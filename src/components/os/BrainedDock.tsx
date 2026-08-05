@@ -5,6 +5,8 @@ import {
   Kanban, Globe, Terminal, Award, Trophy, Settings, Trash2, Video
 } from 'lucide-react';
 
+import { BrainedLogoIcon } from '../common/BrainedLogoIcon';
+
 interface BrainedDockProps {
   activeAppId: string | null;
   openAppIds: string[];
@@ -19,6 +21,7 @@ export const BrainedDock: React.FC<BrainedDockProps> = ({
   badges,
 }) => {
   const dockApps = [
+    { id: 'cera', name: 'Cera IDE — AI Engineer', icon: () => <BrainedLogoIcon className="w-6 h-6 object-contain drop-shadow-md" />, color: 'bg-gradient-to-tr from-pink-600 via-purple-600 to-indigo-600' },
     { id: 'finder', name: 'Finder', icon: Folder, color: 'bg-gradient-to-tr from-[#1D70B8] to-[#428BCA]' },
     { id: 'inbox', name: 'Mail', icon: Mail, color: 'bg-gradient-to-tr from-[#007AFF] to-[#58A6FF]', badge: badges.inbox },
     { id: 'teams', name: 'Microsoft Teams', icon: Video, color: 'bg-gradient-to-tr from-[#464EB8] to-[#6264A7]', badge: badges.teams },

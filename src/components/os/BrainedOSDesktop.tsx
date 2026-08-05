@@ -28,6 +28,7 @@ import { CertificateApp } from '../workspace/CertificateApp';
 import { LeaderboardApp } from '../workspace/LeaderboardApp';
 import { AchievementsApp } from '../workspace/AchievementsApp';
 import { SettingsApp } from '../workspace/SettingsApp';
+import { CeraIDEApp } from '../apps/CeraIDEApp';
 
 import { AIDirectorWidget } from '../overlays/AIDirectorWidget';
 import { SimulationEventModal } from '../overlays/SimulationEventModal';
@@ -45,12 +46,10 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = () => {
   const [isAIDirectorOpen, setIsAIDirectorOpen] = useState(false);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
 
-  // NARRATIVE OS TRIGGER: 3s after boot, slide in incoming Teams call notification top-right!
+  // Clean OS boot state without automatic initial call modal
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setNotifications(INITIAL_NOTIFICATIONS);
-    }, 3000);
-    return () => clearTimeout(timer);
+    // Notifications start clear for clean executive onboarding
+    setNotifications([]);
   }, []);
 
   const handleOpenApp = (appId: string | null) => {
@@ -87,6 +86,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = () => {
   };
 
   const appMetaMap: Record<string, { title: string; icon: React.ReactNode }> = {
+    cera: { title: 'Cera IDE — Autonomous AI Software Engineer', icon: <BrainedLogoIcon className="w-4 h-4" /> },
     dashboard: { title: 'Brained OS — Executive Dashboard', icon: <BrainedLogoIcon className="w-4 h-4" /> },
     inbox: { title: 'Apple Mail — Priority Inbox', icon: <span>✉️</span> },
     teams: { title: 'Microsoft Teams — Live Video & Meetings', icon: <span>📹</span> },
@@ -145,6 +145,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = () => {
               onClose={() => handleCloseApp(activeAppId)}
               onFocus={() => {}}
             >
+              {activeAppId === 'cera' && <CeraIDEApp />}
               {activeAppId === 'dashboard' && (
                 <DashboardHome
                   playerState={{

@@ -73,6 +73,32 @@ export const SpotlightSearch: React.FC<SpotlightSearchProps> = ({
 
           {/* Results List */}
           <div className="max-h-96 overflow-y-auto p-4 space-y-4 text-xs">
+            {/* Quick App Shortcut */}
+            {('cera ide cursor windsurf developer ai engineer').includes(query.toLowerCase()) && (
+              <div>
+                <span className="text-[10px] uppercase font-bold text-pink-400 tracking-wider mb-2 block">
+                  Applications & AI Engines
+                </span>
+                <div
+                  onClick={() => { onSelectApp('cera'); onClose(); }}
+                  className="p-2.5 rounded-xl bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/30 flex items-center justify-between cursor-pointer text-white"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-7 h-7 rounded-lg bg-pink-500/20 flex items-center justify-center text-pink-400 font-bold text-xs border border-pink-500/40">
+                      ⚡
+                    </div>
+                    <div>
+                      <div className="font-bold text-white flex items-center space-x-2">
+                        <span>Cera IDE</span>
+                        <span className="bg-pink-500/20 text-pink-300 text-[9px] px-1.5 py-0.2 rounded border border-pink-500/40 font-mono">AI ENGINEER</span>
+                      </div>
+                      <div className="text-[10px] text-slate-400">Autonomous Enterprise Application Simulator</div>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-3.5 h-3.5 text-pink-400" />
+                </div>
+              </div>
+            )}
             {/* Stakeholders */}
             {filteredStakeholders.length > 0 && (
               <div>
