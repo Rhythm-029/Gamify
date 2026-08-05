@@ -5,18 +5,32 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "server": "npx tsx server/index.ts",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/nodemailer": "^8.0.1",
+    "axios": "^1.19.0",
     "canvas-confetti": "^1.9.4",
+    "cheerio": "^1.2.0",
+    "chrome-launcher": "^1.2.1",
     "clsx": "^2.1.1",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
     "framer-motion": "^12.43.0",
     "lucide-react": "^1.28.0",
+    "nodemailer": "^9.0.4",
+    "puppeteer": "^25.5.0",
+    "puppeteer-core": "^25.5.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "tailwind-merge": "^3.6.0"
+    "tailwind-merge": "^3.6.0",
+    "tsx": "^4.23.6"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
