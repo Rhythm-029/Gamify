@@ -13,10 +13,6 @@ export function App() {
   };
 
   const handleOnboardingComplete = () => {
-    setViewMode('teams_intro');
-  };
-
-  const handleTeamsMeetingComplete = () => {
     setViewMode('workspace'); // Lands directly on Brained OS Desktop!
   };
 
@@ -35,7 +31,7 @@ export function App() {
   }
 
   if (viewMode === 'teams_intro') {
-    return <TeamsCallIntro onJoinMeetingComplete={handleTeamsMeetingComplete} />;
+    return <TeamsCallIntro onJoinMeetingComplete={() => setViewMode('workspace')} />;
   }
 
   // BRAINED OS DESKTOP SIMULATOR WORKSTATION
