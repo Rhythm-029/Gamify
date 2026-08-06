@@ -30,138 +30,95 @@ declare global {
 
 const STAKEHOLDERS = [
   {
+    name: "Aarav",
+    role: "Senior Digital Transformation Consultant",
+    department: "Digital Transformation Office",
+    badge: "Your Mentor",
+    voicePitch: -15,
+    audioFile: "/voice/01_aarav_intro.mp3",
+    fullImage: "/character/aaravFull.png",
+    dp: "/character/AaravDP.png",
+    accentColor: "#eab308",
+    tags: ["Your Guide", "Seen It All", "No Sugarcoating"],
+    quote: "Aarav here. I'll be your mentor on this one.\nFair warning — this team doesn't hand-hold.\nEveryone you're about to meet is sharp, opinionated, and has a very short patience for vague answers.\nI'll walk you through them. Pay attention."
+  },
+  {
     name: "Marcus",
-    role: "Chief Technology Officer",
-    department: "Technology Leadership",
+    role: "Chief Technology Officer (CTO)",
+    department: "Technology & Engineering",
     badge: "Technology Visionary",
     voicePitch: -45,
-    quote: "Welcome to Brained.\nI'm Marcus, the Chief Technology Officer.\nI'll define where we're going...\nbut you'll decide how we get there.\nRemember...\nGood technology solves business problems.\nGreat technology prevents them.",
-    avatarSvg: (
-      <svg viewBox="0 0 100 100" className="w-full h-full">
-        <defs>
-          <radialGradient id="marcusGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#1e3a8a" stopOpacity="0" />
-          </radialGradient>
-        </defs>
-        <circle cx="50%" cy="50%" r="45" fill="url(#marcusGlow)" />
-        <path d="M50 23c6.6 0 12 5.4 12 12s-5.4 12-12 12-12-5.4-12-12 5.4-12 12-12zm0 29c-15 0-27 8-27 18v5h54v-5c0-10-12-18-27-18z" fill="#dbeafe" />
-        <circle cx="50%" cy="15" r="3" fill="#3b82f6" />
-        <circle cx="20" cy="50" r="3" fill="#3b82f6" />
-        <circle cx="80" cy="50" r="3" fill="#3b82f6" />
-        <line x1="50" y1="15" x2="20" y2="50" stroke="#3b82f6" strokeWidth="1.2" />
-        <line x1="50" y1="15" x2="80" y2="50" stroke="#3b82f6" strokeWidth="1.2" />
-      </svg>
-    )
+    audioFile: "/voice/02_marcus_intro.mp3",
+    fullImage: "/character/marcus_reed/MarcusFull.png",
+    dp: "/character/marcus_reed/MarcusDP.png",
+    accentColor: "#3b82f6",
+    tags: ["Intimidating", "Zero Shortcuts", "Better Be Prepared"],
+    quote: "That's Marcus Reed. Our CTO.\nBrilliant, calculated — and honestly a little intimidating.\nHe doesn't repeat himself. Ever.\nIf you're not prepared when you walk into his office, don't walk in at all.\nEvery commitment you make, he will remember."
   },
   {
     name: "Emma",
-    role: "HR Director",
-    department: "Human Resources",
+    role: "HR Transformation Specialist",
+    department: "HR Transformation",
     badge: "Employee Advocate",
     voicePitch: 90,
-    quote: "Hi.\nI'm Emma.\nI lead Human Resources.\nSystems don't fail because of software.\nThey fail because people were never understood.\nListen carefully.\nThe best requirements are often the ones nobody says aloud.",
-    avatarSvg: (
-      <svg viewBox="0 0 100 100" className="w-full h-full">
-        <defs>
-          <radialGradient id="emmaGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#10b981" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#064e3b" stopOpacity="0" />
-          </radialGradient>
-        </defs>
-        <circle cx="50%" cy="50%" r="45" fill="url(#emmaGlow)" />
-        <path d="M50 25c7.7 0 14 6.3 14 14s-6.3 14-14 14-14-6.3-14-14 6.3-14 14-14zm0 32c-15.5 0-28 8.5-28 19v4h56v-4c0-10.5-12.5-19-28-19z" fill="#d1fae5" />
-        <circle cx="50%" cy="39" r="22" stroke="#10b981" strokeWidth="1.2" strokeDasharray="3 3" fill="none" />
-        <path d="M25 80 Q50 62 75 80" stroke="#34d399" strokeWidth="1.5" fill="none" />
-      </svg>
-    )
-  },
-  {
-    name: "Daniel",
-    role: "Business Head",
-    department: "Business Strategy",
-    badge: "Outcome Driven",
-    voicePitch: 15,
-    quote: "Daniel.\nBusiness Strategy.\nEvery delay costs money.\nEvery decision has consequences.\nKeep me informed...\nbefore I have to ask.",
-    avatarSvg: (
-      <svg viewBox="0 0 100 100" className="w-full h-full">
-        <defs>
-          <radialGradient id="danielGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#f97316" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#7c2d12" stopOpacity="0" />
-          </radialGradient>
-        </defs>
-        <circle cx="50%" cy="50%" r="45" fill="url(#danielGlow)" />
-        <path d="M50 22c6.6 0 12 5.4 12 12s-5.4 12-12 12-12-5.4-12-12 5.4-12 12-12zm-22 50c0-9.9 9.8-18 22-18s22 8.1 22 18v5H28v-5zm22-15v-6h4" fill="#ffedd5" stroke="#f97316" strokeWidth="0.8" />
-        <rect x="25" y="25" width="50" height="50" stroke="#f97316" strokeWidth="1.0" strokeDasharray="5 5" fill="none" />
-        <line x1="20" y1="50" x2="80" y2="50" stroke="#f97316" strokeWidth="0.8" />
-      </svg>
-    )
+    audioFile: "/voice/03_emma_intro.mp3",
+    fullImage: "/character/Emma_Carter/EmmaFull.png",
+    dp: "/character/Emma_Carter/EmmaDP.png",
+    accentColor: "#10b981",
+    tags: ["Empathetic", "Notices Everything", "People Over Process"],
+    quote: "Emma Carter. HR — but not what you're picturing.\nShe catches the requirements that engineers completely miss.\nThe ones no one says out loud.\nIf she flags something, take it seriously.\nShe's usually three steps ahead."
   },
   {
     name: "Olivia",
-    role: "Information Security Lead",
-    department: "Cyber Security",
+    role: "Director of Information Security & Compliance",
+    department: "Cybersecurity & Governance",
     badge: "Guardian of Trust",
     voicePitch: 60,
-    quote: "I'm Olivia.\nInformation Security.\nOne overlooked vulnerability...\ncan destroy months of work.\nBuild quickly.\nBut secure it first.",
-    avatarSvg: (
-      <svg viewBox="0 0 100 100" className="w-full h-full">
-        <defs>
-          <radialGradient id="oliviaGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#e11d48" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#4c0519" stopOpacity="0" />
-          </radialGradient>
-        </defs>
-        <circle cx="50%" cy="50%" r="45" fill="url(#oliviaGlow)" />
-        <path d="M50 26c6 0 11 5 11 11s-5 11-11 11-11-5-11-11 5-11 11-11zm0 27c-13 0-24 7-24 16v5h48v-5c0-9-11-16-24-16z" fill="#ffe4e6" />
-        <path d="M50 15 L80 25 L80 50 C80 68 67 80 50 85 C33 80 20 68 20 50 L20 25 Z" stroke="#e11d48" strokeWidth="1.2" fill="none" strokeDasharray="4 2" />
-      </svg>
-    )
+    audioFile: "/voice/04_olivia_intro.mp3",
+    fullImage: "/character/Olivia_hayes/OliviaFull.png",
+    dp: "/character/Olivia_hayes/OliviaDP.png",
+    accentColor: "#e11d48",
+    tags: ["Non-Negotiable", "Evidence Only", "Will Halt Launch"],
+    quote: "Olivia Hayes. Security and Compliance.\nShe doesn't get emotional. She doesn't negotiate.\nBring her evidence, or don't bring anything.\nOne gap — a single one — and she'll halt the entire release.\nDon't even think about 'we'll fix it post-launch'."
+  },
+  {
+    name: "Daniel",
+    role: "Transformation Program Manager",
+    department: "Program Delivery",
+    badge: "Deadline Guardian",
+    voicePitch: 15,
+    audioFile: "/voice/05_daniel_intro.mp3",
+    fullImage: "/character/Daniel_Brooks/danielFull.png",
+    dp: "/character/Daniel_Brooks/DanielDP.png",
+    accentColor: "#f97316",
+    tags: ["Deadline Obsessed", "Tracks Everything", "Coffee Required"],
+    quote: "Daniel Brooks. Program Manager.\nHoodie, coffee, and perpetually behind on something.\nDon't let that fool you — he tracks every blocker, risk, and missed update.\nKeep Jira current before he asks.\nBecause when he asks, it's already too late."
   },
   {
     name: "Sophia",
-    role: "Client Relationship Manager",
-    department: "Business Value",
-    badge: "Client Champion",
+    role: "VP of HR, Titan Manufacturing",
+    department: "Client — Titan Manufacturing",
+    badge: "Our Client",
     voicePitch: 35,
-    quote: "I'm Sophia.\nEvery feature we build...\nmust create value for someone.\nClients won't remember our effort.\nThey'll remember the experience we deliver.",
-    avatarSvg: (
-      <svg viewBox="0 0 100 100" className="w-full h-full">
-        <defs>
-          <radialGradient id="sophiaGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#9333ea" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#3b0764" stopOpacity="0" />
-          </radialGradient>
-        </defs>
-        <circle cx="50%" cy="50%" r="45" fill="url(#sophiaGlow)" />
-        <path d="M50 23c6.6 0 12 5.4 12 12s-5.4 12-12 12-12-5.4-12-12 5.4-12 12-12zm-20 48c0-8 9-15 20-15s20 7 20 15v5H30v-5z" fill="#f3e8ff" />
-        <circle cx="50%" cy="50%" r="30" stroke="#9333ea" strokeWidth="1" fill="none" strokeDasharray="4 4" />
-      </svg>
-    )
+    audioFile: "/voice/06_sophia_intro.mp3",
+    fullImage: "/character/Sophia_bennett/SophiaFull.png",
+    dp: "/character/Sophia_bennett/SophiaDP.png",
+    accentColor: "#9333ea",
+    tags: ["Results Over Everything", "12,000 People Waiting", "No Jargon"],
+    quote: "And this is Sophia Bennett. VP of HR at Titan Manufacturing.\nShe's the client. Our actual reason for being here.\n12,000 factory workers depending on what we build.\nShe doesn't care about your stack or your sprint velocity.\nShe cares if it works. On a tablet. On a factory floor."
   },
   {
     name: "Aarav",
-    role: "Transformation Mentor",
+    role: "Senior Digital Transformation Consultant",
     department: "Digital Transformation Office",
-    badge: "Transformation Mentor",
+    badge: "Your Mentor",
     voicePitch: -15,
-    quote: "Welcome.\nI'm Aarav.\nI've watched hundreds of transformations succeed...\nand even more fail.\nThe difference isn't intelligence.\nIt's judgment.\nThat's what you'll be tested on today.",
-    avatarSvg: (
-      <svg viewBox="0 0 100 100" className="w-full h-full">
-        <defs>
-          <radialGradient id="aaravGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#eab308" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#451a03" stopOpacity="0" />
-          </radialGradient>
-        </defs>
-        <circle cx="50%" cy="50%" r="45" fill="url(#aaravGlow)" />
-        <path d="M50 24c7 0 12.5 5.5 12.5 12.5S57 49 50 49s-12.5-5.5-12.5-12.5S43 24 50 24zm0 29c-14.5 0-26 7.5-26 17v5h52v-5c0-9-11-17-26-17z" fill="#fef9c3" />
-        <path d="M15 15 L25 15 L25 25" stroke="#eab308" strokeWidth="1.5" fill="none" />
-        <path d="M85 85 L75 85 L75 75" stroke="#eab308" strokeWidth="1.5" fill="none" />
-        <circle cx="50%" cy="50%" r="20" stroke="#eab308" strokeWidth="0.8" strokeDasharray="4 2" fill="none" />
-      </svg>
-    )
+    audioFile: "/voice/07_aarav_closing.mp3",
+    fullImage: "/character/aaravFull.png",
+    dp: "/character/AaravDP.png",
+    accentColor: "#eab308",
+    tags: ["60s = 1 Day", "No Ctrl+Z", "Good Luck"],
+    quote: "That's the team.\nIn here, every decision compounds — even sixty seconds plays like a full working day.\nThe pressure is real. The mistakes are permanent.\nThere's no undo, no skip, no 'I'll come back to it'.\nYour OS is live. Go make it count."
   }
 ];
 
@@ -203,6 +160,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
   const [activeStakeholderIndex, setActiveStakeholderIndex] = useState(0);
   const [stakeholderDialogue, setStakeholderDialogue] = useState('');
   const autoContinueRef = useRef<any>(null);
+  const voiceAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Stakes state
   const [stakesPhase, setStakesPhase] = useState<1 | 2>(1);
@@ -557,7 +515,8 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
       
       const interval = setInterval(() => {
         if (charIdx < fullText.length) {
-          setTypewriterText((prev) => prev + fullText[charIdx]);
+          const char = fullText[charIdx];
+          setTypewriterText((prev) => prev + char);
           sound.playClick();
           charIdx++;
         } else {
@@ -591,7 +550,8 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
     const timer = setTimeout(() => {
       const interval = setInterval(() => {
         if (charIdx < msg.length) {
-          setWelcomeText((prev) => prev + msg[charIdx]);
+          const char = msg[charIdx];
+          setWelcomeText((prev) => prev + char);
           sound.playClick();
           charIdx++;
         } else {
@@ -607,7 +567,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
     return () => clearTimeout(timer);
   }, [cinematicActive, cinematicScreen]);
 
-  // Screen 4: Office Cinematic dialog typewriter
+  // Screen 4: Office Cinematic dialog typewriter with ElevenLabs Voice Audio integration
   useEffect(() => {
     if (!cinematicActive || cinematicScreen !== 'office') return;
 
@@ -619,27 +579,87 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
     
     if (autoContinueRef.current) clearTimeout(autoContinueRef.current);
 
-    const interval = setInterval(() => {
-      if (charIdx < currentStakeholder.quote.length) {
-        setStakeholderDialogue((prev) => prev + currentStakeholder.quote[charIdx]);
-        if (charIdx % 2 === 0) {
-          sound.playVoiceStatic(currentStakeholder.voicePitch);
-        } else {
-          sound.playClick();
-        }
-        charIdx++;
-      } else {
-        clearInterval(interval);
+    // Stop previous voice audio if playing
+    if (voiceAudioRef.current) {
+      voiceAudioRef.current.pause();
+      voiceAudioRef.current = null;
+    }
 
+    let intervalId: any = null;
+    let audioEnded = false;
+
+    const startTypewriter = (msPerChar: number = 32, useAudioTrack: boolean = false) => {
+      if (intervalId) clearInterval(intervalId);
+      intervalId = setInterval(() => {
+        if (charIdx < currentStakeholder.quote.length) {
+          const char = currentStakeholder.quote[charIdx];
+          setStakeholderDialogue((prev) => prev + char);
+          if (!useAudioTrack) {
+            if (charIdx % 2 === 0) {
+              sound.playVoiceStatic(currentStakeholder.voicePitch);
+            } else {
+              sound.playClick();
+            }
+          }
+          charIdx++;
+        } else {
+          clearInterval(intervalId);
+          // If no audio track is active, auto-advance after 3.5s fallback
+          if (!useAudioTrack || audioEnded) {
+            autoContinueRef.current = setTimeout(() => {
+              handleNextStakeholder();
+            }, 3500);
+          }
+        }
+      }, msPerChar);
+    };
+
+    // Try playing ElevenLabs voice MP3 file if present in /public/voice/
+    if (currentStakeholder.audioFile) {
+      const audio = new Audio(currentStakeholder.audioFile);
+      voiceAudioRef.current = audio;
+
+      const initAudioTypewriter = () => {
+        if (!audio.duration || isNaN(audio.duration)) {
+          startTypewriter(32, true);
+          return;
+        }
+        const totalDurationMs = audio.duration * 1000;
+        const msPerChar = Math.max(15, Math.floor(totalDurationMs / currentStakeholder.quote.length));
+        startTypewriter(msPerChar, true);
+      };
+
+      if (audio.readyState >= 1) {
+        initAudioTypewriter();
+      } else {
+        audio.onloadedmetadata = () => {
+          initAudioTypewriter();
+        };
+      }
+
+      audio.onended = () => {
+        audioEnded = true;
+        // Auto-advance to next stakeholder like a video cutscene when audio ends!
         autoContinueRef.current = setTimeout(() => {
           handleNextStakeholder();
-        }, 5000);
-      }
-    }, 45);
+        }, 600);
+      };
+
+      audio.play().catch(() => {
+        // Fallback: If voice file missing (404), use default typewriter pacing
+        startTypewriter(32, false);
+      });
+    } else {
+      startTypewriter(32, false);
+    }
 
     return () => {
-      clearInterval(interval);
+      if (intervalId) clearInterval(intervalId);
       if (autoContinueRef.current) clearTimeout(autoContinueRef.current);
+      if (voiceAudioRef.current) {
+        voiceAudioRef.current.pause();
+        voiceAudioRef.current = null;
+      }
     };
   }, [cinematicActive, cinematicScreen, activeStakeholderIndex]);
 
@@ -724,28 +744,38 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
 
         {/* Top Progression Timeline Indicator */}
         {cinematicScreen === 'office' && (
-          <div className="absolute top-20 left-1/2 -translate-x-1/2 hidden md:flex items-center justify-center space-x-3 bg-slate-950/45 backdrop-blur-xl border border-white/5 px-6 py-2.5 rounded-full z-45 select-none max-w-4xl">
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 hidden md:flex items-center justify-center space-x-2 bg-slate-950/60 backdrop-blur-xl border border-white/10 px-5 py-2 rounded-full z-45 select-none max-w-5xl shadow-xl">
             {STAKEHOLDERS.map((st, idx) => {
               const isActive = idx === activeStakeholderIndex;
               const isCompleted = idx < activeStakeholderIndex;
               return (
-                <React.Fragment key={st.name}>
+                <React.Fragment key={`${st.name}-${idx}`}>
                   <div className="flex items-center space-x-1.5">
-                    <div 
-                      className={`w-2 h-2 rounded-full transition-all duration-500 ${
-                        isActive ? 'bg-sky-400 scale-125 shadow-[0_0_10px_#38bdf8]' : 
-                        isCompleted ? 'bg-indigo-500' : 'bg-white/10'
-                      }`} 
-                    />
-                    <span className={`text-[8px] font-mono tracking-widest font-extrabold uppercase transition-colors ${
-                      isActive ? 'text-sky-400' : 
-                      isCompleted ? 'text-indigo-400' : 'text-slate-500'
+                    <div className="relative">
+                      <img
+                        src={st.dp}
+                        alt={st.name}
+                        className={`w-7 h-7 rounded-full object-cover border-2 transition-all duration-500 ${
+                          isActive ? 'scale-125 shadow-lg' : 
+                          isCompleted ? 'opacity-80' : 'opacity-30 grayscale'
+                        }`}
+                        style={{ borderColor: isActive ? st.accentColor : isCompleted ? 'rgba(99,102,241,0.6)' : 'rgba(255,255,255,0.1)' }}
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                      {isActive && (
+                        <span className="absolute -bottom-1 -right-1 w-2.5 h-2.5 rounded-full border-2 border-slate-950 animate-pulse"
+                          style={{ background: st.accentColor }} />
+                      )}
+                    </div>
+                    <span className={`text-[8px] font-mono tracking-widest font-extrabold uppercase transition-colors hidden lg:inline ${
+                      isActive ? 'text-white' : 
+                      isCompleted ? 'text-indigo-400' : 'text-slate-600'
                     }`}>
                       {st.name}
                     </span>
                   </div>
                   {idx < STAKEHOLDERS.length - 1 && (
-                    <div className={`h-[1px] w-6 sm:w-10 transition-all duration-500 ${
+                    <div className={`h-[1px] w-4 sm:w-6 transition-all duration-500 ${
                       idx < activeStakeholderIndex ? 'bg-indigo-500/70' : 'bg-white/5'
                     }`} />
                   )}
@@ -848,17 +878,41 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
               {/* Full screen background office floor blueprints */}
               <OfficeBlueprints activeStakeholderIndex={activeStakeholderIndex} />
 
-              {/* Large overlapping character portrait silhouette on the left */}
+              {/* Large overlapping character portrait — naturally blended into scene */}
               <motion.div
                 key={STAKEHOLDERS[activeStakeholderIndex].name}
                 initial={{ x: -120, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: -120, opacity: 0 }}
                 transition={{ type: 'spring', stiffness: 60, damping: 16 }}
-                className="absolute left-6 md:left-14 bottom-0 w-[35%] md:w-[38%] h-[80vh] flex items-end justify-center z-25 pointer-events-none select-none"
+                className="absolute left-0 md:left-4 bottom-0 w-[40%] md:w-[42%] h-[88vh] flex items-end justify-center z-25 pointer-events-none select-none"
               >
-                <div className="w-full h-full relative max-w-sm flex items-end justify-center filter drop-shadow-[0_20px_40px_rgba(0,0,0,0.6)]">
-                  {STAKEHOLDERS[activeStakeholderIndex].avatarSvg}
+                {/* Soft ambient glow puddle behind character feet */}
+                <div
+                  className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4/5 h-48 rounded-full blur-3xl opacity-15 pointer-events-none"
+                  style={{ background: STAKEHOLDERS[activeStakeholderIndex].accentColor }}
+                />
+
+                {/* Character image — bottom-anchored, fades into floor */}
+                <div className="relative w-full h-full flex items-end justify-center overflow-hidden">
+                  <img
+                    src={STAKEHOLDERS[activeStakeholderIndex].fullImage}
+                    alt={STAKEHOLDERS[activeStakeholderIndex].name}
+                    className="w-full h-full object-contain object-bottom select-none"
+                    draggable={false}
+                    onError={(e) => { (e.target as HTMLImageElement).src = STAKEHOLDERS[activeStakeholderIndex].dp; }}
+                  />
+
+                  {/* Bottom fade — character feet dissolve into the floor */}
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{ background: 'linear-gradient(to top, rgba(7,9,19,1) 0%, rgba(7,9,19,0.6) 12%, rgba(7,9,19,0) 30%)' }}
+                  />
+                  {/* Left edge fade — portrait side merges with blueprint background */}
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{ background: 'linear-gradient(to right, rgba(7,9,19,0.65) 0%, rgba(7,9,19,0) 28%)' }}
+                  />
                 </div>
               </motion.div>
 
@@ -868,33 +922,80 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
                 initial={{ y: 60, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ type: 'spring', stiffness: 75, damping: 18, delay: 0.15 }}
-                className="absolute bottom-8 left-[6%] right-[6%] md:left-[35%] md:right-[8%] bg-slate-950/65 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-2xl z-30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                className="absolute bottom-8 left-[6%] right-[6%] md:left-[40%] md:right-[5%] bg-slate-950/75 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-30 overflow-hidden"
+                style={{ borderLeftWidth: '3px', borderLeftColor: STAKEHOLDERS[activeStakeholderIndex].accentColor }}
               >
-                <div className="space-y-3 flex-1 text-left select-none">
-                  {/* Name and Designation details header */}
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-white/5 pb-2">
-                    <h4 className="text-base font-black text-white tracking-tight">{STAKEHOLDERS[activeStakeholderIndex].name}</h4>
-                    <span className="text-xs text-sky-400 font-medium">{STAKEHOLDERS[activeStakeholderIndex].role}</span>
-                    <span className="text-[10px] text-slate-500 font-mono">• {STAKEHOLDERS[activeStakeholderIndex].department}</span>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-[8px] font-mono text-slate-400 font-bold uppercase tracking-wider">
-                      {STAKEHOLDERS[activeStakeholderIndex].badge}
-                    </span>
-                  </div>
-                  
-                  {/* Dialogue Subtitle typewritten caption */}
-                  <p className="text-xs sm:text-sm font-semibold leading-relaxed text-slate-200 italic pr-8 whitespace-pre-line">
-                    "{stakeholderDialogue}"
-                  </p>
-                </div>
+                <div className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="space-y-2.5 flex-1 text-left select-none">
+                    {/* Character identity with DP thumbnail */}
+                    <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+                      <img
+                        src={STAKEHOLDERS[activeStakeholderIndex].dp}
+                        alt={STAKEHOLDERS[activeStakeholderIndex].name}
+                        className="w-8 h-8 rounded-xl object-cover shrink-0 border-2"
+                        style={{ borderColor: STAKEHOLDERS[activeStakeholderIndex].accentColor + '70' }}
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                      <h4 className="text-sm font-black text-white tracking-tight">{STAKEHOLDERS[activeStakeholderIndex].name}</h4>
+                      <span className="text-[11px] font-semibold" style={{ color: STAKEHOLDERS[activeStakeholderIndex].accentColor }}>
+                        {STAKEHOLDERS[activeStakeholderIndex].role}
+                      </span>
+                      <span className="text-[9px] text-slate-500 font-mono hidden sm:inline">
+                        • {STAKEHOLDERS[activeStakeholderIndex].department}
+                      </span>
+                      <span
+                        className="inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-mono font-bold uppercase tracking-wider border"
+                        style={{
+                          background: STAKEHOLDERS[activeStakeholderIndex].accentColor + '18',
+                          borderColor: STAKEHOLDERS[activeStakeholderIndex].accentColor + '45',
+                          color: STAKEHOLDERS[activeStakeholderIndex].accentColor,
+                        }}
+                      >
+                        {STAKEHOLDERS[activeStakeholderIndex].badge}
+                      </span>
+                    </div>
 
-                {/* Right action indicator */}
-                <button
-                  onClick={handleNextStakeholder}
-                  className="px-6 py-3.5 rounded-xl bg-white hover:bg-slate-100 text-slate-950 font-bold text-xs shadow-xl transition-all flex items-center space-x-2 cursor-pointer shrink-0 hover:scale-105"
-                >
-                  <span>{activeStakeholderIndex === STAKEHOLDERS.length - 1 ? 'Commit Tour' : 'Proceed Briefing'}</span>
-                  <ArrowRight className="w-4 h-4 text-slate-950" />
-                </button>
+                    {/* Personality tags */}
+                    {STAKEHOLDERS[activeStakeholderIndex].tags && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {STAKEHOLDERS[activeStakeholderIndex].tags.map((tag: string, i: number) => (
+                          <span
+                            key={i}
+                            className="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-mono font-bold uppercase tracking-widest"
+                            style={{
+                              background: STAKEHOLDERS[activeStakeholderIndex].accentColor + '12',
+                              color: STAKEHOLDERS[activeStakeholderIndex].accentColor + 'cc',
+                              border: `1px solid ${STAKEHOLDERS[activeStakeholderIndex].accentColor}30`,
+                            }}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="h-px bg-white/5" />
+
+                    {/* Dialogue typewriter — Aarav narrating (no wrapping quotes to avoid clip) */}
+                    <p className="text-xs sm:text-sm font-medium leading-relaxed text-slate-200 whitespace-pre-line">
+                      {stakeholderDialogue}
+                    </p>
+                  </div>
+
+                  {/* Proceed button — styled per character accent */}
+                  <button
+                    onClick={handleNextStakeholder}
+                    className="px-5 py-3 rounded-xl font-bold text-xs shadow-lg transition-all flex items-center space-x-2 cursor-pointer shrink-0 hover:scale-105 border"
+                    style={{
+                      background: STAKEHOLDERS[activeStakeholderIndex].accentColor + '22',
+                      borderColor: STAKEHOLDERS[activeStakeholderIndex].accentColor + '55',
+                      color: 'white',
+                    }}
+                  >
+                    <span>{activeStakeholderIndex === STAKEHOLDERS.length - 1 ? 'Enter Workspace' : 'Proceed Briefing'}</span>
+                    <ArrowRight className="w-4 h-4" style={{ color: STAKEHOLDERS[activeStakeholderIndex].accentColor }} />
+                  </button>
+                </div>
               </motion.div>
             </motion.div>
           )}
