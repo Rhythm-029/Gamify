@@ -207,7 +207,6 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
   // Office cinematic states
   const [activeStakeholderIndex, setActiveStakeholderIndex] = useState(0);
   const [stakeholderDialogue, setStakeholderDialogue] = useState('');
-  const [dialogueFinished, setDialogueFinished] = useState(false);
   const autoContinueRef = useRef<any>(null);
 
   // Stakes state
@@ -622,7 +621,6 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
 
     let charIdx = 0;
     setStakeholderDialogue('');
-    setDialogueFinished(false);
     
     if (autoContinueRef.current) clearTimeout(autoContinueRef.current);
 
@@ -637,7 +635,6 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
         charIdx++;
       } else {
         clearInterval(interval);
-        setDialogueFinished(true);
 
         autoContinueRef.current = setTimeout(() => {
           handleNextStakeholder();
@@ -730,6 +727,39 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
           )}
         </div>
 
+        {/* Top Progression Timeline Indicator */}
+        {cinematicScreen === 'office' && (
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 hidden md:flex items-center justify-center space-x-3 bg-slate-950/45 backdrop-blur-xl border border-white/5 px-6 py-2.5 rounded-full z-45 select-none max-w-4xl">
+            {STAKEHOLDERS.map((st, idx) => {
+              const isActive = idx === activeStakeholderIndex;
+              const isCompleted = idx < activeStakeholderIndex;
+              return (
+                <React.Fragment key={st.name}>
+                  <div className="flex items-center space-x-1.5">
+                    <div 
+                      className={`w-2 h-2 rounded-full transition-all duration-500 ${
+                        isActive ? 'bg-sky-400 scale-125 shadow-[0_0_10px_#38bdf8]' : 
+                        isCompleted ? 'bg-indigo-500' : 'bg-white/10'
+                      }`} 
+                    />
+                    <span className={`text-[8px] font-mono tracking-widest font-extrabold uppercase transition-colors ${
+                      isActive ? 'text-sky-400' : 
+                      isCompleted ? 'text-indigo-400' : 'text-slate-500'
+                    }`}>
+                      {st.name}
+                    </span>
+                  </div>
+                  {idx < STAKEHOLDERS.length - 1 && (
+                    <div className={`h-[1px] w-6 sm:w-10 transition-all duration-500 ${
+                      idx < activeStakeholderIndex ? 'bg-indigo-500/70' : 'bg-white/5'
+                    }`} />
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
+        )}
+
         <AnimatePresence mode="wait">
           {cinematicScreen === 'transition' && (
             <motion.div 
@@ -818,67 +848,59 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="flex-1 flex flex-col md:flex-row relative z-10"
+              className="absolute inset-0 w-full h-full relative z-10"
             >
-              <div className="w-full md:w-3/5 h-[45vh] md:h-full relative border-b md:border-b-0 md:border-r border-white/10">
-                <OfficeBlueprints activeStakeholderIndex={activeStakeholderIndex} />
-              </div>
-              <div className="w-full md:w-2/5 h-[55vh] md:h-full flex flex-col justify-between p-8 bg-slate-950/60 backdrop-blur-2xl relative z-20">
-                <div className="space-y-1.5 border-b border-white/10 pb-4">
-                  <span className="text-[9px] font-mono text-sky-400 font-extrabold tracking-widest uppercase">Target Alignment Locator</span>
-                  <h3 className="text-lg font-black text-white">{STAKEHOLDERS[activeStakeholderIndex].name}</h3>
-                  <p className="text-xs text-slate-400">{STAKEHOLDERS[activeStakeholderIndex].role} • {STAKEHOLDERS[activeStakeholderIndex].department}</p>
+              {/* Full screen background office floor blueprints */}
+              <OfficeBlueprints activeStakeholderIndex={activeStakeholderIndex} />
+
+              {/* Large overlapping character portrait silhouette on the left */}
+              <motion.div
+                key={STAKEHOLDERS[activeStakeholderIndex].name}
+                initial={{ x: -120, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: -120, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 60, damping: 16 }}
+                className="absolute left-6 md:left-14 bottom-0 w-[35%] md:w-[38%] h-[80vh] flex items-end justify-center z-25 pointer-events-none select-none"
+              >
+                <div className="w-full h-full relative max-w-sm flex items-end justify-center filter drop-shadow-[0_20px_40px_rgba(0,0,0,0.6)]">
+                  {STAKEHOLDERS[activeStakeholderIndex].avatarSvg}
+                </div>
+              </motion.div>
+
+              {/* Floating Glassmorphic Bottom Dialogue Panel */}
+              <motion.div
+                key={`dialogue-${activeStakeholderIndex}`}
+                initial={{ y: 60, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 75, damping: 18, delay: 0.15 }}
+                className="absolute bottom-8 left-[6%] right-[6%] md:left-[35%] md:right-[8%] bg-slate-950/65 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-2xl z-30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+              >
+                <div className="space-y-3 flex-1 text-left select-none">
+                  {/* Name and Designation details header */}
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-white/5 pb-2">
+                    <h4 className="text-base font-black text-white tracking-tight">{STAKEHOLDERS[activeStakeholderIndex].name}</h4>
+                    <span className="text-xs text-sky-400 font-medium">{STAKEHOLDERS[activeStakeholderIndex].role}</span>
+                    <span className="text-[10px] text-slate-500 font-mono">• {STAKEHOLDERS[activeStakeholderIndex].department}</span>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-[8px] font-mono text-slate-400 font-bold uppercase tracking-wider">
+                      {STAKEHOLDERS[activeStakeholderIndex].badge}
+                    </span>
+                  </div>
+                  
+                  {/* Dialogue Subtitle typewritten caption */}
+                  <p className="text-xs sm:text-sm font-semibold leading-relaxed text-slate-200 italic pr-8 whitespace-pre-line">
+                    "{stakeholderDialogue}"
+                  </p>
                 </div>
 
-                <div className="flex-1 flex flex-col justify-center py-6 space-y-6">
-                  <div className="flex items-center space-x-5">
-                    <div className="w-24 h-24 rounded-2xl bg-slate-900 border border-white/15 overflow-hidden shrink-0 flex items-center justify-center shadow-2xl relative">
-                      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30" />
-                      {STAKEHOLDERS[activeStakeholderIndex].avatarSvg}
-                    </div>
-                    <div className="space-y-2 select-none text-left">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-[9px] font-mono text-slate-300 font-bold uppercase tracking-wider">
-                        {STAKEHOLDERS[activeStakeholderIndex].badge}
-                      </span>
-                      <div className="text-[10px] font-mono text-slate-500">DIAGNOSTIC STATUS // STABLE</div>
-                      <div className="text-[10px] text-emerald-400 font-mono flex items-center space-x-1.5 font-bold">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                        <span>CLEARANCE_APPROVED</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-black/30 border border-white/10 rounded-2xl p-5 min-h-28 relative flex flex-col justify-center">
-                    <p className="text-sm font-semibold leading-relaxed text-slate-200 text-left italic">
-                      "{stakeholderDialogue}"
-                    </p>
-                    {!dialogueFinished && (
-                      <span className="absolute bottom-4 right-4 w-1.5 h-3.5 bg-sky-400 animate-blink" />
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between border-t border-white/10 pt-4">
-                  <div className="flex items-center space-x-2 select-none">
-                    {STAKEHOLDERS.map((_, idx) => (
-                      <div 
-                        key={idx}
-                        className={`h-1.5 rounded-full transition-all duration-300 ${
-                          idx === activeStakeholderIndex ? 'w-6 bg-sky-400' : 'w-1.5 bg-white/10'
-                        }`}
-                      />
-                    ))}
-                  </div>
-
-                  <button
-                    onClick={handleNextStakeholder}
-                    className="px-6 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-950 font-bold text-xs shadow-xl transition-all flex items-center space-x-2 cursor-pointer"
-                  >
-                    <span>{activeStakeholderIndex === STAKEHOLDERS.length - 1 ? 'Commit Setup' : 'Next Connection'}</span>
-                    <ArrowRight className="w-4 h-4 text-slate-950" />
-                  </button>
-                </div>
-              </div>
+                {/* Right action indicator */}
+                <button
+                  onClick={handleNextStakeholder}
+                  className="px-6 py-3.5 rounded-xl bg-white hover:bg-slate-100 text-slate-950 font-bold text-xs shadow-xl transition-all flex items-center space-x-2 cursor-pointer shrink-0 hover:scale-105"
+                >
+                  <span>{activeStakeholderIndex === STAKEHOLDERS.length - 1 ? 'Commit Tour' : 'Proceed Briefing'}</span>
+                  <ArrowRight className="w-4 h-4 text-slate-950" />
+                </button>
+              </motion.div>
             </motion.div>
           )}
 
