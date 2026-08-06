@@ -11,14 +11,20 @@ export const TeamsCallIntro: React.FC<TeamsCallIntroProps> = ({ onJoinMeetingCom
   const [callState, setCallState] = useState<'ringing' | 'connected' | 'ending' | 'loading'>('ringing');
   const [speechIndex, setSpeechIndex] = useState(0);
 
-  const cto = STAKEHOLDERS[0]; // Marcus Boss
+  // Aarav Kapoor — Mentor & first point of contact
+  const aarav = STAKEHOLDERS.find(s => s.id === 'aarav') ?? {
+    id: 'aarav',
+    name: 'Aarav Kapoor',
+    role: 'Senior Digital Transformation Consultant (Mentor)',
+    avatar: '/character/AaravDP.png',
+  };
 
   const speechBubbles = [
-    "Good morning.",
-    "We need your help.",
-    "We have six weeks.",
-    "We need a new HR Portal.",
-    "You are leading the transformation."
+    "Hey! Welcome to Brained Consulting.",
+    "I'm Aarav — I'll be your mentor.",
+    "We have a live mandate from Titan Manufacturing.",
+    "Six weeks. 12,000 employees. One portal.",
+    "Let me introduce you to the team."
   ];
 
   useEffect(() => {
@@ -67,8 +73,8 @@ export const TeamsCallIntro: React.FC<TeamsCallIntroProps> = ({ onJoinMeetingCom
               <div className="absolute inset-0 rounded-full bg-blue-500/20 animate-pulse-ring scale-150" />
               <div className="absolute inset-0 rounded-full bg-purple-500/20 animate-ping scale-125" />
               <img
-                src={cto.avatar}
-                alt={cto.name}
+                src={aarav.avatar}
+                    alt={aarav.name}
                 className="w-24 h-24 rounded-full object-cover border-4 border-blue-500 relative z-10 shadow-xl"
               />
             </div>
@@ -78,8 +84,8 @@ export const TeamsCallIntro: React.FC<TeamsCallIntroProps> = ({ onJoinMeetingCom
               <span>Incoming Microsoft Teams Video Call</span>
             </div>
 
-            <h2 className="text-2xl font-bold text-white mb-1">{cto.name}</h2>
-            <p className="text-xs text-slate-400 mb-8">{cto.role} • Apex Global</p>
+            <h2 className="text-2xl font-bold text-white mb-1">{aarav.name}</h2>
+            <p className="text-xs text-slate-400 mb-8">{aarav.role} • Brained Consulting</p>
 
             <div className="flex items-center space-x-6">
               <button
@@ -119,8 +125,8 @@ export const TeamsCallIntro: React.FC<TeamsCallIntroProps> = ({ onJoinMeetingCom
             <div className="flex-1 p-6 relative flex flex-col items-center justify-center bg-slate-950/60">
               <div className="relative w-full max-w-3xl h-96 rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-slate-900 flex items-center justify-center">
                 <img
-                  src={cto.avatar}
-                  alt={cto.name}
+                  src={aarav.avatar}
+                    alt={aarav.name}
                   className="w-full h-full object-cover filter contrast-105"
                 />
 
@@ -128,7 +134,7 @@ export const TeamsCallIntro: React.FC<TeamsCallIntroProps> = ({ onJoinMeetingCom
 
                 <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-xl flex items-center space-x-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                  <span className="text-xs font-semibold text-white">{cto.name} ({cto.role})</span>
+                  <span className="text-xs font-semibold text-white">{aarav.name} ({aarav.role})</span>
                 </div>
 
                 <div className="absolute top-8 px-6 py-4 bg-blue-600/90 backdrop-blur-md rounded-2xl border border-white/20 text-white max-w-md shadow-2xl text-center">

@@ -30,22 +30,22 @@ export const OfficeBlueprints: React.FC<OfficeBlueprintsProps> = ({ activeStakeh
       description: 'Spacious high-end office, private discussion space, glass Brained branding panel.',
       x: 0,
       y: -220,
-      w: 220,
-      h: 150,
+      w: 230,
+      h: 155,
       color: 'from-blue-500/20 to-blue-600/5',
       accentGlow: 'rgba(59, 130, 246, 0.4)',
       icon: <Award className="w-5 h-5 text-blue-400" />,
       ambientContent: (
         <div className="absolute inset-0 flex flex-col justify-between p-3 select-none">
-          <div className="flex justify-between items-center">
-            <span className="text-[8px] font-mono text-blue-400 font-bold tracking-wider">EXECUTIVE_SUITE</span>
-            <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+          <div className="flex justify-between items-center gap-2">
+            <span className="text-[8px] font-mono text-blue-400 font-bold tracking-wider truncate">EXECUTIVE_SUITE</span>
+            <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse shrink-0" />
           </div>
           <div className="flex flex-col items-center justify-center py-1">
-            <span className="text-[14px] font-black text-white/40 tracking-wider">BRAINED</span>
+            <span className="text-[13px] font-black text-white/40 tracking-wider">BRAINED</span>
             <span className="text-[6px] text-blue-400 font-mono tracking-widest uppercase">CONSULTING HQ</span>
           </div>
-          <span className="text-[8px] font-mono text-slate-500 text-center">CTO marcus@brained.com</span>
+          <span className="text-[8px] font-mono text-slate-500 text-center truncate">CTO marcus@brained.com</span>
         </div>
       ),
     },
@@ -56,43 +56,43 @@ export const OfficeBlueprints: React.FC<OfficeBlueprintsProps> = ({ activeStakeh
       description: 'Glass-walled meeting room, digital whiteboard, collaborative layouts.',
       x: -120,
       y: -120,
-      w: 160,
-      h: 140,
+      w: 185,
+      h: 145,
       color: 'from-emerald-500/20 to-emerald-600/5',
       accentGlow: 'rgba(16, 185, 129, 0.4)',
       icon: <Users className="w-5 h-5 text-emerald-400" />,
       ambientContent: (
         <div className="absolute inset-0 flex flex-col justify-between p-3 select-none">
-          <div className="flex justify-between items-center">
-            <span className="text-[8px] font-mono text-emerald-400 font-bold tracking-wider">COLLABORATION ZONE</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="flex justify-between items-center gap-2">
+            <span className="text-[8px] font-mono text-emerald-400 font-bold tracking-wider truncate">COLLABORATION ZONE</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
           </div>
           <div className="w-full bg-white/5 border border-white/10 rounded p-1.5 space-y-1">
             <div className="h-1 bg-emerald-500/40 rounded w-3/4" />
             <div className="h-1 bg-white/10 rounded w-1/2" />
             <div className="h-1 bg-white/10 rounded w-5/6" />
           </div>
-          <span className="text-[8px] font-mono text-slate-500 text-right">Emma's Desk</span>
+          <span className="text-[8px] font-mono text-slate-500 text-right truncate">Emma's Desk</span>
         </div>
       ),
     },
     {
       id: 'daniel_biz',
-      name: 'Business Development Boardroom',
+      name: 'Business Development Board',
       department: 'Business Strategy',
       description: 'Smart presentation display screens, analytical charts, executive seating.',
       x: 120,
       y: -120,
-      w: 180,
-      h: 140,
+      w: 195,
+      h: 145,
       color: 'from-orange-500/20 to-orange-600/5',
       accentGlow: 'rgba(249, 115, 22, 0.4)',
       icon: <Briefcase className="w-5 h-5 text-orange-400" />,
       ambientContent: (
         <div className="absolute inset-0 flex flex-col justify-between p-3 select-none">
-          <div className="flex justify-between items-center">
-            <span className="text-[8px] font-mono text-orange-400 font-bold tracking-wider">BOARDROOM B</span>
-            <div className="flex space-x-0.5">
+          <div className="flex justify-between items-center gap-2">
+            <span className="text-[8px] font-mono text-orange-400 font-bold tracking-wider truncate">BOARDROOM B</span>
+            <div className="flex space-x-0.5 shrink-0">
               <span className="w-1 h-1 rounded-full bg-orange-400 animate-ping" />
               <span className="w-1 h-1 rounded-full bg-orange-400" />
             </div>
@@ -104,27 +104,27 @@ export const OfficeBlueprints: React.FC<OfficeBlueprintsProps> = ({ activeStakeh
             <div className="w-1.5 bg-orange-500/40 rounded-t h-[60%]" />
             <div className="w-1.5 bg-orange-500/20 rounded-t h-[30%]" />
           </div>
-          <span className="text-[7px] font-mono text-orange-300/80">KPI MANDATE STAKES</span>
+          <span className="text-[7px] font-mono text-orange-300/80 truncate">KPI MANDATE STAKES</span>
         </div>
       ),
     },
     {
       id: 'olivia_sec',
-      name: 'Information Security Operations Center (SOC)',
+      name: 'Information Security Ops Center',
       department: 'Cyber Security',
       description: 'Access monitor matrix, active threat visual maps, warning system LEDs.',
       x: 120,
       y: 100,
-      w: 180,
-      h: 150,
+      w: 195,
+      h: 155,
       color: 'from-red-500/20 to-red-600/5',
       accentGlow: 'rgba(225, 29, 72, 0.4)',
       icon: <Shield className="w-5 h-5 text-red-400" />,
       ambientContent: (
         <div className="absolute inset-0 flex flex-col justify-between p-3 select-none">
-          <div className="flex justify-between items-center">
-            <span className="text-[8px] font-mono text-red-400 font-bold tracking-wider">SOC_NODE_ALPHA</span>
-            <span className="px-1 py-0.2 rounded bg-red-500/20 text-[7px] text-red-400 font-bold border border-red-500/30 animate-pulse">SECURE</span>
+          <div className="flex justify-between items-center gap-2">
+            <span className="text-[8px] font-mono text-red-400 font-bold tracking-wider truncate">SOC_NODE_ALPHA</span>
+            <span className="px-1.5 py-0.5 rounded bg-red-500/20 text-[7px] text-red-400 font-bold border border-red-500/30 animate-pulse shrink-0">SECURE</span>
           </div>
           <div className="relative h-12 bg-black/30 border border-red-500/20 rounded flex items-center justify-center overflow-hidden">
             <div className="absolute w-full h-px bg-red-500/40 animate-scan-beam" style={{ animationDuration: '2s', animationIterationCount: 'infinite', animationTimingFunction: 'linear' }} />
@@ -134,7 +134,7 @@ export const OfficeBlueprints: React.FC<OfficeBlueprintsProps> = ({ activeStakeh
               ))}
             </div>
           </div>
-          <span className="text-[7px] font-mono text-red-300/80">ZERO-TRUST AUDIT PORTAL</span>
+          <span className="text-[7px] font-mono text-red-300/80 truncate">ZERO-TRUST AUDIT PORTAL</span>
         </div>
       ),
     },
@@ -145,26 +145,26 @@ export const OfficeBlueprints: React.FC<OfficeBlueprintsProps> = ({ activeStakeh
       description: 'Customer journey dashboard wall, elegant glass panels, presentation display.',
       x: -20,
       y: 200,
-      w: 160,
-      h: 130,
+      w: 185,
+      h: 140,
       color: 'from-purple-500/20 to-purple-600/5',
       accentGlow: 'rgba(147, 51, 234, 0.4)',
       icon: <CheckCircle className="w-5 h-5 text-purple-400" />,
       ambientContent: (
         <div className="absolute inset-0 flex flex-col justify-between p-3 select-none">
-          <div className="flex justify-between items-center">
-            <span className="text-[8px] font-mono text-purple-400 font-bold tracking-wider">CLIENT_VALUE</span>
-            <span className="text-[7px] text-purple-300 font-mono">SATISFACTION: 98%</span>
+          <div className="flex justify-between items-center gap-2">
+            <span className="text-[8px] font-mono text-purple-400 font-bold tracking-wider truncate">CLIENT_VALUE</span>
+            <span className="text-[7px] text-purple-300 font-mono shrink-0">98% SATISFACTION</span>
           </div>
           <div className="grid grid-cols-4 gap-1 p-1 bg-black/20 rounded border border-white/5">
             {[1, 2, 3, 4].map((v) => (
-              <div key={v} className="flex items-center space-x-1">
-                <div className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-                <span className="text-[6px] font-mono text-slate-400">V0{v}</span>
+              <div key={v} className="flex items-center space-x-1 min-w-0">
+                <div className="w-1.5 h-1.5 rounded-full bg-purple-400 shrink-0" />
+                <span className="text-[6px] font-mono text-slate-400 truncate">V0{v}</span>
               </div>
             ))}
           </div>
-          <span className="text-[7px] font-mono text-slate-500">Value Realization Lab</span>
+          <span className="text-[7px] font-mono text-slate-500 truncate">Value Realization Lab</span>
         </div>
       ),
     },
@@ -175,23 +175,23 @@ export const OfficeBlueprints: React.FC<OfficeBlueprintsProps> = ({ activeStakeh
       description: 'Digital whiteboard roadmap screens, strategic indicators, feedback boards.',
       x: -140,
       y: 100,
-      w: 190,
-      h: 150,
+      w: 205,
+      h: 155,
       color: 'from-yellow-500/20 to-yellow-600/5',
       accentGlow: 'rgba(234, 179, 8, 0.4)',
       icon: <Code className="w-5 h-5 text-yellow-400" />,
       ambientContent: (
         <div className="absolute inset-0 flex flex-col justify-between p-3 select-none">
-          <div className="flex justify-between items-center">
-            <span className="text-[8px] font-mono text-yellow-400 font-bold tracking-wider">DTO_ROADMAP // ACTIVE</span>
-            <span className="font-mono text-[7px] text-yellow-400/60">ACTIVE WORKPLACE</span>
+          <div className="flex justify-between items-center gap-2">
+            <span className="text-[8px] font-mono text-yellow-400 font-bold tracking-wider truncate">DTO_ROADMAP // ACTIVE</span>
+            <span className="font-mono text-[7px] text-yellow-400/60 shrink-0">ACTIVE</span>
           </div>
           <div className="font-mono text-[6px] text-yellow-300/50 space-y-0.5 overflow-hidden h-14 bg-black/20 p-1 rounded border border-white/5">
             <div className="truncate text-yellow-400/80">{`✓ Loading roadmap parameters`}</div>
             <div className="truncate">{`[system] Syncing DTO dashboard metrics`}</div>
             <div className="truncate text-emerald-400/70">{`Success: 6/6 Stakeholders connected`}</div>
           </div>
-          <span className="text-[8px] font-mono text-slate-500">Aarav & DTO</span>
+          <span className="text-[8px] font-mono text-slate-500 truncate">Aarav & DTO</span>
         </div>
       ),
     },
@@ -312,15 +312,13 @@ export const OfficeBlueprints: React.FC<OfficeBlueprintsProps> = ({ activeStakeh
                 />
 
                 {/* Inner Room Header */}
-                <div className="p-3 pb-1 flex items-start justify-between border-b border-white/5 bg-white/5">
-                  <div className="flex items-center space-x-2 shrink-0">
-                    <div className="p-1 rounded-lg bg-black/40 border border-white/15">
-                      {room.icon}
-                    </div>
-                    <div className="text-left">
-                      <div className="text-[10px] font-extrabold text-white tracking-tight">{room.name}</div>
-                      <div className="text-[8px] text-slate-400 font-semibold uppercase tracking-wider">{room.department}</div>
-                    </div>
+                <div className="p-3 pb-1 flex items-center gap-2 border-b border-white/5 bg-white/5 overflow-hidden">
+                  <div className="p-1 rounded-lg bg-black/40 border border-white/15 shrink-0">
+                    {room.icon}
+                  </div>
+                  <div className="text-left min-w-0 overflow-hidden">
+                    <div className="text-[10px] font-extrabold text-white tracking-tight truncate">{room.name}</div>
+                    <div className="text-[8px] text-slate-400 font-semibold uppercase tracking-wider truncate">{room.department}</div>
                   </div>
                 </div>
 
