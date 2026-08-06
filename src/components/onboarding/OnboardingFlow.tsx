@@ -28,143 +28,138 @@ declare global {
   }
 }
 
-// Stakeholders list for the cinematic tour
 const STAKEHOLDERS = [
   {
-    name: "Sarah",
+    name: "Marcus",
+    role: "Chief Technology Officer",
+    department: "Technology Leadership",
+    badge: "Technology Visionary",
+    voicePitch: -45,
+    quote: "Welcome to Brained.\nI'm Marcus, the Chief Technology Officer.\nI'll define where we're going...\nbut you'll decide how we get there.\nRemember...\nGood technology solves business problems.\nGreat technology prevents them.",
+    avatarSvg: (
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        <defs>
+          <radialGradient id="marcusGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#1e3a8a" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <circle cx="50%" cy="50%" r="45" fill="url(#marcusGlow)" />
+        <path d="M50 23c6.6 0 12 5.4 12 12s-5.4 12-12 12-12-5.4-12-12 5.4-12 12-12zm0 29c-15 0-27 8-27 18v5h54v-5c0-10-12-18-27-18z" fill="#dbeafe" />
+        <circle cx="50%" cy="15" r="3" fill="#3b82f6" />
+        <circle cx="20" cy="50" r="3" fill="#3b82f6" />
+        <circle cx="80" cy="50" r="3" fill="#3b82f6" />
+        <line x1="50" y1="15" x2="20" y2="50" stroke="#3b82f6" strokeWidth="1.2" />
+        <line x1="50" y1="15" x2="80" y2="50" stroke="#3b82f6" strokeWidth="1.2" />
+      </svg>
+    )
+  },
+  {
+    name: "Emma",
     role: "HR Director",
     department: "Human Resources",
     badge: "Employee Advocate",
-    voicePitch: 80,
-    quote: "Hi. I'm Sarah. I represent Human Resources. Employees rarely explain every problem. Ask the right questions.",
+    voicePitch: 90,
+    quote: "Hi.\nI'm Emma.\nI lead Human Resources.\nSystems don't fail because of software.\nThey fail because people were never understood.\nListen carefully.\nThe best requirements are often the ones nobody says aloud.",
     avatarSvg: (
       <svg viewBox="0 0 100 100" className="w-full h-full">
         <defs>
-          <radialGradient id="sarahGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#ec4899" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#db2777" stopOpacity="0" />
+          <radialGradient id="emmaGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#10b981" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#064e3b" stopOpacity="0" />
           </radialGradient>
         </defs>
-        <circle cx="50%" cy="50%" r="45" fill="url(#sarahGlow)" />
-        <path d="M50 25c7.7 0 14 6.3 14 14s-6.3 14-14 14-14-6.3-14-14 6.3-14 14-14zm0 32c-15.5 0-28 8.5-28 19v4h56v-4c0-10.5-12.5-19-28-19z" fill="#fbcfe8" />
-        <circle cx="50%" cy="39" r="22" stroke="#ec4899" strokeWidth="1" strokeDasharray="3 3" fill="none" />
-        <path d="M25 80 Q50 60 75 80" stroke="#f472b6" strokeWidth="1.5" fill="none" />
+        <circle cx="50%" cy="50%" r="45" fill="url(#emmaGlow)" />
+        <path d="M50 25c7.7 0 14 6.3 14 14s-6.3 14-14 14-14-6.3-14-14 6.3-14 14-14zm0 32c-15.5 0-28 8.5-28 19v4h56v-4c0-10.5-12.5-19-28-19z" fill="#d1fae5" />
+        <circle cx="50%" cy="39" r="22" stroke="#10b981" strokeWidth="1.2" strokeDasharray="3 3" fill="none" />
+        <path d="M25 80 Q50 62 75 80" stroke="#34d399" strokeWidth="1.5" fill="none" />
       </svg>
     )
   },
   {
-    name: "Raj",
+    name: "Daniel",
     role: "Business Head",
-    department: "Business",
+    department: "Business Strategy",
     badge: "Outcome Driven",
-    voicePitch: -30,
-    quote: "I'm Raj. I care about outcomes. The Board doesn't buy excuses. Keep me informed.",
+    voicePitch: 15,
+    quote: "Daniel.\nBusiness Strategy.\nEvery delay costs money.\nEvery decision has consequences.\nKeep me informed...\nbefore I have to ask.",
     avatarSvg: (
       <svg viewBox="0 0 100 100" className="w-full h-full">
         <defs>
-          <radialGradient id="rajGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+          <radialGradient id="danielGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#f97316" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#7c2d12" stopOpacity="0" />
           </radialGradient>
         </defs>
-        <circle cx="50%" cy="50%" r="45" fill="url(#rajGlow)" />
-        <path d="M50 22c6.6 0 12 5.4 12 12s-5.4 12-12 12-12-5.4-12-12 5.4-12 12-12zm-22 50c0-9.9 9.8-18 22-18s22 8.1 22 18v5H28v-5zm22-15v-6h4" fill="#fef3c7" stroke="#fbbf24" strokeWidth="0.5" />
-        <rect x="25" y="25" width="50" height="50" stroke="#f59e0b" strokeWidth="0.8" strokeDasharray="5 5" fill="none" />
-        <line x1="20" y1="50" x2="80" y2="50" stroke="#f59e0b" strokeWidth="0.5" />
-      </svg>
-    )
-  },
-  {
-    name: "Ethan",
-    role: "Lead Developer",
-    department: "Technology",
-    badge: "Precision Builder",
-    voicePitch: 10,
-    quote: "I'm Ethan. Give me clear requirements. I build exactly what you communicate.",
-    avatarSvg: (
-      <svg viewBox="0 0 100 100" className="w-full h-full">
-        <defs>
-          <radialGradient id="ethanGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#0284c7" stopOpacity="0" />
-          </radialGradient>
-        </defs>
-        <circle cx="50%" cy="50%" r="45" fill="url(#ethanGlow)" />
-        <path d="M50 24c7 0 12.5 5.5 12.5 12.5S57 49 50 49s-12.5-5.5-12.5-12.5S43 24 50 24zm0 29c-14.5 0-26 7.5-26 17v5h52v-5c0-9.5-11.5-17-26-17z" fill="#e0f2fe" />
-        <rect x="36" y="32" width="10" height="6" rx="1" fill="none" stroke="#38bdf8" strokeWidth="1.5" />
-        <rect x="54" y="32" width="10" height="6" rx="1" fill="none" stroke="#38bdf8" strokeWidth="1.5" />
-        <line x1="46" y1="35" x2="54" y2="35" stroke="#38bdf8" strokeWidth="1.5" />
-        <path d="M15 15 L25 15 L25 25" stroke="#0ea5e9" strokeWidth="1.5" fill="none" />
-        <path d="M85 85 L75 85 L75 75" stroke="#0ea5e9" strokeWidth="1.5" fill="none" />
+        <circle cx="50%" cy="50%" r="45" fill="url(#danielGlow)" />
+        <path d="M50 22c6.6 0 12 5.4 12 12s-5.4 12-12 12-12-5.4-12-12 5.4-12 12-12zm-22 50c0-9.9 9.8-18 22-18s22 8.1 22 18v5H28v-5zm22-15v-6h4" fill="#ffedd5" stroke="#f97316" strokeWidth="0.8" />
+        <rect x="25" y="25" width="50" height="50" stroke="#f97316" strokeWidth="1.0" strokeDasharray="5 5" fill="none" />
+        <line x1="20" y1="50" x2="80" y2="50" stroke="#f97316" strokeWidth="0.8" />
       </svg>
     )
   },
   {
     name: "Olivia",
-    role: "Head of InfoSec",
-    department: "Information Security",
-    badge: "Security First",
+    role: "Information Security Lead",
+    department: "Cyber Security",
+    badge: "Guardian of Trust",
     voicePitch: 60,
-    quote: "I'm Olivia. One ignored security issue can stop an entire transformation.",
+    quote: "I'm Olivia.\nInformation Security.\nOne overlooked vulnerability...\ncan destroy months of work.\nBuild quickly.\nBut secure it first.",
     avatarSvg: (
       <svg viewBox="0 0 100 100" className="w-full h-full">
         <defs>
           <radialGradient id="oliviaGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#be123c" stopOpacity="0" />
+            <stop offset="0%" stopColor="#e11d48" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#4c0519" stopOpacity="0" />
           </radialGradient>
         </defs>
         <circle cx="50%" cy="50%" r="45" fill="url(#oliviaGlow)" />
         <path d="M50 26c6 0 11 5 11 11s-5 11-11 11-11-5-11-11 5-11 11-11zm0 27c-13 0-24 7-24 16v5h48v-5c0-9-11-16-24-16z" fill="#ffe4e6" />
-        <path d="M50 15 L80 25 L80 50 C80 68 67 80 50 85 C33 80 20 68 20 50 L20 25 Z" stroke="#f43f5e" strokeWidth="1" fill="none" strokeDasharray="4 2" />
+        <path d="M50 15 L80 25 L80 50 C80 68 67 80 50 85 C33 80 20 68 20 50 L20 25 Z" stroke="#e11d48" strokeWidth="1.2" fill="none" strokeDasharray="4 2" />
       </svg>
     )
   },
   {
-    name: "David",
-    role: "QA Manager",
-    department: "Quality Assurance",
-    badge: "Nothing Escapes Testing",
-    voicePitch: -10,
-    quote: "I'm David. If something is missing, I'll find it.",
+    name: "Sophia",
+    role: "Client Relationship Manager",
+    department: "Business Value",
+    badge: "Client Champion",
+    voicePitch: 35,
+    quote: "I'm Sophia.\nEvery feature we build...\nmust create value for someone.\nClients won't remember our effort.\nThey'll remember the experience we deliver.",
     avatarSvg: (
       <svg viewBox="0 0 100 100" className="w-full h-full">
         <defs>
-          <radialGradient id="davidGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#10b981" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#047857" stopOpacity="0" />
+          <radialGradient id="sophiaGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#9333ea" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#3b0764" stopOpacity="0" />
           </radialGradient>
         </defs>
-        <circle cx="50%" cy="50%" r="45" fill="url(#davidGlow)" />
-        <path d="M50 25c7 0 12 5 12 12s-5 12-12 12-12-5-12-12 5-12 12-12zm-20 48c0-8 9-15 20-15s20 7 20 15v5H30v-5z" fill="#d1fae5" />
-        <circle cx="50%" cy="50%" r="30" stroke="#10b981" strokeWidth="0.8" fill="none" />
-        <line x1="50" y1="10" x2="50" y2="90" stroke="#10b981" strokeWidth="0.5" strokeDasharray="3 3" />
-        <line x1="10" y1="50" x2="90" y2="50" stroke="#10b981" strokeWidth="0.5" strokeDasharray="3 3" />
+        <circle cx="50%" cy="50%" r="45" fill="url(#sophiaGlow)" />
+        <path d="M50 23c6.6 0 12 5.4 12 12s-5.4 12-12 12-12-5.4-12-12 5.4-12 12-12zm-20 48c0-8 9-15 20-15s20 7 20 15v5H30v-5z" fill="#f3e8ff" />
+        <circle cx="50%" cy="50%" r="30" stroke="#9333ea" strokeWidth="1" fill="none" strokeDasharray="4 4" />
       </svg>
     )
   },
   {
-    name: "Michael",
-    role: "Chief Technology Officer",
-    department: "Executive Leadership",
-    badge: "Technology Visionary",
-    voicePitch: -40,
-    quote: "You're leading this engagement. We're counting on you.",
+    name: "Aarav",
+    role: "Transformation Mentor",
+    department: "Digital Transformation Office",
+    badge: "Transformation Mentor",
+    voicePitch: -15,
+    quote: "Welcome.\nI'm Aarav.\nI've watched hundreds of transformations succeed...\nand even more fail.\nThe difference isn't intelligence.\nIt's judgment.\nThat's what you'll be tested on today.",
     avatarSvg: (
       <svg viewBox="0 0 100 100" className="w-full h-full">
         <defs>
-          <radialGradient id="michaelGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#6d28d9" stopOpacity="0" />
+          <radialGradient id="aaravGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#eab308" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#451a03" stopOpacity="0" />
           </radialGradient>
         </defs>
-        <circle cx="50%" cy="50%" r="45" fill="url(#michaelGlow)" />
-        <path d="M50 23c6.6 0 12 5.4 12 12s-5.4 12-12 12-12-5.4-12-12 5.4-12 12-12zm0 29c-15 0-27 8-27 18v5h54v-5c0-10-12-18-27-18z" fill="#ede9fe" />
-        <circle cx="50%" cy="15" r="3" fill="#8b5cf6" />
-        <circle cx="20" cy="50" r="3" fill="#8b5cf6" />
-        <circle cx="80" cy="50" r="3" fill="#8b5cf6" />
-        <line x1="50" y1="15" x2="20" y2="50" stroke="#8b5cf6" strokeWidth="1" />
-        <line x1="50" y1="15" x2="80" y2="50" stroke="#8b5cf6" strokeWidth="1" />
+        <circle cx="50%" cy="50%" r="45" fill="url(#aaravGlow)" />
+        <path d="M50 24c7 0 12.5 5.5 12.5 12.5S57 49 50 49s-12.5-5.5-12.5-12.5S43 24 50 24zm0 29c-14.5 0-26 7.5-26 17v5h52v-5c0-9-11-17-26-17z" fill="#fef9c3" />
+        <path d="M15 15 L25 15 L25 25" stroke="#eab308" strokeWidth="1.5" fill="none" />
+        <path d="M85 85 L75 85 L75 75" stroke="#eab308" strokeWidth="1.5" fill="none" />
+        <circle cx="50%" cy="50%" r="20" stroke="#eab308" strokeWidth="0.8" strokeDasharray="4 2" fill="none" />
       </svg>
     )
   }
@@ -923,15 +918,10 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
                       transition={{ duration: 1.0 }}
                       className="space-y-6"
                     >
-                      <span className="text-[10px] font-mono text-rose-500 font-extrabold tracking-[0.4em] uppercase">MANDATE CRITICAL</span>
-                      <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight font-serif italic">
-                        Project Titan.
+                      <span className="text-[10px] font-mono text-amber-500 font-extrabold tracking-[0.4em] uppercase">DECISION PROTOCOL</span>
+                      <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight font-sans">
+                        Every transformation begins with a decision.
                       </h2>
-                      <p className="text-sm sm:text-base text-slate-300 font-light max-w-xl mx-auto leading-relaxed">
-                        Brained's highest priority enterprise transformation. <br />
-                        The Board Review begins in three fictional weeks. <br />
-                        Every conversation, every decision, every document will shape the outcome.
-                      </p>
                     </motion.div>
                   ) : (
                     <motion.div 
@@ -942,14 +932,10 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
                       transition={{ duration: 1.0 }}
                       className="space-y-6"
                     >
-                      <span className="text-[10px] font-mono text-slate-500 font-extrabold tracking-[0.4em] uppercase">DECISION PROTOCOL</span>
-                      <h2 className="text-3xl sm:text-4xl font-light text-white leading-relaxed font-sans max-w-xl mx-auto">
-                        The Board will not judge <br />
-                        your luck.
+                      <span className="text-[10px] font-mono text-sky-500 font-extrabold tracking-[0.4em] uppercase">CLEARANCE APPROVED</span>
+                      <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight font-sans">
+                        Today, every decision is yours.
                       </h2>
-                      <p className="text-base sm:text-lg font-bold text-sky-400 uppercase tracking-widest font-mono">
-                        They will judge your decisions.
-                      </p>
                     </motion.div>
                   )}
                 </AnimatePresence>

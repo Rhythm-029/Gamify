@@ -24,7 +24,33 @@ export interface OfficeRoom {
 export const OfficeBlueprints: React.FC<OfficeBlueprintsProps> = ({ activeStakeholderIndex }) => {
   const rooms: OfficeRoom[] = [
     {
-      id: 'sarah_hr',
+      id: 'marcus_cto',
+      name: 'Executive Leadership Hub',
+      department: 'Technology Leadership',
+      description: 'Spacious high-end office, private discussion space, glass Brained branding panel.',
+      x: 0,
+      y: -220,
+      w: 220,
+      h: 150,
+      color: 'from-blue-500/20 to-blue-600/5',
+      accentGlow: 'rgba(59, 130, 246, 0.4)',
+      icon: <Award className="w-5 h-5 text-blue-400" />,
+      ambientContent: (
+        <div className="absolute inset-0 flex flex-col justify-between p-3 select-none">
+          <div className="flex justify-between items-center">
+            <span className="text-[8px] font-mono text-blue-400 font-bold tracking-wider">EXECUTIVE_SUITE</span>
+            <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+          </div>
+          <div className="flex flex-col items-center justify-center py-1">
+            <span className="text-[14px] font-black text-white/40 tracking-wider">BRAINED</span>
+            <span className="text-[6px] text-blue-400 font-mono tracking-widest uppercase">CONSULTING HQ</span>
+          </div>
+          <span className="text-[8px] font-mono text-slate-500 text-center">CTO marcus@brained.com</span>
+        </div>
+      ),
+    },
+    {
+      id: 'emma_hr',
       name: 'Human Resources Suite',
       department: 'Human Resources',
       description: 'Glass-walled meeting room, digital whiteboard, collaborative layouts.',
@@ -32,173 +58,140 @@ export const OfficeBlueprints: React.FC<OfficeBlueprintsProps> = ({ activeStakeh
       y: -120,
       w: 160,
       h: 140,
-      color: 'from-pink-500/20 to-pink-600/5',
-      accentGlow: 'rgba(236, 72, 153, 0.4)',
-      icon: <Users className="w-5 h-5 text-pink-400" />,
+      color: 'from-emerald-500/20 to-emerald-600/5',
+      accentGlow: 'rgba(16, 185, 129, 0.4)',
+      icon: <Users className="w-5 h-5 text-emerald-400" />,
       ambientContent: (
         <div className="absolute inset-0 flex flex-col justify-between p-3 select-none">
           <div className="flex justify-between items-center">
-            <span className="text-[8px] font-mono text-pink-400 font-bold tracking-wider">COLLABORATION ZONE</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-pink-400 animate-pulse" />
+            <span className="text-[8px] font-mono text-emerald-400 font-bold tracking-wider">COLLABORATION ZONE</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           </div>
-          {/* Animated whiteboard representation */}
           <div className="w-full bg-white/5 border border-white/10 rounded p-1.5 space-y-1">
-            <div className="h-1 bg-pink-500/40 rounded w-3/4" />
+            <div className="h-1 bg-emerald-500/40 rounded w-3/4" />
             <div className="h-1 bg-white/10 rounded w-1/2" />
             <div className="h-1 bg-white/10 rounded w-5/6" />
           </div>
-          <span className="text-[8px] font-mono text-slate-500 text-right">Sarah\'s Desk</span>
+          <span className="text-[8px] font-mono text-slate-500 text-right">Emma's Desk</span>
         </div>
       ),
     },
     {
-      id: 'raj_biz',
+      id: 'daniel_biz',
       name: 'Business Development Boardroom',
-      department: 'Business',
+      department: 'Business Strategy',
       description: 'Smart presentation display screens, analytical charts, executive seating.',
       x: 120,
       y: -120,
       w: 180,
       h: 140,
-      color: 'from-amber-500/20 to-amber-600/5',
-      accentGlow: 'rgba(245, 158, 11, 0.4)',
-      icon: <Briefcase className="w-5 h-5 text-amber-400" />,
+      color: 'from-orange-500/20 to-orange-600/5',
+      accentGlow: 'rgba(249, 115, 22, 0.4)',
+      icon: <Briefcase className="w-5 h-5 text-orange-400" />,
       ambientContent: (
         <div className="absolute inset-0 flex flex-col justify-between p-3 select-none">
           <div className="flex justify-between items-center">
-            <span className="text-[8px] font-mono text-amber-400 font-bold tracking-wider">BOARDROOM B</span>
+            <span className="text-[8px] font-mono text-orange-400 font-bold tracking-wider">BOARDROOM B</span>
             <div className="flex space-x-0.5">
-              <span className="w-1 h-1 rounded-full bg-amber-400 animate-ping" />
-              <span className="w-1 h-1 rounded-full bg-amber-400" />
+              <span className="w-1 h-1 rounded-full bg-orange-400 animate-ping" />
+              <span className="w-1 h-1 rounded-full bg-orange-400" />
             </div>
           </div>
-          {/* Analytical charts ticker */}
           <div className="flex items-end justify-between px-2 h-10 border-b border-white/10 pb-1">
-            <div className="w-1.5 bg-amber-500/30 rounded-t h-[40%]" />
-            <div className="w-1.5 bg-amber-500/50 rounded-t h-[70%]" />
-            <div className="w-1.5 bg-amber-400 rounded-t h-[90%] animate-pulse" />
-            <div className="w-1.5 bg-amber-500/40 rounded-t h-[60%]" />
-            <div className="w-1.5 bg-amber-500/20 rounded-t h-[30%]" />
+            <div className="w-1.5 bg-orange-500/30 rounded-t h-[40%]" />
+            <div className="w-1.5 bg-orange-500/50 rounded-t h-[70%]" />
+            <div className="w-1.5 bg-orange-400 rounded-t h-[90%] animate-pulse" />
+            <div className="w-1.5 bg-orange-500/40 rounded-t h-[60%]" />
+            <div className="w-1.5 bg-orange-500/20 rounded-t h-[30%]" />
           </div>
-          <span className="text-[7px] font-mono text-amber-300/80">KPI MANDATE STAKES</span>
-        </div>
-      ),
-    },
-    {
-      id: 'ethan_tech',
-      name: 'Technology & Development Center',
-      department: 'Technology',
-      description: 'Dual-monitor developer setups, local build servers, matrix screen glows.',
-      x: -140,
-      y: 100,
-      w: 190,
-      h: 150,
-      color: 'from-sky-500/20 to-sky-600/5',
-      accentGlow: 'rgba(56, 189, 248, 0.4)',
-      icon: <Code className="w-5 h-5 text-sky-400" />,
-      ambientContent: (
-        <div className="absolute inset-0 flex flex-col justify-between p-3 select-none">
-          <div className="flex justify-between items-center">
-            <span className="text-[8px] font-mono text-sky-400 font-bold tracking-wider">DEV_HQ // TERMINAL</span>
-            <span className="font-mono text-[7px] text-sky-400/60">PING: 14ms</span>
-          </div>
-          {/* Matrix code lines representation */}
-          <div className="font-mono text-[6px] text-sky-300/50 space-y-0.5 overflow-hidden h-14 bg-black/20 p-1 rounded border border-white/5">
-            <div className="truncate text-emerald-400/70">{`$ yarn build --prod`}</div>
-            <div className="truncate text-sky-400/80">{`✓ Bundling components (4.2s)`}</div>
-            <div className="truncate">{`[webpack] Compiled successfully.`}</div>
-            <div className="truncate text-yellow-400/85">{`⚠ Deprecation: use postcss-loader v4`}</div>
-          </div>
-          <span className="text-[8px] font-mono text-slate-500">Ethan & Team</span>
+          <span className="text-[7px] font-mono text-orange-300/80">KPI MANDATE STAKES</span>
         </div>
       ),
     },
     {
       id: 'olivia_sec',
       name: 'Information Security Operations Center (SOC)',
-      department: 'Information Security',
+      department: 'Cyber Security',
       description: 'Access monitor matrix, active threat visual maps, warning system LEDs.',
       x: 120,
       y: 100,
       w: 180,
       h: 150,
-      color: 'from-rose-500/20 to-rose-600/5',
-      accentGlow: 'rgba(244, 63, 94, 0.4)',
-      icon: <Shield className="w-5 h-5 text-rose-400" />,
+      color: 'from-red-500/20 to-red-600/5',
+      accentGlow: 'rgba(225, 29, 72, 0.4)',
+      icon: <Shield className="w-5 h-5 text-red-400" />,
       ambientContent: (
         <div className="absolute inset-0 flex flex-col justify-between p-3 select-none">
           <div className="flex justify-between items-center">
-            <span className="text-[8px] font-mono text-rose-400 font-bold tracking-wider">SOC_NODE_ALPHA</span>
-            <span className="px-1 py-0.2 rounded bg-rose-500/20 text-[7px] text-rose-400 font-bold border border-rose-500/30 animate-pulse">SECURE</span>
+            <span className="text-[8px] font-mono text-red-400 font-bold tracking-wider">SOC_NODE_ALPHA</span>
+            <span className="px-1 py-0.2 rounded bg-red-500/20 text-[7px] text-red-400 font-bold border border-red-500/30 animate-pulse">SECURE</span>
           </div>
-          {/* Threat scanning layout grid */}
-          <div className="relative h-12 bg-black/30 border border-rose-500/20 rounded flex items-center justify-center overflow-hidden">
-            <div className="absolute w-full h-px bg-rose-500/40 animate-scan-beam" style={{ animationDuration: '2s', animationIterationCount: 'infinite', animationTimingFunction: 'linear' }} />
+          <div className="relative h-12 bg-black/30 border border-red-500/20 rounded flex items-center justify-center overflow-hidden">
+            <div className="absolute w-full h-px bg-red-500/40 animate-scan-beam" style={{ animationDuration: '2s', animationIterationCount: 'infinite', animationTimingFunction: 'linear' }} />
             <div className="grid grid-cols-6 gap-0.5 opacity-40">
               {Array.from({ length: 12 }).map((_, i) => (
-                <div key={i} className={`w-1.5 h-1.5 rounded-sm ${i === 3 || i === 8 ? 'bg-rose-500 animate-ping' : 'bg-rose-950'}`} />
+                <div key={i} className={`w-1.5 h-1.5 rounded-sm ${i === 3 || i === 8 ? 'bg-red-500 animate-ping' : 'bg-red-950'}`} />
               ))}
             </div>
           </div>
-          <span className="text-[7px] font-mono text-rose-300/80">ZERO-TRUST AUDIT PORTAL</span>
+          <span className="text-[7px] font-mono text-red-300/80">ZERO-TRUST AUDIT PORTAL</span>
         </div>
       ),
     },
     {
-      id: 'david_qa',
-      name: 'Quality Assurance Lab',
-      department: 'Quality Assurance',
-      description: 'Automation test dashboard screens, green verification checklist arrays.',
+      id: 'sophia_val',
+      name: 'Client Collaboration Room',
+      department: 'Business Value',
+      description: 'Customer journey dashboard wall, elegant glass panels, presentation display.',
       x: -20,
       y: 200,
       w: 160,
       h: 130,
-      color: 'from-emerald-500/20 to-emerald-600/5',
-      accentGlow: 'rgba(16, 185, 129, 0.4)',
-      icon: <CheckCircle className="w-5 h-5 text-emerald-400" />,
+      color: 'from-purple-500/20 to-purple-600/5',
+      accentGlow: 'rgba(147, 51, 234, 0.4)',
+      icon: <CheckCircle className="w-5 h-5 text-purple-400" />,
       ambientContent: (
         <div className="absolute inset-0 flex flex-col justify-between p-3 select-none">
           <div className="flex justify-between items-center">
-            <span className="text-[8px] font-mono text-emerald-400 font-bold tracking-wider">QA_AUTOMATION</span>
-            <span className="text-[7px] text-emerald-300 font-mono">PASS RATE: 100%</span>
+            <span className="text-[8px] font-mono text-purple-400 font-bold tracking-wider">CLIENT_VALUE</span>
+            <span className="text-[7px] text-purple-300 font-mono">SATISFACTION: 98%</span>
           </div>
-          {/* Green check grid */}
           <div className="grid grid-cols-4 gap-1 p-1 bg-black/20 rounded border border-white/5">
             {[1, 2, 3, 4].map((v) => (
               <div key={v} className="flex items-center space-x-1">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span className="text-[6px] font-mono text-slate-400">T0{v}</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                <span className="text-[6px] font-mono text-slate-400">V0{v}</span>
               </div>
             ))}
           </div>
-          <span className="text-[7px] font-mono text-slate-500">Regression Workspace</span>
+          <span className="text-[7px] font-mono text-slate-500">Value Realization Lab</span>
         </div>
       ),
     },
     {
-      id: 'michael_cto',
-      name: 'Executive Leadership Hub',
-      department: 'Executive Leadership',
-      description: 'Spacious high-end office, private discussion space, glass Brained branding panel.',
-      x: 0,
-      y: -220,
-      w: 220,
+      id: 'aarav_dto',
+      name: 'Transformation Strategy Center',
+      department: 'Digital Transformation Office',
+      description: 'Digital whiteboard roadmap screens, strategic indicators, feedback boards.',
+      x: -140,
+      y: 100,
+      w: 190,
       h: 150,
-      color: 'from-violet-500/20 to-violet-600/5',
-      accentGlow: 'rgba(139, 92, 246, 0.4)',
-      icon: <Award className="w-5 h-5 text-violet-400" />,
+      color: 'from-yellow-500/20 to-yellow-600/5',
+      accentGlow: 'rgba(234, 179, 8, 0.4)',
+      icon: <Code className="w-5 h-5 text-yellow-400" />,
       ambientContent: (
         <div className="absolute inset-0 flex flex-col justify-between p-3 select-none">
           <div className="flex justify-between items-center">
-            <span className="text-[8px] font-mono text-violet-400 font-bold tracking-wider">EXECUTIVE_SUITE</span>
-            <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
+            <span className="text-[8px] font-mono text-yellow-400 font-bold tracking-wider">DTO_ROADMAP // ACTIVE</span>
+            <span className="font-mono text-[7px] text-yellow-400/60">ACTIVE WORKPLACE</span>
           </div>
-          {/* Glowing Brained Logo */}
-          <div className="flex flex-col items-center justify-center py-1">
-            <span className="text-[14px] font-black text-white/40 tracking-wider">BRAINED</span>
-            <span className="text-[6px] text-violet-400 font-mono tracking-widest uppercase">CONSULTING HQ</span>
+          <div className="font-mono text-[6px] text-yellow-300/50 space-y-0.5 overflow-hidden h-14 bg-black/20 p-1 rounded border border-white/5">
+            <div className="truncate text-yellow-400/80">{`✓ Loading roadmap parameters`}</div>
+            <div className="truncate">{`[system] Syncing DTO dashboard metrics`}</div>
+            <div className="truncate text-emerald-400/70">{`Success: 6/6 Stakeholders connected`}</div>
           </div>
-          <span className="text-[8px] font-mono text-slate-500 text-center">CTO michael.chen@brained.com</span>
+          <span className="text-[8px] font-mono text-slate-500">Aarav & DTO</span>
         </div>
       ),
     },
