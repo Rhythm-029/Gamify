@@ -125,7 +125,7 @@ export const INITIAL_PLAYER_STATE = {
 export const STAKEHOLDERS: Stakeholder[] = [
   {
     id: "boss",
-    name: "Marcus Boss",
+    name: "Marcus",
     role: "Chief Technology Officer (CTO)",
     avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=250",
     trustLevel: 78,
@@ -139,8 +139,8 @@ export const STAKEHOLDERS: Stakeholder[] = [
   },
   {
     id: "marshal",
-    name: "Elena Marshal",
-    role: "Chief Human Resources Officer (CHRO)",
+    name: "Emma",
+    role: "HR Director",
     avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=250",
     trustLevel: 88,
     mood: "Enthusiastic",
@@ -153,8 +153,8 @@ export const STAKEHOLDERS: Stakeholder[] = [
   },
   {
     id: "knox",
-    name: "David Knox",
-    role: "Head of Information Security (CISO)",
+    name: "Olivia",
+    role: "Information Security Lead",
     avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=250",
     trustLevel: 62,
     mood: "Skeptical",
@@ -166,44 +166,58 @@ export const STAKEHOLDERS: Stakeholder[] = [
     badgeCode: "K"
   },
   {
-    id: "missy",
-    name: "Missy Chen",
-    role: "VP of Finance & Procurement",
-    avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=250",
+    id: "daniel",
+    name: "Daniel",
+    role: "Business Head",
+    avatar: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=250",
     trustLevel: 70,
     mood: "Critical",
     status: "In a Meeting",
     pendingRequest: "Needs ROI justification breakdown for cloud SaaS licenses.",
     recentQuote: "Scope creep will trigger a 15% budget penalty if unmonitored.",
     influence: "High",
-    department: "Finance",
-    badgeCode: "Ms"
+    department: "Business Strategy",
+    badgeCode: "D"
   },
   {
-    id: "lead_dev",
-    name: "Tariq Dev",
-    role: "Lead Software Architect",
-    avatar: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=250",
-    trustLevel: 92,
+    id: "sophia",
+    name: "Sophia",
+    role: "Client Relationship Manager",
+    avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=250",
+    trustLevel: 82,
     mood: "Supportive",
     status: "Online",
-    pendingRequest: "Needs final decision on SSO OAuth2 provider architecture.",
-    recentQuote: "The microservices are ready; we just need clear API specs.",
-    influence: "Medium",
-    department: "Engineering",
-    badgeCode: "T"
+    pendingRequest: "Wants customer journey validation benchmarks configured.",
+    recentQuote: "Every feature we build must create tangible client experience value.",
+    influence: "High",
+    department: "Business Value",
+    badgeCode: "S"
+  },
+  {
+    id: "aarav",
+    name: "Aarav",
+    role: "Transformation Mentor",
+    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=250",
+    trustLevel: 95,
+    mood: "Neutral",
+    status: "Online",
+    pendingRequest: "Reviewing weekly roadmap logs.",
+    recentQuote: "Transformations fail not from lack of intelligence, but from lack of judgment.",
+    influence: "Critical",
+    department: "Digital Transformation Office",
+    badgeCode: "A"
   }
 ];
 
 export const EMAILS: Email[] = [
   {
     id: "email-1",
-    sender: "David Knox (CISO)",
-    senderRole: "Head of InfoSec",
+    sender: "Olivia",
+    senderRole: "Information Security Lead",
     senderAvatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=250",
     subject: "URGENT: Third-Party Authentication Audit for HR Portal",
     snippet: "We flagged potential zero-day vulnerabilities in the proposed auth SDK...",
-    body: `Alex,\n\nOur automated security scanner picked up critical audit flags on the proposed third-party OAuth provider for the new HR Transformation portal.\n\nPlease ensure the architecture documentation is updated with multi-factor encryption layers prior to our steering check tomorrow.\n\nRegards,\nDavid Knox\nInfoSec Division`,
+    body: `Alex,\n\nOur automated security scanner picked up critical audit flags on the proposed third-party OAuth provider for the new HR Transformation portal.\n\nPlease ensure the architecture documentation is updated with multi-factor encryption layers prior to our steering check tomorrow.\n\nRegards,\nOlivia\nInfoSec Division`,
     timestamp: "09:42 AM",
     read: false,
     priority: "High",
@@ -212,12 +226,12 @@ export const EMAILS: Email[] = [
   },
   {
     id: "email-2",
-    sender: "Elena Marshal (CHRO)",
-    senderRole: "Chief HR Officer",
+    sender: "Emma",
+    senderRole: "HR Director",
     senderAvatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=250",
     subject: "RE: Onboarding Workflow & User Journey Feedback",
     snippet: "The executive team reviewed the initial wireframes and loved the simplicity...",
-    body: `Hi Alex,\n\nGreat work on yesterday's kickoff presentation. The regional HR directors loved the interactive self-service portal roadmap.\n\nCould we add a quick video greeting component for new hires on day 1?\n\nBest,\nElena`,
+    body: `Hi Alex,\n\nGreat work on yesterday's kickoff presentation. The regional HR directors loved the interactive self-service portal roadmap.\n\nCould we add a quick video greeting component for new hires on day 1?\n\nBest,\nEmma\nHR Director`,
     timestamp: "08:15 AM",
     read: false,
     priority: "Medium",
@@ -225,7 +239,7 @@ export const EMAILS: Email[] = [
   },
   {
     id: "email-3",
-    sender: "Marcus Boss (CTO)",
+    sender: "Marcus",
     senderRole: "Chief Technology Officer",
     senderAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=250",
     subject: "Steering Committee MOM & RAID Log Approval",
