@@ -3,6 +3,17 @@ import { Mail, Search, Paperclip, Send, AlertCircle, Folder } from 'lucide-react
 import { OS_MAILS } from '../../data/brainedOSData';
 import type { MailItem } from '../../data/brainedOSData';
 
+const getMailColor = (sender: string) => {
+  const clean = sender.toLowerCase();
+  if (clean.includes('marcus')) return { text: 'text-blue-400', border: 'border-blue-500/40', bg: 'bg-blue-500/10', borderL: 'border-l-blue-500' };
+  if (clean.includes('emma')) return { text: 'text-emerald-400', border: 'border-emerald-500/40', bg: 'bg-emerald-500/10', borderL: 'border-l-emerald-500' };
+  if (clean.includes('daniel')) return { text: 'text-orange-400', border: 'border-orange-500/40', bg: 'bg-orange-500/10', borderL: 'border-l-orange-500' };
+  if (clean.includes('olivia')) return { text: 'text-red-400', border: 'border-red-500/40', bg: 'bg-red-500/10', borderL: 'border-l-red-500' };
+  if (clean.includes('sophia')) return { text: 'text-purple-400', border: 'border-purple-500/40', bg: 'bg-purple-500/10', borderL: 'border-l-purple-500' };
+  if (clean.includes('aarav')) return { text: 'text-yellow-400', border: 'border-yellow-500/40', bg: 'bg-yellow-500/10', borderL: 'border-l-yellow-500' };
+  return { text: 'text-sky-400', border: 'border-sky-500/40', bg: 'bg-sky-500/10', borderL: 'border-l-sky-500' };
+};
+
 export const AppleMailApp: React.FC = () => {
   const [mails, setMails] = useState<MailItem[]>(OS_MAILS);
   const [selectedMail, setSelectedMail] = useState<MailItem>(OS_MAILS[0]);
@@ -72,7 +83,7 @@ export const AppleMailApp: React.FC = () => {
             onClick={() => handleSelect(mail)}
             className={`p-4 cursor-pointer transition-colors ${
               selectedMail.id === mail.id
-                ? 'bg-sky-600/20 border-l-4 border-sky-500'
+                ? `${getMailColor(mail.sender).bg} border-l-4 ${getMailColor(mail.sender).borderL}`
                 : mail.read
                 ? 'bg-transparent hover:bg-white/5 opacity-80'
                 : 'bg-slate-900/60 hover:bg-white/5 font-semibold'
@@ -99,15 +110,15 @@ export const AppleMailApp: React.FC = () => {
         <div className="pb-4 border-b border-white/10 mb-6">
           <div className="flex justify-between items-start mb-4">
             <h2 className="text-lg font-bold text-white">{selectedMail.subject}</h2>
-            <span className="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 text-[10px] font-mono">
+            <span className={`px-2 py-0.5 rounded ${getMailColor(selectedMail.sender).bg} ${getMailColor(selectedMail.sender).text} text-[10px] font-mono`}>
               {selectedMail.priority} Priority
             </span>
           </div>
 
           <div className="flex items-center space-x-3">
-            <img src={selectedMail.senderAvatar} alt={selectedMail.sender} className="w-10 h-10 rounded-full object-cover border border-white/10" />
+            <img src={selectedMail.senderAvatar} alt={selectedMail.sender} className={`w-10 h-10 rounded-full object-cover border-2 ${getMailColor(selectedMail.sender).border}`} />
             <div>
-              <div className="text-sm font-semibold text-white">{selectedMail.sender}</div>
+              <div className={`text-sm font-semibold ${getMailColor(selectedMail.sender).text}`}>{selectedMail.sender}</div>
               <div className="text-xs text-slate-400">{selectedMail.senderRole} • &lt;{selectedMail.email}&gt;</div>
             </div>
           </div>

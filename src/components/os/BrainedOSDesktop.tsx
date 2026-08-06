@@ -94,7 +94,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
           id: "notif-teams-1",
           app: "Teams",
           title: "Microsoft Teams • Incoming Video Call",
-          subtitle: "Michael Chen (CTO)",
+          subtitle: "Marcus (CTO)",
           body: "Project Titan Kickoff Briefing — Please join immediately.",
           timestamp: "Just now",
           actionText: "Accept Call",

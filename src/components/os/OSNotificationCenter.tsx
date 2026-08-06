@@ -25,10 +25,14 @@ export const OSNotificationCenter: React.FC<OSNotificationCenterProps> = ({
             exit={{ opacity: 0, x: 80, scale: 0.9 }}
             transition={{ type: "spring", stiffness: 350, damping: 25 }}
             className={`p-4 rounded-2xl glass-panel border shadow-2xl backdrop-blur-2xl pointer-events-auto relative ${
+              notif.subtitle?.toLowerCase().includes('marcus') ? 'border-blue-500/40 bg-gradient-to-r from-slate-950 via-blue-950/15 to-slate-950 ring-1 ring-blue-500/25' :
+              notif.subtitle?.toLowerCase().includes('emma') ? 'border-emerald-500/40 bg-gradient-to-r from-slate-950 via-emerald-950/15 to-slate-950 ring-1 ring-emerald-500/25' :
+              notif.subtitle?.toLowerCase().includes('daniel') ? 'border-orange-500/40 bg-gradient-to-r from-slate-950 via-orange-950/15 to-slate-950 ring-1 ring-orange-500/25' :
+              notif.subtitle?.toLowerCase().includes('olivia') ? 'border-red-500/40 bg-gradient-to-r from-slate-950 via-red-950/15 to-slate-950 ring-1 ring-red-500/25' :
+              notif.subtitle?.toLowerCase().includes('sophia') ? 'border-purple-500/40 bg-gradient-to-r from-slate-950 via-purple-950/15 to-slate-950 ring-1 ring-purple-500/25' :
+              notif.subtitle?.toLowerCase().includes('aarav') ? 'border-yellow-500/40 bg-gradient-to-r from-slate-950 via-yellow-950/15 to-slate-950 ring-1 ring-yellow-500/25' :
               notif.isCall
                 ? 'border-purple-500/50 bg-gradient-to-r from-slate-950 via-purple-950/40 to-slate-950 ring-2 ring-purple-500/30'
-                : notif.app === 'Security'
-                ? 'border-red-500/40 bg-slate-950/90'
                 : 'border-white/15 bg-slate-950/90'
             }`}
           >
@@ -58,7 +62,15 @@ export const OSNotificationCenter: React.FC<OSNotificationCenterProps> = ({
 
             {/* Notification Body */}
             {notif.subtitle && (
-              <h4 className="text-xs font-semibold text-purple-300 mb-0.5">{notif.subtitle}</h4>
+              <h4 className={`text-xs font-semibold mb-0.5 ${
+                notif.subtitle.toLowerCase().includes('marcus') ? 'text-blue-400' :
+                notif.subtitle.toLowerCase().includes('emma') ? 'text-emerald-400' :
+                notif.subtitle.toLowerCase().includes('daniel') ? 'text-orange-400' :
+                notif.subtitle.toLowerCase().includes('olivia') ? 'text-red-400' :
+                notif.subtitle.toLowerCase().includes('sophia') ? 'text-purple-400' :
+                notif.subtitle.toLowerCase().includes('aarav') ? 'text-yellow-400' :
+                'text-purple-300'
+              }`}>{notif.subtitle}</h4>
             )}
             <p className="text-xs text-slate-300 leading-snug mb-3">{notif.body}</p>
 

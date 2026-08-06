@@ -7,23 +7,23 @@ export const MSTeamsApp: React.FC = () => {
   const [isMicOn, setIsMicOn] = useState(true);
 
   const cto = {
-    name: "Michael Chen",
+    name: "Marcus",
     role: "Chief Technology Officer",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=250"
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=250"
   };
 
   const speechBubbles = [
-    "Good morning, Digital Transformer.",
-    "Welcome to Brained Consulting. We're counting on you to lead Project Titan.",
-    "This is our highest priority enterprise transformation.",
-    "The Board Review begins in three weeks. Every decision will shape the outcome. Let's begin!"
+    "Welcome to Brained. I'm Marcus, the Chief Technology Officer.",
+    "I'll define where we're going... but you'll decide how we get there.",
+    "Remember... Good technology solves business problems.",
+    "Great technology prevents them. Open your workspace and let's get Project Titan delivered."
   ];
 
   useEffect(() => {
     if (meetingState === 'in_call') {
       const timer = setInterval(() => {
         setSpeechIndex((prev) => (prev < speechBubbles.length - 1 ? prev + 1 : prev));
-      }, 3000);
+      }, 3500);
       return () => clearInterval(timer);
     }
   }, [meetingState]);
@@ -41,21 +41,21 @@ export const MSTeamsApp: React.FC = () => {
 
       {meetingState === 'in_call' ? (
         <div className="flex-1 flex flex-col justify-between p-6 bg-slate-950/80">
-          {/* Main Speaker Video Screen */}
-          <div className="relative w-full max-w-3xl h-72 mx-auto rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-slate-900 flex items-center justify-center">
+          {/* Main Speaker Video Screen - Royal Blue CTO Signature styling */}
+          <div className="relative w-full max-w-3xl h-72 mx-auto rounded-2xl overflow-hidden border-2 border-blue-500/60 shadow-[0_0_25px_rgba(59,130,246,0.3)] bg-slate-900 flex items-center justify-center">
             <img
               src={cto.avatar}
               alt={cto.name}
               className="w-full h-full object-cover filter contrast-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-black/30" />
-
+ 
             {/* Active Speaker Name Tag */}
             <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 flex items-center space-x-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping" />
               <span className="font-bold text-white text-xs">{cto.name} (CTO)</span>
             </div>
-
+ 
             {/* Subtitles Overlay */}
             <div className="absolute top-6 px-6 py-4 bg-[#3F4499]/90 backdrop-blur-md rounded-2xl border border-white/20 text-white max-w-md shadow-2xl text-center">
               <p className="text-sm font-bold tracking-wide">
