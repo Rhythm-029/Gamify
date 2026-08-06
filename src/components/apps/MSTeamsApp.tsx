@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Video, Mic, MicOff, PhoneOff, CheckCircle2 } from 'lucide-react';
-import { STAKEHOLDERS } from '../../data/simulationData';
 
 export const MSTeamsApp: React.FC = () => {
   const [meetingState, setMeetingState] = useState<'lobby' | 'in_call' | 'ended'>('in_call');
   const [speechIndex, setSpeechIndex] = useState(0);
   const [isMicOn, setIsMicOn] = useState(true);
 
-  const cto = STAKEHOLDERS[0]; // Marcus Boss
+  const cto = {
+    name: "Michael Chen",
+    role: "Chief Technology Officer",
+    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=250"
+  };
 
   const speechBubbles = [
-    "Good morning, Alex. Welcome to Apex Global Enterprise.",
-    "We have a major corporate mandate. Six weeks to deploy a zero-trust HR Portal.",
-    "The board is watching us closely. Alignment with CISO Knox and CHRO Marshal is critical.",
-    "I trust you to lead this digital transformation. Good luck!"
+    "Good morning, Digital Transformer.",
+    "Welcome to Brained Consulting. We're counting on you to lead Project Titan.",
+    "This is our highest priority enterprise transformation.",
+    "The Board Review begins in three weeks. Every decision will shape the outcome. Let's begin!"
   ];
 
   useEffect(() => {

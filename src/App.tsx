@@ -5,15 +5,23 @@ import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
 import { TeamsCallIntro } from './components/intro/TeamsCallIntro';
 
 export function App() {
-  // Main view journey: 'landing' -> 'onboarding' -> 'teams_intro' -> 'workspace'
+  // Main view journey: 'landing' -> 'onboarding' -> 'workspace'
   const [viewMode, setViewMode] = useState<'landing' | 'onboarding' | 'teams_intro' | 'workspace'>('landing');
+  const [playerConfig, setPlayerConfig] = useState<{
+    name: string;
+    role: string;
+    company: string;
+    email: string;
+    linkedin: string;
+  } | null>(null);
 
   const handleStartOnboarding = () => {
     setViewMode('onboarding');
   };
 
-  const handleOnboardingComplete = () => {
-    setViewMode('workspace'); // Lands directly on Brained OS Desktop!
+  const handleOnboardingComplete = (userConfig: any) => {
+    setPlayerConfig(userConfig);
+    setViewMode('workspace'); // Lands directly on Brained OS Desktop with clean boot
   };
 
   if (viewMode === 'landing') {
@@ -35,7 +43,12 @@ export function App() {
   }
 
   // BRAINED OS DESKTOP SIMULATOR WORKSTATION
-  return <BrainedOSDesktop onOpenEventModal={() => {}} />;
+  return (
+    <BrainedOSDesktop 
+      playerConfig={playerConfig || undefined} 
+      firstBoot={true} 
+    />
+  );
 }
 
 export default App;

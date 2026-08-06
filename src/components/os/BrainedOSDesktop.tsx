@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { BrainedMenuBar } from './BrainedMenuBar';
 import { BrainedDock } from './BrainedDock';
 import { BrainedWindow } from './BrainedWindow';
@@ -7,8 +7,9 @@ import { OSNotificationCenter } from './OSNotificationCenter';
 import { SpotlightSearch } from './SpotlightSearch';
 import { DesktopWidgets } from './DesktopWidgets';
 import { BrainedLogoIcon } from '../common/BrainedLogoIcon';
+import { sound } from '../onboarding/SoundEngine';
 
-import { INITIAL_OS_STATE, INITIAL_NOTIFICATIONS } from '../../data/brainedOSData';
+import { INITIAL_OS_STATE } from '../../data/brainedOSData';
 import type { OSNotification } from '../../data/brainedOSData';
 
 // App Clones
@@ -35,10 +36,31 @@ import { SimulationEventModal } from '../overlays/SimulationEventModal';
 
 interface BrainedOSDesktopProps {
   onOpenEventModal?: () => void;
+  playerConfig?: {
+    name: string;
+    role: string;
+    company: string;
+    email: string;
+    linkedin: string;
+  };
+  firstBoot?: boolean;
 }
 
-export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = () => {
-  const [osState, setOsState] = useState(INITIAL_OS_STATE);
+export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig, firstBoot }) => {
+  const [osState, setOsState] = useState(() => {
+    const defaultState = { ...INITIAL_OS_STATE };
+    if (playerConfig) {
+      defaultState.user = {
+        name: playerConfig.name,
+        role: playerConfig.role,
+        company: playerConfig.company,
+        avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(playerConfig.name)}&backgroundColor=8b5cf6,3b82f6`,
+        workstation: `${playerConfig.name.split(' ')[0]}'s MacBook Pro (Brained OS v3.2)`,
+      };
+    }
+    return defaultState;
+  });
+
   const [activeAppId, setActiveAppId] = useState<string | null>(null); // Starts NULL on desktop wallpaper!
   const [openAppIds, setOpenAppIds] = useState<string[]>([]);
   const [notifications, setNotifications] = useState<OSNotification[]>([]);
@@ -46,11 +68,45 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = () => {
   const [isAIDirectorOpen, setIsAIDirectorOpen] = useState(false);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
 
-  // Clean OS boot state without automatic initial call modal
+  // OS Boot timer sequence states
+  const [bootStep, setBootStep] = useState<'booting' | 'silence' | 'ready'>(firstBoot ? 'booting' : 'ready');
+
   useEffect(() => {
-    // Notifications start clear for clean executive onboarding
-    setNotifications([]);
-  }, []);
+    if (!firstBoot) {
+      setNotifications([]);
+      return;
+    }
+
+    if (bootStep === 'booting') {
+      setNotifications([]);
+      const timer = setTimeout(() => {
+        setBootStep('silence');
+      }, 3500); // Boot loader screen displays for 3.5s
+      return () => clearTimeout(timer);
+    }
+
+    if (bootStep === 'silence') {
+      const timer = setTimeout(() => {
+        setBootStep('ready');
+        
+        // Trigger Teams incoming notification and play synthesized ringtone
+        const teamsNotification: OSNotification = {
+          id: "notif-teams-1",
+          app: "Teams",
+          title: "Microsoft Teams • Incoming Video Call",
+          subtitle: "Michael Chen (CTO)",
+          body: "Project Titan Kickoff Briefing — Please join immediately.",
+          timestamp: "Just now",
+          actionText: "Accept Call",
+          onActionAppId: "teams",
+          isCall: true,
+        };
+        setNotifications([teamsNotification]);
+        sound.startTeamsRingtone();
+      }, 5000); // Silence observer duration of 5s
+      return () => clearTimeout(timer);
+    }
+  }, [bootStep, firstBoot]);
 
   const handleOpenApp = (appId: string | null) => {
     if (appId && !openAppIds.includes(appId)) {
@@ -68,10 +124,12 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = () => {
 
   const handleDismissNotification = (notifId: string) => {
     setNotifications((prev) => prev.filter((n) => n.id !== notifId));
+    sound.stopTeamsRingtone();
   };
 
   const handleActionNotification = (notif: OSNotification) => {
     handleDismissNotification(notif.id);
+    sound.stopTeamsRingtone();
     if (notif.onActionAppId) {
       handleOpenApp(notif.onActionAppId);
     }
@@ -109,6 +167,48 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = () => {
 
   return (
     <div className="w-full h-screen bg-[#0B0E18] text-white flex flex-col font-sans selection:bg-[#0A84FF] selection:text-white relative overflow-hidden select-none">
+      
+      {/* Booting Loader Screen overlay */}
+      <AnimatePresence>
+        {bootStep === 'booting' && (
+          <motion.div
+            key="boot-screen"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.0 }}
+            className="absolute inset-0 bg-[#070913] flex flex-col items-center justify-center z-[100] select-none"
+          >
+            <div className="space-y-6 text-center">
+              {/* Brained Logo Centered */}
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-sky-500 via-indigo-600 to-pink-500 p-3 mx-auto shadow-2xl border border-white/20 animate-pulse flex items-center justify-center">
+                <BrainedLogoIcon className="w-full h-full object-contain filter drop-shadow-xl" />
+              </div>
+              <div className="space-y-1">
+                <h2 className="text-sm font-extrabold text-white tracking-widest uppercase">Booting Brained OS...</h2>
+                <div className="text-[10px] text-slate-500 font-mono">Brained Workstation Simulator v3.2.0</div>
+              </div>
+              {/* Loader progress indicator bar */}
+              <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden mx-auto">
+                <motion.div 
+                  className="h-full bg-gradient-to-r from-sky-500 to-indigo-500"
+                  initial={{ width: '0%' }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 3.0, ease: 'easeInOut' }}
+                />
+              </div>
+            </div>
+            {/* Tiny debug system console logs in bottom corner */}
+            <div className="absolute bottom-6 left-6 text-left font-mono text-[8px] text-slate-650 max-w-sm space-y-0.5">
+              <div>[ OK ] Initializing core microservices...</div>
+              <div>[ OK ] Mounting virtual volumes...</div>
+              <div>[ OK ] Connecting network handoff: brained.network.sso...</div>
+              <div>[ OK ] Provisioned session: {osState.user.name}</div>
+              <div>[ OK ] System load complete.</div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* REAL MACOS SCENERY WALLPAPER */}
       <div 
         className="absolute inset-0 bg-cover bg-center z-0 transition-all duration-700"
