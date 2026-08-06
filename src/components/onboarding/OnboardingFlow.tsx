@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ArrowRight, CheckCircle2, Mail, Key, RefreshCw, AlertCircle, Check, Globe, User, Briefcase, Building
+  ArrowRight, CheckCircle2, Mail, Key, RefreshCw, AlertCircle, Check, 
+  Globe, User, Briefcase, Building, Volume2, VolumeX
 } from 'lucide-react';
 import { INITIAL_PLAYER_STATE } from '../../data/simulationData';
 import { BrainedLogoIcon } from '../common/BrainedLogoIcon';
+import { sound } from './SoundEngine';
+import { OfficeBlueprints } from './OfficeBlueprints';
 
 const LinkedinIcon: React.FC<{ className?: string }> = ({ className = "w-4 h-4" }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 24 24">
@@ -13,7 +16,10 @@ const LinkedinIcon: React.FC<{ className?: string }> = ({ className = "w-4 h-4" 
 );
 
 interface OnboardingFlowProps {
-  onComplete: (userConfig: Partial<typeof INITIAL_PLAYER_STATE>) => void;
+  onComplete: (userConfig: Partial<typeof INITIAL_PLAYER_STATE> & {
+    email?: string;
+    linkedin?: string;
+  }) => void;
 }
 
 declare global {
@@ -22,10 +28,151 @@ declare global {
   }
 }
 
-export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+// Stakeholders list for the cinematic tour
+const STAKEHOLDERS = [
+  {
+    name: "Sarah",
+    role: "HR Director",
+    department: "Human Resources",
+    badge: "Employee Advocate",
+    voicePitch: 80,
+    quote: "Hi. I'm Sarah. I represent Human Resources. Employees rarely explain every problem. Ask the right questions.",
+    avatarSvg: (
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        <defs>
+          <radialGradient id="sarahGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ec4899" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#db2777" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <circle cx="50%" cy="50%" r="45" fill="url(#sarahGlow)" />
+        <path d="M50 25c7.7 0 14 6.3 14 14s-6.3 14-14 14-14-6.3-14-14 6.3-14 14-14zm0 32c-15.5 0-28 8.5-28 19v4h56v-4c0-10.5-12.5-19-28-19z" fill="#fbcfe8" />
+        <circle cx="50%" cy="39" r="22" stroke="#ec4899" strokeWidth="1" strokeDasharray="3 3" fill="none" />
+        <path d="M25 80 Q50 60 75 80" stroke="#f472b6" strokeWidth="1.5" fill="none" />
+      </svg>
+    )
+  },
+  {
+    name: "Raj",
+    role: "Business Head",
+    department: "Business",
+    badge: "Outcome Driven",
+    voicePitch: -30,
+    quote: "I'm Raj. I care about outcomes. The Board doesn't buy excuses. Keep me informed.",
+    avatarSvg: (
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        <defs>
+          <radialGradient id="rajGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <circle cx="50%" cy="50%" r="45" fill="url(#rajGlow)" />
+        <path d="M50 22c6.6 0 12 5.4 12 12s-5.4 12-12 12-12-5.4-12-12 5.4-12 12-12zm-22 50c0-9.9 9.8-18 22-18s22 8.1 22 18v5H28v-5zm22-15v-6h4" fill="#fef3c7" stroke="#fbbf24" strokeWidth="0.5" />
+        <rect x="25" y="25" width="50" height="50" stroke="#f59e0b" strokeWidth="0.8" strokeDasharray="5 5" fill="none" />
+        <line x1="20" y1="50" x2="80" y2="50" stroke="#f59e0b" strokeWidth="0.5" />
+      </svg>
+    )
+  },
+  {
+    name: "Ethan",
+    role: "Lead Developer",
+    department: "Technology",
+    badge: "Precision Builder",
+    voicePitch: 10,
+    quote: "I'm Ethan. Give me clear requirements. I build exactly what you communicate.",
+    avatarSvg: (
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        <defs>
+          <radialGradient id="ethanGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#0284c7" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <circle cx="50%" cy="50%" r="45" fill="url(#ethanGlow)" />
+        <path d="M50 24c7 0 12.5 5.5 12.5 12.5S57 49 50 49s-12.5-5.5-12.5-12.5S43 24 50 24zm0 29c-14.5 0-26 7.5-26 17v5h52v-5c0-9.5-11.5-17-26-17z" fill="#e0f2fe" />
+        <rect x="36" y="32" width="10" height="6" rx="1" fill="none" stroke="#38bdf8" strokeWidth="1.5" />
+        <rect x="54" y="32" width="10" height="6" rx="1" fill="none" stroke="#38bdf8" strokeWidth="1.5" />
+        <line x1="46" y1="35" x2="54" y2="35" stroke="#38bdf8" strokeWidth="1.5" />
+        <path d="M15 15 L25 15 L25 25" stroke="#0ea5e9" strokeWidth="1.5" fill="none" />
+        <path d="M85 85 L75 85 L75 75" stroke="#0ea5e9" strokeWidth="1.5" fill="none" />
+      </svg>
+    )
+  },
+  {
+    name: "Olivia",
+    role: "Head of InfoSec",
+    department: "Information Security",
+    badge: "Security First",
+    voicePitch: 60,
+    quote: "I'm Olivia. One ignored security issue can stop an entire transformation.",
+    avatarSvg: (
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        <defs>
+          <radialGradient id="oliviaGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#be123c" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <circle cx="50%" cy="50%" r="45" fill="url(#oliviaGlow)" />
+        <path d="M50 26c6 0 11 5 11 11s-5 11-11 11-11-5-11-11 5-11 11-11zm0 27c-13 0-24 7-24 16v5h48v-5c0-9-11-16-24-16z" fill="#ffe4e6" />
+        <path d="M50 15 L80 25 L80 50 C80 68 67 80 50 85 C33 80 20 68 20 50 L20 25 Z" stroke="#f43f5e" strokeWidth="1" fill="none" strokeDasharray="4 2" />
+      </svg>
+    )
+  },
+  {
+    name: "David",
+    role: "QA Manager",
+    department: "Quality Assurance",
+    badge: "Nothing Escapes Testing",
+    voicePitch: -10,
+    quote: "I'm David. If something is missing, I'll find it.",
+    avatarSvg: (
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        <defs>
+          <radialGradient id="davidGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#10b981" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#047857" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <circle cx="50%" cy="50%" r="45" fill="url(#davidGlow)" />
+        <path d="M50 25c7 0 12 5 12 12s-5 12-12 12-12-5-12-12 5-12 12-12zm-20 48c0-8 9-15 20-15s20 7 20 15v5H30v-5z" fill="#d1fae5" />
+        <circle cx="50%" cy="50%" r="30" stroke="#10b981" strokeWidth="0.8" fill="none" />
+        <line x1="50" y1="10" x2="50" y2="90" stroke="#10b981" strokeWidth="0.5" strokeDasharray="3 3" />
+        <line x1="10" y1="50" x2="90" y2="50" stroke="#10b981" strokeWidth="0.5" strokeDasharray="3 3" />
+      </svg>
+    )
+  },
+  {
+    name: "Michael",
+    role: "Chief Technology Officer",
+    department: "Executive Leadership",
+    badge: "Technology Visionary",
+    voicePitch: -40,
+    quote: "You're leading this engagement. We're counting on you.",
+    avatarSvg: (
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        <defs>
+          <radialGradient id="michaelGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#6d28d9" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <circle cx="50%" cy="50%" r="45" fill="url(#michaelGlow)" />
+        <path d="M50 23c6.6 0 12 5.4 12 12s-5.4 12-12 12-12-5.4-12-12 5.4-12 12-12zm0 29c-15 0-27 8-27 18v5h54v-5c0-10-12-18-27-18z" fill="#ede9fe" />
+        <circle cx="50%" cy="15" r="3" fill="#8b5cf6" />
+        <circle cx="20" cy="50" r="3" fill="#8b5cf6" />
+        <circle cx="80" cy="50" r="3" fill="#8b5cf6" />
+        <line x1="50" y1="15" x2="20" y2="50" stroke="#8b5cf6" strokeWidth="1" />
+        <line x1="50" y1="15" x2="80" y2="50" stroke="#8b5cf6" strokeWidth="1" />
+      </svg>
+    )
+  }
+];
 
-  // Authentication State (Step 1)
+export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
+  // Authentication & Form States (Step 1, Step 2, Step 3)
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [emailInput, setEmailInput] = useState('');
   const [otpInput, setOtpInput] = useState('');
   const [isOtpSent, setIsOtpSent] = useState(false);
@@ -34,7 +181,6 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
   const [authEmail, setAuthEmail] = useState('');
   const [authMessage, setAuthMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // LinkedIn Link & Executive Form State (Step 2)
   const [linkedinUrl, setLinkedinUrl] = useState('');
   const [isScraping, setIsScraping] = useState(false);
   const [profileForm, setProfileForm] = useState({
@@ -43,11 +189,33 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
     company: '',
     avatar: '',
   });
-  const [scrapeError, setScrapeError] = useState<string | null>(null);
+
+  // Cinematic Sequences Mode States
+  const [cinematicActive, setCinematicActive] = useState(false);
+  const [cinematicScreen, setCinematicScreen] = useState<'transition' | 'init' | 'welcome' | 'office' | 'stakes'>('transition');
+  const [isMuted, setIsMuted] = useState(false);
+
+  // Canvas drift animation states
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Typewriter sequence states
+  const [initLines, setInitLines] = useState<string[]>([]);
+  const [currentInitIndex, setCurrentInitIndex] = useState(0);
+  const [typewriterText, setTypewriterText] = useState('');
+  const [welcomeText, setWelcomeText] = useState('');
+
+  // Office cinematic states
+  const [activeStakeholderIndex, setActiveStakeholderIndex] = useState(0);
+  const [stakeholderDialogue, setStakeholderDialogue] = useState('');
+  const [dialogueFinished, setDialogueFinished] = useState(false);
+  const autoContinueRef = useRef<any>(null);
+
+  // Stakes state
+  const [stakesPhase, setStakesPhase] = useState<1 | 2>(1);
 
   // Dynamically load Google GSI OAuth Script on Step 1
   useEffect(() => {
-    if (step === 1) {
+    if (step === 1 && !cinematicActive) {
       const scriptId = 'google-gsi-script';
       if (!document.getElementById(scriptId)) {
         const script = document.createElement('script');
@@ -61,7 +229,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
         setTimeout(initGoogleSignIn, 100);
       }
     }
-  }, [step]);
+  }, [step, cinematicActive]);
 
   const initGoogleSignIn = () => {
     if (window.google?.accounts?.id) {
@@ -95,7 +263,6 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ credential: response.credential }),
       });
-
       const data = await res.json();
 
       if (data.success && data.user) {
@@ -197,7 +364,6 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
     if (!urlToScrape.trim()) return;
 
     setIsScraping(true);
-    setScrapeError(null);
 
     try {
       const res = await fetch('http://localhost:4000/api/linkedin/fetch-profile', {
@@ -218,7 +384,6 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
         }));
       }
     } catch (err) {
-      // Local fallback parsing
       const match = urlToScrape.match(/linkedin\.com\/in\/([^\/\?#]+)/i);
       if (match && match[1]) {
         const parsedName = match[1]
@@ -254,16 +419,527 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
       }
       setStep(3);
     } else {
-      onComplete({
-        name: profileForm.name || 'Executive Member',
-        role: profileForm.role || 'Software Engineer',
-        company: profileForm.company || 'Enterprise Systems',
-        industry: 'Technology & Enterprise',
-        avatar: profileForm.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(profileForm.name || 'User')}`,
-      });
+      // Step 3 clicks Launch Brained OS Workspace: Initiate Cinematic!
+      sound.startAmbientMusic();
+      sound.playSystemClearance();
+      setCinematicActive(true);
+      setCinematicScreen('transition');
+      
+      setTimeout(() => {
+        setCinematicScreen('init');
+      }, 2500);
     }
   };
 
+  // Sound Engine Muting Effect
+  useEffect(() => {
+    sound.setMute(isMuted);
+  }, [isMuted]);
+
+  // Particle background canvas loops
+  useEffect(() => {
+    if (!cinematicActive || cinematicScreen === 'transition') return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animationFrameId: number;
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
+
+    const particles: Array<{
+      x: number;
+      y: number;
+      size: number;
+      speedX: number;
+      speedY: number;
+      opacity: number;
+      char?: string;
+    }> = [];
+
+    for (let i = 0; i < 40; i++) {
+      particles.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        size: Math.random() * 2 + 1,
+        speedX: (Math.random() - 0.5) * 0.4,
+        speedY: (Math.random() - 0.8) * 0.4,
+        opacity: Math.random() * 0.4 + 0.1,
+        char: Math.random() > 0.8 ? (Math.random() > 0.5 ? '1' : '0') : undefined
+      });
+    }
+
+    const handleResize = () => {
+      if (!canvas) return;
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', handleResize);
+
+    const animate = () => {
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = 'rgba(7, 9, 19, 1)';
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
+      ctx.lineWidth = 1;
+      const gridSize = 40;
+      for (let x = 0; x < width; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+      }
+      for (let y = 0; y < height; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+
+      particles.forEach((p) => {
+        p.x += p.speedX;
+        p.y += p.speedY;
+
+        if (p.x < 0) p.x = width;
+        if (p.x > width) p.x = 0;
+        if (p.y < 0) p.y = height;
+        if (p.y > height) p.y = 0;
+
+        ctx.fillStyle = `rgba(56, 189, 248, ${p.opacity})`;
+        if (p.char) {
+          ctx.font = '8px monospace';
+          ctx.fillText(p.char, p.x, p.y);
+        } else {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.04)';
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 100) {
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [cinematicActive, cinematicScreen]);
+
+  // Screen 2: System Initialization typewriters
+  useEffect(() => {
+    if (!cinematicActive || cinematicScreen !== 'init') return;
+
+    const initLinesData = [
+      "Authenticating Identity...",
+      "Connecting to Brained Network...",
+      "Assigning Enterprise Workspace...",
+      "Loading Stakeholder Profiles...",
+      "Initializing Transformation Environment..."
+    ];
+
+    if (currentInitIndex < initLinesData.length) {
+      const fullText = initLinesData[currentInitIndex];
+      let charIdx = 0;
+      setTypewriterText('');
+      
+      const interval = setInterval(() => {
+        if (charIdx < fullText.length) {
+          setTypewriterText((prev) => prev + fullText[charIdx]);
+          sound.playClick();
+          charIdx++;
+        } else {
+          clearInterval(interval);
+          sound.playSystemClearance();
+          
+          setTimeout(() => {
+            setInitLines((prev) => [...prev, fullText]);
+            setCurrentInitIndex((prev) => prev + 1);
+          }, 1200);
+        }
+      }, 50);
+
+      return () => clearInterval(interval);
+    } else {
+      const timer = setTimeout(() => {
+        setCinematicScreen('welcome');
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [cinematicActive, cinematicScreen, currentInitIndex]);
+
+  // Screen 3: Welcome Text
+  useEffect(() => {
+    if (!cinematicActive || cinematicScreen !== 'welcome') return;
+
+    const msg = `Today, you begin your journey as a Digital Transformer.`;
+    let charIdx = 0;
+    setWelcomeText('');
+
+    const timer = setTimeout(() => {
+      const interval = setInterval(() => {
+        if (charIdx < msg.length) {
+          setWelcomeText((prev) => prev + msg[charIdx]);
+          sound.playClick();
+          charIdx++;
+        } else {
+          clearInterval(interval);
+          setTimeout(() => {
+            setCinematicScreen('office');
+          }, 3500);
+        }
+      }, 60);
+      return () => clearInterval(interval);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [cinematicActive, cinematicScreen]);
+
+  // Screen 4: Office Cinematic dialog typewriter
+  useEffect(() => {
+    if (!cinematicActive || cinematicScreen !== 'office') return;
+
+    const currentStakeholder = STAKEHOLDERS[activeStakeholderIndex];
+    if (!currentStakeholder) return;
+
+    let charIdx = 0;
+    setStakeholderDialogue('');
+    setDialogueFinished(false);
+    
+    if (autoContinueRef.current) clearTimeout(autoContinueRef.current);
+
+    const interval = setInterval(() => {
+      if (charIdx < currentStakeholder.quote.length) {
+        setStakeholderDialogue((prev) => prev + currentStakeholder.quote[charIdx]);
+        if (charIdx % 2 === 0) {
+          sound.playVoiceStatic(currentStakeholder.voicePitch);
+        } else {
+          sound.playClick();
+        }
+        charIdx++;
+      } else {
+        clearInterval(interval);
+        setDialogueFinished(true);
+
+        autoContinueRef.current = setTimeout(() => {
+          handleNextStakeholder();
+        }, 5000);
+      }
+    }, 45);
+
+    return () => {
+      clearInterval(interval);
+      if (autoContinueRef.current) clearTimeout(autoContinueRef.current);
+    };
+  }, [cinematicActive, cinematicScreen, activeStakeholderIndex]);
+
+  const handleNextStakeholder = () => {
+    if (autoContinueRef.current) clearTimeout(autoContinueRef.current);
+
+    if (activeStakeholderIndex < STAKEHOLDERS.length - 1) {
+      sound.playSystemClearance();
+      setActiveStakeholderIndex((prev) => prev + 1);
+    } else {
+      sound.playSystemClearance();
+      setCinematicScreen('stakes');
+    }
+  };
+
+  // Screen 5: Stakes phase timers
+  useEffect(() => {
+    if (!cinematicActive || cinematicScreen !== 'stakes') return;
+
+    if (stakesPhase === 1) {
+      const timer = setTimeout(() => {
+        setStakesPhase(2);
+      }, 7000);
+      return () => clearTimeout(timer);
+    } else {
+      const timer = setTimeout(() => {
+        sound.stopAll();
+        onComplete({
+          name: profileForm.name || 'Executive Member',
+          role: profileForm.role || 'Software Engineer',
+          company: profileForm.company || 'Enterprise Systems',
+          industry: 'Technology & Enterprise',
+          avatar: profileForm.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(profileForm.name || 'User')}`,
+          email: authEmail || emailInput,
+          linkedin: linkedinUrl
+        });
+      }, 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [cinematicActive, cinematicScreen, stakesPhase]);
+
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+  };
+
+  // RENDERING CINEMATIC MODES
+  if (cinematicActive) {
+    return (
+      <div className="fixed inset-0 w-full h-full bg-[#070913] text-white flex flex-col font-sans select-none overflow-hidden z-50">
+        <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-0" />
+
+        {/* Global Controls */}
+        <div className="absolute top-6 left-6 right-6 flex items-center justify-between z-40">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-sky-500 via-indigo-600 to-pink-600 p-1 flex items-center justify-center border border-white/20 shadow-lg shadow-indigo-500/10">
+              <span className="text-[10px] font-black text-white">BR</span>
+            </div>
+            <div>
+              <div className="text-[10px] font-extrabold text-white tracking-widest uppercase">Brained Consulting</div>
+              <div className="text-[8px] text-slate-500 font-mono tracking-wider">WORKSPACE PROVISIONING ENGINE</div>
+            </div>
+          </div>
+
+          {cinematicScreen !== 'transition' && (
+            <div className="flex items-center space-x-4">
+              <div className="text-[9px] font-mono text-slate-400 bg-white/5 border border-white/10 px-3 py-1 rounded-full uppercase tracking-wider">
+                {cinematicScreen === 'init' && 'STEP 01 // WORKSTATION INITIALIZATION'}
+                {cinematicScreen === 'welcome' && 'STEP 02 // IDENTITY VERIFIED'}
+                {cinematicScreen === 'office' && `STEP 03 // ALIGNMENT BOARD [${activeStakeholderIndex + 1}/6]`}
+                {cinematicScreen === 'stakes' && 'STEP 04 // ENGAGEMENT CONTRACT'}
+              </div>
+              
+              <button 
+                onClick={toggleMute}
+                className="p-2 rounded-lg bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
+              >
+                {isMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4 text-sky-400" />}
+              </button>
+            </div>
+          )}
+        </div>
+
+        <AnimatePresence mode="wait">
+          {cinematicScreen === 'transition' && (
+            <motion.div 
+              key="transition"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex-1 flex flex-col items-center justify-center relative z-10"
+            >
+              <motion.div 
+                className="absolute w-full h-[2px] bg-gradient-to-r from-transparent via-sky-400 to-transparent top-0"
+                animate={{ y: ['0vh', '100vh'] }}
+                transition={{ duration: 2.0, ease: 'easeInOut' }}
+              />
+              <div className="text-center space-y-4">
+                <div className="w-8 h-8 rounded-full border border-sky-500 border-t-transparent animate-spin mx-auto opacity-70" />
+                <span className="text-[10px] font-mono tracking-widest text-sky-400 font-extrabold uppercase animate-pulse">ESTABLISHING CLEARANCE SECURE HANDOFF...</span>
+              </div>
+            </motion.div>
+          )}
+
+          {cinematicScreen === 'init' && (
+            <motion.div 
+              key="init"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, transition: { duration: 1.0 } }}
+              className="flex-1 flex flex-col items-center justify-center p-6 relative z-10"
+            >
+              <div className="w-full max-w-md space-y-4">
+                {initLines.map((line, idx) => (
+                  <div key={idx} className="flex items-center space-x-3 text-slate-300 font-mono text-sm">
+                    <span className="text-emerald-400 font-bold">✓</span>
+                    <span className="font-semibold">{line}</span>
+                  </div>
+                ))}
+                {currentInitIndex < 5 && (
+                  <div className="flex items-center space-x-3 font-mono text-sm text-sky-400 font-extrabold">
+                    <span className="w-2.5 h-2.5 rounded bg-sky-400 animate-pulse shrink-0" />
+                    <span>{typewriterText}</span>
+                    <span className="w-1.5 h-4 bg-sky-400 animate-blink animate-infinite" />
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {cinematicScreen === 'welcome' && (
+            <motion.div 
+              key="welcome"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, y: -20, transition: { duration: 1.0 } }}
+              className="flex-1 flex flex-col items-center justify-center bg-black text-center px-6 relative z-10"
+            >
+              <div className="space-y-8">
+                <motion.h1 
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 1.2, ease: 'easeOut' }}
+                  className="text-4xl sm:text-5xl font-black text-white tracking-[0.3em] font-sans"
+                >
+                  W E L C O M E
+                </motion.h1>
+                <motion.h2
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 1.0, delay: 0.8 }}
+                  className="text-xl sm:text-2xl font-extrabold bg-gradient-to-r from-sky-400 via-indigo-300 to-pink-400 bg-clip-text text-transparent uppercase tracking-wider font-mono"
+                >
+                  {profileForm.name}
+                </motion.h2>
+                <div className="h-10 pt-4 flex items-center justify-center font-serif italic text-slate-300 font-light text-base max-w-md leading-relaxed">
+                  <span>{welcomeText}</span>
+                  {welcomeText.length > 0 && welcomeText.length < 52 && (
+                    <span className="w-1 h-5 bg-white inline-block ml-1 animate-blink" />
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {cinematicScreen === 'office' && (
+            <motion.div 
+              key="office"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="flex-1 flex flex-col md:flex-row relative z-10"
+            >
+              <div className="w-full md:w-3/5 h-[45vh] md:h-full relative border-b md:border-b-0 md:border-r border-white/10">
+                <OfficeBlueprints activeStakeholderIndex={activeStakeholderIndex} />
+              </div>
+              <div className="w-full md:w-2/5 h-[55vh] md:h-full flex flex-col justify-between p-8 bg-slate-950/60 backdrop-blur-2xl relative z-20">
+                <div className="space-y-1.5 border-b border-white/10 pb-4">
+                  <span className="text-[9px] font-mono text-sky-400 font-extrabold tracking-widest uppercase">Target Alignment Locator</span>
+                  <h3 className="text-lg font-black text-white">{STAKEHOLDERS[activeStakeholderIndex].name}</h3>
+                  <p className="text-xs text-slate-400">{STAKEHOLDERS[activeStakeholderIndex].role} • {STAKEHOLDERS[activeStakeholderIndex].department}</p>
+                </div>
+
+                <div className="flex-1 flex flex-col justify-center py-6 space-y-6">
+                  <div className="flex items-center space-x-5">
+                    <div className="w-24 h-24 rounded-2xl bg-slate-900 border border-white/15 overflow-hidden shrink-0 flex items-center justify-center shadow-2xl relative">
+                      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30" />
+                      {STAKEHOLDERS[activeStakeholderIndex].avatarSvg}
+                    </div>
+                    <div className="space-y-2 select-none text-left">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-[9px] font-mono text-slate-300 font-bold uppercase tracking-wider">
+                        {STAKEHOLDERS[activeStakeholderIndex].badge}
+                      </span>
+                      <div className="text-[10px] font-mono text-slate-500">DIAGNOSTIC STATUS // STABLE</div>
+                      <div className="text-[10px] text-emerald-400 font-mono flex items-center space-x-1.5 font-bold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                        <span>CLEARANCE_APPROVED</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-black/30 border border-white/10 rounded-2xl p-5 min-h-28 relative flex flex-col justify-center">
+                    <p className="text-sm font-semibold leading-relaxed text-slate-200 text-left italic">
+                      "{stakeholderDialogue}"
+                    </p>
+                    {!dialogueFinished && (
+                      <span className="absolute bottom-4 right-4 w-1.5 h-3.5 bg-sky-400 animate-blink" />
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between border-t border-white/10 pt-4">
+                  <div className="flex items-center space-x-2 select-none">
+                    {STAKEHOLDERS.map((_, idx) => (
+                      <div 
+                        key={idx}
+                        className={`h-1.5 rounded-full transition-all duration-300 ${
+                          idx === activeStakeholderIndex ? 'w-6 bg-sky-400' : 'w-1.5 bg-white/10'
+                        }`}
+                      />
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={handleNextStakeholder}
+                    className="px-6 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-950 font-bold text-xs shadow-xl transition-all flex items-center space-x-2 cursor-pointer"
+                  >
+                    <span>{activeStakeholderIndex === STAKEHOLDERS.length - 1 ? 'Commit Setup' : 'Next Connection'}</span>
+                    <ArrowRight className="w-4 h-4 text-slate-950" />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {cinematicScreen === 'stakes' && (
+            <motion.div 
+              key="stakes"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, transition: { duration: 1.2 } }}
+              className="flex-1 flex flex-col items-center justify-center bg-black px-6 text-center select-none relative z-10"
+            >
+              <div className="max-w-2xl space-y-10">
+                <AnimatePresence mode="wait">
+                  {stakesPhase === 1 ? (
+                    <motion.div 
+                      key="phase1"
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -15 }}
+                      transition={{ duration: 1.0 }}
+                      className="space-y-6"
+                    >
+                      <span className="text-[10px] font-mono text-rose-500 font-extrabold tracking-[0.4em] uppercase">MANDATE CRITICAL</span>
+                      <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight font-serif italic">
+                        Project Titan.
+                      </h2>
+                      <p className="text-sm sm:text-base text-slate-300 font-light max-w-xl mx-auto leading-relaxed">
+                        Brained's highest priority enterprise transformation. <br />
+                        The Board Review begins in three fictional weeks. <br />
+                        Every conversation, every decision, every document will shape the outcome.
+                      </p>
+                    </motion.div>
+                  ) : (
+                    <motion.div 
+                      key="phase2"
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -15 }}
+                      transition={{ duration: 1.0 }}
+                      className="space-y-6"
+                    >
+                      <span className="text-[10px] font-mono text-slate-500 font-extrabold tracking-[0.4em] uppercase">DECISION PROTOCOL</span>
+                      <h2 className="text-3xl sm:text-4xl font-light text-white leading-relaxed font-sans max-w-xl mx-auto">
+                        The Board will not judge <br />
+                        your luck.
+                      </h2>
+                      <p className="text-base sm:text-lg font-bold text-sky-400 uppercase tracking-widest font-mono">
+                        They will judge your decisions.
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
+
+  // STANDARD SSO AUTHENTICATION & IDENTITY FORM (Original HTML layout preserved)
   return (
     <div className="min-h-screen bg-[#070913] text-white flex items-center justify-center p-6 selection:bg-pink-500 selection:text-white font-sans relative overflow-hidden">
       {/* Background Glow */}
@@ -282,7 +958,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
               <BrainedLogoIcon className="w-full h-full object-contain" />
             </div>
             <div>
-              <div className="text-sm font-extrabold text-white tracking-tight flex items-center space-x-1.5">
+              <div className="text-sm font-extrabold text-white tracking-tight flex items-center space-x-1.5 text-left">
                 <span>BRAINED OS</span>
                 <span className="bg-pink-500/20 text-pink-300 text-[9px] font-bold px-1.5 py-0.2 rounded border border-pink-500/30">
                   ENTERPRISE
@@ -307,7 +983,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
 
         {/* STEP 1: UNIFIED AUTHENTICATION */}
         {step === 1 && (
-          <motion.div initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} className="space-y-5">
+          <motion.div initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} className="space-y-5 text-left">
             <div>
               <h2 className="text-xl font-extrabold text-white tracking-tight">Authentication Required</h2>
               <p className="text-xs text-slate-400 mt-1">Sign in with your Google Account or verify via Email OTP.</p>
@@ -344,7 +1020,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
                     disabled={isAuthLoading || authVerified || !emailInput.trim()}
                     className="absolute right-1.5 top-1.5 px-3 py-1.5 rounded-lg bg-pink-600 hover:bg-pink-500 text-white font-bold text-[11px] transition-all cursor-pointer disabled:opacity-50"
                   >
-                    {isAuthLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : isOtpSent ? 'Resend Code' : 'Send Code'}
+                    {isAuthLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : isOtpSent ? 'Resend' : 'Send'}
                   </button>
                 </div>
               </div>
@@ -392,7 +1068,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
 
         {/* STEP 2: LINKEDIN SYNC & EXECUTIVE DETAILS FORM */}
         {step === 2 && (
-          <motion.div initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} className="space-y-5">
+          <motion.div initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} className="space-y-5 text-left">
             <div>
               <h2 className="text-xl font-extrabold text-white tracking-tight flex items-center space-x-2">
                 <LinkedinIcon className="w-5 h-5 text-sky-400" />
