@@ -207,11 +207,41 @@ export const OfficeBlueprints: React.FC<OfficeBlueprintsProps> = ({ activeStakeh
   // Active room coords used to offset the blueprint map viewport
   const activeRoom = rooms[activeStakeholderIndex] || rooms[0];
 
+  // Animated pathways to make the office blueprint look dynamically populated
+  const walkingPaths = [
+    {
+      id: 'worker_1',
+      coords: [
+        { x: -100, y: -80 },
+        { x: 0, y: -80 },
+        { x: 100, y: -80 },
+        { x: 100, y: 50 },
+        { x: 0, y: 50 },
+        { x: -100, y: 50 },
+        { x: -100, y: -80 }
+      ],
+      duration: 25,
+      color: 'bg-sky-400/50'
+    },
+    {
+      id: 'worker_2',
+      coords: [
+        { x: 50, y: 150 },
+        { x: 50, y: -50 },
+        { x: -50, y: -50 },
+        { x: -50, y: 150 },
+        { x: 50, y: 150 }
+      ],
+      duration: 18,
+      color: 'bg-pink-400/50'
+    }
+  ];
+
   return (
-    <div className="w-full h-full relative overflow-hidden flex items-center justify-center bg-[#070913]">
-      {/* Dynamic isometric grid background grid lines */}
+    <div className="absolute inset-0 w-full h-full overflow-hidden flex items-center justify-center bg-[#070913] z-0">
+      {/* Dynamic isometric grid background lines */}
       <div 
-        className="absolute inset-0 bg-cover opacity-[0.03] pointer-events-none"
+        className="absolute inset-0 bg-cover opacity-[0.04] pointer-events-none"
         style={{
           backgroundImage: `
             radial-gradient(circle at 1px 1px, white 1px, transparent 0),
@@ -223,18 +253,18 @@ export const OfficeBlueprints: React.FC<OfficeBlueprintsProps> = ({ activeStakeh
       />
 
       {/* Blueprint viewport with perspective */}
-      <div className="w-full h-[55vh] flex items-center justify-center perspective-[1200px]">
+      <div className="absolute inset-0 w-full h-full flex items-center justify-center perspective-[1500px]">
         {/* Isometric map container */}
         <motion.div
           animate={{
-            x: -activeRoom.x,
-            y: -activeRoom.y,
-            scale: 1.15,
+            x: -activeRoom.x + 160, // Shift center x to the right to leave space for the portrait on the left!
+            y: -activeRoom.y - 20,
+            scale: 1.45, // Dramatic AAA zoom focus
           }}
           transition={{
             type: 'spring',
-            stiffness: 70,
-            damping: 20,
+            stiffness: 55,
+            damping: 18,
           }}
           className="relative w-0 h-0 transform-style-preserve-3d"
           style={{
@@ -243,13 +273,13 @@ export const OfficeBlueprints: React.FC<OfficeBlueprintsProps> = ({ activeStakeh
         >
           {/* Main floor outline blueprint */}
           <div 
-            className="absolute -translate-x-1/2 -translate-y-1/2 w-[720px] h-[720px] rounded-full border border-dashed border-white/5 bg-slate-950/20 backdrop-blur-[1px] transform-style-preserve-3d"
+            className="absolute -translate-x-1/2 -translate-y-1/2 w-[760px] h-[760px] rounded-full border border-dashed border-white/5 bg-slate-950/20 backdrop-blur-[1px] transform-style-preserve-3d"
             style={{ transform: 'translateZ(-10px)' }}
           />
 
           {/* Grid lines floor */}
           <div 
-            className="absolute -translate-x-1/2 -translate-y-1/2 w-[650px] h-[650px] border border-white/10 transform-style-preserve-3d"
+            className="absolute -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] border border-white/10 transform-style-preserve-3d"
             style={{
               backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px)',
               backgroundSize: '20px 20px',
@@ -264,28 +294,28 @@ export const OfficeBlueprints: React.FC<OfficeBlueprintsProps> = ({ activeStakeh
               <motion.div
                 key={room.id}
                 animate={{
-                  translateZ: isActive ? 20 : 0,
-                  opacity: isActive ? 1.0 : 0.25,
-                  scale: isActive ? 1.05 : 0.95,
+                  translateZ: isActive ? 30 : 0, // Extra elevation height on active
+                  opacity: isActive ? 1.0 : 0.08, // Dim inactive rooms significantly!
+                  scale: isActive ? 1.06 : 0.92,
                 }}
                 transition={{
                   type: 'spring',
-                  stiffness: 100,
-                  damping: 18,
+                  stiffness: 90,
+                  damping: 16,
                 }}
-                className={`absolute rounded-2xl bg-gradient-to-br ${room.color} border-2 border-white/15 backdrop-blur-md shadow-2xl flex flex-col justify-between overflow-hidden cursor-pointer transform-style-preserve-3d`}
+                className={`absolute rounded-2xl bg-gradient-to-br ${room.color} border-2 border-white/15 backdrop-blur-md shadow-2xl flex flex-col justify-between overflow-hidden transform-style-preserve-3d z-10`}
                 style={{
                   width: room.w,
                   height: room.h,
                   left: room.x - room.w / 2,
                   top: room.y - room.h / 2,
-                  boxShadow: isActive ? `0 0 45px ${room.accentGlow}` : 'none',
+                  boxShadow: isActive ? `0 0 60px 15px ${room.accentGlow}` : 'none',
                 }}
               >
                 {/* 3D Depth walls representation */}
                 <div 
                   className="absolute inset-0 border border-white/5 rounded-2xl pointer-events-none transform-style-preserve-3d"
-                  style={{ transform: 'translateZ(10px)' }}
+                  style={{ transform: 'translateZ(12px)' }}
                 />
 
                 {/* Inner Room Header */}
@@ -306,12 +336,23 @@ export const OfficeBlueprints: React.FC<OfficeBlueprintsProps> = ({ activeStakeh
                   {room.ambientContent}
                 </div>
 
+                {/* Spotlight cone overlay gradient */}
+                {isActive && (
+                  <div 
+                    className="absolute inset-0 pointer-events-none transform-style-preserve-3d"
+                    style={{
+                      background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.06), transparent 80%)',
+                      transform: 'translateZ(15px)',
+                    }}
+                  />
+                )}
+
                 {/* Active scanner outline indicator */}
                 {isActive && (
                   <motion.div
                     className="absolute inset-0 border-2 border-white pointer-events-none rounded-2xl"
                     animate={{
-                      borderColor: ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.7)', 'rgba(255,255,255,0.1)'],
+                      borderColor: ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.8)', 'rgba(255,255,255,0.1)'],
                     }}
                     transition={{
                       duration: 2.0,
@@ -322,11 +363,31 @@ export const OfficeBlueprints: React.FC<OfficeBlueprintsProps> = ({ activeStakeh
               </motion.div>
             );
           })}
+
+          {/* Animated walking workers inside corridors */}
+          {walkingPaths.map((worker) => (
+            <motion.div
+              key={worker.id}
+              animate={{
+                x: worker.coords.map(c => c.x),
+                y: worker.coords.map(c => c.y),
+              }}
+              transition={{
+                duration: worker.duration,
+                repeat: Infinity,
+                ease: 'linear'
+              }}
+              className={`absolute w-3 h-3 rounded-full ${worker.color} border border-white/10 flex items-center justify-center shadow-md transform-style-preserve-3d z-30`}
+              style={{ transform: 'translateZ(10px)' }}
+            >
+              <span className="w-1 h-1 bg-white rounded-full animate-pulse" />
+            </motion.div>
+          ))}
         </motion.div>
       </div>
 
-      {/* Ambient office sound wave overlay details */}
-      <div className="absolute bottom-6 left-6 flex items-center space-x-2 bg-slate-950/80 backdrop-blur-xl border border-white/10 px-3 py-1.5 rounded-full select-none">
+      {/* Ambient office camera watermarks */}
+      <div className="absolute bottom-6 left-6 flex items-center space-x-2 bg-slate-950/80 backdrop-blur-xl border border-white/10 px-3 py-1.5 rounded-full select-none z-30">
         <span className="flex h-2 w-2 relative">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
           <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
