@@ -223,15 +223,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     }
   };
 
-  // ── Enable audio safely on user gesture ──
+  // ── Enable audio safely on valid user gesture (click/keydown/touchstart) ──
   const enableAllAudio = () => {
     try {
       const vid = videoRef.current;
       if (vid) {
         vid.muted = false;
-        vid.volume = 0.5;
+        vid.volume = 0.6;
+        if (vid.paused) {
+          vid.play().catch(() => {});
+        }
       }
-    } catch {}
+    } catch (e) {
+      console.warn('Video audio unmute failed:', e);
+    }
     startMusic();
     setIsMuted(false);
   };
@@ -239,17 +244,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const toggleMute = () => {
     const vid = videoRef.current;
     if (isMuted) {
-      if (vid) {
-        vid.muted = false;
-        vid.volume = 0.5;
-      }
-      if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
-        audioCtxRef.current.resume();
-      }
-      if (ambienceRef.current) {
-        ambienceRef.current.master.gain.setValueAtTime(0.40, audioCtxRef.current?.currentTime || 0);
-      }
-      setIsMuted(false);
+      enableAllAudio();
     } else {
       if (vid) {
         vid.muted = true;
@@ -261,21 +256,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     }
   };
 
-  // Audio initialization and interaction listeners remain untouched
-
   useEffect(() => {
-    // Attempt ambient tune start
+    // Safely attempt ambient tune start
     startMusic();
 
-    // Safely enable sound on initial user interaction (click, scroll, mousemove, touch, keydown)
+    // Safely enable sound on initial EXPLICIT user interaction (click, keydown, touchstart)
     const onInteract = () => {
       enableAllAudio();
     };
 
-    window.addEventListener('pointermove', onInteract, { once: true });
     window.addEventListener('click', onInteract, { once: true });
     window.addEventListener('keydown', onInteract, { once: true });
-    window.addEventListener('scroll', onInteract, { once: true });
     window.addEventListener('touchstart', onInteract, { once: true });
 
     return () => {
@@ -289,10 +280,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           setTimeout(() => ctx.close(), 1500);
         }
       }
-      window.removeEventListener('pointermove', onInteract);
       window.removeEventListener('click', onInteract);
       window.removeEventListener('keydown', onInteract);
-      window.removeEventListener('scroll', onInteract);
       window.removeEventListener('touchstart', onInteract);
     };
   }, []);
@@ -381,6 +370,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             objectPosition: 'center 15%',
           }}
         />
+
+        {/* Floating Sound Prompt Badge */}
+        {isMuted ? (
+          <button
+            onClick={enableAllAudio}
+            className="absolute top-6 right-6 z-30 flex items-center space-x-2 bg-slate-950/85 hover:bg-black text-amber-300 border border-amber-500/50 px-4 py-2 rounded-full text-xs font-mono font-bold backdrop-blur-md transition-all cursor-pointer shadow-2xl animate-bounce"
+          >
+            <VolumeX className="w-4 h-4 text-amber-400" />
+            <span>Click to Enable Video Sound</span>
+          </button>
+        ) : (
+          <button
+            onClick={toggleMute}
+            className="absolute top-6 right-6 z-30 flex items-center space-x-2 bg-slate-950/60 hover:bg-slate-950/80 text-emerald-300 border border-emerald-500/30 px-3.5 py-1.5 rounded-full text-xs font-mono font-bold backdrop-blur-md transition-all cursor-pointer shadow-lg"
+          >
+            <Volume2 className="w-4 h-4 text-emerald-400" />
+            <span>Sound Active</span>
+          </button>
+        )}
 
         {/* Bottom fade only — minimal, doesn't dim video content */}
         <div className="absolute bottom-0 left-0 right-0 pointer-events-none"
