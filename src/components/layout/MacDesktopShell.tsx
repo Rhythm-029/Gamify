@@ -64,57 +64,8 @@ export const MacDesktopShell: React.FC<MacDesktopShellProps> = ({
           </nav>
         </div>
 
-        {/* Center: Game Stats (Streak, XP, Trust) */}
-        <div className="flex items-center space-x-3">
-          {/* Day & Act */}
-          <div className="hidden lg:flex items-center bg-white/5 border border-white/10 px-2.5 py-1 rounded-full text-[11px] text-slate-300">
-            <span className="font-semibold text-blue-400 mr-1.5">DAY {playerState.currentDay} OF {playerState.totalDays}</span>
-            <span className="text-slate-500">•</span>
-            <span className="ml-1.5 text-slate-400">{playerState.currentAct}</span>
-          </div>
-
-          {/* DUOLINGO-STYLE STREAK COUNTER */}
-          <div 
-            onClick={() => onSelectApp('dashboard')}
-            className="flex items-center space-x-1.5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-orange-500/40 px-2.5 py-1 rounded-full text-orange-400 cursor-pointer hover:scale-105 transition-transform"
-            title="Duolingo-Inspired Daily Streak"
-          >
-            <Flame className="w-3.5 h-3.5 text-orange-500 fill-orange-500 animate-bounce" />
-            <span className="font-bold tracking-tight text-[11px]">{playerState.streakDays} Day Streak</span>
-          </div>
-
-          {/* XP & Trust Metrics */}
-          <div className="flex items-center space-x-2 bg-blue-500/10 border border-blue-500/30 px-2.5 py-1 rounded-full text-[11px] text-blue-300">
-            <Award className="w-3.5 h-3.5 text-blue-400" />
-            <span className="font-bold">{playerState.transformationXP} XP</span>
-          </div>
-
-          <div className="flex items-center space-x-1.5 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-full text-[11px] text-emerald-300">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="font-semibold">{playerState.trustScore}% Trust</span>
-          </div>
-        </div>
-
         {/* Right Controls */}
         <div className="flex items-center space-x-2">
-          {/* Quick Simulation Crisis Event Trigger Button */}
-          <button 
-            onClick={onOpenEventModal}
-            className="flex items-center space-x-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 px-2 py-0.5 rounded text-[10px] text-red-300 font-medium transition-all cursor-pointer"
-            title="Trigger Business Event Modal"
-          >
-            <ShieldAlert className="w-3 h-3 text-red-400" />
-            <span className="hidden sm:inline">Trigger Event</span>
-          </button>
-
-          {/* AI Director floating button */}
-          <button
-            onClick={onOpenAIDirector}
-            className="flex items-center space-x-1 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 px-2 py-0.5 rounded text-[10px] text-purple-300 font-medium transition-all accent-glow-purple cursor-pointer"
-          >
-            <Sparkles className="w-3 h-3 text-purple-400" />
-            <span>AI Director</span>
-          </button>
 
           {/* User Profile avatar dropdown */}
           <div className="relative">

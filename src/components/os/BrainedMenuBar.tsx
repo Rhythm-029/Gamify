@@ -56,35 +56,6 @@ export const BrainedMenuBar: React.FC<BrainedMenuBarProps> = ({
 
       {/* RIGHT: Game Metrics & System Indicators */}
       <div className="flex items-center space-x-3 text-xs">
-        {/* Day & Act Badge */}
-        <div className="hidden xl:flex items-center bg-blue-500/15 border border-blue-500/30 px-3 py-1 rounded-full text-slate-200">
-          <span className="font-bold text-blue-400 mr-1.5">DAY {osState.currentDay} OF {osState.totalDays}</span>
-          <span className="text-slate-500">•</span>
-          <span className="ml-1.5 text-slate-300 font-medium">Act I: Foundation</span>
-        </div>
-
-        {/* DUOLINGO STREAK COUNTER */}
-        <div 
-          onClick={() => onSelectApp('dashboard')}
-          className="flex items-center space-x-1.5 bg-gradient-to-r from-amber-500/25 to-orange-500/25 border border-orange-500/50 px-3 py-1 rounded-full text-orange-300 cursor-pointer hover:scale-105 transition-transform shadow-sm"
-          title="Daily Transformation Streak"
-        >
-          <Flame className="w-4 h-4 text-orange-400 fill-orange-400 animate-bounce" />
-          <span className="font-extrabold text-xs">{osState.streakDays} Day Streak</span>
-        </div>
-
-        {/* XP Badge */}
-        <div className="hidden sm:flex items-center space-x-1.5 bg-blue-500/20 border border-blue-500/40 px-3 py-1 rounded-full text-blue-200">
-          <Award className="w-4 h-4 text-blue-400" />
-          <span className="font-extrabold text-xs">{osState.xp} XP</span>
-        </div>
-
-        {/* Executive Trust */}
-        <div className="flex items-center space-x-1.5 bg-emerald-500/20 border border-emerald-500/40 px-3 py-1 rounded-full text-emerald-200">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-          <span className="font-bold text-xs">{osState.trustScore}% Trust</span>
-        </div>
-
         {/* Spotlight Search Trigger (⌘K) */}
         <button
           onClick={onOpenSpotlight}
@@ -93,24 +64,6 @@ export const BrainedMenuBar: React.FC<BrainedMenuBarProps> = ({
         >
           <Search className="w-3.5 h-3.5 text-slate-300" />
           <span className="hidden md:inline font-bold">⌘K Search</span>
-        </button>
-
-        {/* Crisis Event Trigger */}
-        <button 
-          onClick={onOpenEventModal}
-          className="flex items-center space-x-1.5 bg-red-500/25 hover:bg-red-500/40 border border-red-500/50 px-2.5 py-1 rounded-lg text-xs text-red-200 font-bold cursor-pointer transition-all"
-        >
-          <ShieldAlert className="w-3.5 h-3.5 text-red-400" />
-          <span className="hidden sm:inline">Crisis</span>
-        </button>
-
-        {/* AI Director button */}
-        <button
-          onClick={onOpenAIDirector}
-          className="flex items-center space-x-1.5 bg-purple-500/25 hover:bg-purple-500/40 border border-purple-500/50 px-2.5 py-1 rounded-lg text-xs text-purple-200 font-bold apple-glow-purple cursor-pointer transition-all"
-        >
-          <Sparkles className="w-3.5 h-3.5 text-purple-300" />
-          <span>AI Assistant</span>
         </button>
 
         {/* Time & Status Icons */}
