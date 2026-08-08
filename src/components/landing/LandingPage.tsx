@@ -257,17 +257,32 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   };
 
   useEffect(() => {
-    // Safely attempt ambient tune start
-    startMusic();
+    const vid = videoRef.current;
 
-    // Safely enable sound on initial EXPLICIT user interaction (click, keydown, touchstart)
-    const onInteract = () => {
-      enableAllAudio();
-    };
+    // Try playing with sound immediately (works if user already interacted or browser allows it)
+    if (vid) {
+      vid.muted = false;
+      vid.volume = 0.6;
+      vid.play().then(() => {
+        // Played with sound successfully
+        setIsMuted(false);
+        startMusic();
+      }).catch(() => {
+        // Browser blocked unmuted autoplay — fall back to muted, then unmute on first interaction
+        vid.muted = true;
+        vid.play().catch(() => {});
 
-    window.addEventListener('click', onInteract, { once: true });
-    window.addEventListener('keydown', onInteract, { once: true });
-    window.addEventListener('touchstart', onInteract, { once: true });
+        const onInteract = () => {
+          enableAllAudio();
+        };
+
+        window.addEventListener('click', onInteract, { once: true });
+        window.addEventListener('keydown', onInteract, { once: true });
+        window.addEventListener('touchstart', onInteract, { once: true });
+      });
+    } else {
+      startMusic();
+    }
 
     return () => {
       if (ambienceRef.current) {
@@ -280,9 +295,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           setTimeout(() => ctx.close(), 1500);
         }
       }
-      window.removeEventListener('click', onInteract);
-      window.removeEventListener('keydown', onInteract);
-      window.removeEventListener('touchstart', onInteract);
     };
   }, []);
 
@@ -355,9 +367,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         */}
         <video
           ref={videoRef}
-          src="/start_video/make_a_animation_video_of_thsi.mp4"
+          src="/start_video/intro_1080p.mp4"
+          poster="/start_video/frame0.jpg"
           autoPlay
-          muted
           playsInline
           preload="auto"
           onPlay={(e) => {
@@ -368,27 +380,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           style={{
             objectFit: 'cover',
             objectPosition: 'center 15%',
+            willChange: 'transform',
+            imageRendering: 'high-quality',
           }}
         />
 
-        {/* Floating Sound Prompt Badge */}
-        {isMuted ? (
-          <button
-            onClick={enableAllAudio}
-            className="absolute top-6 right-6 z-30 flex items-center space-x-2 bg-slate-950/85 hover:bg-black text-amber-300 border border-amber-500/50 px-4 py-2 rounded-full text-xs font-mono font-bold backdrop-blur-md transition-all cursor-pointer shadow-2xl animate-bounce"
-          >
-            <VolumeX className="w-4 h-4 text-amber-400" />
-            <span>Click to Enable Video Sound</span>
-          </button>
-        ) : (
-          <button
-            onClick={toggleMute}
-            className="absolute top-6 right-6 z-30 flex items-center space-x-2 bg-slate-950/60 hover:bg-slate-950/80 text-emerald-300 border border-emerald-500/30 px-3.5 py-1.5 rounded-full text-xs font-mono font-bold backdrop-blur-md transition-all cursor-pointer shadow-lg"
-          >
-            <Volume2 className="w-4 h-4 text-emerald-400" />
-            <span>Sound Active</span>
-          </button>
-        )}
+        {/* Floating Sound Badge */}
+        <button
+          onClick={toggleMute}
+          className="absolute top-6 right-6 z-30 flex items-center space-x-2 backdrop-blur-md transition-all cursor-pointer shadow-lg px-3.5 py-1.5 rounded-full text-xs font-mono font-bold border"
+          style={isMuted
+            ? { background: 'rgba(15,15,30,0.85)', color: '#fbbf24', borderColor: 'rgba(251,191,36,0.5)' }
+            : { background: 'rgba(15,15,30,0.6)', color: '#6ee7b7', borderColor: 'rgba(110,231,183,0.3)' }
+          }
+        >
+          {isMuted
+            ? <><VolumeX className="w-4 h-4 text-amber-400" /><span>Unmute</span></>
+            : <><Volume2 className="w-4 h-4 text-emerald-400 animate-pulse" /><span>Sound On</span></>
+          }
+        </button>
 
         {/* Bottom fade only — minimal, doesn't dim video content */}
         <div className="absolute bottom-0 left-0 right-0 pointer-events-none"
