@@ -269,7 +269,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
                 />
               )}
               {activeAppId === 'inbox' && <AppleMailApp />}
-              {activeAppId === 'teams' && <MSTeamsApp />}
+              {activeAppId === 'teams' && <MSTeamsApp onPenalty={handleApplyDecision} />}
               {activeAppId === 'slack' && <SlackOSApp />}
               {activeAppId === 'notes' && <AppleNotesApp />}
               {activeAppId === 'calendar' && <AppleCalendarApp />}
