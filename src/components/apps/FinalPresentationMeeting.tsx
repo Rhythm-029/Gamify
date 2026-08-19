@@ -34,10 +34,10 @@ type BoardMember = keyof typeof BOARD;
 // ── Follow-up questions (world-state adaptive) ─────────────────────────────────
 
 function buildFollowUpQuestions(
-  prototypeBuilt: boolean,
+  _prototypeBuilt: boolean,
   danielContacted: boolean,
   hasAuditLogs: boolean,
-  hasDocUpload: boolean,
+  _hasDocUpload: boolean,
 ): Array<{ speaker: BoardMember; text: string }> {
   const qs: Array<{ speaker: BoardMember; text: string }> = [];
 
@@ -105,7 +105,7 @@ export const FinalPresentationMeeting: React.FC = () => {
 
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const [isRecording, setIsRecording] = useState(false);
+  const [, setIsRecording] = useState(false);
   const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadDone, setUploadDone] = useState(false);

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Flame, Award, Sparkles, Settings, LogOut, ShieldAlert, CheckCircle2, Trophy
+  Settings, LogOut, Trophy
 } from 'lucide-react';
 import { INITIAL_PLAYER_STATE } from '../../data/simulationData';
 
@@ -20,8 +20,8 @@ export const MacDesktopShell: React.FC<MacDesktopShellProps> = ({
   activeApp,
   onSelectApp,
   playerState,
-  onOpenAIDirector,
-  onOpenEventModal,
+  onOpenAIDirector: _onOpenAIDirector,
+  onOpenEventModal: _onOpenEventModal,
   unreadEmailCount,
   unreadSlackCount,
 }) => {

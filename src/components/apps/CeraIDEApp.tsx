@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
 import { 
-  Sparkles, Terminal as TerminalIcon, Monitor, Play, RotateCw, CheckCircle2, Zap
+  Sparkles, RotateCw, CheckCircle2, Zap
 } from 'lucide-react';
 import { CeraActivityBar, type ActivityTab } from './cera/CeraActivityBar';
 import { CeraSidebar } from './cera/CeraSidebar';
@@ -11,7 +10,7 @@ import { CeraTerminal } from './cera/CeraTerminal';
 import { CeraPreviewWindow } from './cera/CeraPreviewWindow';
 import { 
   INITIAL_TIMELINE_STEPS, SIMULATION_PHASES,
-  type VirtualFile, type BuildTimelineStep, type SimulationPhase 
+  type VirtualFile, type BuildTimelineStep
 } from './cera/ceraSimulationData';
 import { BrainedLogoIcon } from '../common/BrainedLogoIcon';
 
@@ -41,7 +40,7 @@ export const CeraIDEApp: React.FC = () => {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
 
-  const simulationTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const simulationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Clean up timer on unmount
   useEffect(() => {

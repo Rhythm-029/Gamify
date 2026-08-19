@@ -27,19 +27,19 @@ export const ENV = {
   // Redis — local default, override with Upstash URL in .env
   REDIS_URL: process.env.REDIS_URL || 'redis://localhost:6379',
 
-  // ── LLM (Grok-first, OpenAI fallback) ────────────────────────────────────
-  // Grok / xAI — set XAI_API_KEY for Grok
-  XAI_API_KEY: process.env.XAI_API_KEY || '',
-  LLM_BASE_URL: process.env.LLM_BASE_URL || 'https://api.x.ai/v1',
-  LLM_MODEL: process.env.LLM_MODEL || 'grok-3',
+  // ── LLM (Grok / Groq / OpenAI) ──────────────────────────────────────────
+  XAI_API_KEY: process.env.XAI_API_KEY || process.env.GROK_API_KEY || process.env.GROQ_API_KEY || '',
+  GROK_API_KEY: process.env.GROK_API_KEY || process.env.XAI_API_KEY || process.env.GROQ_API_KEY || '',
+  GROQ_API_KEY: process.env.GROQ_API_KEY || process.env.GROK_API_KEY || process.env.XAI_API_KEY || '',
+  LLM_BASE_URL: process.env.LLM_BASE_URL || ((process.env.GROK_API_KEY || process.env.GROQ_API_KEY || '').startsWith('gsk_') ? 'https://api.groq.com/openai/v1' : 'https://api.x.ai/v1'),
+  LLM_MODEL: process.env.LLM_MODEL || ((process.env.GROK_API_KEY || process.env.GROQ_API_KEY || '').startsWith('gsk_') ? 'llama-3.3-70b-versatile' : 'grok-3'),
 
-  // OpenAI — fallback (used if XAI_API_KEY not set)
+  // OpenAI — fallback
   OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
 
   // ── Whisper (transcription) ───────────────────────────────────────────────
-  // WHISPER_PROVIDER: 'openai' (default) | 'groq' (faster, free tier)
-  WHISPER_PROVIDER: process.env.WHISPER_PROVIDER || 'openai',
-  GROQ_API_KEY: process.env.GROQ_API_KEY || '',
+  WHISPER_PROVIDER: process.env.WHISPER_PROVIDER || ((process.env.GROK_API_KEY || process.env.GROQ_API_KEY || '').startsWith('gsk_') ? 'groq' : 'openai'),
+
 
   // Storage adapter: 'local' (default) | 's3' | 'r2'
   STORAGE_ADAPTER: process.env.STORAGE_ADAPTER || 'local',

@@ -8,7 +8,7 @@ import { GameProvider, useGame } from './context/GameContext';
 // ── Inner app — reads GameContext for phase transitions ────────────────────────
 
 function InnerApp({ playerConfig }: { playerConfig: any }) {
-  const { state, setPhase } = useGame();
+  const { state } = useGame();
 
   // Show Final Report fullscreen when phase is 'report'
   if (state.phase === 'report') {

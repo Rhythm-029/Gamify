@@ -200,7 +200,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const ambienceRef = useRef<{ nodes: AudioNode[]; master: GainNode } | null>(null);
-  const [musicStarted, setMusicStarted] = useState(false);
+  const [, setMusicStarted] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
 
   // ── Start corporate ambient tune (Web Audio synth pad) ──
@@ -381,7 +381,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             objectFit: 'cover',
             objectPosition: 'center 15%',
             willChange: 'transform',
-            imageRendering: 'high-quality',
           }}
         />
 

@@ -265,13 +265,6 @@ const OUTCOME_ICON = {
   needs_improvement: <AlertTriangle className="w-10 h-10 text-red-400" />,
 };
 
-const DIMENSION_OUTCOME_COLORS = {
-  strong: 'text-emerald-400',
-  good: 'text-sky-400',
-  needs_work: 'text-amber-400',
-  missed: 'text-red-400',
-};
-
 // ── Main component ────────────────────────────────────────────────────────────
 
 interface FinalReportScreenProps {

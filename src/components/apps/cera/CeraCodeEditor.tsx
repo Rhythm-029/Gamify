@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   X, Copy, Check, Sparkles, Send, Code, Terminal, Monitor, ArrowRight
 } from 'lucide-react';
@@ -243,7 +243,7 @@ export const CeraCodeEditor: React.FC<CeraCodeEditorProps> = ({
                 }
                 return (
                   <div key={idx} className="whitespace-pre">
-                    {line}
+                    {highlightedLine}
                   </div>
                 );
               })}

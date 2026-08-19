@@ -116,7 +116,7 @@ interface PrototypeReviewMeetingProps {
   onClose?: () => void;
 }
 
-export const PrototypeReviewMeeting: React.FC<PrototypeReviewMeetingProps> = ({ onClose }) => {
+export const PrototypeReviewMeeting: React.FC<PrototypeReviewMeetingProps> = ({ onClose: _onClose }) => {
   const { state, setPrototypeReviewDone, addSignal } = useGame();
 
   const hasFeature = (id: string) =>
@@ -455,7 +455,7 @@ export const PrototypeReviewMeeting: React.FC<PrototypeReviewMeetingProps> = ({ 
           {/* Chat log */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {/* Previously answered questions */}
-            {questions.slice(0, questionIdx).map((q, i) => {
+            {questions.slice(0, questionIdx).map((q) => {
               const char = CHARS[q.speaker];
               return (
                 <div key={q.id} className="space-y-2">

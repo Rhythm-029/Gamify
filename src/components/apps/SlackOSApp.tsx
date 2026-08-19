@@ -26,6 +26,7 @@ interface LocalMsg {
   senderAvatar: string;
   content: string;
   timestamp: string;
+  channelId?: string;
 }
 
 interface SlackChannel {
@@ -97,7 +98,7 @@ const CHANNEL_DEFS: SlackChannel[] = [
 
 // ── Seed messages (shown from game start — static context, not timed) ─────────
 
-const SEED_MESSAGES: LocalMsg[] & { channelId: string }[] = [
+const SEED_MESSAGES: LocalMsg[] = [
   {
     id: 'g1', channelId: 'ch-general',
     senderId: 'system', senderName: 'Brained', senderAvatar: '/brained_icon.png',

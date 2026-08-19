@@ -17,7 +17,7 @@ interface CeraSidebarProps {
 }
 
 export const CeraSidebar: React.FC<CeraSidebarProps> = ({
-  activeTab,
+  activeTab: _activeTab,
   projectName,
   generatedFiles,
   activeFileId,

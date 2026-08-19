@@ -24,8 +24,6 @@ import { PostMeetingPrompt } from '../apps/PostMeetingPrompt';
 import { PrototypeReviewMeeting } from '../apps/PrototypeReviewMeeting';
 import { FinalPresentationMeeting } from '../apps/FinalPresentationMeeting';
 
-// Other Apps
-import { DashboardHome } from '../workspace/DashboardHome';
 import { AppleMailApp } from '../apps/AppleMailApp';
 import { AppleNotesApp } from '../apps/AppleNotesApp';
 import { AppleCalendarApp } from '../apps/AppleCalendarApp';
@@ -73,12 +71,11 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
   const sessionId = localStorage.getItem('brained_session_id');
 
   // Game context (central simulation state)
-  const { state: gameState, setPhase } = useGame();
+  const { state: gameState } = useGame();
 
   // Live game session WebSocket hook
   const {
     notifications: liveNotifications,
-    mails: liveMails,
     dockBadges: liveDockBadges,
     dismissNotification: dismissLiveNotification,
   } = useGameSession(sessionId);
@@ -159,7 +156,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
         changed = true;
         next = [...next, {
           id: pn.id,
-          app: pn.app,
+          app: (['Teams', 'Slack', 'Mail', 'Calendar', 'Security'].includes(pn.app) ? pn.app : 'Teams') as OSNotification['app'],
           title: pn.title,
           subtitle: pn.subtitle,
           body: pn.body,

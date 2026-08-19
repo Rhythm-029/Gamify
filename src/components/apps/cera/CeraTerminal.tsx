@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
-  Terminal as TerminalIcon, Play, Maximize2, X, ChevronUp, ChevronDown, CheckCircle2
+  Terminal as TerminalIcon, Play, ChevronUp, ChevronDown
 } from 'lucide-react';
 
 interface CeraTerminalProps {

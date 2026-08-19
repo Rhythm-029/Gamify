@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   Globe, RotateCw, ArrowLeft, ArrowRight, Monitor, Smartphone, Tablet, 
-  ShieldCheck, Sparkles, ExternalLink, CheckCircle2
+  Sparkles
 } from 'lucide-react';
 import { Dashboard } from './previewViews/DashboardView';
 import { LeaveManagement } from './previewViews/LeaveView';

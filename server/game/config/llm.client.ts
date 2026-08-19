@@ -7,26 +7,26 @@
 import OpenAI from 'openai';
 import { ENV } from '../../config/env';
 
-// Grok API is OpenAI-compatible — same SDK, different baseURL and key
+// Grok / Groq API is OpenAI-compatible — same SDK, different baseURL and key
 export const llmClient = new OpenAI({
-  apiKey: ENV.XAI_API_KEY || ENV.OPENAI_API_KEY,
-  baseURL: ENV.LLM_BASE_URL, // https://api.x.ai/v1 for Grok
+  apiKey: ENV.XAI_API_KEY || ENV.GROK_API_KEY || ENV.GROQ_API_KEY || ENV.OPENAI_API_KEY,
+  baseURL: ENV.LLM_BASE_URL,
 });
 
 /** Default model — overridable per call */
-export const LLM_MODEL = ENV.LLM_MODEL; // grok-3, grok-2, or gpt-4o
+export const LLM_MODEL = ENV.LLM_MODEL;
 
 /** Whisper client — can be same key or separate Groq key */
 export const whisperClient = (() => {
   if (ENV.WHISPER_PROVIDER === 'groq') {
     return new OpenAI({
-      apiKey: ENV.GROQ_API_KEY,
+      apiKey: ENV.GROQ_API_KEY || ENV.GROK_API_KEY || ENV.XAI_API_KEY,
       baseURL: 'https://api.groq.com/openai/v1',
     });
   }
   // Default: OpenAI Whisper API
   return new OpenAI({
-    apiKey: ENV.OPENAI_API_KEY || ENV.XAI_API_KEY,
+    apiKey: ENV.OPENAI_API_KEY || ENV.XAI_API_KEY || ENV.GROK_API_KEY,
   });
 })();
 

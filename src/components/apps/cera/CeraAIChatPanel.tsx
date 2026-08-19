@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
-  Sparkles, CheckCircle2, Clock, Zap, ChevronDown, ChevronRight, 
+  Sparkles, CheckCircle2, Clock, Zap, 
   Bot, RefreshCw, Check
 } from 'lucide-react';
 import type { BuildTimelineStep } from './ceraSimulationData';

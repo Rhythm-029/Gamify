@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  Flame, Award, CheckCircle2, Search, Wifi, Battery, Sparkles, ShieldAlert 
+  Search, Wifi, Battery 
 } from 'lucide-react';
 import { INITIAL_OS_STATE } from '../../data/brainedOSData';
 import { BrainedLogoIcon } from '../common/BrainedLogoIcon';
@@ -17,7 +17,7 @@ interface BrainedMenuBarProps {
 
 export const BrainedMenuBar: React.FC<BrainedMenuBarProps> = ({
   activeAppName,
-  osState,
+  osState: _osState,
   onOpenSpotlight,
   onOpenAIDirector: _onOpenAIDirector,
   onOpenEventModal: _onOpenEventModal,
