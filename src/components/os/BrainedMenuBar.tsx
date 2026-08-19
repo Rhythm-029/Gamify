@@ -12,15 +12,17 @@ interface BrainedMenuBarProps {
   onOpenAIDirector: () => void;
   onOpenEventModal: () => void;
   onSelectApp: (appId: string | null) => void;
+  clockWidget?: React.ReactNode;
 }
 
 export const BrainedMenuBar: React.FC<BrainedMenuBarProps> = ({
   activeAppName,
   osState,
   onOpenSpotlight,
-  onOpenAIDirector,
-  onOpenEventModal,
+  onOpenAIDirector: _onOpenAIDirector,
+  onOpenEventModal: _onOpenEventModal,
   onSelectApp,
+  clockWidget,
 }) => {
   return (
     <header className="h-11 w-full apple-header-glass fixed top-0 left-0 right-0 z-50 px-5 flex items-center justify-between text-xs select-none border-b border-white/20 text-slate-100 backdrop-blur-2xl bg-slate-900/90 shadow-lg">
@@ -66,11 +68,13 @@ export const BrainedMenuBar: React.FC<BrainedMenuBarProps> = ({
           <span className="hidden md:inline font-bold">⌘K Search</span>
         </button>
 
-        {/* Time & Status Icons */}
-        <div className="flex items-center space-x-2.5 text-slate-300 pl-1 border-l border-white/15 ml-1">
+        {/* In-game clock widget */}
+        {clockWidget && <div className="border-l border-white/15 pl-3 ml-1">{clockWidget}</div>}
+
+        {/* System icons */}
+        <div className="flex items-center space-x-2 text-slate-300 border-l border-white/15 pl-2 ml-1">
           <Wifi className="w-3.5 h-3.5 text-slate-200" />
           <Battery className="w-4 h-4 text-emerald-400" />
-          <span className="font-bold text-white font-mono text-xs">10:42 AM</span>
         </div>
       </div>
     </header>

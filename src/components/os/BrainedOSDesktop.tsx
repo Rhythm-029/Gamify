@@ -7,18 +7,29 @@ import { OSNotificationCenter } from './OSNotificationCenter';
 import { SpotlightSearch } from './SpotlightSearch';
 import { DesktopWidgets } from './DesktopWidgets';
 import { BrainedLogoIcon } from '../common/BrainedLogoIcon';
+import { InGameClock } from './InGameClock';
+import { PauseExitGate } from './PauseExitGate';
 import { sound } from '../onboarding/SoundEngine';
+import { useGameSession } from '../../hooks/useGameSession';
+import { useGame } from '../../context/GameContext';
 
 import { INITIAL_OS_STATE } from '../../data/brainedOSData';
 import type { OSNotification } from '../../data/brainedOSData';
 
-// App Clones
+// Simulation Apps
+import { TitanKickoffMeeting } from '../apps/TitanKickoffMeeting';
+import { TitanIDEApp } from '../apps/TitanIDEApp';
+import { SlackOSApp } from '../apps/SlackOSApp';
+import { PostMeetingPrompt } from '../apps/PostMeetingPrompt';
+import { PrototypeReviewMeeting } from '../apps/PrototypeReviewMeeting';
+import { FinalPresentationMeeting } from '../apps/FinalPresentationMeeting';
+
+// Other Apps
 import { DashboardHome } from '../workspace/DashboardHome';
 import { AppleMailApp } from '../apps/AppleMailApp';
 import { AppleNotesApp } from '../apps/AppleNotesApp';
 import { AppleCalendarApp } from '../apps/AppleCalendarApp';
 import { MSTeamsApp } from '../apps/MSTeamsApp';
-import { SlackApp as SlackOSApp } from '../workspace/SlackApp';
 import { JiraKanbanApp } from '../apps/JiraKanbanApp';
 import { FinderApp } from '../apps/FinderApp';
 import { FakeBrowserApp } from '../apps/FakeBrowserApp';
@@ -26,10 +37,7 @@ import { TerminalApp } from '../apps/TerminalApp';
 import { DocumentsApp } from '../workspace/DocumentsApp';
 import { StakeholdersApp } from '../workspace/StakeholdersApp';
 import { CertificateApp } from '../workspace/CertificateApp';
-import { LeaderboardApp } from '../workspace/LeaderboardApp';
-import { AchievementsApp } from '../workspace/AchievementsApp';
 import { SettingsApp } from '../workspace/SettingsApp';
-import { CeraIDEApp } from '../apps/CeraIDEApp';
 
 import { AIDirectorWidget } from '../overlays/AIDirectorWidget';
 import { SimulationEventModal } from '../overlays/SimulationEventModal';
@@ -61,52 +69,113 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
     return defaultState;
   });
 
-  const [activeAppId, setActiveAppId] = useState<string | null>(null); // Starts NULL on desktop wallpaper!
+  // Read session ID from localStorage
+  const sessionId = localStorage.getItem('brained_session_id');
+
+  // Game context (central simulation state)
+  const { state: gameState, setPhase } = useGame();
+
+  // Live game session WebSocket hook
+  const {
+    notifications: liveNotifications,
+    mails: liveMails,
+    dockBadges: liveDockBadges,
+    dismissNotification: dismissLiveNotification,
+  } = useGameSession(sessionId);
+
+  const [activeAppId, setActiveAppId] = useState<string | null>(null);
   const [openAppIds, setOpenAppIds] = useState<string[]>([]);
-  const [notifications, setNotifications] = useState<OSNotification[]>([]);
+  const [localNotifications, setLocalNotifications] = useState<OSNotification[]>([]);
   const [isSpotlightOpen, setIsSpotlightOpen] = useState(false);
   const [isAIDirectorOpen, setIsAIDirectorOpen] = useState(false);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [showPostMeetingPrompt, setShowPostMeetingPrompt] = useState(false);
+
+  // Merge local (boot) notifications with live WebSocket notifications
+  const notifications = [
+    ...localNotifications,
+    ...liveNotifications.filter((n) => !localNotifications.some((l) => l.id === n.id)),
+  ];
 
   // OS Boot timer sequence states
   const [bootStep, setBootStep] = useState<'booting' | 'silence' | 'ready'>(firstBoot ? 'booting' : 'ready');
 
   useEffect(() => {
     if (!firstBoot) {
-      setNotifications([]);
+      setLocalNotifications([]);
       return;
     }
 
     if (bootStep === 'booting') {
-      setNotifications([]);
+      setLocalNotifications([]);
       const timer = setTimeout(() => {
         setBootStep('silence');
-      }, 3500); // Boot loader screen displays for 3.5s
+      }, 3500);
       return () => clearTimeout(timer);
     }
 
     if (bootStep === 'silence') {
       const timer = setTimeout(() => {
         setBootStep('ready');
-        
-        // Trigger Teams incoming notification and play synthesized ringtone
+        // Kickoff call notification — opens TitanKickoffMeeting
         const teamsNotification: OSNotification = {
-          id: "notif-teams-1",
-          app: "Teams",
-          title: "Microsoft Teams • Incoming Video Call",
-          subtitle: "Marcus (CTO)",
-          body: "Project Titan Kickoff Briefing — Please join immediately.",
-          timestamp: "Just now",
-          actionText: "Accept Call",
-          onActionAppId: "teams",
+          id: 'notif-kickoff',
+          app: 'Teams',
+          title: 'Microsoft Teams • Incoming Video Call',
+          subtitle: 'Marcus Reed (CTO) • 4 participants',
+          body: 'Project Titan Kickoff — Please join immediately.',
+          timestamp: 'Just now',
+          actionText: 'Accept Call',
+          onActionAppId: 'kickoff',
           isCall: true,
         };
-        setNotifications([teamsNotification]);
+        setLocalNotifications([teamsNotification]);
         sound.startTeamsRingtone();
-      }, 5000); // Silence observer duration of 5s
+      }, 3500);
       return () => clearTimeout(timer);
     }
   }, [bootStep, firstBoot]);
+
+  // Show post-meeting prompt 3s after kickoff finishes
+  useEffect(() => {
+    if (gameState.meetingState.kickoffDone && !gameState.meetingState.momSubmitted) {
+      const timer = setTimeout(() => setShowPostMeetingPrompt(true), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [gameState.meetingState.kickoffDone, gameState.meetingState.momSubmitted]);
+
+  // Sync pendingNotifications from GameContext FrontendEventScheduler into local notification list
+  // This replaces all manual Day 7 / Day 14 notification useEffects.
+  // The scheduler in GameContext fires at exact realElapsedMs offsets — no more clock.day integer checks.
+  useEffect(() => {
+    const pending = gameState.pendingNotifications;
+    if (pending.length === 0) return;
+
+    setLocalNotifications((prev) => {
+      let changed = false;
+      let next = [...prev];
+      for (const pn of pending) {
+        if (next.some((n) => n.id === pn.id)) continue;
+        changed = true;
+        next = [...next, {
+          id: pn.id,
+          app: pn.app,
+          title: pn.title,
+          subtitle: pn.subtitle,
+          body: pn.body,
+          timestamp: pn.timestamp,
+          actionText: pn.actionText,
+          onActionAppId: pn.onActionAppId,
+          isCall: pn.isCall,
+        }];
+        // Ring tone for calls
+        if (pn.isCall) {
+          sound.startTeamsRingtone();
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [gameState.pendingNotifications]); // eslint-disable-line
 
   const handleOpenApp = (appId: string | null) => {
     if (appId && !openAppIds.includes(appId)) {
@@ -123,7 +192,8 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
   };
 
   const handleDismissNotification = (notifId: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== notifId));
+    setLocalNotifications((prev) => prev.filter((n) => n.id !== notifId));
+    dismissLiveNotification(notifId);
     sound.stopTeamsRingtone();
   };
 
@@ -144,23 +214,24 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
   };
 
   const appMetaMap: Record<string, { title: string; icon: React.ReactNode }> = {
-    cera: { title: 'Cera IDE — Autonomous AI Software Engineer', icon: <BrainedLogoIcon className="w-4 h-4" /> },
+    kickoff: { title: 'Microsoft Teams — Project Titan Kickoff', icon: <span>📹</span> },
+    review: { title: 'Microsoft Teams — Prototype Review · Day 7', icon: <span>📹</span> },
+    presentation: { title: 'Microsoft Teams — Final Presentation · Day 14', icon: <span>📹</span> },
+    ide: { title: 'Titan HR Portal — Prototype Builder', icon: <BrainedLogoIcon className="w-4 h-4" /> },
     dashboard: { title: 'Brained OS — Executive Dashboard', icon: <BrainedLogoIcon className="w-4 h-4" /> },
     inbox: { title: 'Apple Mail — Priority Inbox', icon: <span>✉️</span> },
-    teams: { title: 'Microsoft Teams — Live Video & Meetings', icon: <span>📹</span> },
-    slack: { title: 'Slack HQ — Workspace Messenger', icon: <span>💬</span> },
-    notes: { title: 'Apple Notes — MOM & Executive Notes', icon: <span>📝</span> },
+    teams: { title: 'Microsoft Teams — Project Titan', icon: <span>📹</span> },
+    slack: { title: 'Slack — Brained Workspace', icon: <span>💬</span> },
+    notes: { title: 'Notes — MOM & Working Notes', icon: <span>📝</span> },
     calendar: { title: 'Calendar — Schedule & Milestones', icon: <span>📅</span> },
-    documents: { title: 'Project Documents & RACI Logs', icon: <span>📁</span> },
-    tasks: { title: 'Jira / Linear — Sprint 1 Kanban', icon: <span>📋</span> },
-    browser: { title: 'Arc Browser — Enterprise Cloud Console', icon: <span>🌐</span> },
-    finder: { title: 'Finder — File Explorer', icon: <span>📂</span> },
-    terminal: { title: 'Terminal — Brained OS CLI', icon: <span>💻</span> },
-    stakeholders: { title: 'Boardroom Alignment & Stakeholder Index', icon: <span>👥</span> },
-    certificate: { title: 'Verified Executive Certificate of Mastery', icon: <span>🏆</span> },
-    leaderboard: { title: 'Global Leaderboard', icon: <span>🥇</span> },
-    achievements: { title: 'Achievements & Badges', icon: <span>✨</span> },
-    settings: { title: 'System Settings', icon: <span>⚙️</span> },
+    documents: { title: 'Project Documents', icon: <span>📁</span> },
+    tasks: { title: 'Jira — Sprint Kanban', icon: <span>📋</span> },
+    browser: { title: 'Browser', icon: <span>🌐</span> },
+    finder: { title: 'Finder', icon: <span>📂</span> },
+    terminal: { title: 'Terminal', icon: <span>💻</span> },
+    stakeholders: { title: 'Stakeholder Map', icon: <span>👥</span> },
+    certificate: { title: 'Certificate', icon: <span>🏆</span> },
+    settings: { title: 'Settings', icon: <span>⚙️</span> },
   };
 
   const currentAppMeta = activeAppId ? appMetaMap[activeAppId] || { title: 'Finder', icon: null } : { title: 'Finder', icon: null };
@@ -218,14 +289,15 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
         <div className="absolute inset-0 bg-slate-950/25 backdrop-blur-[1px]" />
       </div>
 
-      {/* TOP BRAINED OS MENU BAR */}
+      {/* TOP BRAINED OS MENU BAR with in-game clock */}
       <BrainedMenuBar
-        activeAppName={activeAppId ? currentAppMeta.title.split(' — ')[0] : 'Finder'}
+        activeAppName={activeAppId ? (appMetaMap[activeAppId]?.title?.split(' — ')[0] ?? 'Finder') : 'Finder'}
         osState={osState}
         onOpenSpotlight={() => setIsSpotlightOpen(true)}
         onOpenAIDirector={() => setIsAIDirectorOpen(true)}
         onOpenEventModal={() => setIsEventModalOpen(true)}
         onSelectApp={handleOpenApp}
+        clockWidget={<InGameClock />}
       />
 
       {/* DESKTOP CANVAS */}
@@ -245,29 +317,14 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
               onClose={() => handleCloseApp(activeAppId)}
               onFocus={() => {}}
             >
-              {activeAppId === 'cera' && <CeraIDEApp />}
-              {activeAppId === 'dashboard' && (
-                <DashboardHome
-                  playerState={{
-                    name: osState.user.name,
-                    role: osState.user.role,
-                    company: osState.user.company,
-                    industry: "FinTech",
-                    avatar: osState.user.avatar,
-                    streakDays: osState.streakDays,
-                    transformationXP: osState.xp,
-                    trustScore: osState.trustScore,
-                    attendanceScore: 98,
-                    currentDay: osState.currentDay,
-                    totalDays: osState.totalDays,
-                    currentAct: "Act I: Foundation",
-                    rank: "Principal Transformer",
-                    consistencyMeter: 92,
-                  }}
-                  onSelectApp={handleOpenApp}
-                  onOpenEventModal={() => setIsEventModalOpen(true)}
-                />
-              )}
+              {/* KICKOFF — replaces old Teams during meeting */}
+              {activeAppId === 'kickoff' && <TitanKickoffMeeting />}
+              {/* PROTOTYPE REVIEW — Day 7 */}
+              {activeAppId === 'review' && <PrototypeReviewMeeting />}
+              {/* FINAL PRESENTATION — Day 14 */}
+              {activeAppId === 'presentation' && <FinalPresentationMeeting />}
+              {/* IDE — deterministic prototype builder */}
+              {activeAppId === 'ide' && <TitanIDEApp />}
               {activeAppId === 'inbox' && <AppleMailApp />}
               {activeAppId === 'teams' && <MSTeamsApp onPenalty={handleApplyDecision} />}
               {activeAppId === 'slack' && <SlackOSApp />}
@@ -299,8 +356,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
                   }}
                 />
               )}
-              {activeAppId === 'leaderboard' && <LeaderboardApp />}
-              {activeAppId === 'achievements' && <AchievementsApp />}
+              {/* Leaderboard/achievements hidden during simulation — per spec */}
               {activeAppId === 'settings' && (
                 <SettingsApp
                   playerState={{
@@ -345,8 +401,24 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
         activeAppId={activeAppId}
         openAppIds={openAppIds}
         onOpenApp={handleOpenApp}
-        badges={osState.dockBadges}
+        badges={{
+          inbox: liveDockBadges.inbox || osState.dockBadges.inbox,
+          slack: liveDockBadges.slack || osState.dockBadges.slack,
+          notes: osState.dockBadges.notes,
+          calendar: osState.dockBadges.calendar,
+          teams: liveDockBadges.teams || osState.dockBadges.teams,
+        }}
       />
+
+      {/* POST-MEETING PROMPT */}
+      <PostMeetingPrompt
+        visible={showPostMeetingPrompt && !gameState.meetingState.momSubmitted}
+        onOpenNotes={() => { setShowPostMeetingPrompt(false); handleOpenApp('notes'); }}
+        onLater={() => setShowPostMeetingPrompt(false)}
+      />
+
+      {/* PAUSE / EXIT GATE */}
+      <PauseExitGate onConfirmExit={() => setBootStep('booting')} />
 
       {/* OVERLAYS */}
       <AIDirectorWidget
