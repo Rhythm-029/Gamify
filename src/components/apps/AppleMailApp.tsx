@@ -1,33 +1,59 @@
 import React, { useState } from 'react';
 import { Mail, Search, Paperclip, Send, AlertCircle, Folder } from 'lucide-react';
-import { OS_MAILS } from '../../data/brainedOSData';
-import type { MailItem } from '../../data/brainedOSData';
+import type { GameMail } from '../../hooks/useGameSession';
+import { useGame } from '../../context/GameContext';
+
+// Legacy type alias for backward compatibility
+export type MailItem = GameMail & { senderAvatar: string };
 
 const getMailColor = (sender: string) => {
   const clean = sender.toLowerCase();
   if (clean.includes('marcus')) return { text: 'text-blue-400', border: 'border-blue-500/40', bg: 'bg-blue-500/10', borderL: 'border-l-blue-500' };
   if (clean.includes('emma')) return { text: 'text-emerald-400', border: 'border-emerald-500/40', bg: 'bg-emerald-500/10', borderL: 'border-l-emerald-500' };
   if (clean.includes('daniel')) return { text: 'text-orange-400', border: 'border-orange-500/40', bg: 'bg-orange-500/10', borderL: 'border-l-orange-500' };
-  if (clean.includes('olivia')) return { text: 'text-red-400', border: 'border-red-500/40', bg: 'bg-red-500/10', borderL: 'border-l-red-500' };
-  if (clean.includes('sophia')) return { text: 'text-purple-400', border: 'border-purple-500/40', bg: 'bg-purple-500/10', borderL: 'border-l-purple-500' };
-  if (clean.includes('aarav')) return { text: 'text-yellow-400', border: 'border-yellow-500/40', bg: 'bg-yellow-500/10', borderL: 'border-l-yellow-500' };
+  if (clean.includes('aarav')) return { text: 'text-purple-400', border: 'border-purple-500/40', bg: 'bg-purple-500/10', borderL: 'border-l-purple-500' };
   return { text: 'text-sky-400', border: 'border-sky-500/40', bg: 'bg-sky-500/10', borderL: 'border-l-sky-500' };
 };
 
-export const AppleMailApp: React.FC = () => {
-  const [mails, setMails] = useState<MailItem[]>(OS_MAILS);
-  const [selectedMail, setSelectedMail] = useState<MailItem>(OS_MAILS[0]);
+interface AppleMailAppProps {
+  mails?: GameMail[];
+}
+
+export const AppleMailApp: React.FC<AppleMailAppProps> = ({ mails: propMails = [] }) => {
+  const { state, markMailRead } = useGame();
+
+  const gameMails: GameMail[] = state.deliveredMails.map((m) => ({
+    id: m.id,
+    from_character_id: m.fromCharacterId,
+    sender_name: m.senderName,
+    sender_role: m.senderRole,
+    sender_avatar: m.senderAvatar,
+    sender_email: m.senderEmail,
+    subject: m.subject,
+    body: m.body,
+    preview: m.preview,
+    timestamp_real: new Date().toISOString(),
+    timestamp_ingame: m.ingameTimestamp,
+    read: m.read,
+    starred: m.starred,
+    priority: m.priority,
+    folder: m.folder,
+    attachment: m.attachment,
+    event_id: m.eventId,
+  }));
+
+  const allMails = propMails.length > 0 ? propMails : gameMails;
+  const [selectedMail, setSelectedMail] = useState<GameMail | null>(allMails[0] ?? null);
   const [activeFolder, setActiveFolder] = useState<string>('Inbox');
   const [replyText, setReplyText] = useState('');
 
-  const handleSelect = (mail: MailItem) => {
+  const handleSelect = (mail: GameMail) => {
     setSelectedMail(mail);
-    setMails((prev) =>
-      prev.map((m) => (m.id === mail.id ? { ...m, read: true } : m))
-    );
+    markMailRead(mail.id);
   };
 
-  const filteredMails = mails.filter((m) => m.folder === activeFolder);
+  const filteredMails = allMails.filter((m) => m.folder === activeFolder);
+
 
   return (
     <div className="flex-1 flex flex-row overflow-hidden bg-slate-950/80 text-white font-sans text-xs">
@@ -55,7 +81,7 @@ export const AppleMailApp: React.FC = () => {
                 </div>
                 {fld === 'Inbox' && (
                   <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-sky-500/20 text-sky-300 font-bold">
-                    {mails.filter((m) => !m.read).length}
+                    {allMails.filter((m) => !m.read).length}
                   </span>
                 )}
               </button>
@@ -82,16 +108,16 @@ export const AppleMailApp: React.FC = () => {
             key={mail.id}
             onClick={() => handleSelect(mail)}
             className={`p-4 cursor-pointer transition-colors ${
-              selectedMail.id === mail.id
-                ? `${getMailColor(mail.sender).bg} border-l-4 ${getMailColor(mail.sender).borderL}`
+              selectedMail?.id === mail.id
+                ? `${getMailColor(mail.sender_name).bg} border-l-4 ${getMailColor(mail.sender_name).borderL}`
                 : mail.read
                 ? 'bg-transparent hover:bg-white/5 opacity-80'
                 : 'bg-slate-900/60 hover:bg-white/5 font-semibold'
             }`}
           >
             <div className="flex items-center justify-between mb-1">
-              <span className="font-bold text-xs text-white truncate max-w-[140px]">{mail.sender}</span>
-              <span className="text-[10px] text-slate-400">{mail.timestamp}</span>
+              <span className="font-bold text-xs text-white truncate max-w-[140px]">{mail.sender_name}</span>
+              <span className="text-[10px] text-slate-400">{mail.timestamp_ingame}</span>
             </div>
             <h4 className="text-xs font-semibold text-slate-200 truncate mb-1">{mail.subject}</h4>
             <p className="text-[11px] text-slate-400 line-clamp-2 leading-tight">{mail.preview}</p>
@@ -107,64 +133,78 @@ export const AppleMailApp: React.FC = () => {
 
       {/* PANEL 3: Full Email Preview */}
       <div className="flex-1 flex flex-col bg-slate-950/60 overflow-y-auto p-6">
-        <div className="pb-4 border-b border-white/10 mb-6">
-          <div className="flex justify-between items-start mb-4">
-            <h2 className="text-lg font-bold text-white">{selectedMail.subject}</h2>
-            <span className={`px-2 py-0.5 rounded ${getMailColor(selectedMail.sender).bg} ${getMailColor(selectedMail.sender).text} text-[10px] font-mono`}>
-              {selectedMail.priority} Priority
-            </span>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <img src={selectedMail.senderAvatar} alt={selectedMail.sender} className={`w-10 h-10 rounded-full object-cover border-2 ${getMailColor(selectedMail.sender).border}`} />
-            <div>
-              <div className={`text-sm font-semibold ${getMailColor(selectedMail.sender).text}`}>{selectedMail.sender}</div>
-              <div className="text-xs text-slate-400">{selectedMail.senderRole} • &lt;{selectedMail.email}&gt;</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Email Body */}
-        <div className="flex-1 text-sm text-slate-200 whitespace-pre-wrap leading-relaxed space-y-4 mb-6">
-          {selectedMail.body}
-        </div>
-
-        {/* Attachment Card */}
-        {selectedMail.attachment && (
-          <div className="p-3 bg-slate-900/90 rounded-xl border border-white/10 flex items-center justify-between max-w-sm mb-6">
-            <div className="flex items-center space-x-2 text-xs">
-              <Paperclip className="w-4 h-4 text-sky-400" />
-              <div>
-                <span className="text-white font-semibold block">{selectedMail.attachment.name}</span>
-                <span className="text-[10px] text-slate-400">{selectedMail.attachment.size}</span>
+        {selectedMail ? (
+          <>
+            <div className="pb-4 border-b border-white/10 mb-6">
+              <div className="flex justify-between items-start mb-4">
+                <h2 className="text-lg font-bold text-white">{selectedMail.subject}</h2>
+                <span className={`px-2 py-0.5 rounded ${getMailColor(selectedMail.sender_name).bg} ${getMailColor(selectedMail.sender_name).text} text-[10px] font-mono`}>
+                  {selectedMail.priority} Priority
+                </span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <img src={selectedMail.sender_avatar} alt={selectedMail.sender_name} className={`w-10 h-10 rounded-full object-cover border-2 ${getMailColor(selectedMail.sender_name).border}`} />
+                <div>
+                  <div className={`text-sm font-semibold ${getMailColor(selectedMail.sender_name).text}`}>{selectedMail.sender_name}</div>
+                  <div className="text-xs text-slate-400">{selectedMail.sender_role} • &lt;{selectedMail.sender_email}&gt;</div>
+                </div>
               </div>
             </div>
-            <button 
-              onClick={() => alert(`Downloading attachment: ${selectedMail.attachment?.name}`)}
-              className="text-[10px] bg-sky-600 hover:bg-sky-500 text-white px-3 py-1 rounded-lg font-bold cursor-pointer"
-            >
-              Download
-            </button>
+
+            {/* Email Body */}
+            <div className="flex-1 text-sm text-slate-200 whitespace-pre-wrap leading-relaxed space-y-4 mb-6">
+              {selectedMail.body}
+            </div>
+
+            {/* Attachment Card */}
+            {selectedMail.attachment && (
+              <div className="p-3 bg-slate-900/90 rounded-xl border border-white/10 flex items-center justify-between max-w-sm mb-6">
+                <div className="flex items-center space-x-2 text-xs">
+                  <Paperclip className="w-4 h-4 text-sky-400" />
+                  <div>
+                    <span className="text-white font-semibold block">{selectedMail.attachment.name}</span>
+                    <span className="text-[10px] text-slate-400">{selectedMail.attachment.size}</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    if (selectedMail.attachment?.content) {
+                      const win = window.open('', '_blank');
+                      win?.document.write(`<pre style="font-family:monospace;padding:20px;white-space:pre-wrap">${selectedMail.attachment.content}</pre>`);
+                    } else {
+                      alert(`Opening: ${selectedMail.attachment?.name}`);
+                    }
+                  }}
+                  className="text-[10px] bg-sky-600 hover:bg-sky-500 text-white px-3 py-1 rounded-lg font-bold cursor-pointer"
+                >
+                  View
+                </button>
+              </div>
+            )}
+
+            {/* Quick Reply Bar */}
+            <div className="pt-4 border-t border-white/10 flex items-center space-x-2">
+              <input
+                type="text"
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                placeholder={`Reply to ${selectedMail.sender_name}...`}
+                className="flex-1 bg-slate-900 border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-sky-500"
+              />
+              <button
+                onClick={() => { setReplyText(''); }}
+                className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold flex items-center space-x-1 cursor-pointer"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>Send</span>
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center text-slate-500 text-sm">
+            Select a mail to read
           </div>
         )}
-
-        {/* Quick Reply Bar */}
-        <div className="pt-4 border-t border-white/10 flex items-center space-x-2">
-          <input
-            type="text"
-            value={replyText}
-            onChange={(e) => setReplyText(e.target.value)}
-            placeholder={`Reply to ${selectedMail.sender}...`}
-            className="flex-1 bg-slate-900 border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-sky-500"
-          />
-          <button 
-            onClick={() => { setReplyText(''); alert('Reply sent! Executive trust updated.'); }}
-            className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold flex items-center space-x-1 cursor-pointer"
-          >
-            <Send className="w-3.5 h-3.5" />
-            <span>Send</span>
-          </button>
-        </div>
       </div>
     </div>
   );
