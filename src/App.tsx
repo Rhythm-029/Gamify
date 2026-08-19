@@ -2,26 +2,87 @@ import { useState } from 'react';
 import { BrainedOSDesktop } from './components/os/BrainedOSDesktop';
 import { LandingPage } from './components/landing/LandingPage';
 import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
-import { TeamsCallIntro } from './components/intro/TeamsCallIntro';
+import { FinalReportScreen } from './components/apps/FinalReportScreen';
+import { GameProvider, useGame } from './context/GameContext';
+
+// ── Inner app — reads GameContext for phase transitions ────────────────────────
+
+function InnerApp({ playerConfig }: { playerConfig: any }) {
+  const { state, setPhase } = useGame();
+
+  // Show Final Report fullscreen when phase is 'report'
+  if (state.phase === 'report') {
+    return (
+      <FinalReportScreen
+        onReturnToDashboard={() => {
+          // Reset to landing for a new run
+          window.location.reload();
+        }}
+      />
+    );
+  }
+
+  return (
+    <BrainedOSDesktop
+      playerConfig={playerConfig}
+      firstBoot={true}
+    />
+  );
+}
+
+// ── Evaluation bridge — transitions evaluating → report after delay ────────────
+
+function EvaluationBridge({ playerConfig }: { playerConfig: any }) {
+  const { state, setPhase } = useGame();
+
+  // When phase switches to 'evaluating', wait 4s then go to report
+  if (state.phase === 'evaluating') {
+    setTimeout(() => setPhase('report'), 4000);
+  }
+
+  return <InnerApp playerConfig={playerConfig} />;
+}
+
+// ── Root App ───────────────────────────────────────────────────────────────────
 
 export function App() {
-  // Main view journey: 'landing' -> 'onboarding' -> 'workspace'
-  const [viewMode, setViewMode] = useState<'landing' | 'onboarding' | 'teams_intro' | 'workspace'>('landing');
+  const [viewMode, setViewMode] = useState<'landing' | 'onboarding' | 'workspace'>('landing');
   const [playerConfig, setPlayerConfig] = useState<{
-    name: string;
-    role: string;
-    company: string;
-    email: string;
-    linkedin: string;
+    name: string; role: string; company: string; email: string; linkedin: string;
   } | null>(null);
 
-  const handleStartOnboarding = () => {
-    setViewMode('onboarding');
-  };
+  const handleStartOnboarding = () => setViewMode('onboarding');
 
   const handleOnboardingComplete = (userConfig: any) => {
     setPlayerConfig(userConfig);
-    setViewMode('workspace'); // Lands directly on Brained OS Desktop with clean boot
+
+    // Create game session on backend (non-blocking)
+    if (userConfig?.email) {
+      fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/game/session/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          player_name: userConfig.name,
+          player_email: userConfig.email,
+          player_company: userConfig.company,
+          player_role: userConfig.role,
+          scenario_id: 'titan_hr_portal',
+        }),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data?.session_id) {
+            localStorage.setItem('brained_session_id', data.session_id);
+          }
+        })
+        .catch(() => {
+          // Offline — local session ID
+          const localId = `local_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+          localStorage.setItem('brained_session_id', localId);
+        });
+    }
+
+    setViewMode('workspace');
   };
 
   if (viewMode === 'landing') {
@@ -38,16 +99,11 @@ export function App() {
     return <OnboardingFlow onComplete={handleOnboardingComplete} />;
   }
 
-  if (viewMode === 'teams_intro') {
-    return <TeamsCallIntro onJoinMeetingComplete={() => setViewMode('workspace')} />;
-  }
-
-  // BRAINED OS DESKTOP SIMULATOR WORKSTATION
+  // Workspace — wrapped in GameProvider
   return (
-    <BrainedOSDesktop 
-      playerConfig={playerConfig || undefined} 
-      firstBoot={true} 
-    />
+    <GameProvider>
+      <EvaluationBridge playerConfig={playerConfig} />
+    </GameProvider>
   );
 }
 
