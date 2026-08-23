@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  Search, Wifi, Battery 
+  Search, Wifi, Battery, Bell 
 } from 'lucide-react';
 import { INITIAL_OS_STATE } from '../../data/brainedOSData';
 import { BrainedLogoIcon } from '../common/BrainedLogoIcon';
@@ -12,6 +12,8 @@ interface BrainedMenuBarProps {
   onOpenAIDirector: () => void;
   onOpenEventModal: () => void;
   onSelectApp: (appId: string | null) => void;
+  onToggleNotificationDrawer?: () => void;
+  unreadNotifCount?: number;
   clockWidget?: React.ReactNode;
 }
 
@@ -22,6 +24,8 @@ export const BrainedMenuBar: React.FC<BrainedMenuBarProps> = ({
   onOpenAIDirector: _onOpenAIDirector,
   onOpenEventModal: _onOpenEventModal,
   onSelectApp,
+  onToggleNotificationDrawer,
+  unreadNotifCount = 0,
   clockWidget,
 }) => {
   return (
@@ -67,6 +71,23 @@ export const BrainedMenuBar: React.FC<BrainedMenuBarProps> = ({
           <Search className="w-3.5 h-3.5 text-slate-300" />
           <span className="hidden md:inline font-bold">⌘K Search</span>
         </button>
+
+        {/* Notification Center Right Panel Toggle */}
+        {onToggleNotificationDrawer && (
+          <button
+            onClick={onToggleNotificationDrawer}
+            className="flex items-center space-x-1.5 bg-pink-500/20 hover:bg-pink-500/30 border border-pink-500/40 px-2.5 py-1 rounded-full text-pink-300 font-bold transition-all cursor-pointer relative"
+            title="Open Notification Center"
+          >
+            <Bell className="w-3.5 h-3.5 text-pink-400" />
+            <span className="hidden sm:inline text-[11px]">Alerts</span>
+            {unreadNotifCount > 0 && (
+              <span className="w-4 h-4 bg-pink-500 text-white rounded-full font-extrabold text-[9px] flex items-center justify-center border border-slate-900 ml-0.5">
+                {unreadNotifCount}
+              </span>
+            )}
+          </button>
+        )}
 
         {/* In-game clock widget */}
         {clockWidget && <div className="border-l border-white/15 pl-3 ml-1">{clockWidget}</div>}

@@ -7,21 +7,27 @@ interface OSNotificationCenterProps {
   notifications: OSNotification[];
   onDismiss: (id: string) => void;
   onAction: (notif: OSNotification) => void;
+  onTimeoutCall?: (notif: OSNotification) => void;
 }
-
-const NOTIFICATION_AUTO_DISMISS_MS = 22000; // 22 seconds (20-25 seconds range)
 
 const OSNotificationItem: React.FC<{
   notif: OSNotification;
   onDismiss: (id: string) => void;
   onAction: (notif: OSNotification) => void;
-}> = ({ notif, onDismiss, onAction }) => {
+  onTimeoutCall?: (notif: OSNotification) => void;
+}> = ({ notif, onDismiss, onAction, onTimeoutCall }) => {
+  const durationMs = notif.isCall ? 30000 : 15000;
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      onDismiss(notif.id);
-    }, NOTIFICATION_AUTO_DISMISS_MS);
+      if (notif.isCall && onTimeoutCall) {
+        onTimeoutCall(notif);
+      } else {
+        onDismiss(notif.id);
+      }
+    }, durationMs);
     return () => clearTimeout(timer);
-  }, [notif.id, onDismiss]);
+  }, [notif, onDismiss, onTimeoutCall, durationMs]);
 
   return (
     <motion.div
@@ -87,10 +93,14 @@ const OSNotificationItem: React.FC<{
             className="flex-1 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold text-xs shadow-lg shadow-emerald-500/30 flex items-center justify-center space-x-1.5 cursor-pointer animate-bounce"
           >
             <PhoneCall className="w-3.5 h-3.5" />
-            <span>Accept Meeting Call</span>
+            <span>Accept Meeting Call (30s)</span>
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); onDismiss(notif.id); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onTimeoutCall) onTimeoutCall(notif);
+              else onDismiss(notif.id);
+            }}
             className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 text-xs font-semibold"
           >
             Decline
@@ -103,13 +113,13 @@ const OSNotificationItem: React.FC<{
         </div>
       )}
 
-      {/* Auto-dismiss progress bar (22s countdown) */}
+      {/* Auto-dismiss progress bar (15s for normal, 30s for call) */}
       <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/10">
         <motion.div
           initial={{ width: '100%' }}
           animate={{ width: '0%' }}
-          transition={{ duration: NOTIFICATION_AUTO_DISMISS_MS / 1000, ease: 'linear' }}
-          className="h-full bg-gradient-to-r from-sky-400 to-indigo-500 opacity-80"
+          transition={{ duration: durationMs / 1000, ease: 'linear' }}
+          className={`h-full opacity-80 ${notif.isCall ? 'bg-gradient-to-r from-purple-500 to-rose-500' : 'bg-gradient-to-r from-sky-400 to-indigo-500'}`}
         />
       </div>
     </motion.div>
@@ -120,6 +130,7 @@ export const OSNotificationCenter: React.FC<OSNotificationCenterProps> = ({
   notifications,
   onDismiss,
   onAction,
+  onTimeoutCall,
 }) => {
   return (
     <div className="fixed top-12 right-4 z-50 flex flex-col space-y-3 max-w-sm w-full pointer-events-none">
@@ -130,6 +141,7 @@ export const OSNotificationCenter: React.FC<OSNotificationCenterProps> = ({
             notif={notif}
             onDismiss={onDismiss}
             onAction={onAction}
+            onTimeoutCall={onTimeoutCall}
           />
         ))}
       </AnimatePresence>

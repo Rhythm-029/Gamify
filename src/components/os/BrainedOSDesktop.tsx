@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Folder, Code2 } from 'lucide-react';
+import { Folder, Code2, Bell } from 'lucide-react';
 import { BrainedMenuBar } from './BrainedMenuBar';
 import { BrainedDock } from './BrainedDock';
 import { BrainedWindow } from './BrainedWindow';
 import { OSNotificationCenter } from './OSNotificationCenter';
+import { OSNotificationCenterDrawer } from './OSNotificationCenterDrawer';
 import { SpotlightSearch } from './SpotlightSearch';
 import { DesktopWidgets } from './DesktopWidgets';
 import { BrainedLogoIcon } from '../common/BrainedLogoIcon';
@@ -72,40 +73,53 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
   const sessionId = localStorage.getItem('brained_session_id');
 
   // Game context (central simulation state)
-  const { state: gameState } = useGame();
+  const { state: gameState, addSignal } = useGame();
 
   // Live game session WebSocket hook
   const {
-    notifications: liveNotifications,
     dockBadges: liveDockBadges,
     dismissNotification: dismissLiveNotification,
   } = useGameSession(sessionId);
 
   const [activeAppId, setActiveAppId] = useState<string | null>(null);
   const [openAppIds, setOpenAppIds] = useState<string[]>([]);
-  const [localNotifications, setLocalNotifications] = useState<OSNotification[]>([]);
+  
+  // Notification States
+  const [bannerNotifications, setBannerNotifications] = useState<OSNotification[]>([]);
+  const [historyNotifications, setHistoryNotifications] = useState<OSNotification[]>([]);
+  const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] = useState(false);
+  const seenNotifIds = useRef<Set<string>>(new Set());
+
   const [isSpotlightOpen, setIsSpotlightOpen] = useState(false);
   const [isAIDirectorOpen, setIsAIDirectorOpen] = useState(false);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [showPostMeetingPrompt, setShowPostMeetingPrompt] = useState(false);
 
-  // Merge local (boot) notifications with live WebSocket notifications
-  const notifications = [
-    ...localNotifications,
-    ...liveNotifications.filter((n) => !localNotifications.some((l) => l.id === n.id)),
-  ];
-
   // OS Boot timer sequence states
   const [bootStep, setBootStep] = useState<'booting' | 'silence' | 'ready'>(firstBoot ? 'booting' : 'ready');
 
-  useEffect(() => {
-    if (!firstBoot) {
-      setLocalNotifications([]);
-      return;
+  // Helper to push new notification (1-time popup rule)
+  const pushNotification = (notif: OSNotification) => {
+    if (seenNotifIds.current.has(notif.id)) return;
+    seenNotifIds.current.add(notif.id);
+
+    const formatted: OSNotification = {
+      ...notif,
+      read: false,
+    };
+
+    setBannerNotifications((prev) => [...prev, formatted]);
+    setHistoryNotifications((prev) => [formatted, ...prev]);
+
+    if (notif.isCall) {
+      sound.startTeamsRingtone();
     }
+  };
+
+  useEffect(() => {
+    if (!firstBoot) return;
 
     if (bootStep === 'booting') {
-      setLocalNotifications([]);
       const timer = setTimeout(() => {
         setBootStep('silence');
       }, 3500);
@@ -116,7 +130,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
       const timer = setTimeout(() => {
         setBootStep('ready');
         // Kickoff call notification — opens TitanKickoffMeeting
-        const teamsNotification: OSNotification = {
+        pushNotification({
           id: 'notif-kickoff',
           app: 'Teams',
           title: 'Microsoft Teams • Incoming Video Call',
@@ -126,9 +140,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
           actionText: 'Accept Call',
           onActionAppId: 'kickoff',
           isCall: true,
-        };
-        setLocalNotifications([teamsNotification]);
-        sound.startTeamsRingtone();
+        });
       }, 3500);
       return () => clearTimeout(timer);
     }
@@ -143,19 +155,13 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
   }, [gameState.meetingState.kickoffDone, gameState.meetingState.momSubmitted]);
 
   // Sync pendingNotifications from GameContext FrontendEventScheduler into local notification list
-  // This replaces all manual Day 7 / Day 14 notification useEffects.
-  // The scheduler in GameContext fires at exact realElapsedMs offsets — no more clock.day integer checks.
   useEffect(() => {
     const pending = gameState.pendingNotifications;
     if (pending.length === 0) return;
 
-    setLocalNotifications((prev) => {
-      let changed = false;
-      let next = [...prev];
-      for (const pn of pending) {
-        if (next.some((n) => n.id === pn.id)) continue;
-        changed = true;
-        next = [...next, {
+    for (const pn of pending) {
+      if (!seenNotifIds.current.has(pn.id)) {
+        pushNotification({
           id: pn.id,
           app: (['Teams', 'Slack', 'Mail', 'Calendar', 'Security'].includes(pn.app) ? pn.app : 'Teams') as OSNotification['app'],
           title: pn.title,
@@ -165,14 +171,9 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
           actionText: pn.actionText,
           onActionAppId: pn.onActionAppId,
           isCall: pn.isCall,
-        }];
-        // Ring tone for calls
-        if (pn.isCall) {
-          sound.startTeamsRingtone();
-        }
+        });
       }
-      return changed ? next : prev;
-    });
+    }
   }, [gameState.pendingNotifications]); // eslint-disable-line
 
   const handleOpenApp = (appId: string | null) => {
@@ -189,16 +190,23 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
     }
   };
 
-  const handleDismissNotification = (notifId: string) => {
-    setLocalNotifications((prev) => prev.filter((n) => n.id !== notifId));
+  // Dismiss banner toast (leaves it in history)
+  const handleDismissBanner = (notifId: string) => {
+    setBannerNotifications((prev) => prev.filter((n) => n.id !== notifId));
     dismissLiveNotification(notifId);
     sound.stopTeamsRingtone();
   };
 
+  // Click on notification banner or drawer item
   const handleActionNotification = (notif: OSNotification) => {
-    handleDismissNotification(notif.id);
+    handleDismissBanner(notif.id);
     sound.stopTeamsRingtone();
-    // Use explicit onActionAppId if set, otherwise derive from the notification's app type
+
+    // Mark as read in history
+    setHistoryNotifications((prev) =>
+      prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n))
+    );
+
     const targetAppId = notif.onActionAppId || (() => {
       switch (notif.app) {
         case 'Teams': return 'teams';
@@ -212,6 +220,33 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
     if (targetAppId) {
       handleOpenApp(targetAppId);
     }
+  };
+
+  // Timeout handler for Call notifications (30s timeout -> Missed Call + Penalty)
+  const handleTimeoutCallNotification = (notif: OSNotification) => {
+    sound.stopTeamsRingtone();
+    setBannerNotifications((prev) => prev.filter((n) => n.id !== notif.id));
+
+    // Update history entry as Missed Call
+    setHistoryNotifications((prev) =>
+      prev.map((n) => {
+        if (n.id === notif.id) {
+          return {
+            ...n,
+            title: '❌ Missed Teams Call',
+            subtitle: '30s Timeout • Penalty Applied (-10 Trust)',
+            body: 'You did not answer the video call on time. Trust Score reduced (-10).',
+            missed: true,
+            read: false,
+          };
+        }
+        return n;
+      })
+    );
+
+    // Apply Penalty
+    handleApplyDecision(-10, 0);
+    addSignal('delivery_management', 'Missed urgent Teams meeting call (-10 Trust)', -10);
   };
 
   const handleApplyDecision = (trustDelta: number, xpDelta: number) => {
@@ -307,6 +342,8 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
         onOpenAIDirector={() => setIsAIDirectorOpen(true)}
         onOpenEventModal={() => setIsEventModalOpen(true)}
         onSelectApp={handleOpenApp}
+        onToggleNotificationDrawer={() => setIsNotificationDrawerOpen((prev) => !prev)}
+        unreadNotifCount={historyNotifications.filter((n) => !n.read).length}
         clockWidget={<InGameClock />}
       />
 
@@ -336,6 +373,20 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
             </motion.button>
           </div>
         )}
+
+        {/* FLOATING RIGHT SIDE NOTIFICATION CENTER TOGGLE BUTTON */}
+        <button
+          onClick={() => setIsNotificationDrawerOpen(true)}
+          className="fixed top-20 right-0 z-40 bg-[#121526]/90 hover:bg-pink-600/90 border-l border-t border-b border-white/20 text-white px-2.5 py-2 rounded-l-2xl shadow-2xl backdrop-blur-md flex items-center space-x-2 transition-all cursor-pointer group"
+          title="Open Notification Center Drawer"
+        >
+          <Bell className="w-4 h-4 text-pink-400 group-hover:text-white" />
+          {historyNotifications.filter((n) => !n.read).length > 0 && (
+            <span className="w-5 h-5 bg-pink-500 rounded-full text-white text-[10px] font-extrabold flex items-center justify-center border border-slate-900">
+              {historyNotifications.filter((n) => !n.read).length}
+            </span>
+          )}
+        </button>
 
         {/* ACTIVE WINDOW CONTAINER (Visible when an app window is open!) */}
         <AnimatePresence>
@@ -414,11 +465,27 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
         </AnimatePresence>
       </main>
 
-      {/* TOP-RIGHT MAC OS SLIDE-IN NOTIFICATIONS */}
+      {/* TOP-RIGHT MAC OS TOAST BANNER NOTIFICATIONS */}
       <OSNotificationCenter
-        notifications={notifications}
-        onDismiss={handleDismissNotification}
+        notifications={bannerNotifications}
+        onDismiss={handleDismissBanner}
         onAction={handleActionNotification}
+        onTimeoutCall={handleTimeoutCallNotification}
+      />
+
+      {/* RIGHT SIDE SLIDING NOTIFICATION CENTER DRAWER PANEL */}
+      <OSNotificationCenterDrawer
+        isOpen={isNotificationDrawerOpen}
+        onClose={() => setIsNotificationDrawerOpen(false)}
+        historyNotifications={historyNotifications}
+        onOpenAppFromNotif={(item) => {
+          setIsNotificationDrawerOpen(false);
+          handleActionNotification(item);
+        }}
+        onClearAll={() => setHistoryNotifications([])}
+        onMarkAllRead={() => {
+          setHistoryNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+        }}
       />
 
       {/* SPOTLIGHT SEARCH ⌘K OVERLAY */}

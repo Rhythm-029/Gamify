@@ -8,6 +8,8 @@ export interface OSNotification {
   actionText?: string;
   onActionAppId?: string;
   isCall?: boolean;
+  read?: boolean;
+  missed?: boolean;
 }
 
 export interface MailItem {
