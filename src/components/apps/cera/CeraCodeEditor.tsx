@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  X, Copy, Check, Sparkles, Send, Code, Terminal, Monitor, ArrowRight
+  X, Copy, Check, Sparkles, Send, Code, Terminal, Monitor, ArrowRight, Code2
 } from 'lucide-react';
 import { STARTER_PROMPTS, type VirtualFile } from './ceraSimulationData';
-import { BrainedLogoIcon } from '../../common/BrainedLogoIcon';
 
 interface CeraCodeEditorProps {
   openFiles: VirtualFile[];
@@ -99,8 +98,8 @@ export const CeraCodeEditor: React.FC<CeraCodeEditorProps> = ({
             className="flex flex-col items-center space-y-4 mb-8"
           >
             <div className="relative">
-              <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-pink-500 via-purple-600 to-indigo-600 p-3.5 shadow-2xl shadow-pink-500/30 border border-white/20 flex items-center justify-center animate-pulse">
-                <BrainedLogoIcon className="w-full h-full object-contain filter drop-shadow-xl" />
+              <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-pink-500 via-purple-600 to-indigo-600 p-4 shadow-2xl shadow-pink-500/30 border border-white/20 flex items-center justify-center animate-pulse">
+                <Code2 className="w-10 h-10 text-white drop-shadow-xl" />
               </div>
               <span className="absolute -bottom-2 -right-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-full border border-white/30 shadow-md">
                 CERA 4.0 ULTRA

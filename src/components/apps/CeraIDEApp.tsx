@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Sparkles, RotateCw, CheckCircle2, Zap
+  Sparkles, RotateCw, CheckCircle2, Zap, Download, Code2
 } from 'lucide-react';
+import JSZip from 'jszip';
 import { CeraActivityBar, type ActivityTab } from './cera/CeraActivityBar';
 import { CeraSidebar } from './cera/CeraSidebar';
 import { CeraCodeEditor } from './cera/CeraCodeEditor';
@@ -12,7 +13,7 @@ import {
   INITIAL_TIMELINE_STEPS, SIMULATION_PHASES,
   type VirtualFile, type BuildTimelineStep
 } from './cera/ceraSimulationData';
-import { BrainedLogoIcon } from '../common/BrainedLogoIcon';
+import { useGame } from '../../context/GameContext';
 
 interface ChatMessage {
   id: string;
@@ -22,6 +23,7 @@ interface ChatMessage {
 }
 
 export const CeraIDEApp: React.FC = () => {
+  const { buildPrototype, addSignal } = useGame();
   const [activeActivityTab, setActiveActivityTab] = useState<ActivityTab>('explorer');
   const [projectName, setProjectName] = useState<string | null>(null);
   
@@ -82,10 +84,39 @@ export const CeraIDEApp: React.FC = () => {
     setTerminalLogs([]);
   };
 
+  const handleDownloadZip = async () => {
+    try {
+      const zip = new JSZip();
+      const folder = zip.folder('titan-hr-portal-prototype');
+      if (!folder) return;
+
+      generatedFiles.forEach((file) => {
+        folder.file(file.name, file.content);
+      });
+
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'titan-hr-portal-prototype.zip';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      addSignal('delivery_management', 'Downloaded Cera IDE project codebase folder zip', 10);
+    } catch (err) {
+      console.error('Failed to generate zip download:', err);
+    }
+  };
+
   const handleSubmitPrompt = (promptText: string) => {
     handleResetSimulation();
     setProjectName('Project Titan');
     setIsAiBuilding(true);
+
+    // Call buildPrototype in GameContext so state is set and desktop folder opens
+    buildPrototype();
 
     const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
@@ -109,6 +140,7 @@ export const CeraIDEApp: React.FC = () => {
         setIsAiBuilding(false);
         setIsBuildFinished(true);
         setCurrentStatus('Project ready.');
+        buildPrototype();
         return;
       }
 
@@ -201,8 +233,8 @@ export const CeraIDEApp: React.FC = () => {
       <header className="h-10 bg-[#0f111d] border-b border-white/10 px-3 flex items-center justify-between text-xs select-none shrink-0 z-30">
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-2">
-            <div className="w-5 h-5 rounded-lg bg-pink-500/20 border border-pink-500/30 flex items-center justify-center p-0.5">
-              <BrainedLogoIcon className="w-full h-full object-contain" />
+            <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-pink-600 via-purple-600 to-indigo-600 border border-pink-500/40 flex items-center justify-center p-1 shadow-md">
+              <Code2 className="w-4 h-4 text-white" />
             </div>
             <span className="font-extrabold text-white text-xs tracking-tight bg-gradient-to-r from-pink-400 via-purple-300 to-blue-400 bg-clip-text text-transparent">
               Cera IDE
@@ -218,6 +250,17 @@ export const CeraIDEApp: React.FC = () => {
 
         {/* Status Pill & Controls */}
         <div className="flex items-center space-x-3 text-xs">
+          {generatedFiles.length > 0 && (
+            <button
+              onClick={handleDownloadZip}
+              className="px-2.5 py-1 bg-pink-600 hover:bg-pink-500 border border-pink-400/40 text-white rounded-lg font-bold text-[11px] flex items-center space-x-1 cursor-pointer transition-colors shadow-sm"
+              title="Download full project source code as .zip folder"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Download Folder (.zip)</span>
+            </button>
+          )}
+
           {isAiBuilding && (
             <div className="flex items-center space-x-1.5 bg-pink-500/20 border border-pink-500/40 px-2.5 py-0.5 rounded-full text-pink-300 text-[11px] font-semibold animate-pulse">
               <Sparkles className="w-3 h-3 text-pink-400 animate-spin" />
