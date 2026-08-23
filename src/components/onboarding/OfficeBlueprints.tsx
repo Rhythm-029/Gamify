@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Users, Code, Shield, Briefcase, CheckCircle, Award } from 'lucide-react';
+import { Users, Code, Briefcase, Award } from 'lucide-react';
 
 interface OfficeBlueprintsProps {
   activeStakeholderIndex: number;

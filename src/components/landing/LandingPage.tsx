@@ -90,8 +90,8 @@ function buildCorporateAmbience(ctx: AudioContext): { nodes: AudioNode[]; master
 
 export const LandingPage: React.FC<LandingPageProps> = ({
   onStartOnboarding,
-  onViewLeaderboard,
-  onViewCertificate,
+  onViewLeaderboard: _onViewLeaderboard,
+  onViewCertificate: _onViewCertificate,
 }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
