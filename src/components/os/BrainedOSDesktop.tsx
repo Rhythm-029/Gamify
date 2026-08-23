@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Folder, Code2 } from 'lucide-react';
 import { BrainedMenuBar } from './BrainedMenuBar';
 import { BrainedDock } from './BrainedDock';
 import { BrainedWindow } from './BrainedWindow';
@@ -18,7 +19,7 @@ import type { OSNotification } from '../../data/brainedOSData';
 
 // Simulation Apps
 import { TitanKickoffMeeting } from '../apps/TitanKickoffMeeting';
-import { TitanIDEApp } from '../apps/TitanIDEApp';
+import { CeraIDEApp } from '../apps/CeraIDEApp';
 import { SlackOSApp } from '../apps/SlackOSApp';
 import { PostMeetingPrompt } from '../apps/PostMeetingPrompt';
 import { PrototypeReviewMeeting } from '../apps/PrototypeReviewMeeting';
@@ -225,7 +226,8 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
     kickoff: { title: 'Microsoft Teams — Project Titan Kickoff', icon: <span>📹</span> },
     review: { title: 'Microsoft Teams — Prototype Review · Day 7', icon: <span>📹</span> },
     presentation: { title: 'Microsoft Teams — Final Presentation · Day 14', icon: <span>📹</span> },
-    ide: { title: 'Titan HR Portal — Prototype Builder', icon: <BrainedLogoIcon className="w-4 h-4" /> },
+    ide: { title: 'Cera IDE — AI Software Engineer Workspace', icon: <Code2 className="w-4 h-4 text-pink-400" /> },
+    cera: { title: 'Cera IDE — AI Software Engineer Workspace', icon: <Code2 className="w-4 h-4 text-pink-400" /> },
     dashboard: { title: 'Brained OS — Executive Dashboard', icon: <BrainedLogoIcon className="w-4 h-4" /> },
     inbox: { title: 'Apple Mail — Priority Inbox', icon: <span>✉️</span> },
     teams: { title: 'Microsoft Teams — Project Titan', icon: <span>📹</span> },
@@ -235,7 +237,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
     documents: { title: 'Project Documents', icon: <span>📁</span> },
     tasks: { title: 'Jira — Sprint Kanban', icon: <span>📋</span> },
     browser: { title: 'Browser', icon: <span>🌐</span> },
-    finder: { title: 'Finder', icon: <span>📂</span> },
+    finder: { title: 'Finder — Desktop & Files', icon: <span>📂</span> },
     terminal: { title: 'Terminal', icon: <span>💻</span> },
     stakeholders: { title: 'Stakeholder Map', icon: <span>👥</span> },
     certificate: { title: 'Certificate', icon: <span>🏆</span> },
@@ -313,6 +315,28 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
         {/* DESKTOP WIDGETS (CLOCK & STREAK) */}
         <DesktopWidgets osState={osState} onOpenApp={handleOpenApp} />
 
+        {/* DESKTOP SHORTCUT ICONS (Project Code Folder shortcut ONLY visible after prompt submission in Cera IDE) */}
+        {gameState.prototypeBuilt && (
+          <div className="absolute top-72 left-8 z-10 flex flex-col space-y-5 pointer-events-auto">
+            <motion.button
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              onClick={() => handleOpenApp('finder')}
+              className="flex flex-col items-center p-2 rounded-2xl hover:bg-white/10 group transition-all cursor-pointer w-24"
+              title="Open Project Titan Source Code Folder"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 via-sky-600 to-blue-600 p-3 shadow-2xl border border-white/25 group-hover:scale-105 transition-transform flex items-center justify-center relative">
+                <Folder className="w-8 h-8 text-white" />
+                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-slate-900" />
+              </div>
+              <span className="text-[11px] font-bold text-white mt-1 text-center drop-shadow-lg group-hover:text-amber-300">
+                Project Code
+              </span>
+            </motion.button>
+          </div>
+        )}
+
         {/* ACTIVE WINDOW CONTAINER (Visible when an app window is open!) */}
         <AnimatePresence>
           {activeAppId && (
@@ -331,8 +355,8 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
               {activeAppId === 'review' && <PrototypeReviewMeeting />}
               {/* FINAL PRESENTATION — Day 14 */}
               {activeAppId === 'presentation' && <FinalPresentationMeeting />}
-              {/* IDE — deterministic prototype builder */}
-              {activeAppId === 'ide' && <TitanIDEApp />}
+              {/* CERA IDE — AI Software Engineer Workspace */}
+              {(activeAppId === 'ide' || activeAppId === 'cera') && <CeraIDEApp />}
               {activeAppId === 'inbox' && <AppleMailApp />}
               {activeAppId === 'teams' && <MSTeamsApp onPenalty={handleApplyDecision} />}
               {activeAppId === 'slack' && <SlackOSApp />}
