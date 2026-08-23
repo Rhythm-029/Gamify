@@ -197,8 +197,19 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
   const handleActionNotification = (notif: OSNotification) => {
     handleDismissNotification(notif.id);
     sound.stopTeamsRingtone();
-    if (notif.onActionAppId) {
-      handleOpenApp(notif.onActionAppId);
+    // Use explicit onActionAppId if set, otherwise derive from the notification's app type
+    const targetAppId = notif.onActionAppId || (() => {
+      switch (notif.app) {
+        case 'Teams': return 'teams';
+        case 'Slack': return 'slack';
+        case 'Mail': return 'inbox';
+        case 'Calendar': return 'calendar';
+        case 'Security': return 'settings';
+        default: return null;
+      }
+    })();
+    if (targetAppId) {
+      handleOpenApp(targetAppId);
     }
   };
 

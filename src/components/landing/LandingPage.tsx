@@ -1,9 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  ArrowRight, Users, Clock, ChevronDown, 
-  Layers, Cpu, FileText, Volume2, VolumeX
-} from 'lucide-react';
+import { ArrowRight, Volume2, VolumeX } from 'lucide-react';
 import { sound } from '../onboarding/SoundEngine';
 
 interface LandingPageProps {
@@ -11,106 +7,6 @@ interface LandingPageProps {
   onViewLeaderboard: () => void;
   onViewCertificate: () => void;
 }
-
-const GAME_STAKEHOLDERS = [
-  {
-    id: "aarav",
-    name: "Aarav Kapoor",
-    role: "Senior Transformation Consultant",
-    department: "Digital Transformation Office",
-    dp: "/character/AaravDP.png",
-    accentColor: "#eab308",
-    trustLevel: 95,
-    tags: ["Your Guide", "Seen It All", "No Sugarcoating"],
-    quote: "This place runs fast, decisions matter, and everyone here is sharp. Don't try to impress everyone — just make the right decisions."
-  },
-  {
-    id: "marcus",
-    name: "Marcus Reed",
-    role: "Chief Technology Officer (CTO)",
-    department: "Technology & Engineering",
-    dp: "/character/marcus_reed/MarcusDP.png",
-    accentColor: "#3b82f6",
-    trustLevel: 65,
-    tags: ["Intimidating", "Zero Shortcuts", "Better Be Prepared"],
-    quote: "I don't repeat myself. Think before you commit. Technology remembers every decision."
-  },
-  {
-    id: "emma",
-    name: "Emma Carter",
-    role: "HR Transformation Specialist",
-    department: "HR Transformation",
-    dp: "/character/Emma_Carter/EmmaDP.png",
-    accentColor: "#10b981",
-    trustLevel: 80,
-    tags: ["Empathetic", "Notices Everything", "People Over Process"],
-    quote: "Behind every requirement is a real employee. Systems fail when people were never understood."
-  },
-  {
-    id: "olivia",
-    name: "Olivia Hayes",
-    role: "Director of InfoSec & Compliance",
-    department: "Cybersecurity & Governance",
-    dp: "/character/Olivia_hayes/OliviaDP.png",
-    accentColor: "#e11d48",
-    trustLevel: 50,
-    tags: ["Non-Negotiable", "Evidence Only", "Will Halt Launch"],
-    quote: "I'm watching every endpoint you touch. Bring evidence, or don't bring anything. Hope isn't a security strategy."
-  },
-  {
-    id: "daniel",
-    name: "Daniel Brooks",
-    role: "Transformation Program Manager",
-    department: "Program Delivery",
-    dp: "/character/Daniel_Brooks/DanielDP.png",
-    accentColor: "#f97316",
-    trustLevel: 70,
-    tags: ["Deadline Obsessed", "Tracks Everything", "Coffee Required"],
-    quote: "Fourteen deliverables. Three sprints. Already behind. Keep Jira updated or I'll find out anyway."
-  },
-  {
-    id: "sophia",
-    name: "Sophia Bennett",
-    role: "VP of HR — Titan Manufacturing",
-    department: "Client: Titan Manufacturing",
-    dp: "/character/Sophia_bennett/SophiaDP.png",
-    accentColor: "#9333ea",
-    trustLevel: 60,
-    tags: ["Results Over Everything", "12,000 People Waiting", "No Jargon"],
-    quote: "Our 12,000 factory workers are stuck on systems from 2009. I don't need impressive — I need it to work."
-  }
-];
-
-const SIMULATION_APPS = [
-  {
-    id: 'teams',
-    name: 'Microsoft Teams',
-    icon: <Users className="w-5 h-5 text-indigo-400" />,
-    tag: 'Real-time Video Calls & Chat',
-    desc: 'Receive incoming video calls from CTO Marcus and mentor Aarav. Manage high-pressure stakeholder group chats with instant voice synthesis.'
-  },
-  {
-    id: 'mail',
-    name: 'Outlook Mail',
-    icon: <FileText className="w-5 h-5 text-sky-400" />,
-    tag: 'Executive Inbox & Approvals',
-    desc: 'Filter urgent directives from non-critical noise. Compose strategic responses that impact C-Suite trust levels in real time.'
-  },
-  {
-    id: 'jira',
-    name: 'Linear & Jira Board',
-    icon: <Layers className="w-5 h-5 text-blue-400" />,
-    tag: 'Sprint & Scope Velocity',
-    desc: 'Manage sprint backlogs, prioritize critical technical debt vs feature requests, and prevent deadline slippage before PM Daniel intervenes.'
-  },
-  {
-    id: 'whiteboard',
-    name: 'Architecture Board',
-    icon: <Cpu className="w-5 h-5 text-purple-400" />,
-    tag: 'System Design & Diagramming',
-    desc: 'Evaluate microservices architectures, data pipelines, and security controls to satisfy InfoSec Lead Olivia\'s zero-trust audit.'
-  }
-];
 
 // ──────────────────────────────────────────────────────────────────
 // Corporate Ambient Music Engine
@@ -311,59 +207,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#070913] text-white flex flex-col font-sans relative overflow-x-hidden selection:bg-blue-500 selection:text-white">
+    <div className="h-screen bg-[#070913] text-white flex flex-col font-sans relative overflow-hidden selection:bg-blue-500 selection:text-white">
 
-      {/* ── STICKY HEADER ── */}
-      <header className="w-full bg-[#070913] border-b border-white/10 sticky top-0 z-50 h-14">
-        <nav className="h-full max-w-7xl mx-auto px-6 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-pink-600 p-0.5 shadow-lg shadow-indigo-500/30">
-              <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center font-black text-xs text-white">BQ</div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="font-extrabold text-base tracking-tight text-white">Brained Quest</span>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30 uppercase tracking-wider">Enterprise Edition</span>
-            </div>
-          </div>
-
-          <div className="hidden md:flex items-center space-x-8 text-xs font-mono tracking-wider text-slate-300 uppercase">
-            <a href="#overview" className="hover:text-white transition-colors">The Mandate</a>
-            <a href="#characters" className="hover:text-white transition-colors">Stakeholders</a>
-            <a href="#workspace" className="hover:text-white transition-colors">Simulation OS</a>
-            <button onClick={onViewLeaderboard} className="hover:text-white transition-colors cursor-pointer">Leaderboard</button>
-            <button onClick={onViewCertificate} className="hover:text-white transition-colors cursor-pointer">Credentials</button>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            {/* Sound Toggle Button */}
-            <button
-              onClick={toggleMute}
-              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white border border-white/10 transition-all cursor-pointer flex items-center space-x-1.5 text-xs font-mono"
-              title={isMuted ? "Unmute Audio" : "Mute Audio"}
-            >
-              {isMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4 text-emerald-400 animate-pulse" />}
-              <span className="hidden sm:inline">{isMuted ? "Sound Off" : "Sound On"}</span>
-            </button>
-
-            <button onClick={handleEnterRoom}
-              className="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold text-xs transition-all shadow-xl shadow-indigo-600/40 hover:scale-105 flex items-center space-x-2 cursor-pointer">
-              <span>Start Simulation</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </nav>
-      </header>
-
-      {/* ── HERO VIDEO — BELOW HEADER, FILLS FULL WIDTH+HEIGHT, NO BARS ── */}
+      {/* ── HERO VIDEO — FILLS FULL VIEWPORT, NO HEADER ── */}
       <section
-        className="relative flex-shrink-0 overflow-hidden"
-        style={{ height: 'calc(100vh - 3.5rem)', background: '#000' }}
+        className="relative flex-1 overflow-hidden"
+        style={{ background: '#000' }}
       >
         {/*
           object-cover = fills 100% width AND height, no black bars ever.
           objectPosition 'center 15%' = content sits slightly below center-top
           so the video headline is visible but not right at the cut.
-          ?v=3 cache-bust = forces browser to load the new CRF-8 sharpened encode.
         */}
         <video
           ref={videoRef}
@@ -410,144 +264,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <span>Enter the room</span>
             <ArrowRight className="w-5 h-5 text-slate-950 group-hover:translate-x-1 transition-transform" />
           </button>
-
-          <motion.button
-            animate={{ y: [0, 5, 0] }}
-            transition={{ duration: 2.2, repeat: Infinity }}
-            className="flex items-center space-x-2 text-[10px] font-mono uppercase tracking-widest text-white/80 cursor-pointer bg-black/50 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/20"
-            onClick={() => document.getElementById('overview')?.scrollIntoView({ behavior: 'smooth' })}>
-            <span>Scroll for Mandate &amp; Game Details</span>
-            <ChevronDown className="w-3.5 h-3.5" />
-          </motion.button>
         </div>
       </section>
-
-      {/* ── SCROLL SECTION 1: MANDATE ── */}
-      <section id="overview" className="max-w-6xl mx-auto px-6 py-20 border-t border-white/10 w-full">
-        <div className="text-center mb-16 space-y-3">
-          <span className="text-xs font-mono uppercase tracking-widest text-sky-400 font-extrabold">CORPORATE REALITY SIMULATOR</span>
-          <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">The Titan Manufacturing Mandate</h2>
-          <p className="text-slate-400 text-sm max-w-xl mx-auto leading-relaxed">
-            You have been assigned as Lead Transformation Architect for Brained Consulting. Your mission: modernize Titan Manufacturing's 15-year-old HR portal for 12,000 factory workers in 6 weeks.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-slate-950/70 backdrop-blur-xl p-6 rounded-2xl border border-white/10 shadow-2xl hover:border-sky-500/40 transition-all">
-            <div className="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center mb-5"><Cpu className="w-6 h-6" /></div>
-            <h3 className="text-lg font-bold text-white mb-2">1. Technical Judgment</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">Evaluate system architectures, API schemas, and technical debt. CTO Marcus Reed will scrutinize every design decision — zero shortcuts tolerated.</p>
-          </div>
-          <div className="bg-slate-950/70 backdrop-blur-xl p-6 rounded-2xl border border-white/10 shadow-2xl hover:border-emerald-500/40 transition-all">
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mb-5"><Users className="w-6 h-6" /></div>
-            <h3 className="text-lg font-bold text-white mb-2">2. Stakeholder Diplomacy</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">Balance competing C-Suite agendas. HR Lead Emma cares about factory workers, InfoSec Olivia enforces zero-trust, while PM Daniel demands speed.</p>
-          </div>
-          <div className="bg-slate-950/70 backdrop-blur-xl p-6 rounded-2xl border border-white/10 shadow-2xl hover:border-purple-500/40 transition-all">
-            <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center mb-5"><Clock className="w-6 h-6" /></div>
-            <h3 className="text-lg font-bold text-white mb-2">3. Time Compression (1m = 1d)</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">Every 60 seconds represents a full working day. Deadlines compound rapidly, emails pile up, and delayed approvals lock down sprints.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── SCROLL SECTION 2: CHARACTER MATRIX ── */}
-      <section id="characters" className="max-w-6xl mx-auto px-6 py-20 border-t border-white/10 w-full">
-        <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-12 gap-4">
-          <div>
-            <span className="text-xs font-mono uppercase tracking-widest text-purple-400 font-extrabold">C-SUITE MATRIX</span>
-            <h2 className="text-3xl font-black text-white mt-1">Meet the Brained Universe Characters</h2>
-            <p className="text-slate-400 text-sm mt-1">Official personas, motivations, and trust dynamics you must navigate.</p>
-          </div>
-          <button onClick={handleEnterRoom} className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-all border border-white/10 flex items-center space-x-2 cursor-pointer shrink-0">
-            <span>Enter Simulation Room</span><ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {GAME_STAKEHOLDERS.map((char) => (
-            <div key={char.id} className="bg-slate-950/75 backdrop-blur-2xl rounded-2xl p-5 border border-white/10 flex flex-col justify-between shadow-2xl hover:border-white/20 transition-all"
-              style={{ borderTopWidth: '3px', borderTopColor: char.accentColor }}>
-              <div>
-                <div className="flex items-center space-x-3.5 mb-4">
-                  <img src={char.dp} alt={char.name} className="w-12 h-12 rounded-xl object-cover border-2 shadow-md shrink-0"
-                    style={{ borderColor: char.accentColor }}
-                    onError={(e) => { (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${char.name}`; }} />
-                  <div className="min-w-0">
-                    <h3 className="font-extrabold text-sm text-white tracking-tight truncate">{char.name}</h3>
-                    <p className="text-[11px] font-semibold truncate" style={{ color: char.accentColor }}>{char.role}</p>
-                    <p className="text-[9px] text-slate-500 font-mono truncate">{char.department}</p>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-1.5 mb-4">
-                  {char.tags.map((tag, idx) => (
-                    <span key={idx} className="px-2 py-0.5 rounded text-[8px] font-mono font-bold uppercase tracking-wider border"
-                      style={{ background: char.accentColor + '15', borderColor: char.accentColor + '35', color: char.accentColor }}>{tag}</span>
-                  ))}
-                </div>
-                <div className="bg-black/30 p-3 rounded-xl border border-white/5 mb-4 text-xs italic text-slate-300 leading-relaxed">"{char.quote}"</div>
-              </div>
-              <div className="pt-3 border-t border-white/5 flex items-center justify-between text-xs font-mono">
-                <span className="text-slate-400">Baseline Trust:</span>
-                <span className="font-bold text-emerald-400">{char.trustLevel}%</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── SCROLL SECTION 3: SIMULATION OS ── */}
-      <section id="workspace" className="max-w-6xl mx-auto px-6 py-20 border-t border-white/10 w-full">
-        <div className="text-center mb-16 space-y-3">
-          <span className="text-xs font-mono uppercase tracking-widest text-indigo-400 font-extrabold">HYPER-REALISTIC WORKSPACE</span>
-          <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">The Brained OS Suite</h2>
-          <p className="text-slate-400 text-sm max-w-xl mx-auto">Not static multiple-choice questions. Work inside realistic clones of standard enterprise SaaS software.</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {SIMULATION_APPS.map((app) => (
-            <div key={app.id} className="bg-slate-950/75 backdrop-blur-xl p-6 rounded-2xl border border-white/10 shadow-2xl flex items-start space-x-4">
-              <div className="p-3 rounded-xl bg-white/5 border border-white/10 shrink-0">{app.icon}</div>
-              <div className="space-y-1.5">
-                <div className="flex items-center space-x-2">
-                  <h3 className="font-bold text-white text-base">{app.name}</h3>
-                  <span className="px-2 py-0.5 rounded-full text-[9px] font-mono bg-white/5 text-slate-400 border border-white/10">{app.tag}</span>
-                </div>
-                <p className="text-xs text-slate-400 leading-relaxed">{app.desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── SCROLL SECTION 4: FINAL CTA ── */}
-      <section className="max-w-4xl mx-auto px-6 py-24 text-center w-full">
-        <div className="bg-slate-950/90 backdrop-blur-2xl p-10 sm:p-14 rounded-3xl border border-white/15 shadow-2xl flex flex-col items-center">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 p-0.5 mb-6 shadow-xl shadow-indigo-500/20">
-            <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center font-black text-xl text-white">BQ</div>
-          </div>
-          <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight mb-4 font-serif">Ready to test your execution under pressure?</h2>
-          <p className="text-sm sm:text-base text-slate-300 max-w-lg mb-8 font-light leading-relaxed">
-            The executive committee is assembling. Your email inbox is loading. Titan Manufacturing's deadline is counting down.
-          </p>
-          <button onClick={handleEnterRoom} className="px-10 py-5 rounded-2xl bg-white hover:bg-slate-100 text-slate-950 font-black text-lg transition-all shadow-[0_0_60px_rgba(255,255,255,0.4)] hover:scale-105 flex items-center space-x-3 cursor-pointer group">
-            <span>Enter the room</span>
-            <ArrowRight className="w-5 h-5 text-slate-950 group-hover:translate-x-1 transition-transform" />
-          </button>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="w-full border-t border-white/10 py-10 px-6 bg-slate-950/90 text-xs text-slate-500 mt-auto">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-white font-black text-xs">BQ</div>
-            <span className="text-slate-300 font-semibold">Brained Quest — Enterprise Digital Transformation Engine</span>
-          </div>
-          <div className="flex space-x-6 text-slate-400 font-mono text-[10px]">
-            <span>ENTERPRISE CLEARANCE</span>
-            <span>PRIVACY SHIELD</span>
-            <span>ISO/IEC 27001 AUDITED</span>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };

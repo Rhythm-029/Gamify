@@ -22,7 +22,36 @@ export interface OfficeRoom {
 }
 
 export const OfficeBlueprints: React.FC<OfficeBlueprintsProps> = ({ activeStakeholderIndex }) => {
+  // Order must match STAKEHOLDERS array in OnboardingFlow:
+  // 0=Aarav, 1=Marcus, 2=Emma, 3=Daniel, 4=Aarav-closing (fallback to 0)
   const rooms: OfficeRoom[] = [
+    {
+      id: 'aarav_dto',
+      name: 'Transformation Strategy Center',
+      department: 'Digital Transformation Office',
+      description: 'Digital whiteboard roadmap screens, strategic indicators, feedback boards.',
+      x: -140,
+      y: 100,
+      w: 205,
+      h: 155,
+      color: 'from-yellow-500/20 to-yellow-600/5',
+      accentGlow: 'rgba(234, 179, 8, 0.4)',
+      icon: <Code className="w-5 h-5 text-yellow-400" />,
+      ambientContent: (
+        <div className="absolute inset-0 flex flex-col justify-between p-3 select-none">
+          <div className="flex justify-between items-center gap-2">
+            <span className="text-[8px] font-mono text-yellow-400 font-bold tracking-wider truncate">DTO_ROADMAP // ACTIVE</span>
+            <span className="font-mono text-[7px] text-yellow-400/60 shrink-0">ACTIVE</span>
+          </div>
+          <div className="font-mono text-[6px] text-yellow-300/50 space-y-0.5 overflow-hidden h-14 bg-black/20 p-1 rounded border border-white/5">
+            <div className="truncate text-yellow-400/80">{`✓ Loading roadmap parameters`}</div>
+            <div className="truncate">{`[system] Syncing DTO dashboard metrics`}</div>
+            <div className="truncate text-emerald-400/70">{`Success: 4/4 Stakeholders connected`}</div>
+          </div>
+          <span className="text-[8px] font-mono text-slate-500 truncate">Aarav & DTO</span>
+        </div>
+      ),
+    },
     {
       id: 'marcus_cto',
       name: 'Executive Leadership Hub',
@@ -105,93 +134,6 @@ export const OfficeBlueprints: React.FC<OfficeBlueprintsProps> = ({ activeStakeh
             <div className="w-1.5 bg-orange-500/20 rounded-t h-[30%]" />
           </div>
           <span className="text-[7px] font-mono text-orange-300/80 truncate">KPI MANDATE STAKES</span>
-        </div>
-      ),
-    },
-    {
-      id: 'olivia_sec',
-      name: 'Information Security Ops Center',
-      department: 'Cyber Security',
-      description: 'Access monitor matrix, active threat visual maps, warning system LEDs.',
-      x: 120,
-      y: 100,
-      w: 195,
-      h: 155,
-      color: 'from-red-500/20 to-red-600/5',
-      accentGlow: 'rgba(225, 29, 72, 0.4)',
-      icon: <Shield className="w-5 h-5 text-red-400" />,
-      ambientContent: (
-        <div className="absolute inset-0 flex flex-col justify-between p-3 select-none">
-          <div className="flex justify-between items-center gap-2">
-            <span className="text-[8px] font-mono text-red-400 font-bold tracking-wider truncate">SOC_NODE_ALPHA</span>
-            <span className="px-1.5 py-0.5 rounded bg-red-500/20 text-[7px] text-red-400 font-bold border border-red-500/30 animate-pulse shrink-0">SECURE</span>
-          </div>
-          <div className="relative h-12 bg-black/30 border border-red-500/20 rounded flex items-center justify-center overflow-hidden">
-            <div className="absolute w-full h-px bg-red-500/40 animate-scan-beam" style={{ animationDuration: '2s', animationIterationCount: 'infinite', animationTimingFunction: 'linear' }} />
-            <div className="grid grid-cols-6 gap-0.5 opacity-40">
-              {Array.from({ length: 12 }).map((_, i) => (
-                <div key={i} className={`w-1.5 h-1.5 rounded-sm ${i === 3 || i === 8 ? 'bg-red-500 animate-ping' : 'bg-red-950'}`} />
-              ))}
-            </div>
-          </div>
-          <span className="text-[7px] font-mono text-red-300/80 truncate">ZERO-TRUST AUDIT PORTAL</span>
-        </div>
-      ),
-    },
-    {
-      id: 'sophia_val',
-      name: 'Client Collaboration Room',
-      department: 'Business Value',
-      description: 'Customer journey dashboard wall, elegant glass panels, presentation display.',
-      x: -20,
-      y: 200,
-      w: 185,
-      h: 140,
-      color: 'from-purple-500/20 to-purple-600/5',
-      accentGlow: 'rgba(147, 51, 234, 0.4)',
-      icon: <CheckCircle className="w-5 h-5 text-purple-400" />,
-      ambientContent: (
-        <div className="absolute inset-0 flex flex-col justify-between p-3 select-none">
-          <div className="flex justify-between items-center gap-2">
-            <span className="text-[8px] font-mono text-purple-400 font-bold tracking-wider truncate">CLIENT_VALUE</span>
-            <span className="text-[7px] text-purple-300 font-mono shrink-0">98% SATISFACTION</span>
-          </div>
-          <div className="grid grid-cols-4 gap-1 p-1 bg-black/20 rounded border border-white/5">
-            {[1, 2, 3, 4].map((v) => (
-              <div key={v} className="flex items-center space-x-1 min-w-0">
-                <div className="w-1.5 h-1.5 rounded-full bg-purple-400 shrink-0" />
-                <span className="text-[6px] font-mono text-slate-400 truncate">V0{v}</span>
-              </div>
-            ))}
-          </div>
-          <span className="text-[7px] font-mono text-slate-500 truncate">Value Realization Lab</span>
-        </div>
-      ),
-    },
-    {
-      id: 'aarav_dto',
-      name: 'Transformation Strategy Center',
-      department: 'Digital Transformation Office',
-      description: 'Digital whiteboard roadmap screens, strategic indicators, feedback boards.',
-      x: -140,
-      y: 100,
-      w: 205,
-      h: 155,
-      color: 'from-yellow-500/20 to-yellow-600/5',
-      accentGlow: 'rgba(234, 179, 8, 0.4)',
-      icon: <Code className="w-5 h-5 text-yellow-400" />,
-      ambientContent: (
-        <div className="absolute inset-0 flex flex-col justify-between p-3 select-none">
-          <div className="flex justify-between items-center gap-2">
-            <span className="text-[8px] font-mono text-yellow-400 font-bold tracking-wider truncate">DTO_ROADMAP // ACTIVE</span>
-            <span className="font-mono text-[7px] text-yellow-400/60 shrink-0">ACTIVE</span>
-          </div>
-          <div className="font-mono text-[6px] text-yellow-300/50 space-y-0.5 overflow-hidden h-14 bg-black/20 p-1 rounded border border-white/5">
-            <div className="truncate text-yellow-400/80">{`✓ Loading roadmap parameters`}</div>
-            <div className="truncate">{`[system] Syncing DTO dashboard metrics`}</div>
-            <div className="truncate text-emerald-400/70">{`Success: 6/6 Stakeholders connected`}</div>
-          </div>
-          <span className="text-[8px] font-mono text-slate-500 truncate">Aarav & DTO</span>
         </div>
       ),
     },
@@ -375,15 +317,6 @@ export const OfficeBlueprints: React.FC<OfficeBlueprintsProps> = ({ activeStakeh
             </motion.div>
           ))}
         </motion.div>
-      </div>
-
-      {/* Ambient office camera watermarks */}
-      <div className="absolute bottom-6 left-6 flex items-center space-x-2 bg-slate-950/80 backdrop-blur-xl border border-white/10 px-3 py-1.5 rounded-full select-none z-30">
-        <span className="flex h-2 w-2 relative">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-        </span>
-        <span className="text-[9px] font-mono text-emerald-400 tracking-widest font-extrabold">LIVE_FEED // HQ_CAM_14</span>
       </div>
     </div>
   );

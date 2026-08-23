@@ -33,9 +33,9 @@ const CHARS = {
     id: 'emma', name: 'Emma Carter', role: 'HR Transformation Specialist', org: 'Brained',
     dp: '/character/Emma_Carter/EmmaDP.png', color: '#10b981',
   },
-  sophia: {
-    id: 'sophia', name: 'Sophia Bennett', role: 'VP of HR', org: 'Titan Manufacturing',
-    dp: '/character/Sophia_bennett/SophiaDP.png', color: '#a855f7',
+  aarav: {
+    id: 'aarav', name: 'Aarav Kapoor', role: 'Senior Consultant', org: 'Brained',
+    dp: '/character/AaravDP.png', color: '#eab308',
   },
 };
 
@@ -53,29 +53,24 @@ interface Line {
 const SCRIPT: Line[] = [
   { speaker: 'marcus', text: "Alright, let's get started.", pause: 1200 },
   { speaker: 'marcus', text: "This is Project Titan.", pause: 1800 },
-  { speaker: 'marcus', text: "Sophia, I'll let you frame the business problem.", pause: 2000 },
-  { speaker: 'sophia', text: "Thanks, Marcus.", pause: 1000 },
-  { speaker: 'sophia', text: "Titan has grown quickly over the last few years, but our HR systems haven't kept up.", pause: 3000 },
-  { speaker: 'sophia', text: "Our employees still depend on spreadsheets, email and manual forms for things that should be straightforward.", pause: 3500 },
-  { speaker: 'sophia', text: "Leave requests are one of our biggest pain points.", pause: 2000 },
-  { speaker: 'sophia', text: "Employees submit requests through different channels, managers approve them manually, and HR ends up reconciling everything.", pause: 3500 },
-  { speaker: 'emma', text: "The same thing happens with employee records.", pause: 2000 },
+  { speaker: 'marcus', text: "Titan has grown quickly over the last few years, but their HR systems haven't kept up.", pause: 3000 },
+  { speaker: 'marcus', text: "Their employees still depend on spreadsheets, email and manual forms for things that should be straightforward.", pause: 3500 },
+  { speaker: 'emma', text: "Leave requests are one of the biggest pain points.", pause: 2000 },
+  { speaker: 'emma', text: "Employees submit requests through different channels, managers approve them manually, and HR ends up reconciling everything.", pause: 3500 },
   { speaker: 'emma', text: "HR doesn't have one reliable view of employee information.", pause: 2500 },
   { speaker: 'emma', text: "We're constantly checking spreadsheets and shared folders.", pause: 2500 },
   { speaker: 'daniel', text: "Which is why we're proposing a centralised HR portal.", pause: 2500 },
   { speaker: 'marcus', text: "The initial scope is straightforward.", pause: 1500 },
   { speaker: 'marcus', text: "Employee access. Employee directory. Attendance. Leave management. And an HR dashboard.", pause: 4000 },
-  { speaker: 'sophia', text: "I'd also like employees to be able to see the status of their requests.", pause: 2500 },
-  { speaker: 'emma', text: "Yes. And managers need an approval workflow.", pause: 2000 },
+  { speaker: 'emma', text: "Employees should be able to see the status of their requests.", pause: 2500 },
+  { speaker: 'emma', text: "And managers need an approval workflow.", pause: 2000 },
   { speaker: 'daniel', text: "Timeline is tight.", pause: 1500 },
   { speaker: 'daniel', text: "We need a working prototype before the end of the week.", pause: 2500 },
   { speaker: 'marcus', text: "And we have a client presentation at the end of the engagement.", pause: 2500 },
-  { speaker: 'sophia', text: "I don't need something technically impressive just for the sake of it.", pause: 2500 },
-  { speaker: 'sophia', text: "I need something our employees can actually use.", pause: 2500 },
-  { speaker: 'marcus', text: "Exactly.", pause: 1000 },
   { speaker: 'marcus', text: "Don't optimise for features. Optimise for the problem.", pause: 3000 },
   { speaker: 'daniel', text: "I'll send the project brief after this.", pause: 2000 },
   { speaker: 'emma', text: "I'll also send the employee survey data.", pause: 2000 },
+  { speaker: 'aarav', text: "You'll want to read both carefully. There are things in there people won't say out loud.", pause: 3000 },
   { speaker: 'marcus', text: "Good. Let's move.", pause: 1000 },
 ];
 
@@ -240,7 +235,7 @@ export const TitanKickoffMeeting: React.FC = () => {
 
             <div className="p-6 space-y-4">
               <p className="text-sm text-slate-300 leading-relaxed">
-                This meeting will include <strong className="text-white">Marcus, Daniel, Emma, Sophia,</strong> and you.
+                This meeting will include <strong className="text-white">Marcus, Daniel, Emma, Aarav,</strong> and you.
                 Your camera and microphone will help maintain meeting professionalism.
               </p>
 
@@ -316,14 +311,14 @@ export const TitanKickoffMeeting: React.FC = () => {
         </div>
 
         {/* Main call grid */}
-        <div className="flex-1 grid grid-cols-3 gap-2 p-3 overflow-hidden">
+        <div className="flex-1 grid grid-cols-3 auto-rows-fr gap-2 p-3 overflow-hidden">
           {/* Character tiles */}
           {chars.map((char) => {
             const isSpeaking = activeSpeaker === char.id && !isScriptDone;
             return (
               <div
                 key={char.id}
-                className={`relative rounded-2xl overflow-hidden bg-slate-900/80 border-2 transition-all duration-300 ${
+                className={`relative rounded-2xl overflow-hidden bg-slate-900/80 border-2 transition-all duration-300 flex items-center justify-center ${
                   isSpeaking ? 'border-[var(--c)] shadow-lg' : 'border-white/10'
                 }`}
                 style={{ '--c': char.color } as React.CSSProperties}
@@ -331,7 +326,7 @@ export const TitanKickoffMeeting: React.FC = () => {
                 <img
                   src={char.dp}
                   alt={char.name}
-                  className="w-full h-full object-cover object-top"
+                  className="w-full h-full object-cover object-center scale-[0.85]"
                 />
                 {/* Speaking indicator */}
                 {isSpeaking && (
@@ -366,7 +361,7 @@ export const TitanKickoffMeeting: React.FC = () => {
           })}
 
           {/* Player tile */}
-          <div className="relative rounded-2xl overflow-hidden bg-slate-900 border-2 border-sky-500/30">
+          <div className="relative rounded-2xl overflow-hidden bg-slate-900 border-2 border-sky-500/30 flex items-center justify-center">
             {isCameraOn && streamRef.current ? (
               <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover scale-x-[-1]" />
             ) : (

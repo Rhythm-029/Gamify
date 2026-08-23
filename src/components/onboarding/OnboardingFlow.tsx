@@ -69,19 +69,6 @@ const STAKEHOLDERS = [
     quote: "Emma Carter. HR — but not what you're picturing.\nShe catches the requirements that engineers completely miss.\nThe ones no one says out loud.\nIf she flags something, take it seriously.\nShe's usually three steps ahead."
   },
   {
-    name: "Olivia",
-    role: "Director of Information Security & Compliance",
-    department: "Cybersecurity & Governance",
-    badge: "Guardian of Trust",
-    voicePitch: 60,
-    audioFile: "/voice/04_olivia_intro.mp3",
-    fullImage: "/character/Olivia_hayes/OliviaFull.png",
-    dp: "/character/Olivia_hayes/OliviaDP.png",
-    accentColor: "#e11d48",
-    tags: ["Non-Negotiable", "Evidence Only", "Will Halt Launch"],
-    quote: "Olivia Hayes. Security and Compliance.\nShe doesn't get emotional. She doesn't negotiate.\nBring her evidence, or don't bring anything.\nOne gap — a single one — and she'll halt the entire release.\nDon't even think about 'we'll fix it post-launch'."
-  },
-  {
     name: "Daniel",
     role: "Transformation Program Manager",
     department: "Program Delivery",
@@ -93,19 +80,6 @@ const STAKEHOLDERS = [
     accentColor: "#f97316",
     tags: ["Deadline Obsessed", "Tracks Everything", "Coffee Required"],
     quote: "Daniel Brooks. Program Manager.\nHoodie, coffee, and perpetually behind on something.\nDon't let that fool you — he tracks every blocker, risk, and missed update.\nKeep Jira current before he asks.\nBecause when he asks, it's already too late."
-  },
-  {
-    name: "Sophia",
-    role: "VP of HR, Titan Manufacturing",
-    department: "Client — Titan Manufacturing",
-    badge: "Our Client",
-    voicePitch: 35,
-    audioFile: "/voice/06_sophia_intro.mp3",
-    fullImage: "/character/Sophia_bennett/SophiaFull.png",
-    dp: "/character/Sophia_bennett/SophiaDP.png",
-    accentColor: "#9333ea",
-    tags: ["Results Over Everything", "12,000 People Waiting", "No Jargon"],
-    quote: "And this is Sophia Bennett. VP of HR at Titan Manufacturing.\nShe's the client. Our actual reason for being here.\n12,000 factory workers depending on what we build.\nShe doesn't care about your stack or your sprint velocity.\nShe cares if it works. On a tablet. On a factory floor."
   },
   {
     name: "Aarav",
@@ -386,6 +360,10 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
   // Sound Engine Muting Effect
   useEffect(() => {
     sound.setMute(isMuted);
+    // Also mute/unmute the ElevenLabs voice audio element (not routed through SoundEngine)
+    if (voiceAudioRef.current) {
+      voiceAudioRef.current.muted = isMuted;
+    }
   }, [isMuted]);
 
   // Particle background canvas loops
@@ -682,7 +660,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
     if (stakesPhase === 1) {
       const timer = setTimeout(() => {
         setStakesPhase(2);
-      }, 7000);
+      }, 5000);
       return () => clearTimeout(timer);
     } else {
       const timer = setTimeout(() => {
@@ -696,13 +674,18 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
           email: authEmail || emailInput,
           linkedin: linkedinUrl
         });
-      }, 6000);
+      }, 4000);
       return () => clearTimeout(timer);
     }
   }, [cinematicActive, cinematicScreen, stakesPhase]);
 
   const toggleMute = () => {
-    setIsMuted(!isMuted);
+    const newMuted = !isMuted;
+    setIsMuted(newMuted);
+    // Immediately mute/unmute voice audio element
+    if (voiceAudioRef.current) {
+      voiceAudioRef.current.muted = newMuted;
+    }
   };
 
   // RENDERING CINEMATIC MODES
@@ -728,7 +711,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
               <div className="text-[9px] font-mono text-slate-400 bg-white/5 border border-white/10 px-3 py-1 rounded-full uppercase tracking-wider">
                 {cinematicScreen === 'init' && 'STEP 01 // WORKSTATION INITIALIZATION'}
                 {cinematicScreen === 'welcome' && 'STEP 02 // IDENTITY VERIFIED'}
-                {cinematicScreen === 'office' && `STEP 03 // ALIGNMENT BOARD [${activeStakeholderIndex + 1}/6]`}
+                {cinematicScreen === 'office' && `STEP 03 // ALIGNMENT BOARD [${activeStakeholderIndex + 1}/${STAKEHOLDERS.length}]`}
                 {cinematicScreen === 'stakes' && 'STEP 04 // ENGAGEMENT CONTRACT'}
               </div>
               
