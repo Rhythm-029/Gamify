@@ -54,7 +54,7 @@ export interface FinderFile {
   path: string;
   folder: 'Documents' | 'Downloads' | 'Projects' | 'Desktop';
   size: string;
-  kind: 'PDF Document' | 'Markdown' | 'Spreadsheet' | 'Image';
+  kind: 'PDF Document' | 'Markdown' | 'Spreadsheet' | 'Image' | 'Zip Archive' | 'TypeScript Source' | 'JSON Config';
   lastModified: string;
   content: string;
 }
@@ -254,6 +254,59 @@ export const OS_CALENDAR_EVENTS: CalendarEvent[] = [
 ];
 
 export const OS_FINDER_FILES: FinderFile[] = [
+  {
+    id: "file-titan-folder",
+    name: "titan-hr-portal-prototype.zip",
+    path: "/Desktop/Project Titan Code",
+    folder: "Desktop",
+    size: "1.2 MB",
+    kind: "Zip Archive",
+    lastModified: "Just now",
+    content: "Full source code package for Project Titan HR Portal. Contains Next.js 14 codebase, package.json, App.tsx, SSOAuth.tsx, LeaveManagement.tsx, and README.md."
+  },
+  {
+    id: "file-titan-app-tsx",
+    name: "App.tsx",
+    path: "/Projects/titan-hr-portal/src",
+    folder: "Projects",
+    size: "4.2 KB",
+    kind: "TypeScript Source",
+    lastModified: "Just now",
+    content: `import React from 'react';
+import { SSOAuth } from './components/SSOAuth';
+import { LeaveManagement } from './components/LeaveManagement';
+import { Directory } from './components/Directory';
+
+export default function TitanHRPortal() {
+  return (
+    <div className="p-8 bg-slate-950 text-white font-sans">
+      <h1 className="text-2xl font-bold text-sky-400">Titan Enterprise HR Portal</h1>
+      <SSOAuth />
+      <LeaveManagement />
+      <Directory />
+    </div>
+  );
+}`
+  },
+  {
+    id: "file-titan-package-json",
+    name: "package.json",
+    path: "/Projects/titan-hr-portal",
+    folder: "Projects",
+    size: "820 B",
+    kind: "JSON Config",
+    lastModified: "Just now",
+    content: `{
+  "name": "titan-hr-portal-prototype",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "next": "^14.2.0",
+    "react": "^18.3.0",
+    "@titan/design-system": "^2.1.4"
+  }
+}`
+  },
   {
     id: "file-1",
     name: "Enterprise_HR_Portal_Charter.pdf",

@@ -1,22 +1,11 @@
-/**
- * TitanIDEApp — Deterministic HR Portal Prototype Builder.
- *
- * NO LLM. NO code generation.
- * The player selects/deselects features they have discovered.
- * Building the prototype shows a simulated build log.
- * The preview renders a live HR Portal with only the selected features.
- * The prototype state feeds into the evaluation system.
- *
- * Feature visibility is controlled by GameContext.discoveredRequirements.
- */
-
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import JSZip from 'jszip';
 import {
   Play, Check, AlertCircle, ChevronRight,
   Layers, Eye, Terminal as TerminalIcon,
   RotateCw, Shield, Database, Users, FileText,
-  CreditCard, ClipboardList, Upload
+  CreditCard, ClipboardList, Upload, Download, Code, FileCode
 } from 'lucide-react';
 import { useGame, type RequirementId } from '../../context/GameContext';
 
@@ -35,6 +24,117 @@ const FEATURE_ICONS: Record<string, React.FC<{ className?: string }>> = {
   req_payroll: CreditCard,
   req_audit_logs: ClipboardList,
   req_bulk_import: Users,
+};
+
+const DEFAULT_CODE_FILES: Record<string, string> = {
+  'package.json': `{
+  "name": "titan-hr-portal-prototype",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "^14.2.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "@titan/design-system": "^2.1.4",
+    "@brained/auth-adapter": "^1.0.2"
+  }
+}`,
+  'README.md': `# Project Titan — Employee HR Portal Prototype
+
+Built for Apex Global Enterprise & Titan HR Team by Brained Transformation Engineering.
+
+## Selected Modules
+- SSO Authentication (OAuth2 / SAML)
+- Employee Dashboard & Quick Actions
+- Searchable Employee Directory
+- Leave Request & Approvals Workflow
+- Attendance Tracking & Clock-in/out
+- HR Operations Admin Panel
+`,
+  'src/App.tsx': `import React, { useState } from 'react';
+import { SSOAuth } from './components/SSOAuth';
+import { LeaveManagement } from './components/LeaveManagement';
+import { Directory } from './components/Directory';
+
+export default function TitanHRPortal() {
+  const [user] = useState({ name: 'Alex Vance', role: 'Employee', dept: 'Engineering' });
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-white font-sans p-8">
+      <header className="flex justify-between items-center pb-6 border-b border-slate-800">
+        <div>
+          <h1 className="text-2xl font-bold text-sky-400">Titan Enterprise HR Portal</h1>
+          <p className="text-xs text-slate-400">Brained OS Micro-Frontend Architecture</p>
+        </div>
+        <div className="text-xs font-mono bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+          User: {user.name} ({user.role})
+        </div>
+      </header>
+
+      <main className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        <SSOAuth user={user} />
+        <LeaveManagement user={user} />
+        <Directory />
+      </main>
+    </div>
+  );
+}`,
+  'src/components/SSOAuth.tsx': `import React from 'react';
+
+export const SSOAuth = ({ user }: { user: any }) => {
+  return (
+    <div className="p-5 bg-slate-900 rounded-2xl border border-sky-500/30">
+      <h2 className="text-base font-bold text-sky-300">Single Sign-On (OAuth2 / SAML)</h2>
+      <p className="text-xs text-slate-400 mt-1">Enterprise SSO Integration initialized via Brained Auth Adapter v1.0.2.</p>
+      <div className="mt-4 p-3 bg-slate-950 rounded-xl text-xs font-mono text-emerald-400 border border-emerald-500/20">
+        [OK] Session Active: {user.name} ({user.dept})
+      </div>
+    </div>
+  );
+};`,
+  'src/components/LeaveManagement.tsx': `import React, { useState } from 'react';
+
+export const LeaveManagement = ({ user }: { user: any }) => {
+  const [requests] = useState([
+    { id: 'LR-101', type: 'Annual Leave', days: 3, status: 'Approved' },
+    { id: 'LR-102', type: 'Medical Leave', days: 1, status: 'Pending' },
+  ]);
+
+  return (
+    <div className="p-5 bg-slate-900 rounded-2xl border border-white/10">
+      <h2 className="text-base font-bold text-white">Leave Requests & Workflows</h2>
+      <p className="text-xs text-slate-400 mt-1">Simple 2-click submission optimized for plant floor workers & remote staff.</p>
+      <div className="mt-4 space-y-2">
+        {requests.map(r => (
+          <div key={r.id} className="p-3 bg-slate-950 rounded-xl flex justify-between items-center text-xs">
+            <span>{r.id} ({r.type}) — {r.days} day(s)</span>
+            <span className={r.status === 'Approved' ? 'text-emerald-400 font-bold' : 'text-amber-400'}>{r.status}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};`,
+  'src/components/Directory.tsx': `import React from 'react';
+
+export const Directory = () => {
+  return (
+    <div className="p-5 bg-slate-900 rounded-2xl border border-white/10 col-span-1 lg:col-span-2">
+      <h2 className="text-base font-bold text-white">Employee Directory</h2>
+      <p className="text-xs text-slate-400 mt-1">Searchable org hierarchy and team contact details.</p>
+      <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+        <div className="p-3 bg-slate-950 rounded-xl">Marcus Reed · CTO</div>
+        <div className="p-3 bg-slate-950 rounded-xl">Daniel Brooks · Program Manager</div>
+        <div className="p-3 bg-slate-950 rounded-xl">Emma Carter · HR Specialist</div>
+      </div>
+    </div>
+  );
+};`
 };
 
 // ── Build log messages ────────────────────────────────────────────────────────
@@ -253,12 +353,16 @@ const PREVIEW_SCREENS: Record<RequirementId, React.FC> = {
 
 export const TitanIDEApp: React.FC = () => {
   const { state, togglePrototypeFeature, buildPrototype, addSignal } = useGame();
-  const [activeTab, setActiveTab] = useState<'builder' | 'preview' | 'terminal'>('builder');
+  const [activeTab, setActiveTab] = useState<'builder' | 'code' | 'preview' | 'terminal'>('builder');
   const [isBuilding, setIsBuilding] = useState(false);
   const [buildDone, setBuildDone] = useState(state.prototypeBuilt);
   const [buildLog, setBuildLog] = useState<string[]>([]);
   const [logIdx, setLogIdx] = useState(0);
   const [activeScreen, setActiveScreen] = useState<RequirementId>('req_login');
+
+  // Code files state
+  const [codeFiles, setCodeFiles] = useState<Record<string, string>>(DEFAULT_CODE_FILES);
+  const [selectedFileKey, setSelectedFileKey] = useState<string>('src/App.tsx');
   const logRef = useRef<HTMLDivElement>(null);
 
   const discoveredFeatures = state.prototypeFeatures.filter((f) => f.discovered);
@@ -303,12 +407,38 @@ export const TitanIDEApp: React.FC = () => {
     addSignal('delivery_management', `Built prototype with ${selectedFeatures.length} features`, 12);
   };
 
+  const handleDownloadZip = async () => {
+    try {
+      const zip = new JSZip();
+      const folder = zip.folder('titan-hr-portal-prototype');
+      if (!folder) return;
+
+      Object.entries(codeFiles).forEach(([filePath, content]) => {
+        folder.file(filePath, content);
+      });
+
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'titan-hr-portal-prototype.zip';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      addSignal('delivery_management', 'Downloaded Project Titan prototype codebase folder .zip', 10);
+    } catch (err) {
+      console.error('Failed to generate zip download:', err);
+    }
+  };
+
   const PreviewScreen = PREVIEW_SCREENS[activeScreen];
 
   return (
     <div className="flex-1 flex flex-col bg-[#0d1117] text-white font-sans text-xs overflow-hidden">
       {/* IDE header */}
-      <div className="h-9 bg-[#161b22] border-b border-white/10 flex items-center justify-between px-4 shrink-0">
+      <div className="h-10 bg-[#161b22] border-b border-white/10 flex items-center justify-between px-4 shrink-0">
         <div className="flex items-center space-x-3">
           <div className="flex space-x-1.5">
             <div className="w-3 h-3 rounded-full bg-red-500" />
@@ -317,8 +447,9 @@ export const TitanIDEApp: React.FC = () => {
           </div>
           <span className="text-slate-400 font-mono text-[10px]">titan-hr-portal/</span>
         </div>
+
         <div className="flex items-center space-x-1">
-          {(['builder', 'preview', 'terminal'] as const).map((tab) => (
+          {(['builder', 'code', 'preview', 'terminal'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -327,23 +458,36 @@ export const TitanIDEApp: React.FC = () => {
               }`}
             >
               {tab === 'builder' ? <><Layers className="w-3 h-3 inline mr-1" />Builder</>
+               : tab === 'code' ? <><Code className="w-3 h-3 inline mr-1" />Code Editor</>
                : tab === 'preview' ? <><Eye className="w-3 h-3 inline mr-1" />Preview {buildDone && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block ml-1" />}</>
                : <><TerminalIcon className="w-3 h-3 inline mr-1" />Terminal</>}
             </button>
           ))}
         </div>
-        <button
-          onClick={handleBuild}
-          disabled={isBuilding || selectedFeatures.length === 0}
-          className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
-            isBuilding || selectedFeatures.length === 0
-              ? 'bg-slate-700/40 text-slate-500 cursor-not-allowed'
-              : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20'
-          }`}
-        >
-          {isBuilding ? <RotateCw className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
-          <span>{isBuilding ? 'Building…' : 'Build Prototype'}</span>
-        </button>
+
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={handleDownloadZip}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold bg-sky-600/80 hover:bg-sky-500 text-white transition-all cursor-pointer shadow-md shadow-sky-600/20"
+            title="Download full project source code as .zip folder"
+          >
+            <Download className="w-3 h-3" />
+            <span>Download Folder (.zip)</span>
+          </button>
+
+          <button
+            onClick={handleBuild}
+            disabled={isBuilding || selectedFeatures.length === 0}
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+              isBuilding || selectedFeatures.length === 0
+                ? 'bg-slate-700/40 text-slate-500 cursor-not-allowed'
+                : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20'
+            }`}
+          >
+            {isBuilding ? <RotateCw className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
+            <span>{isBuilding ? 'Building…' : 'Build Prototype'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Content */}
@@ -458,6 +602,70 @@ export const TitanIDEApp: React.FC = () => {
                   </button>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Code Editor tab */}
+          {activeTab === 'code' && (
+            <div className="flex-1 flex overflow-hidden bg-[#0d1117]">
+              {/* Code File Explorer Sidebar */}
+              <div className="w-52 border-r border-white/10 bg-[#161b22] p-2 space-y-1 overflow-y-auto shrink-0 select-none">
+                <p className="text-[9px] text-slate-500 uppercase px-2 py-1 font-bold tracking-wider">Project Files</p>
+                {Object.keys(codeFiles).map((fileKey) => (
+                  <button
+                    key={fileKey}
+                    onClick={() => setSelectedFileKey(fileKey)}
+                    className={`w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-lg text-left text-[11px] font-mono transition-colors cursor-pointer ${
+                      selectedFileKey === fileKey
+                        ? 'bg-sky-600/30 text-sky-300 font-bold border border-sky-500/30'
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <FileCode className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                    <span className="truncate">{fileKey}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Code Text Editor */}
+              <div className="flex-1 flex flex-col overflow-hidden">
+                <div className="h-8 bg-[#161b22] border-b border-white/10 flex items-center justify-between px-4 shrink-0 font-mono text-[10px] text-slate-400">
+                  <div className="flex items-center space-x-2">
+                    <Code className="w-3.5 h-3.5 text-sky-400" />
+                    <span>{selectedFileKey}</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <span>{(codeFiles[selectedFileKey] || '').split('\n').length} lines</span>
+                    <button
+                      onClick={handleDownloadZip}
+                      className="text-sky-400 hover:text-sky-300 flex items-center space-x-1 cursor-pointer"
+                    >
+                      <Download className="w-3 h-3" />
+                      <span>Download .zip</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex-1 relative overflow-hidden flex">
+                  {/* Line numbers */}
+                  <div className="w-10 bg-[#0d1117] border-r border-white/5 py-4 text-right pr-2 text-slate-600 font-mono text-xs select-none leading-relaxed">
+                    {(codeFiles[selectedFileKey] || '').split('\n').map((_, idx) => (
+                      <div key={idx}>{idx + 1}</div>
+                    ))}
+                  </div>
+
+                  {/* Code Textarea */}
+                  <textarea
+                    value={codeFiles[selectedFileKey] || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setCodeFiles((prev) => ({ ...prev, [selectedFileKey]: val }));
+                    }}
+                    className="flex-1 h-full bg-[#0d1117] font-mono text-xs text-sky-200 p-4 focus:outline-none resize-none leading-relaxed selection:bg-sky-600/40"
+                    spellCheck={false}
+                  />
+                </div>
+              </div>
             </div>
           )}
 

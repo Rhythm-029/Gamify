@@ -395,10 +395,17 @@ HR Transformation Specialist`,
   // ── Day 2 ────────────────────────────────────────────────────────────────────
 
   {
+    event_id: 'notify_ide_ready',
+    fireAtMs: 50_000,
+    channel: 'notification',
+    build: () => makeNotif('notif_ide_ready', 'Calendar', '💻 Coding Task Ready', 'Click here to open Titan IDE and configure/build the HR Portal prototype codebase.', { subtitle: 'Titan IDE Workspace', onActionAppId: 'ide' }),
+  },
+
+  {
     event_id: 'prototype_review_calendar',
     fireAtMs: 120_000,
     channel: 'notification',
-    build: () => makeNotif('notif_calendar_review', 'Calendar', 'Calendar — Prototype Review added', 'Day 7 · 10:00 · Marcus, Daniel, Emma', { subtitle: 'Day 7 · 10:00 AM' }),
+    build: () => makeNotif('notif_calendar_review', 'Calendar', 'Calendar — Prototype Review added', 'Day 7 · 10:00 · Marcus, Daniel, Emma', { subtitle: 'Day 7 · 10:00 AM', onActionAppId: 'calendar' }),
   },
 
   {
@@ -406,7 +413,15 @@ HR Transformation Specialist`,
     fireAtMs: 140_000,
     channel: 'notification',
     condition: (s) => !s.stakeholderContacted.daniel,
-    build: () => makeNotif('notif_daniel_day2', 'Teams', 'Daniel Brooks', 'Quick check — how are you progressing? Any blockers?', { subtitle: 'Direct Message' }),
+    build: () => makeNotif('notif_daniel_day2', 'Teams', 'Daniel Brooks', 'Quick check — how are you progressing? Any blockers?', { subtitle: 'Direct Message', onActionAppId: 'teams' }),
+  },
+
+  {
+    event_id: 'notify_ide_day2_nudge',
+    fireAtMs: 150_000,
+    channel: 'notification',
+    condition: (s) => !s.prototypeBuilt,
+    build: () => makeNotif('notif_ide_day2', 'Calendar', '💻 Titan IDE — Build Prototype', 'Prototype review is Day 7. Click to open Titan IDE & build your initial prototype.', { subtitle: 'Developer Task', onActionAppId: 'ide' }),
   },
 
   {
@@ -416,7 +431,7 @@ HR Transformation Specialist`,
     condition: (s) => !s.prototypeBuilt,
     build: () => makeSlack(
       'aarav_ide_nudge', 'aarav', 'dm-aarav', 'Aarav Kapoor',
-      `Have you looked at the prototype workspace yet? It would help to at least explore the project structure early — prototype review is Day 7.`,
+      `Have you looked at the prototype workspace yet? Open Titan IDE from your dock or desktop to build the project structure — prototype review is Day 7.`,
       'Day 2 · 09:30',
     ),
   },
