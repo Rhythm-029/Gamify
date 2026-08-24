@@ -15,46 +15,70 @@ import {
 } from './worldState.redis';
 import type { WorldState, WorldStateEvent, EventType, ScoreableSignal } from './worldState.types';
 
-// ── DB Connection ─────────────────────────────────────────────────────────────
+// ── DB Connection & In-Memory Fallback ───────────────────────────────────────
 
 import mongoose from 'mongoose';
 import { ENV } from '../../config/env';
 
 let dbConnected = false;
+let dbConnectAttempted = false;
+const inMemoryWorldStates = new Map<string, WorldState>();
 
 export async function ensureDbConnected(): Promise<void> {
   if (dbConnected || mongoose.connection.readyState === 1) return;
-  await mongoose.connect(ENV.MONGODB_URI, {
-    dbName: 'brained',
-    serverSelectionTimeoutMS: 5000,
-  });
-  dbConnected = true;
-  console.log('[MONGO] Connected to brained database');
+  if (ENV.MONGODB_URI.includes('<db_password>')) {
+    if (!dbConnectAttempted) {
+      console.warn('[MONGO] Warning: MONGODB_URI contains placeholder "<db_password>". Operating in in-memory fallback mode.');
+      dbConnectAttempted = true;
+    }
+    return;
+  }
+  try {
+    await mongoose.connect(ENV.MONGODB_URI, {
+      dbName: 'brained',
+      serverSelectionTimeoutMS: 3000,
+    });
+    dbConnected = true;
+    console.log('[MONGO] Connected to brained database');
+  } catch (err: any) {
+    if (!dbConnectAttempted) {
+      console.warn('[MONGO] Connection failed. Local in-memory fallback active:', err?.message ?? err);
+      dbConnectAttempted = true;
+    }
+  }
 }
 
 // ── Core Read/Write ───────────────────────────────────────────────────────────
 
 /**
- * Read World State — checks Redis hot cache first, falls back to Mongo.
+ * Read World State — checks Redis hot cache first, then Mongo, then in-memory fallback.
  */
 export async function readWorldState(sessionId: string): Promise<WorldState | null> {
   // Try cache first (sub-ms)
   const cached = await getCachedWorldState<WorldState>(sessionId);
   if (cached) return cached;
 
-  // Fallback to Mongo
+  // Fallback to Mongo if connected
   await ensureDbConnected();
-  const doc = await WorldStateModel.findOne({ session_id: sessionId }).lean();
-  if (!doc) return null;
+  if (dbConnected && mongoose.connection.readyState === 1) {
+    try {
+      const doc = await WorldStateModel.findOne({ session_id: sessionId }).lean();
+      if (doc) {
+        await cacheWorldState(sessionId, doc);
+        return doc as unknown as WorldState;
+      }
+    } catch (err) {
+      console.warn('[MONGO] Read failed, checking in-memory fallback:', err);
+    }
+  }
 
-  // Re-warm the cache
-  await cacheWorldState(sessionId, doc);
-  return doc as unknown as WorldState;
+  // Fallback to in-memory store
+  return inMemoryWorldStates.get(sessionId) ?? null;
 }
 
 /**
  * Atomic World State mutation.
- * Takes the current state, applies the mutator function, persists to Mongo,
+ * Takes the current state, applies the mutator function, persists to Mongo or in-memory fallback,
  * writes through to Redis, and publishes a state:changed event.
  */
 export async function mutateWorldState(
@@ -64,7 +88,7 @@ export async function mutateWorldState(
 ): Promise<WorldState> {
   await ensureDbConnected();
 
-  // Read current state (from cache or Mongo)
+  // Read current state
   const current = await readWorldState(sessionId);
   if (!current) throw new Error(`World State not found for session: ${sessionId}`);
 
@@ -85,15 +109,30 @@ export async function mutateWorldState(
     patch.event_log = [...(current.event_log ?? []), event];
   }
 
-  // Write to Mongo atomically
-  const updated = await WorldStateModel.findOneAndUpdate(
-    { session_id: sessionId },
-    { $set: patch },
-    { new: true, lean: true }
-  );
-  if (!updated) throw new Error(`Mutation failed — session not found: ${sessionId}`);
+  let newState: WorldState;
 
-  const newState = updated as unknown as WorldState;
+  if (dbConnected && mongoose.connection.readyState === 1) {
+    try {
+      const updated = await WorldStateModel.findOneAndUpdate(
+        { session_id: sessionId },
+        { $set: patch },
+        { new: true, lean: true }
+      );
+      if (updated) {
+        newState = updated as unknown as WorldState;
+      } else {
+        newState = { ...current, ...patch } as WorldState;
+      }
+    } catch (err) {
+      console.warn('[MONGO] Mutation write failed, using in-memory update:', err);
+      newState = { ...current, ...patch } as WorldState;
+    }
+  } else {
+    newState = { ...current, ...patch } as WorldState;
+  }
+
+  // Update in-memory fallback store
+  inMemoryWorldStates.set(sessionId, newState);
 
   // Write-through to Redis
   await cacheWorldState(sessionId, newState);
@@ -181,8 +220,15 @@ export async function createWorldState(params: {
     evaluation: null,
   });
 
-  await doc.save();
   const state = doc.toObject() as unknown as WorldState;
+  if (dbConnected && mongoose.connection.readyState === 1) {
+    try {
+      await doc.save();
+    } catch (err) {
+      console.warn('[MONGO] Save created state failed, using in-memory store:', err);
+    }
+  }
+  inMemoryWorldStates.set(sessionId, state);
   await cacheWorldState(sessionId, state);
   return state;
 }

@@ -30,6 +30,7 @@
     "ioredis": "^6.0.0",
     "jszip": "^3.10.1",
     "lucide-react": "^1.28.0",
+    "mongodb": "^7.5.0",
     "mongoose": "^9.9.2",
     "multer": "^2.2.0",
     "nodemailer": "^9.0.4",

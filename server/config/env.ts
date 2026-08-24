@@ -31,14 +31,26 @@ export const ENV = {
   XAI_API_KEY: process.env.XAI_API_KEY || process.env.GROK_API_KEY || process.env.GROQ_API_KEY || '',
   GROK_API_KEY: process.env.GROK_API_KEY || process.env.XAI_API_KEY || process.env.GROQ_API_KEY || '',
   GROQ_API_KEY: process.env.GROQ_API_KEY || process.env.GROK_API_KEY || process.env.XAI_API_KEY || '',
-  LLM_BASE_URL: process.env.LLM_BASE_URL || ((process.env.GROK_API_KEY || process.env.GROQ_API_KEY || '').startsWith('gsk_') ? 'https://api.groq.com/openai/v1' : 'https://api.x.ai/v1'),
-  LLM_MODEL: process.env.LLM_MODEL || ((process.env.GROK_API_KEY || process.env.GROQ_API_KEY || '').startsWith('gsk_') ? 'llama-3.3-70b-versatile' : 'grok-3'),
-
-  // OpenAI — fallback
   OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
 
+  LLM_BASE_URL: process.env.LLM_BASE_URL || (() => {
+    const key = process.env.GROK_API_KEY || process.env.GROQ_API_KEY || process.env.XAI_API_KEY || process.env.OPENAI_API_KEY || '';
+    if (key.startsWith('gsk_')) return 'https://api.groq.com/openai/v1';
+    if (key.startsWith('xai-')) return 'https://api.x.ai/v1';
+    if (key.startsWith('sk-')) return 'https://api.openai.com/v1';
+    return key.startsWith('gsk_') ? 'https://api.groq.com/openai/v1' : 'https://api.x.ai/v1';
+  })(),
+
+  LLM_MODEL: process.env.LLM_MODEL || (() => {
+    const key = process.env.GROK_API_KEY || process.env.GROQ_API_KEY || process.env.XAI_API_KEY || process.env.OPENAI_API_KEY || '';
+    if (key.startsWith('gsk_')) return 'openai/gpt-oss-20b';
+    if (key.startsWith('xai-')) return 'grok-2-1212';
+    if (key.startsWith('sk-')) return 'gpt-4o-mini';
+    return 'openai/gpt-oss-20b';
+  })(),
+
   // ── Whisper (transcription) ───────────────────────────────────────────────
-  WHISPER_PROVIDER: process.env.WHISPER_PROVIDER || ((process.env.GROK_API_KEY || process.env.GROQ_API_KEY || '').startsWith('gsk_') ? 'groq' : 'openai'),
+  WHISPER_PROVIDER: process.env.WHISPER_PROVIDER || ((process.env.GROK_API_KEY || process.env.GROQ_API_KEY || process.env.XAI_API_KEY || '').startsWith('gsk_') ? 'groq' : 'openai'),
 
 
   // Storage adapter: 'local' (default) | 's3' | 'r2'

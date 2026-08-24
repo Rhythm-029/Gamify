@@ -125,17 +125,18 @@ export async function logEndOfSessionSignals(sessionId: string): Promise<void> {
     }
   }
 
-  // Check: Olivia contacted proactively (before CTO security nudge fired)?
-  const ctoNudgeFired = state.fired_events.includes('cto_security_nudge');
-  const oliviaEverContacted = state.conversation_threads['olivia']?.some(
+  // Check: Aarav contacted proactively (before Day 3 security nudge fired)?
+  // Players who reach out to the mentor early demonstrate good stakeholder management.
+  const earlyNudgeFired = state.fired_events.includes('manager_checkin');
+  const aaravEverContacted = state.conversation_threads['aarav']?.some(
     (m) => m.role === 'player'
   );
-  if (oliviaEverContacted && !ctoNudgeFired) {
+  if (aaravEverContacted && !earlyNudgeFired) {
     await logSignal(sessionId, {
       dimension: 'stakeholder_management',
-      signal_type: 'proactive_olivia_contact',
-      value: 8,
-      description: 'Player contacted Olivia (InfoSec) proactively, before the CTO security nudge.',
+      signal_type: 'proactive_mentor_contact',
+      value: 5,
+      description: 'Player contacted Aarav (Mentor) proactively, before the Day 3 nudge fired.',
     });
   }
 

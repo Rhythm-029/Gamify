@@ -99,7 +99,7 @@ export const TITAN_SCENARIO: ScenarioDef = {
     },
     {
       // Late-arriving, always fires via Emma at ~35% mark
-      id: 'req_doc_upload',
+      id: 'req_document_upload',
       label: 'Employee Document Upload',
       revealedVia: 'mid_event',
       owner: 'emma',
@@ -160,7 +160,7 @@ export const TITAN_SCENARIO: ScenarioDef = {
       role: 'HR Transformation Specialist & Client Lead',
       department: 'HR Transformation',
       badge: 'Employee Advocate',
-      knowledgeScope: ['req_leave', 'req_attendance', 'req_directory', 'req_documents', 'req_announcements', 'req_doc_upload'],
+      knowledgeScope: ['req_leave', 'req_attendance', 'req_directory', 'req_documents', 'req_announcements', 'req_document_upload'],
       initialTrust: 80,
       replyDelayMs: 20_000,
       dp: '/character/Emma_Carter/EmmaDP.png',

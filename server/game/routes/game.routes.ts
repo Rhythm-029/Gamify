@@ -9,7 +9,7 @@ import path from 'path';
 import os from 'os';
 
 // Services
-import { createSession, getSession, pauseSession, resumeSession, abandonSession, getPlayerActiveSessions } from '../session/session.service';
+import { createSession, getSession, pauseSession, resumeSession, abandonSession, getPlayerActiveSessions, getLeaderboardFromDb } from '../session/session.service';
 import { generateCharacterReply, getConversationThread } from '../characters/character.service';
 import { runIDE } from '../ide/ide.service';
 import { submitMOM } from '../mom/mom.service';
@@ -52,6 +52,42 @@ gameRouter.post('/session/start', asyncHandler(async (req, res) => {
 
   const result = await createSession(player_id, scenario_id);
   startTracking(result.session_id); // start clock
+  res.json({ success: true, ...result });
+}));
+
+/** POST /api/game/session/create — create session with full player metadata (used by onboarding) */
+gameRouter.post('/session/create', asyncHandler(async (req, res) => {
+  const {
+    player_name,
+    player_email,
+    player_company,
+    player_role,
+    scenario_id,
+  } = req.body as {
+    player_name?: string;
+    player_email?: string;
+    player_company?: string;
+    player_role?: string;
+    scenario_id?: string;
+  };
+
+  const scenarioId = scenario_id || 'titan_manufacturing_v1';
+  const playerId = player_email
+    ? `p-${player_email.replace(/[^a-z0-9]/gi, '-').toLowerCase()}`
+    : `p-${Date.now()}`;
+
+  const result = await createSession(playerId, scenarioId);
+  startTracking(result.session_id);
+
+  // Patch player metadata into world state for leaderboard
+  const { mutateWorldState } = await import('../engine/worldState.engine');
+  await mutateWorldState(result.session_id, () => ({
+    player_name: player_name || 'Anonymous',
+    player_company: player_company || '',
+    player_email: player_email || '',
+    player_role: player_role || '',
+  } as any));
+
   res.json({ success: true, ...result });
 }));
 
@@ -117,10 +153,22 @@ gameRouter.get('/brief/:sessionId', asyncHandler(async (req, res) => {
 
 /** POST /api/game/character/:characterId/message — player sends message to character */
 gameRouter.post('/character/:characterId/message', asyncHandler(async (req, res) => {
-  const { session_id, message } = req.body as { session_id: string; message: string };
-  if (!session_id || !message) {
-    res.status(400).json({ success: false, error: 'session_id and message required' });
+  let { session_id, message } = req.body as { session_id?: string; message?: string };
+  if (!message) {
+    res.status(400).json({ success: false, error: 'message required' });
     return;
+  }
+
+  if (!session_id) {
+    session_id = 'session_titan_default';
+  }
+
+  const { readWorldState } = await import('../engine/worldState.engine');
+  let state = await readWorldState(session_id);
+  if (!state) {
+    const { createSession } = await import('../session/session.service');
+    const created = await createSession('player_1', 'titan_manufacturing_v1');
+    session_id = created.session_id;
   }
 
   const result = await generateCharacterReply({
@@ -128,7 +176,7 @@ gameRouter.post('/character/:characterId/message', asyncHandler(async (req, res)
     characterId: req.params.characterId,
     incomingMessage: message,
   });
-  res.json({ success: true, ...result });
+  res.json({ success: true, session_id, ...result });
 }));
 
 /** GET /api/game/character/:characterId/thread/:sessionId — full conversation thread */
@@ -201,4 +249,12 @@ gameRouter.post('/presentation/complete', asyncHandler(async (req, res) => {
 gameRouter.get('/report/:sessionId', asyncHandler(async (req, res) => {
   const report = await generateReport(req.params.sessionId);
   res.json({ success: true, report });
+}));
+
+// ── Leaderboard ───────────────────────────────────────────────────────────────
+
+/** GET /api/game/leaderboard — get top scores across all MongoDB sessions */
+gameRouter.get('/leaderboard', asyncHandler(async (_req, res) => {
+  const leaderboard = await getLeaderboardFromDb();
+  res.json({ success: true, leaderboard });
 }));

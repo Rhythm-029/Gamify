@@ -8,6 +8,7 @@ import { gameRouter } from './game/routes/game.routes';
 import { initWebSocket } from './game/websocket/ws.gateway';
 import { startClockWorker } from './game/clock/clock.service';
 import { initOrchestrator } from './game/orchestrator/event.orchestrator';
+import { ensureDbConnected } from './game/engine/worldState.engine';
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -37,7 +38,10 @@ app.use('/api/game', gameRouter);
 // ── WebSocket Gateway ─────────────────────────────────────────────────────────
 initWebSocket(httpServer);
 
-// ── Game Engine Services ──────────────────────────────────────────────────────
+// ── Game Engine Services & Database Connection ──────────────────────────────
+ensureDbConnected().catch((err) => {
+  console.warn('[MONGO] Warning: MongoDB connection failed on boot. Local fallback active.', err.message);
+});
 startClockWorker();
 initOrchestrator();
 

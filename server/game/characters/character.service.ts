@@ -133,21 +133,24 @@ Be fully in character. Never break the fourth wall. Never acknowledge you are an
     }
   }
 
-  // Schedule delivery after character's reply delay
+  // Stash the reply in Redis under a delivery key, then schedule
   const deliveryEventRef = `char_reply:${characterId}:${Date.now()}`;
   const delayMs = charDef.replyDelayMs;
 
-  // Stash the reply in Redis under a delivery key, then schedule
-  const { getRedis } = await import('../engine/worldState.redis');
-  const redis = getRedis();
-  await redis.setex(
-    `pending_reply:${sessionId}:${deliveryEventRef}`,
-    300, // 5 min TTL
-    JSON.stringify({ characterId, replyText, channel: 'teams' })
-  );
-  await scheduleGameEvent(sessionId, deliveryEventRef, delayMs);
+  try {
+    const { getRedis } = await import('../engine/worldState.redis');
+    const redis = getRedis();
+    await redis.setex(
+      `pending_reply:${sessionId}:${deliveryEventRef}`,
+      300, // 5 min TTL
+      JSON.stringify({ characterId, replyText, channel: 'teams' })
+    );
+    await scheduleGameEvent(sessionId, deliveryEventRef, delayMs);
+  } catch (schedErr) {
+    console.warn(`[CHARACTER AI] Redis scheduling warning for ${characterId}:`, schedErr);
+  }
 
-  // Log the player's message immediately to conversation thread
+  // Write player message to conversation thread (character reply delivered after delay by deliverPendingReply)
   if (!proactiveMessage) {
     await mutateWorldState(sessionId, (s) => ({
       conversation_threads: {
@@ -171,9 +174,22 @@ Be fully in character. Never break the fourth wall. Never acknowledge you are an
       value: 2,
       description: `Player sent message to ${characterId}`,
     });
+
+    // Score reply quality: log extra signal if message shows depth/specificity
+    const msgLower = incomingMessage.toLowerCase();
+    const isThoughtful = incomingMessage.length > 120 ||
+      ['audit', 'rbac', 'sso', 'access control', 'payroll', 'document upload', 'bulk import', 'security', 'architecture', 'compliance'].some(kw => msgLower.includes(kw));
+    if (isThoughtful) {
+      await logSignal(sessionId, {
+        dimension: 'decision_quality',
+        signal_type: 'thoughtful_stakeholder_message',
+        value: 3,
+        description: `Player sent a detailed/specific message to ${characterId} (shows strategic thinking)`,
+      });
+    }
   }
 
-  return { queued: true, expected_delay_ms: delayMs };
+  return { queued: true, expected_delay_ms: delayMs, replyText, character_id: characterId };
 }
 
 /**

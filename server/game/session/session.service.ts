@@ -61,6 +61,8 @@ const SessionModel: Model<SessionDocument> =
 
 // ── Service methods ───────────────────────────────────────────────────────────
 
+const inMemorySessions = new Map<string, any>();
+
 /**
  * Create a brand-new session for a player.
  * Initialises World State from the scenario config.
@@ -94,15 +96,27 @@ export async function createSession(
     },
   });
 
-  // Create session record
-  await SessionModel.create({
+  const sessionObj = {
     session_id: sessionId,
     player_id: playerId,
     scenario_id: scenarioId,
     status: 'active',
     world_state_id: sessionId, // same key as world state
     reconnect_token: reconnectToken,
-  });
+    started_at: new Date(),
+    ended_at: null,
+  };
+
+  inMemorySessions.set(sessionId, sessionObj);
+
+  // Create session record in Mongo if connected
+  if (mongoose.connection.readyState === 1) {
+    try {
+      await SessionModel.create(sessionObj);
+    } catch (err) {
+      console.warn('[SESSION] Save to Mongo failed, using in-memory session:', err);
+    }
+  }
 
   console.log(`[SESSION] Created session ${sessionId} for player ${playerId} (${scenarioId})`);
   return { session_id: sessionId, reconnect_token: reconnectToken };
@@ -117,7 +131,15 @@ export async function getSession(sessionId: string): Promise<{
   world_state: Awaited<ReturnType<typeof readWorldState>>;
 }> {
   await ensureDbConnected();
-  const session = await SessionModel.findOne({ session_id: sessionId }).lean() as unknown as SessionDocument | null;
+  let session: SessionDocument | null = null;
+  if (mongoose.connection.readyState === 1) {
+    try {
+      session = await SessionModel.findOne({ session_id: sessionId }).lean() as unknown as SessionDocument | null;
+    } catch { /* fallback */ }
+  }
+  if (!session) {
+    session = inMemorySessions.get(sessionId) ?? null;
+  }
   const world_state = await readWorldState(sessionId);
   return { session, world_state };
 }
@@ -219,4 +241,97 @@ export async function abandonSession(sessionId: string): Promise<void> {
 export async function getPlayerActiveSessions(playerId: string): Promise<SessionDocument[]> {
   await ensureDbConnected();
   return SessionModel.find({ player_id: playerId, status: { $in: ['active', 'paused'] } }).lean() as unknown as SessionDocument[];
+}
+
+/** Get top player scores from MongoDB for Leaderboard display */
+export async function getLeaderboardFromDb(): Promise<Array<{
+  id: string;
+  rank: number;
+  name: string;
+  avatar: string;
+  company: string;
+  outcome: 'excellent' | 'strong' | 'developing' | 'needs_improvement';
+  score: number;
+  completedAt: string;
+  requirementsDiscovered: number;
+  totalRequirements: number;
+}>> {
+  await ensureDbConnected();
+
+  let sessions: any[] = [];
+  if (mongoose.connection.readyState === 1) {
+    try {
+      sessions = await SessionModel.find({ status: { $in: ['completed', 'active'] } }).limit(100).lean();
+    } catch {
+      // fallback to in-memory
+    }
+  }
+
+  // Also pull from in-memory fallback
+  const inMemoryIds = Array.from(inMemorySessions.keys());
+  for (const sid of inMemoryIds) {
+    const s = inMemorySessions.get(sid);
+    if (s && !sessions.find((x) => x.session_id === s.session_id)) {
+      sessions.push(s);
+    }
+  }
+
+  const entries: ReturnType<typeof getLeaderboardFromDb> extends Promise<infer T> ? T : never[] = [] as any;
+
+  for (const s of sessions) {
+    const worldState = await readWorldState(s.session_id);
+    if (!worldState) continue;
+
+    // Only show completed sessions (evaluation done) or sessions with significant activity
+    const hasEval = !!worldState.evaluation;
+    const discoveredCount = worldState.requirements?.discovered?.length ?? 0;
+    const hiddenCount = worldState.requirements?.hidden?.length ?? 0;
+    if (!hasEval && discoveredCount === 0) continue;
+
+    // Derive score
+    let score = 0;
+    let outcome: 'excellent' | 'strong' | 'developing' | 'needs_improvement' = 'developing';
+    if (hasEval && worldState.evaluation) {
+      score = Math.round(worldState.evaluation.total_score ?? 0);
+    } else {
+      // Estimate from signals
+      const signals: any[] = worldState.scoreable_signals ?? [];
+      const sigScore = signals.reduce((a: number, s: any) => a + (Number(s.value) || 0), 0);
+      score = Math.min(100, Math.round(sigScore));
+    }
+
+    if (score >= 75) outcome = 'excellent';
+    else if (score >= 55) outcome = 'strong';
+    else if (score >= 30) outcome = 'developing';
+    else outcome = 'needs_improvement';
+
+    // Player name from world state player profile or player_id
+    const name = (worldState as any).player_name || s.player_id.replace(/^p-/, 'Transformer ').replace(/^local_\d+_/, 'Player ') || 'Anonymous';
+    const company = (worldState as any).player_company || '';
+    const completedAt = worldState.evaluation?.completed_at
+      ? new Date(worldState.evaluation.completed_at).toISOString()
+      : s.started_at
+      ? new Date(s.started_at).toISOString()
+      : new Date().toISOString();
+
+    const totalReqs = (worldState.requirements?.discovered?.length ?? 0) + (worldState.requirements?.hidden?.length ?? 0);
+
+    (entries as any[]).push({
+      id: s.session_id,
+      rank: 0,
+      name,
+      company,
+      avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=6d28d9&textColor=ffffff`,
+      outcome,
+      score,
+      completedAt,
+      requirementsDiscovered: discoveredCount,
+      totalRequirements: totalReqs,
+    });
+  }
+
+  (entries as any[]).sort((a: any, b: any) => b.score - a.score || b.requirementsDiscovered - a.requirementsDiscovered);
+  (entries as any[]).forEach((e: any, idx: number) => { e.rank = idx + 1; });
+
+  return entries as any;
 }
