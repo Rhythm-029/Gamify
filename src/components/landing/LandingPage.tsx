@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { ArrowRight, Volume2, VolumeX } from 'lucide-react';
+import { ArrowRight, Volume2, VolumeX, Trophy, ChevronRight } from 'lucide-react';
 import { sound } from '../onboarding/SoundEngine';
+import { Leaderboard } from './Leaderboard';
 
 interface LandingPageProps {
   onStartOnboarding: () => void;
@@ -98,6 +99,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const ambienceRef = useRef<{ nodes: AudioNode[]; master: GainNode } | null>(null);
   const [, setMusicStarted] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   // ── Start corporate ambient tune (Web Audio synth pad) ──
   const startMusic = () => {
@@ -209,16 +211,52 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   return (
     <div className="h-screen bg-[#070913] text-white flex flex-col font-sans relative overflow-hidden selection:bg-blue-500 selection:text-white">
 
-      {/* ── HERO VIDEO — FILLS FULL VIEWPORT, NO HEADER ── */}
+      {/* ── MINIMAL LANDING PAGE HEADER ── */}
+      <header className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-6 py-4 bg-gradient-to-b from-black/80 via-black/40 to-transparent backdrop-blur-sm border-b border-white/5 select-none">
+        {/* Left: Brand Logo & Tag */}
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 border border-purple-400/40 flex items-center justify-center font-black text-sm text-white shadow-lg shadow-purple-500/20">
+            B
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="font-black tracking-wider text-sm text-white font-mono">BRAINED</span>
+            <span className="text-[10px] text-purple-300/80 uppercase font-mono tracking-widest bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-full hidden sm:inline-block">
+              Consulting Simulation
+            </span>
+          </div>
+        </div>
+
+        {/* Right: Controls (Leaderboard + Sound) */}
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => setShowLeaderboard(!showLeaderboard)}
+            className="flex items-center space-x-2 backdrop-blur-md transition-all cursor-pointer shadow-lg px-3.5 py-1.5 rounded-full text-xs font-mono font-bold border bg-[#0f0f1e]/80 text-amber-300 border-amber-500/40 hover:bg-[#16162a]"
+          >
+            <Trophy className="w-4 h-4 text-amber-400" />
+            <span>Leaderboard</span>
+          </button>
+
+          <button
+            onClick={toggleMute}
+            className="flex items-center space-x-2 backdrop-blur-md transition-all cursor-pointer shadow-lg px-3.5 py-1.5 rounded-full text-xs font-mono font-bold border"
+            style={isMuted
+              ? { background: 'rgba(15,15,30,0.85)', color: '#fbbf24', borderColor: 'rgba(251,191,36,0.5)' }
+              : { background: 'rgba(15,15,30,0.6)', color: '#6ee7b7', borderColor: 'rgba(110,231,183,0.3)' }
+            }
+          >
+            {isMuted
+              ? <><VolumeX className="w-4 h-4 text-amber-400" /><span>Unmute</span></>
+              : <><Volume2 className="w-4 h-4 text-emerald-400 animate-pulse" /><span>Sound On</span></>
+            }
+          </button>
+        </div>
+      </header>
+
+      {/* ── HERO VIDEO — FILLS FULL VIEWPORT ── */}
       <section
         className="relative flex-1 overflow-hidden"
         style={{ background: '#000' }}
       >
-        {/*
-          object-cover = fills 100% width AND height, no black bars ever.
-          objectPosition 'center 15%' = content sits slightly below center-top
-          so the video headline is visible but not right at the cut.
-        */}
         <video
           ref={videoRef}
           src="/start_video/intro_1080p.mp4"
@@ -238,20 +276,48 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           }}
         />
 
-        {/* Floating Sound Badge */}
-        <button
-          onClick={toggleMute}
-          className="absolute top-6 right-6 z-30 flex items-center space-x-2 backdrop-blur-md transition-all cursor-pointer shadow-lg px-3.5 py-1.5 rounded-full text-xs font-mono font-bold border"
-          style={isMuted
-            ? { background: 'rgba(15,15,30,0.85)', color: '#fbbf24', borderColor: 'rgba(251,191,36,0.5)' }
-            : { background: 'rgba(15,15,30,0.6)', color: '#6ee7b7', borderColor: 'rgba(110,231,183,0.3)' }
-          }
-        >
-          {isMuted
-            ? <><VolumeX className="w-4 h-4 text-amber-400" /><span>Unmute</span></>
-            : <><Volume2 className="w-4 h-4 text-emerald-400 animate-pulse" /><span>Sound On</span></>
-          }
-        </button>
+        {/* Live Leaderboard Overlay Modal */}
+        {showLeaderboard && (
+          <div className="absolute inset-y-0 right-0 z-40 w-full sm:w-[420px] bg-[#090b16]/95 backdrop-blur-xl border-l border-white/10 p-6 flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10">
+              <div className="flex items-center space-x-2">
+                <Trophy className="w-5 h-5 text-amber-400" />
+                <h2 className="font-extrabold text-base text-white">Global Leaderboard</h2>
+              </div>
+              <button
+                onClick={() => setShowLeaderboard(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 text-xs font-bold"
+              >
+                ✕ Close
+              </button>
+            </div>
+            <p className="text-xs text-slate-400 mb-4">
+              Real-time rankings of top digital transformation consultants worldwide.
+            </p>
+            <div className="flex-1 overflow-y-auto pr-1">
+              <Leaderboard limit={20} />
+            </div>
+          </div>
+        )}
+
+        {/* Bottom-Right Good Luck Badge (Positioned over the star logo area) */}
+        <div className="absolute bottom-16 right-6 z-20 flex flex-col bg-[#070914]/95 backdrop-blur-xl border border-amber-500/30 p-4 rounded-2xl shadow-2xl select-none min-w-[220px] shadow-amber-950/20">
+          <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/10">
+            <div className="flex items-center space-x-2">
+              <span className="text-amber-400 font-bold text-xs">✨</span>
+              <span className="text-[11px] font-mono font-black text-amber-300 tracking-wider">GOOD LUCK, CONSULTANT</span>
+            </div>
+            <span className="text-[9px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">READY</span>
+          </div>
+          <div className="space-y-1">
+            <p className="text-[11px] text-slate-200 font-medium leading-relaxed">
+              Step into the room with confidence.
+            </p>
+            <p className="text-[10px] text-amber-200/70 font-sans leading-tight">
+              Trust your instincts — every decision counts.
+            </p>
+          </div>
+        </div>
 
         {/* Bottom fade only — minimal, doesn't dim video content */}
         <div className="absolute bottom-0 left-0 right-0 pointer-events-none"
