@@ -20,7 +20,7 @@ import {
   Video, VideoOff, Mic, MicOff, PhoneOff,
   Send, CheckCircle2, AlertTriangle, Users
 } from 'lucide-react';
-import { useGame } from '../../context/GameContext';
+import { useGame, API_BASE } from '../../context/GameContext';
 
 // ── Characters ────────────────────────────────────────────────────────────────
 
@@ -205,31 +205,58 @@ export const PrototypeReviewMeeting: React.FC<PrototypeReviewMeetingProps> = ({ 
   const handleSubmitAnswer = useCallback(() => {
     if (!currentInput.trim() || submitting) return;
     const q = questions[questionIdx];
+    const answerText = currentInput.trim();
     setSubmitting(true);
 
     // Log signal
-    const quality = currentInput.trim().length >= q.minLength ? 10 : 4;
+    const quality = answerText.length >= q.minLength ? 10 : 4;
     addSignal(q.signalDimension, `Prototype review Q${questionIdx + 1} answer`, quality);
-    setAnswers((prev) => ({ ...prev, [q.id]: currentInput.trim() }));
+    setAnswers((prev) => ({ ...prev, [q.id]: answerText }));
 
-    // Simulate character acknowledgement
-    setTimeout(() => {
-      setFeedbackMsg(generateAck(q.speaker, currentInput.trim(), q));
-      setSubmitting(false);
+    const sid = state.sessionId || localStorage.getItem('brained_session_id') || 'session_titan_default';
 
-      // After ack, advance to next question
-      setTimeout(() => {
-        setFeedbackMsg(null);
-        setShowFollowUp(null);
-        if (questionIdx >= questions.length - 1) {
-          setStage('wrap_up');
-        } else {
-          setQuestionIdx((i) => i + 1);
-          setCurrentInput('');
-        }
-      }, 2500);
-    }, 1000);
-  }, [currentInput, questionIdx, questions, submitting, addSignal]);
+    fetch(`${API_BASE}/api/game/character/${q.speaker}/message`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id: sid,
+        message: `[PROTOTYPE REVIEW MEETING QUESTION: "${q.question}"]\nMy response: "${answerText}"`,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const aiAck = data.replyText || data.text || generateAck(q.speaker, answerText, q);
+        setFeedbackMsg(aiAck);
+        setSubmitting(false);
+
+        setTimeout(() => {
+          setFeedbackMsg(null);
+          setShowFollowUp(null);
+          if (questionIdx >= questions.length - 1) {
+            setStage('wrap_up');
+          } else {
+            setQuestionIdx((i) => i + 1);
+            setCurrentInput('');
+          }
+        }, 3500);
+      })
+      .catch((err) => {
+        console.warn('[MEETING AI] AI ack failed, using fallback:', err);
+        setFeedbackMsg(generateAck(q.speaker, answerText, q));
+        setSubmitting(false);
+
+        setTimeout(() => {
+          setFeedbackMsg(null);
+          setShowFollowUp(null);
+          if (questionIdx >= questions.length - 1) {
+            setStage('wrap_up');
+          } else {
+            setQuestionIdx((i) => i + 1);
+            setCurrentInput('');
+          }
+        }, 2500);
+      });
+  }, [currentInput, questionIdx, questions, submitting, addSignal, state.sessionId]);
 
   const endMeeting = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -256,7 +283,6 @@ export const PrototypeReviewMeeting: React.FC<PrototypeReviewMeetingProps> = ({ 
       ],
     };
     return acks[speaker as keyof typeof acks]?.[isGood ? 0 : 1] ?? "Understood. Thank you.";
-    return acks[speaker][isGood ? 0 : 1];
   }
 
   const currentQ = questions[questionIdx];

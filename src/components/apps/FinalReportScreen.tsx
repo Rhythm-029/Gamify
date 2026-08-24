@@ -436,21 +436,19 @@ export const FinalReportScreen: React.FC<FinalReportScreenProps> = ({ onReturnTo
 
                 {/* Actions */}
                 <div className="flex items-center space-x-4 pt-2">
-                  {report.certificateUnlocked && (
-                    <button className="flex items-center space-x-2 px-5 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-sm cursor-pointer hover:from-purple-500 hover:to-indigo-500">
-                      <Download className="w-4 h-4" />
-                      <span>Download Certificate</span>
-                    </button>
-                  )}
-                  {onReturnToDashboard && (
-                    <button
-                      onClick={onReturnToDashboard}
-                      className="flex items-center space-x-2 px-5 py-3 rounded-xl bg-white/8 hover:bg-white/12 border border-white/12 text-white font-semibold text-sm cursor-pointer"
-                    >
-                      <ArrowRight className="w-4 h-4" />
-                      <span>Return to Dashboard</span>
-                    </button>
-                  )}
+                  <button
+                    onClick={() => {
+                      if (report) {
+                        localStorage.setItem('brained_last_score', String(report.overall_score || 55));
+                      }
+                      if (onReturnToDashboard) onReturnToDashboard();
+                    }}
+                    className="flex items-center space-x-2 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm cursor-pointer shadow-lg shadow-purple-500/20"
+                  >
+                    <Award className="w-4 h-4" />
+                    <span>View Leaderboard, Certificate & Share</span>
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </button>
                 </div>
               </>
             )}

@@ -14,7 +14,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Hash, Send, MessageSquare, ChevronDown } from 'lucide-react';
-import { useGame } from '../../context/GameContext';
+import { useGame, API_BASE } from '../../context/GameContext';
 import type { ScheduledSlackMsg } from '../../context/GameContext';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -222,33 +222,65 @@ export const SlackOSApp: React.FC = () => {
       markStakeholderContacted(activeChannel.characterId as 'marcus' | 'daniel' | 'emma' | 'aarav');
     }
 
-    // Character reply
+    // Character AI reply call
     if (activeChannel.type === 'dm' && activeChannel.characterId) {
       const charId = activeChannel.characterId;
       const char = CHARS[charId];
       if (!char) return;
 
       setIsTyping(true);
-      const delay = 1500 + Math.random() * 2000;
+      const sentText = msgText.trim();
+      const currentChannelId = activeId;
 
-      setTimeout(() => {
-        setIsTyping(false);
-        const idx = replyIndexRef.current[charId] ?? 0;
-        const reply = char.fallbacks[idx % char.fallbacks.length];
-        replyIndexRef.current[charId] = idx + 1;
+      fetch(`${API_BASE}/api/game/character/${charId}/message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: state.sessionId || localStorage.getItem('brained_session_id') || 'session_titan_default',
+          message: sentText,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          setIsTyping(false);
+          const reply = data.replyText || data.text || char.fallbacks[(replyIndexRef.current[charId] ?? 0) % char.fallbacks.length];
+          replyIndexRef.current[charId] = (replyIndexRef.current[charId] ?? 0) + 1;
 
-        setCharReplies((prev) => [...prev, {
-          id: `m-${Date.now()}-r`,
-          channelId: activeId,
-          senderId: charId,
-          senderName: char.name,
-          senderAvatar: char.avatar,
-          content: reply,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        }]);
-      }, delay);
+          setCharReplies((prev) => [
+            ...prev,
+            {
+              id: `m-${Date.now()}-r`,
+              channelId: currentChannelId,
+              senderId: charId,
+              senderName: char.name,
+              senderAvatar: char.avatar,
+              content: reply,
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            },
+          ]);
+        })
+        .catch((err) => {
+          console.warn('[SLACK AI] Backend call failed, using fallback:', err);
+          setIsTyping(false);
+          const idx = replyIndexRef.current[charId] ?? 0;
+          const reply = char.fallbacks[idx % char.fallbacks.length];
+          replyIndexRef.current[charId] = idx + 1;
+
+          setCharReplies((prev) => [
+            ...prev,
+            {
+              id: `m-${Date.now()}-r`,
+              channelId: currentChannelId,
+              senderId: charId,
+              senderName: char.name,
+              senderAvatar: char.avatar,
+              content: reply,
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            },
+          ]);
+        });
     }
-  }, [msgText, activeId, activeChannel, addSignal, markStakeholderContacted]);
+  }, [msgText, activeId, activeChannel, state.sessionId, addSignal, markStakeholderContacted]);
 
   return (
     <div className="flex-1 flex flex-row overflow-hidden bg-[#1a1d21] text-white font-sans text-xs">
@@ -337,20 +369,33 @@ export const SlackOSApp: React.FC = () => {
           <div ref={bottomRef} />
         </div>
 
-        <form onSubmit={handleSend} className="p-3 border-t border-white/8 bg-[#1e2128]">
-          <div className="flex items-center space-x-2 bg-[#2a2d36] rounded-xl border border-white/10 px-3 py-2">
-            <input
-              type="text"
-              value={msgText}
-              onChange={(e) => setMsgText(e.target.value)}
-              placeholder={`Message ${activeChannel.type === 'dm' ? activeChannel.name : '#' + activeChannel.name}`}
-              className="flex-1 bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none"
-            />
-            <button type="submit" disabled={!msgText.trim()} className="p-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:opacity-40 cursor-pointer">
-              <Send className="w-3.5 h-3.5 text-white" />
-            </button>
+        {activeChannel.type === 'dm' ? (
+          <form onSubmit={handleSend} className="p-3 border-t border-white/8 bg-[#1e2128]">
+            <div className="flex items-center space-x-2 bg-[#2a2d36] rounded-xl border border-white/10 px-3 py-2">
+              <input
+                type="text"
+                value={msgText}
+                onChange={(e) => setMsgText(e.target.value)}
+                placeholder={`Message ${activeChannel.name}…`}
+                className="flex-1 bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none"
+              />
+              <button type="submit" disabled={!msgText.trim()} className="p-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:opacity-40 cursor-pointer">
+                <Send className="w-3.5 h-3.5 text-white" />
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className="p-3 border-t border-white/8 bg-[#1e2128]">
+            <div className="flex items-center space-x-2 bg-[#2a2d36] rounded-xl border border-white/5 px-3 py-2 opacity-50">
+              <input
+                type="text"
+                disabled
+                placeholder={`#${activeChannel.name} is read-only — use Direct Messages to contact stakeholders`}
+                className="flex-1 bg-transparent text-xs text-slate-500 placeholder-slate-600 focus:outline-none cursor-not-allowed"
+              />
+            </div>
           </div>
-        </form>
+        )}
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, Search, Paperclip, Send, AlertCircle, Folder } from 'lucide-react';
 import type { GameMail } from '../../hooks/useGameSession';
-import { useGame } from '../../context/GameContext';
+import { useGame, API_BASE } from '../../context/GameContext';
 
 // Legacy type alias for backward compatibility
 export type MailItem = GameMail & { senderAvatar: string };
@@ -20,7 +20,9 @@ interface AppleMailAppProps {
 }
 
 export const AppleMailApp: React.FC<AppleMailAppProps> = ({ mails: propMails = [] }) => {
-  const { state, markMailRead } = useGame();
+  const { state, markMailRead, addSignal } = useGame();
+  const [isSending, setIsSending] = useState(false);
+  const [extraMails, setExtraMails] = useState<GameMail[]>([]);
 
   const gameMails: GameMail[] = state.deliveredMails.map((m) => ({
     id: m.id,
@@ -42,7 +44,7 @@ export const AppleMailApp: React.FC<AppleMailAppProps> = ({ mails: propMails = [
     event_id: m.eventId,
   }));
 
-  const allMails = propMails.length > 0 ? propMails : gameMails;
+  const allMails = [...(propMails.length > 0 ? propMails : gameMails), ...extraMails];
   const [selectedMail, setSelectedMail] = useState<GameMail | null>(allMails[0] ?? null);
   const [activeFolder, setActiveFolder] = useState<string>('Inbox');
   const [replyText, setReplyText] = useState('');
@@ -52,7 +54,7 @@ export const AppleMailApp: React.FC<AppleMailAppProps> = ({ mails: propMails = [
     markMailRead(mail.id);
   };
 
-  const filteredMails = allMails.filter((m) => m.folder === activeFolder);
+  const filteredMails = allMails.filter((m) => m.folder === activeFolder || (m.folder === 'Inbox' && activeFolder === 'Inbox'));
 
 
   return (
@@ -183,22 +185,74 @@ export const AppleMailApp: React.FC<AppleMailAppProps> = ({ mails: propMails = [
             )}
 
             {/* Quick Reply Bar */}
-            <div className="pt-4 border-t border-white/10 flex items-center space-x-2">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!replyText.trim() || isSending) return;
+                const charId = selectedMail.from_character_id || 'daniel';
+                const text = replyText.trim();
+                setReplyText('');
+                setIsSending(true);
+
+                addSignal('communication', `Sent email reply to ${selectedMail.sender_name}`, 3);
+
+                fetch(`${API_BASE}/api/game/character/${charId}/message`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    session_id: state.sessionId || localStorage.getItem('brained_session_id') || 'session_titan_default',
+                    message: `[EMAIL REPLIES TO: "${selectedMail.subject}"]\n\n${text}`,
+                  }),
+                })
+                  .then((res) => res.json())
+                  .then((data) => {
+                    setIsSending(false);
+                    const aiReply = data.replyText || data.text || "Thank you for the update — noted.";
+                    const newMail: GameMail = {
+                      id: `mail-reply-${Date.now()}`,
+                      from_character_id: charId,
+                      sender_name: selectedMail.sender_name,
+                      sender_role: selectedMail.sender_role,
+                      sender_avatar: selectedMail.sender_avatar,
+                      sender_email: selectedMail.sender_email,
+                      subject: `Re: ${selectedMail.subject}`,
+                      body: aiReply,
+                      preview: aiReply.slice(0, 80) + '...',
+                      timestamp_real: new Date().toISOString(),
+                      timestamp_ingame: `Day ${state.clock.day}, ${String(state.clock.hour).padStart(2, '0')}:${String(state.clock.minute).padStart(2, '0')}`,
+                      read: false,
+                      starred: false,
+                      priority: 'Normal',
+                      folder: 'Inbox',
+                      event_id: `reply-${Date.now()}`,
+                    };
+                    setExtraMails((prev) => [...prev, newMail]);
+                    setSelectedMail(newMail);
+                  })
+                  .catch((err) => {
+                    console.warn('[MAIL AI] Reply failed, using fallback:', err);
+                    setIsSending(false);
+                  });
+              }}
+              className="pt-4 border-t border-white/10 flex items-center space-x-2"
+            >
               <input
                 type="text"
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
-                placeholder={`Reply to ${selectedMail.sender_name}...`}
-                className="flex-1 bg-slate-900 border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-sky-500"
+                placeholder={isSending ? "AI is generating reply..." : `Reply to ${selectedMail.sender_name}...`}
+                disabled={isSending}
+                className="flex-1 bg-slate-900 border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-sky-500 disabled:opacity-50"
               />
               <button
-                onClick={() => { setReplyText(''); }}
-                className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold flex items-center space-x-1 cursor-pointer"
+                type="submit"
+                disabled={!replyText.trim() || isSending}
+                className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 disabled:opacity-40 text-white text-xs font-bold flex items-center space-x-1 cursor-pointer"
               >
                 <Send className="w-3.5 h-3.5" />
-                <span>Send</span>
+                <span>{isSending ? 'Sending...' : 'Send'}</span>
               </button>
-            </div>
+            </form>
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center text-slate-500 text-sm">

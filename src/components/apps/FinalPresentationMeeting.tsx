@@ -203,25 +203,56 @@ export const FinalPresentationMeeting: React.FC = () => {
 
   const handleFqAnswer = useCallback(() => {
     if (!fqInput.trim() || fqSubmitting) return;
+    const currentQ = followUpQuestions[fqIdx];
+    const answerText = fqInput.trim();
+    const speaker = currentQ?.speaker ?? 'daniel';
+
     setFqSubmitting(true);
-    addSignal('communication', `Board Q${fqIdx + 1} answered`, fqInput.trim().length > 60 ? 10 : 4);
-    setFqAnswers((prev) => [...prev, fqInput.trim()]);
+    addSignal('communication', `Board Q${fqIdx + 1} answered`, answerText.length > 60 ? 10 : 4);
+    setFqAnswers((prev) => [...prev, answerText]);
 
-    setTimeout(() => {
-      setFqFeedback(generateBoardAck(followUpQuestions[fqIdx].speaker, fqInput.trim()));
-      setFqSubmitting(false);
+    const sid = state.sessionId || localStorage.getItem('brained_session_id') || 'session_titan_default';
 
-      setTimeout(() => {
-        setFqFeedback(null);
-        if (fqIdx >= followUpQuestions.length - 1) {
-          uploadRecording();
-        } else {
-          setFqIdx((i) => i + 1);
-          setFqInput('');
-        }
-      }, 2500);
-    }, 1200);
-  }, [fqInput, fqIdx, fqSubmitting, followUpQuestions, addSignal]); // eslint-disable-line
+    fetch(`${API_BASE}/api/game/character/${speaker}/message`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id: sid,
+        message: `[BOARD PRESENTATION FOLLOW-UP QUESTION: "${currentQ?.text ?? ''}"]\nMy answer: "${answerText}"`,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const aiAck = data.replyText || data.text || generateBoardAck(speaker, answerText);
+        setFqFeedback(aiAck);
+        setFqSubmitting(false);
+
+        setTimeout(() => {
+          setFqFeedback(null);
+          if (fqIdx >= followUpQuestions.length - 1) {
+            uploadRecording();
+          } else {
+            setFqIdx((i) => i + 1);
+            setFqInput('');
+          }
+        }, 3500);
+      })
+      .catch((err) => {
+        console.warn('[BOARD AI] AI ack failed, using fallback:', err);
+        setFqFeedback(generateBoardAck(speaker, answerText));
+        setFqSubmitting(false);
+
+        setTimeout(() => {
+          setFqFeedback(null);
+          if (fqIdx >= followUpQuestions.length - 1) {
+            uploadRecording();
+          } else {
+            setFqIdx((i) => i + 1);
+            setFqInput('');
+          }
+        }, 2500);
+      });
+  }, [fqInput, fqIdx, fqSubmitting, followUpQuestions, addSignal, state.sessionId]);
 
   function generateBoardAck(speaker: BoardMember, answer: string): string {
     const good = answer.length > 60;
