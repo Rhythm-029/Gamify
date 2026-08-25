@@ -372,30 +372,60 @@ export const FinalPresentationMeeting: React.FC = () => {
   }
 
   const CharGrid = ({ highlight }: { highlight?: boolean }) => (
-    <div className="grid grid-cols-2 gap-2 p-3 flex-1 overflow-hidden">
+    <div className="grid grid-cols-3 gap-3 p-4 flex-1 overflow-y-auto bg-[#0a0b14]">
       {Object.values(BOARD).map((char) => (
-        <div key={char.name} className={`relative rounded-2xl overflow-hidden border ${highlight ? 'border-white/20' : 'border-white/10'} bg-slate-900/60`}>
-          <img src={char.dp} alt={char.name} className="w-full h-full object-cover object-top aspect-video" />
-          <div className="absolute bottom-2 left-2 right-2 px-2 py-0.5 rounded-lg bg-black/70 text-[9px] font-bold text-white truncate">
-            {char.name} <span className="text-slate-400 font-normal">· {char.role}</span>
+        <div
+          key={char.name}
+          className={`relative rounded-xl overflow-hidden border ${
+            highlight ? 'border-purple-500/30' : 'border-white/10'
+          } bg-[#141524] shadow-lg flex flex-col aspect-video`}
+        >
+          <div className="w-full h-full relative overflow-hidden bg-[#10111d] flex items-center justify-center">
+            <img
+              src={char.dp}
+              alt={char.name}
+              className="w-full h-full object-cover object-[center_12%]"
+            />
+          </div>
+          <div className="absolute bottom-2 left-2 right-2 px-2.5 py-1 rounded-md bg-black/75 backdrop-blur-sm text-[10px] font-bold text-white flex items-center justify-between border border-white/10">
+            <span className="truncate">{char.name}</span>
+            <span className="text-slate-400 font-normal text-[9px] truncate ml-1">{char.role}</span>
           </div>
         </div>
       ))}
       {/* Player tile */}
-      <div className={`relative rounded-2xl overflow-hidden border-2 ${highlight ? 'border-red-500/60' : 'border-purple-500/40'} bg-slate-900`}>
-        {isCameraOn
-          ? <video ref={attachPlayerVideo} autoPlay muted playsInline className="w-full aspect-video object-cover scale-x-[-1]" />
-          : <div className="w-full aspect-video flex items-center justify-center bg-slate-800">
-              {highlight ? <Mic className="w-8 h-8 text-red-400 animate-pulse" /> : <VideoOff className="w-8 h-8 text-slate-500" />}
-            </div>}
-        {highlight && (
-          <div className="absolute top-2 right-2 flex items-center space-x-1 bg-red-600/80 px-2 py-0.5 rounded-full">
-            <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-            <span className="text-[9px] font-bold text-white">REC {time}</span>
+      <div
+        className={`relative rounded-xl overflow-hidden border-2 ${
+          highlight ? 'border-red-500/80 shadow-red-500/20' : 'border-purple-500/50'
+        } bg-[#141524] shadow-lg flex flex-col aspect-video`}
+      >
+        {isCameraOn ? (
+          <video
+            ref={attachPlayerVideo}
+            autoPlay
+            muted
+            playsInline
+            className="w-full h-full object-cover scale-x-[-1]"
+          />
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center bg-[#10111d] text-slate-400">
+            {highlight ? (
+              <Mic className="w-8 h-8 text-red-400 animate-pulse mb-1" />
+            ) : (
+              <VideoOff className="w-8 h-8 text-slate-500 mb-1" />
+            )}
+            <span className="text-[10px]">Camera Off</span>
           </div>
         )}
-        <div className="absolute bottom-2 left-2 right-2 px-2 py-0.5 rounded-lg bg-black/70 text-[9px] font-bold text-purple-300">
-          You {highlight ? '(Speaking)' : '(Presenting)'}
+        {highlight && (
+          <div className="absolute top-2 right-2 flex items-center space-x-1.5 bg-red-600 px-2 py-0.5 rounded-md text-[9px] font-bold text-white shadow-md">
+            <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+            <span>REC {time}</span>
+          </div>
+        )}
+        <div className="absolute bottom-2 left-2 right-2 px-2.5 py-1 rounded-md bg-black/75 backdrop-blur-sm text-[10px] font-bold text-purple-300 flex items-center justify-between border border-purple-500/30">
+          <span>You</span>
+          <span className="text-slate-400 text-[9px]">{highlight ? '(Speaking)' : '(Presenting)'}</span>
         </div>
       </div>
     </div>

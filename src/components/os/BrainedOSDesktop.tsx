@@ -98,7 +98,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
   // OS Boot timer sequence states
   const [bootStep, setBootStep] = useState<'booting' | 'silence' | 'ready'>(firstBoot ? 'booting' : 'ready');
 
-  // Helper to push new notification (1-time popup rule)
+  // Helper to push new notification (deduplicated & 1-time popup rule)
   const pushNotification = (notif: OSNotification) => {
     if (seenNotifIds.current.has(notif.id)) return;
     seenNotifIds.current.add(notif.id);
@@ -108,8 +108,20 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
       read: false,
     };
 
-    setBannerNotifications((prev) => [...prev, formatted]);
-    setHistoryNotifications((prev) => [formatted, ...prev]);
+    // Deduplicate by title & body in history
+    setHistoryNotifications((prev) => {
+      if (prev.some((item) => item.title === notif.title && item.body === notif.body)) {
+        return prev;
+      }
+      return [formatted, ...prev];
+    });
+
+    setBannerNotifications((prev) => {
+      if (prev.some((item) => item.title === notif.title && item.body === notif.body)) {
+        return prev;
+      }
+      return [...prev, formatted];
+    });
 
     if (notif.isCall) {
       sound.startTeamsRingtone();
@@ -465,13 +477,23 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
         </AnimatePresence>
       </main>
 
-      {/* TOP-RIGHT MAC OS TOAST BANNER NOTIFICATIONS */}
-      <OSNotificationCenter
-        notifications={bannerNotifications}
-        onDismiss={handleDismissBanner}
-        onAction={handleActionNotification}
-        onTimeoutCall={handleTimeoutCallNotification}
-      />
+      {/* TOP-RIGHT MAC OS TOAST BANNER NOTIFICATIONS (Suppressed during active meetings) */}
+      {(() => {
+        const meetingAppIds = ['kickoff', 'prototype_review', 'presentation'];
+        const isInMeeting =
+          openAppIds.some((id) => meetingAppIds.includes(id)) ||
+          (activeAppId !== null && meetingAppIds.includes(activeAppId)) ||
+          ['kickoff', 'prototype_review', 'presentation'].includes(gameState.phase);
+
+        return (
+          <OSNotificationCenter
+            notifications={isInMeeting ? [] : bannerNotifications}
+            onDismiss={handleDismissBanner}
+            onAction={handleActionNotification}
+            onTimeoutCall={handleTimeoutCallNotification}
+          />
+        );
+      })()}
 
       {/* RIGHT SIDE SLIDING NOTIFICATION CENTER DRAWER PANEL */}
       <OSNotificationCenterDrawer

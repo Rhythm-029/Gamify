@@ -31,35 +31,34 @@ const DEFAULT_NOTES: NoteItem[] = [
     pinned: true,
     lastModified: 'Just now',
     isMOM: true,
-    content: `# Project Titan — Kickoff Meeting Notes
-## Date: Day 1
+    content: `Project Titan — Kickoff Meeting Notes
+Date: Day 1
 
-### Participants
+PARTICIPANTS:
 - Marcus Reed (CTO)
 - Daniel Brooks (Program Manager)
 - Emma Carter (HR Transformation Specialist)
 - Sophia Bennett (VP HR, Titan Manufacturing)
 - [Your name] (Digital Transformation Consultant)
 
-### Summary
+SUMMARY:
 
 
-### Requirements Discussed
+REQUIREMENTS DISCUSSED:
 
 
-### Action Items
-- [ ] 
-- [ ] 
+ACTION ITEMS:
+- 
+- 
 
-### Timeline
+TIMELINE:
 - Day 7: Prototype Review
 - Day 14: Board Presentation
 
-### Risks & Concerns
+RISKS & CONCERNS:
 
 
-### Open Questions
-
+OPEN QUESTIONS:
 `,
   },
   {
@@ -68,7 +67,7 @@ const DEFAULT_NOTES: NoteItem[] = [
     folder: 'Project Titan',
     pinned: false,
     lastModified: 'Now',
-    content: '# Titan HR Portal\n\n## Architecture Notes\n\n\n## Decisions Made\n\n\n## Risks\n\n',
+    content: 'Titan HR Portal\n\nARCHITECTURE NOTES:\n\n\nDECISIONS MADE:\n\n\nRISKS:\n\n',
   },
   {
     id: 'note-scratch',

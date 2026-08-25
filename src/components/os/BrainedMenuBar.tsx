@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  Search, Wifi, Battery, Bell 
+  Search, Wifi, Battery, Bell, Maximize, Minimize 
 } from 'lucide-react';
 import { INITIAL_OS_STATE } from '../../data/brainedOSData';
 import { BrainedLogoIcon } from '../common/BrainedLogoIcon';
@@ -91,6 +91,29 @@ export const BrainedMenuBar: React.FC<BrainedMenuBarProps> = ({
 
         {/* In-game clock widget */}
         {clockWidget && <div className="border-l border-white/15 pl-3 ml-1">{clockWidget}</div>}
+
+        {/* Fullscreen Toggle (Immersive Game Mode) */}
+        {(() => {
+          const toggleFullscreen = () => {
+            if (!document.fullscreenElement) {
+              document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+              document.exitFullscreen().catch(() => {});
+            }
+          };
+          const isFS = !!document.fullscreenElement;
+
+          return (
+            <button
+              onClick={toggleFullscreen}
+              className="flex items-center space-x-1 bg-white/10 hover:bg-white/20 border border-white/20 px-2.5 py-1 rounded-full text-slate-200 font-mono text-[11px] transition-all cursor-pointer"
+              title={isFS ? 'Exit Fullscreen' : 'Enter Fullscreen Game Mode'}
+            >
+              {isFS ? <Minimize className="w-3.5 h-3.5 text-purple-300" /> : <Maximize className="w-3.5 h-3.5 text-purple-400" />}
+              <span className="hidden xl:inline text-[10px] font-bold">{isFS ? 'Window' : 'Fullscreen'}</span>
+            </button>
+          );
+        })()}
 
         {/* System icons */}
         <div className="flex items-center space-x-2 text-slate-300 border-l border-white/15 pl-2 ml-1">
