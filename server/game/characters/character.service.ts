@@ -55,7 +55,7 @@ export async function generateCharacterReply(
 
   // Build conversation history for this character's thread
   const thread = state.conversation_threads[characterId] ?? [];
-  const historyMessages = thread.slice(-12).map((m) => ({
+  const historyMessages = thread.slice(-10).map((m) => ({
     role: m.role === 'player' ? ('user' as const) : ('assistant' as const),
     content: m.content,
   }));
@@ -69,15 +69,19 @@ export async function generateCharacterReply(
 KNOWLEDGE SCOPE ENFORCEMENT:
 You may ONLY discuss topics related to: ${scopeDescription}
 Requirement IDs you may reference: ${scopeList}
-If the player asks about anything outside this scope, respond with a natural in-character redirect like: "${persona.deflectionPhrase}" — do NOT answer the out-of-scope question.
+If the player asks anything outside this scope, use your deflection phrase naturally in character: "${persona.deflectionPhrase}"
 
-WORLD STATE CONTEXT (read-only — stay consistent with this):
+CURRENT SESSION CONTEXT:
 - Project status: ${state.project_status}
 - Requirements discovered so far: ${state.requirements.discovered.join(', ') || 'none yet'}
-- Day in-game: ${state.clock.ingame_day}, Time: ${state.clock.ingame_time}
-- Your current trust with the player: ${state.stakeholder_trust[characterId] ?? 70}/100
+- Fired events: ${state.fired_events.join(', ') || 'none'}
+- In-game day: ${state.clock.ingame_day}, Time: ${state.clock.ingame_time}
+- Your current trust with the consultant: ${state.stakeholder_trust[characterId] ?? 70}/100
 
-Be fully in character. Never break the fourth wall. Never acknowledge you are an AI.`;
+REPLY LENGTH RULE — CRITICAL:
+Your reply must be 1-3 sentences only. No bullet lists in casual messages. No greetings or sign-offs (no "Hi", no "Best", no "Let me know"). Write exactly how a busy professional messages on Teams — short, direct, real.
+
+Never break the fourth wall. Never acknowledge you are an AI.`;
 
   const userMessage = proactiveMessage
     ? `[SYSTEM: This is a proactive message from you to the player. Generate the message naturally in your voice.]\n\n${proactiveMessage}`
@@ -93,8 +97,8 @@ Be fully in character. Never break the fourth wall. Never acknowledge you are an
         ...historyMessages,
         { role: 'user', content: userMessage },
       ],
-      max_tokens: 300,
-      temperature: 0.7,
+      max_tokens: 120,  // Enforce short, punchy replies — characters are busy professionals
+      temperature: 0.72,
     });
     replyText = completion.choices[0]?.message?.content?.trim() ?? 'I need to step away — follow up later.';
   } catch (err) {
@@ -133,9 +137,15 @@ Be fully in character. Never break the fourth wall. Never acknowledge you are an
     }
   }
 
+  // Randomize delay: 5–20 seconds for natural feel (each character has their own personality baseline)
+  const baseDelayMs = charDef.replyDelayMs;
+  // Jitter: ±40% of base, clamped between 5s and 20s
+  const jitter = (Math.random() - 0.5) * 0.8 * baseDelayMs;
+  const delayMs = Math.min(20000, Math.max(5000, Math.round(baseDelayMs + jitter)));
+
   // Stash the reply in Redis under a delivery key, then schedule
   const deliveryEventRef = `char_reply:${characterId}:${Date.now()}`;
-  const delayMs = charDef.replyDelayMs;
+  let scheduledViaRedis = false;
 
   try {
     const { getRedis } = await import('../engine/worldState.redis');
@@ -146,8 +156,38 @@ Be fully in character. Never break the fourth wall. Never acknowledge you are an
       JSON.stringify({ characterId, replyText, channel: 'teams' })
     );
     await scheduleGameEvent(sessionId, deliveryEventRef, delayMs);
+    scheduledViaRedis = true;
   } catch (schedErr) {
-    console.warn(`[CHARACTER AI] Redis scheduling warning for ${characterId}:`, schedErr);
+    console.warn(`[CHARACTER AI] Redis scheduling unavailable for ${characterId} — using in-process timer fallback:`, schedErr);
+  }
+
+  // Guaranteed in-process fallback: always deliver after the correct delay
+  // (runs even if Redis succeeded — deliverPendingReply has a Redis-get that will find the key,
+  //  or if Redis is down, we deliver directly here)
+  if (!scheduledViaRedis) {
+    setTimeout(async () => {
+      try {
+        const { publishStateChanged } = await import('../engine/worldState.redis');
+        await mutateWorldState(sessionId, (s) => ({
+          conversation_threads: {
+            ...s.conversation_threads,
+            [characterId]: [
+              ...(s.conversation_threads[characterId] ?? []),
+              { role: 'character', content: replyText, timestamp: new Date() },
+            ],
+          },
+        }));
+        await updateTrust(sessionId, characterId, 1);
+        await publishStateChanged(sessionId, {
+          type: 'character_message',
+          character_id: characterId,
+          message: replyText,
+        });
+        console.log(`[CHARACTER AI] In-process fallback delivered reply from ${characterId}`);
+      } catch (fallbackErr) {
+        console.error(`[CHARACTER AI] Fallback delivery also failed for ${characterId}:`, fallbackErr);
+      }
+    }, delayMs);
   }
 
   // Write player message to conversation thread (character reply delivered after delay by deliverPendingReply)

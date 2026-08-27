@@ -42,41 +42,45 @@ interface TimelineEntry {
  * are evaluated by the orchestrator, NOT pre-scheduled.
  */
 export const TIMELINE: TimelineEntry[] = [
-  // 0:45 — Daniel sends brief + attachment
+  // Day 1 — 0:45 real: Daniel sends brief + attachment
   { event_id: 'daniel_brief_mail', offset_ms: 45_000, always: true, pre_schedule: true },
-  // 1:00 — Emma sends survey findings
+  // Day 1 — 1:00 real: Emma sends survey findings
   { event_id: 'emma_survey_mail', offset_ms: 60_000, always: true, pre_schedule: true },
-  // 2:00 — Calendar: Prototype Review added
+  // Day 2 — 2:00 real: Calendar: Prototype Review added
   { event_id: 'calendar_prototype_event', offset_ms: 120_000, always: true, pre_schedule: true },
-  // 2:30 — Daniel check-in (CONDITIONAL — orchestrator handles)
-  { event_id: 'manager_checkin', offset_ms: 150_000, always: false, pre_schedule: false },
-  // 3:00 — Daniel Slack payroll hint
+  // Day 3 — 3:00 real: Daniel Slack payroll hint
   { event_id: 'daniel_slack_payroll_hint', offset_ms: 180_000, always: true, pre_schedule: true },
-  // 4:00 — Marcus CTO security nudge (CONDITIONAL — orchestrator handles)
+  // Day 3 — Daniel check-in (CONDITIONAL — orchestrator handles if player hasn't messaged him)
+  { event_id: 'manager_checkin', offset_ms: 150_000, always: false, pre_schedule: false },
+  // Day 4 — CTO security nudge (CONDITIONAL — orchestrator handles)
   { event_id: 'cto_security_nudge', offset_ms: 240_000, always: false, pre_schedule: false },
-  // 4:30 — Calendar: Board Presentation added
+  // Day 5 — 4:30 real: Calendar: Board Presentation added
   { event_id: 'calendar_board_event', offset_ms: 270_000, always: true, pre_schedule: true },
-  // 5:15 — Emma Document Upload amendment (always fires at 35% = 315s)
-  { event_id: 'hr_amendment', offset_ms: 315_000, always: true, pre_schedule: true },
-  // 6:00 — Emma Slack plant hint
+  // Day 6 — 6:00 real: Emma Slack plant hint
   { event_id: 'emma_slack_plant_hint', offset_ms: 360_000, always: true, pre_schedule: true },
-  // 7:30 — Sophia prototype ask (50% = 450s)
+  // Day 7 — 7:30 real: Sophia prototype ask mail
   { event_id: 'client_prototype_ask', offset_ms: 450_000, always: true, pre_schedule: true },
-  // 9:00 — Prototype Review checkpoint notification
+  // Day 7 — 9:00 real: Prototype Review checkpoint notification
   { event_id: 'prototype_review_notif', offset_ms: 540_000, always: true, pre_schedule: true },
-  // 10:00 — Marcus Slack architecture chase
-  { event_id: 'marcus_slack_arch', offset_ms: 600_000, always: true, pre_schedule: true },
-  // 11:00 — Sophia follow-up (CONDITIONAL — only if prototype not ready)
+  // Day 8 — 8:00 real: Emma Document Upload amendment (AFTER prototype review, more realistic)
+  { event_id: 'hr_amendment', offset_ms: 480_000, always: true, pre_schedule: true },
+  // Day 9 — Marcus Slack group @mention architecture chase
+  { event_id: 'marcus_slack_group_tag', offset_ms: 540_000, always: true, pre_schedule: true },
+  // Day 10 — Daniel requests prototype link for security review
+  { event_id: 'daniel_prototype_link_request', offset_ms: 600_000, always: true, pre_schedule: true },
+  // Day 11 — Sophia follow-up (CONDITIONAL — only if prototype not ready)
   { event_id: 'sophia_follow_up', offset_ms: 660_000, always: false, pre_schedule: false },
-  // 12:00 — Olivia RBAC reminder (CONDITIONAL — only if req_rbac not discovered)
+  // Day 11 — Aarav check-in asking for update
+  { event_id: 'aarav_checkin_teams', offset_ms: 660_000, always: true, pre_schedule: true },
+  // Day 12 — Olivia RBAC reminder (CONDITIONAL — only if req_rbac not discovered)
   { event_id: 'olivia_rbac_reminder', offset_ms: 720_000, always: false, pre_schedule: false },
-  // 13:00 — Calendar: Final Presentation added
+  // Day 13 — Calendar: Final Presentation added
   { event_id: 'final_presentation_calendar', offset_ms: 780_000, always: true, pre_schedule: true },
-  // 13:30 — Teams call: Final Presentation
+  // Day 13 — Teams call: Final Presentation
   { event_id: 'final_presentation_call', offset_ms: 810_000, always: true, pre_schedule: true },
-  // 14:00 — Board deadline (auto-starts presentation)
+  // Day 14 — Board deadline (auto-starts presentation)
   { event_id: 'board_deadline', offset_ms: 840_000, always: true, pre_schedule: true },
-  // 15:00 — Hard session end
+  // Hard session end
   { event_id: 'session_end', offset_ms: 900_000, always: true, pre_schedule: true },
 ];
 
@@ -168,14 +172,54 @@ export async function handleTimelineEvent(sessionId: string, eventId: string): P
       await pushDockBadge(sessionId, 'slack', 1);
       break;
 
-    case 'marcus_slack_arch':
+    case 'marcus_slack_group_tag':
+      // Marcus @mentions the player in the group channel asking about architecture/security
       await pushSlackNotification(sessionId, {
         from: 'Marcus Reed',
         channel: '#project-titan',
         character_id: 'marcus',
-        message: "Where are we on the architecture doc? Board wants to see a real technical summary, not just a slide deck.",
+        message: `@Consultant — where are we on the architecture doc and security sign-off? Board wants a real technical summary, not just a slide. Tag me when it's ready.`,
       });
+      // Daniel follows up in the group immediately after Marcus
+      setTimeout(async () => {
+        await pushSlackNotification(sessionId, {
+          from: 'Daniel Brooks',
+          channel: '#project-titan',
+          character_id: 'daniel',
+          message: `+1 from me — @Consultant is the prototype ready for security check? I'll set up the review once you confirm.`,
+        });
+      }, 8000);
       await pushDockBadge(sessionId, 'slack', 1);
+      break;
+
+    case 'daniel_prototype_link_request':
+      // Daniel messages directly (Teams) asking for the prototype link
+      await pushTeamsNotification(sessionId, {
+        from: 'Daniel Brooks',
+        character_id: 'daniel',
+        message: `Need the prototype link today — I want to run it past the security checklist before the board presentation. Once you share it I'll loop Olivia in for the final sign-off.`,
+        isUrgent: true,
+        eventType: 'prototype_link_request',
+      });
+      // Also emit the special prototype_link_request event for the share-link button
+      await publishStateChanged(sessionId, {
+        type: 'prototype_link_request',
+        character_id: 'daniel',
+        message: 'Daniel is asking for the prototype link for his security review.',
+      });
+      await pushDockBadge(sessionId, 'teams', 1);
+      break;
+
+    case 'aarav_checkin_teams':
+      // Aarav checks in via Teams asking for an update
+      await pushTeamsNotification(sessionId, {
+        from: 'Aarav Kapoor',
+        character_id: 'aarav',
+        message: `How's it going? I've been watching the timeline — Day 11 is here. Have you managed to get the security review sorted with Daniel? And how did you handle Emma's doc upload request?`,
+        isUrgent: false,
+        eventType: 'aarav_checkin',
+      });
+      await pushDockBadge(sessionId, 'teams', 1);
       break;
 
     case 'olivia_rbac_reminder':
@@ -358,7 +402,7 @@ async function pushSlackNotification(
 
 async function pushTeamsNotification(
   sessionId: string,
-  opts: { from: string; character_id: string; message: string; isUrgent: boolean }
+  opts: { from: string; character_id: string; message: string; isUrgent: boolean; eventType?: string }
 ): Promise<void> {
   const state = await readWorldState(sessionId);
   if (!state) return;
@@ -378,11 +422,12 @@ async function pushTeamsNotification(
     character_id: opts.character_id,
     from: opts.from,
     message: opts.message,
+    event_type: opts.eventType,
     notification: {
       app: 'Teams',
       title: `Microsoft Teams • ${opts.from}`,
       subtitle: opts.from,
-      body: opts.message,
+      body: opts.message.length > 80 ? `${opts.message.slice(0, 80)}…` : opts.message,
       actionText: 'Reply',
       onActionAppId: 'teams',
       isUrgent: opts.isUrgent,

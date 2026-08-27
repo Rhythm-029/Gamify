@@ -4,7 +4,7 @@
  * No hardcoded mails at session start — everything fires from the clock timeline.
  */
 
-import { mutateWorldState, readWorldState, logSignal } from '../engine/worldState.engine';
+import { mutateWorldState, readWorldState } from '../engine/worldState.engine';
 import { publishStateChanged } from '../engine/worldState.redis';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -164,7 +164,7 @@ export function buildEmmaSurveyMail(ingameTime: string): GameMail {
     preview: 'Happy to share the employee experience research I ran last month — really useful context...',
     body: `Hi,
 
-Happy to share the employee experience research I ran last month across 4 of the Titan plants. Really useful context for what we\'re building.
+Happy to share the employee experience research I ran last month across 4 of the Titan plants. Really useful context for what we're building.
 
 KEY FINDINGS:
 
@@ -210,22 +210,22 @@ export function buildEmmaAmendmentMail(ingameTime: string): GameMail {
     sender_role: 'HR Transformation Specialist',
     sender_avatar: '/character/Emma_Carter/EmmaDP.png',
     sender_email: 'emma.carter@brained.io',
-    subject: 'Scope Amendment — Employee Document Upload (Action Required)',
-    preview: 'One more thing — spoke to plant HR leads and Document Upload really can\'t be optional...',
+    subject: 'One more thing — Employee Document Upload amendment',
+    preview: 'I spoke to plant HR leads and Document Upload really can\'t be optional...',
     body: `Hi,
 
-One more thing — I spoke to a few plant HR leads over the weekend, and Employee Document Upload really can't be optional. They need to attach ID proof and certifications directly through the portal.
+I hope the prototype is coming together well!
 
-Specifically, the use case is:
-• New joiners uploading ID documents and certifications during onboarding
-• HR staff requesting document re-submission (e.g. expired certifications)
-• Audit compliance — some plants need a documented trail of document submissions
+I wanted to flag something that came up when I spoke to the plant HR leads in Malaysia and Brazil last week. It wasn't in the original brief because it came up verbally in their internal sessions — but it's a real pain point.
 
-This wasn't in my original brief because it came up verbally, not in the initial scope document. I wanted to make sure you knew about it before you got too far into development.
+Employees need to be able to attach documents directly through the portal:
+• New joiners uploading ID documents and certifications at onboarding
+• HR requesting document re-submission (expired certifications, updated contracts)
+• Basic audit trail of who submitted what and when
 
-Can we make sure this gets included? It would significantly affect adoption at the plant level if we miss it.
+I know this adds to scope, and I don't want to push for something that breaks the timeline — I really don't. But if we ship without it, adoption at the plant level will take a hit.
 
-Let me know if you need more detail from the plant HR teams — I can get you on a call with the Malaysia lead.
+Could you discuss it with Daniel and let me know if that's possible for Phase 1? He'll have a better read on whether the timeline can absorb it. I don't want to go back to the plant leads without checking with you first.
 
 — Emma`,
     timestamp_real: new Date(),
@@ -283,7 +283,7 @@ export function buildOliviaReviewMail(ingameTime: string): GameMail {
     preview: 'I\'ve had a first look at what\'s been scoped. Audit Logs and RBAC are not present...',
     body: `Hi,
 
-I\'ve had a first look at the scoped architecture. Two compliance gaps that are non-negotiable before I can sign off:
+I've had a first look at the scoped architecture. Two compliance gaps that are non-negotiable before I can sign off:
 
 1. AUDIT LOGS — Not currently in scope
    Standard requirement under ISO 27001 and SOC2 Type II for any system handling employee personal data. Every data access event, modification, and deletion must be logged with user identity, timestamp, and action type. This is not optional for enterprise HR systems at Titan's scale.

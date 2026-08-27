@@ -30,8 +30,6 @@ export const BrainedDock: React.FC<BrainedDockProps> = ({
     { id: 'tasks', name: 'Jira / Linear', icon: Kanban, color: 'bg-gradient-to-tr from-[#5E6AD2] to-[#4C58C0]' },
     { id: 'browser', name: 'Arc Browser', icon: Globe, color: 'bg-gradient-to-tr from-[#8A2BE2] to-[#4A90E2]' },
     { id: 'terminal', name: 'Terminal', icon: Terminal, color: 'bg-gradient-to-tr from-[#1E1E1E] to-[#2C2C2E]' },
-    { id: 'certificate', name: 'Certificate', icon: Award, color: 'bg-gradient-to-tr from-[#FFD700] to-[#D4AF37]' },
-    { id: 'leaderboard', name: 'Leaderboard', icon: Trophy, color: 'bg-gradient-to-tr from-[#FF9F0A] to-[#D48806]' },
     { id: 'settings', name: 'System Settings', icon: Settings, color: 'bg-gradient-to-tr from-[#8E8E93] to-[#636366]' },
   ];
 

@@ -136,7 +136,7 @@ export const TITAN_SCENARIO: ScenarioDef = {
       badge: 'Technology Visionary',
       knowledgeScope: ['req_sso', 'req_rbac', 'req_dashboard', 'req_payroll'],
       initialTrust: 70,
-      replyDelayMs: 5_000,
+      replyDelayMs: 7_000,   // Marcus replies fast — he's curt
       dp: '/character/marcus_reed/MarcusDP.png',
     },
     {
@@ -151,7 +151,7 @@ export const TITAN_SCENARIO: ScenarioDef = {
         'req_audit_logs', 'req_rbac',
       ],
       initialTrust: 75,
-      replyDelayMs: 8_000,
+      replyDelayMs: 9_000,   // Daniel is busy but responsive
       dp: '/character/Daniel_Brooks/DanielDP.png',
     },
     {
@@ -162,7 +162,7 @@ export const TITAN_SCENARIO: ScenarioDef = {
       badge: 'Employee Advocate',
       knowledgeScope: ['req_leave', 'req_attendance', 'req_directory', 'req_documents', 'req_announcements', 'req_document_upload'],
       initialTrust: 80,
-      replyDelayMs: 20_000,
+      replyDelayMs: 12_000,   // Emma writes longer, more thoughtful messages
       dp: '/character/Emma_Carter/EmmaDP.png',
     },
     {
@@ -173,7 +173,7 @@ export const TITAN_SCENARIO: ScenarioDef = {
       badge: 'Mentor',
       knowledgeScope: ['req_sso', 'req_dashboard', 'req_leave', 'req_attendance'],
       initialTrust: 85,
-      replyDelayMs: 30_000,
+      replyDelayMs: 10_000,   // Aarav is thoughtful but not slow
       dp: '/character/AaravDP.png',
     },
   ],
@@ -182,14 +182,30 @@ export const TITAN_SCENARIO: ScenarioDef = {
   eventRules: [
     {
       event_id: 'hr_amendment',
-      label: 'Emma — Employee Document Upload amendment',
+      label: 'Emma — Employee Document Upload amendment (with request to check Daniel)',
       trigger_type: 'always_at_time',
       condition_expr: 'progress >= 35',
       fires_once: true,
       sender_character_id: 'emma',
       delivery_channel: 'mail',
       message_template:
-        "One more thing — I spoke to a few plant HR leads, and Employee Document Upload really can't be optional. They need to attach ID proof and certifications directly. Can we make sure this is in scope?",
+        "I spoke to a few of the plant HR leads this week, and one thing came up that I didn't flag at kickoff — they really need employees to be able to attach documents directly. ID proof, medical certs for leave, that kind of thing. It came up across three plants so it's not a one-off. Could you have a quick word with Daniel and let me know if Employee Document Upload is feasible for Phase 1? I don't want to push for something that breaks the timeline — just want to check before I go back to them.",
+    },
+    {
+      event_id: 'daniel_document_upload_response',
+      label: 'Daniel — Document Upload is Phase 2 (fires after player asks Daniel about Emma amendment)',
+      trigger_type: 'conditional',
+      // Fires if the player has messaged Daniel after the hr_amendment event fired
+      condition_expr: `
+        fired_events.includes('hr_amendment') &&
+        !fired_events.includes('daniel_document_upload_response') &&
+        conversation_threads.daniel?.some(m => m.role === 'player')
+      `,
+      fires_once: true,
+      sender_character_id: 'daniel',
+      delivery_channel: 'teams',
+      message_template:
+        "On the document upload thing — it's a reasonable feature, but adding it to Phase 1 now would push us. We've got payroll integration and RBAC still to lock in, and the build timeline is already tight. I'd recommend logging it as a confirmed Phase 2 item and letting Emma know directly — better she hears it with reasoning than just a no.",
     },
     {
       event_id: 'manager_checkin',
@@ -205,7 +221,7 @@ export const TITAN_SCENARIO: ScenarioDef = {
       sender_character_id: 'daniel',
       delivery_channel: 'teams',
       message_template:
-        "Hey — progress update? Board's asking me for a status line.",
+        "Quick check — where are we on the prototype? Board's asking me for a status line and I want to give them something real.",
     },
     {
       event_id: 'cto_security_nudge',
@@ -221,7 +237,7 @@ export const TITAN_SCENARIO: ScenarioDef = {
       sender_character_id: 'marcus',
       delivery_channel: 'teams',
       message_template:
-        "Quick one — has security actually been reviewed? I don't want the architecture flagged the week before the board demo.",
+        "Has the architecture been security-reviewed? I don't want RBAC and audit logging flagged the week before the board demo.",
     },
     {
       event_id: 'daniel_security_review',
@@ -232,7 +248,7 @@ export const TITAN_SCENARIO: ScenarioDef = {
       sender_character_id: 'daniel',
       delivery_channel: 'mail',
       message_template:
-        "Now that the prototype is taking shape, I need to flag a few things. Authentication: how is SSO being implemented? Role-based access: employees, managers and HR admins can't have the same permissions. Audit logging: every access to employee data needs a trail. Please document the access model.",
+        "Now the prototype is taking shape, I need to flag three things before we go further. One: how is SSO being implemented — we need a documented auth flow, not just a placeholder. Two: RBAC — employees, managers and HR admins must have distinct permission sets, not the same login access. Three: Audit Logs — every access to employee data needs an immutable trail. Please document the access model before the prototype review.",
     },
     {
       event_id: 'emma_client_pressure',
@@ -243,7 +259,7 @@ export const TITAN_SCENARIO: ScenarioDef = {
       sender_character_id: 'emma',
       delivery_channel: 'mail',
       message_template:
-        "Hi [player_name] — the Titan HR team is asking whether there's anything they could review yet, even rough. The employee experience is their primary concern. Is there something I could show them?",
+        "The Titan HR team has been asking if there's anything they can see yet, even if it's rough. The employee experience side is what they care most about. Is there a prototype link I could share with them?",
     },
   ],
 

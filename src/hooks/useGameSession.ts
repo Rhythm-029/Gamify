@@ -9,6 +9,8 @@
  * - Slack messages
  * - Dock badge increments
  * - Clock ticks (in-game time display)
+ * - Character reply notifications (Teams toast for every character reply)
+ * - Share-prototype-link event (daniel_prototype_link_request)
  *
  * Usage:
  *   const { notifications, mails, slackMessages, dismissNotification, worldState } = useGameSession(sessionId);
@@ -74,6 +76,23 @@ export interface InGameClock {
   paused: boolean;
 }
 
+/** Fired when Daniel requests the prototype link on Day 10 */
+export interface PrototypeLinkRequest {
+  fired: boolean;
+  character_id: string;
+  message: string;
+}
+
+// ── Character name/app map ─────────────────────────────────────────────────────
+const CHARACTER_DISPLAY: Record<string, { name: string; app: string }> = {
+  marcus: { name: 'Marcus Reed', app: 'Teams' },
+  daniel: { name: 'Daniel Brooks', app: 'Teams' },
+  emma: { name: 'Emma Carter', app: 'Teams' },
+  olivia: { name: 'Olivia Hayes', app: 'Teams' },
+  sophia: { name: 'Sophia Bennett', app: 'Teams' },
+  aarav: { name: 'Aarav Kapoor', app: 'Teams' },
+};
+
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
 export function useGameSession(sessionId: string | null) {
@@ -86,23 +105,24 @@ export function useGameSession(sessionId: string | null) {
   const [dockBadges, setDockBadges] = useState<DockBadges>({ inbox: 0, slack: 0, teams: 0, calendar: 0 });
   const [clock, setClock] = useState<InGameClock | null>(null);
   const [connected, setConnected] = useState(false);
+  const [prototypeLinkRequest, setPrototypeLinkRequest] = useState<PrototypeLinkRequest | null>(null);
 
-  // Notification auto-dismiss after 8 seconds
+  // Notification auto-dismiss after 10 seconds
   const dismissTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   const addNotification = useCallback((notif: OSNotification) => {
     setNotifications((prev) => {
-      // Deduplicate
+      // Deduplicate by id
       if (prev.some((n) => n.id === notif.id)) return prev;
       return [...prev, notif];
     });
 
-    // Auto-dismiss after 8s (keep call notifications longer)
+    // Auto-dismiss: 10s for normal, keep calls until accepted/declined
     if (!notif.isCall) {
       const timer = setTimeout(() => {
         setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
         dismissTimersRef.current.delete(notif.id);
-      }, 8000);
+      }, 10000);
       dismissTimersRef.current.set(notif.id, timer);
     }
   }, []);
@@ -152,18 +172,17 @@ export function useGameSession(sessionId: string | null) {
     socket.on('world_state_update', (data: { session_id: string; patch: any }) => {
       const { patch } = data;
 
-      // Clock tick update
+      // ── Clock tick ──────────────────────────────────────────────────────────
       if (patch.clock) {
         setClock(patch.clock);
       }
 
-      // New mail delivered
+      // ── New Mail ────────────────────────────────────────────────────────────
       if (patch.type === 'new_mail' && patch.mail) {
         setMails((prev) => {
           if (prev.some((m) => m.id === patch.mail.id)) return prev;
           return [...prev, patch.mail];
         });
-        // Push notification
         if (patch.notification) {
           addNotification({
             id: `notif-mail-${patch.mail.id}`,
@@ -172,9 +191,11 @@ export function useGameSession(sessionId: string | null) {
             timestamp: 'Just now',
           });
         }
+        // Increment inbox dock badge
+        setDockBadges((prev) => ({ ...prev, inbox: prev.inbox + 1 }));
       }
 
-      // Slack message
+      // ── Slack Message ───────────────────────────────────────────────────────
       if (patch.type === 'slack_message') {
         setSlackMessages((prev) => [
           ...prev,
@@ -190,27 +211,75 @@ export function useGameSession(sessionId: string | null) {
         ]);
         if (patch.notification) {
           addNotification({
-            id: `notif-slack-${Date.now()}`,
+            id: `notif-slack-${patch.character_id}-${Date.now()}`,
             app: 'Slack',
             ...patch.notification,
             timestamp: 'Just now',
           });
         }
+        setDockBadges((prev) => ({ ...prev, slack: prev.slack + 1 }));
       }
 
-      // Teams notification (character reply or proactive)
-      if (patch.type === 'teams_message' || patch.type === 'proactive_message') {
+      // ── Character Reply (from generateCharacterReply delivery) ──────────────
+      // Fired by deliverPendingReply → publishStateChanged({ type: 'character_message' })
+      if (patch.type === 'character_message' && patch.character_id) {
+        const charInfo = CHARACTER_DISPLAY[patch.character_id] ?? { name: patch.character_id, app: 'Teams' };
+        // Truncate to a notification-friendly preview
+        const preview = patch.message?.length > 80
+          ? `${patch.message.slice(0, 80)}…`
+          : patch.message;
+        addNotification({
+          id: `notif-char-${patch.character_id}-${Date.now()}`,
+          app: 'Teams',
+          title: `Microsoft Teams • ${charInfo.name}`,
+          subtitle: charInfo.name,
+          body: preview,
+          actionText: 'Reply',
+          onActionAppId: 'teams',
+          timestamp: 'Just now',
+        });
+        setDockBadges((prev) => ({ ...prev, teams: prev.teams + 1 }));
+      }
+
+      // ── Proactive/Orchestrator message (Teams channel or mail) ──────────────
+      if (patch.type === 'proactive_message' && patch.character_id) {
+        const charInfo = CHARACTER_DISPLAY[patch.character_id] ?? { name: patch.character_id, app: 'Teams' };
+        const preview = patch.message?.length > 80
+          ? `${patch.message.slice(0, 80)}…`
+          : patch.message;
+        addNotification({
+          id: `notif-proactive-${patch.character_id}-${Date.now()}`,
+          app: patch.channel === 'mail' ? 'Mail' : 'Teams',
+          title: patch.channel === 'mail'
+            ? `Mail • ${charInfo.name}`
+            : `Microsoft Teams • ${charInfo.name}`,
+          subtitle: charInfo.name,
+          body: preview,
+          actionText: patch.channel === 'mail' ? 'Open Mail' : 'Reply',
+          onActionAppId: patch.channel === 'mail' ? 'inbox' : 'teams',
+          timestamp: 'Just now',
+        });
+        setDockBadges((prev) =>
+          patch.channel === 'mail'
+            ? { ...prev, inbox: prev.inbox + 1 }
+            : { ...prev, teams: prev.teams + 1 }
+        );
+      }
+
+      // ── Teams direct notification (legacy, from timeline pushTeamsNotification) ──
+      if (patch.type === 'teams_message') {
         if (patch.notification) {
           addNotification({
-            id: `notif-teams-${Date.now()}`,
+            id: `notif-teams-${patch.character_id}-${Date.now()}`,
             app: 'Teams',
             ...patch.notification,
             timestamp: 'Just now',
           });
         }
+        setDockBadges((prev) => ({ ...prev, teams: prev.teams + 1 }));
       }
 
-      // Calendar event
+      // ── Calendar Event ──────────────────────────────────────────────────────
       if (patch.type === 'calendar_event_added') {
         setCalendarEvents((prev) => [...prev, patch.calendar_event]);
         if (patch.notification) {
@@ -223,28 +292,39 @@ export function useGameSession(sessionId: string | null) {
         }
       }
 
-      // System notification (generic)
+      // ── System Notification ─────────────────────────────────────────────────
       if (patch.type === 'system_notification' && patch.notification) {
+        const isCall = patch.notification.isCall;
         addNotification({
           id: `notif-sys-${Date.now()}`,
-          app: patch.notification.app || 'Mail',
+          app: patch.notification.app || 'Teams',
           ...patch.notification,
           timestamp: 'Just now',
+          isCall: isCall ?? false,
         });
       }
 
-      // Final presentation call (isCall)
-      if (patch.type === 'system_notification' && patch.notification?.isCall) {
+      // ── Prototype Link Request (Daniel Day 10) ──────────────────────────────
+      if (patch.type === 'prototype_link_request') {
+        setPrototypeLinkRequest({
+          fired: true,
+          character_id: patch.character_id ?? 'daniel',
+          message: patch.message ?? 'Daniel has requested the prototype link.',
+        });
         addNotification({
-          id: `notif-call-${Date.now()}`,
+          id: `notif-proto-link-${Date.now()}`,
           app: 'Teams',
-          ...patch.notification,
+          title: 'Microsoft Teams • Daniel Brooks',
+          subtitle: 'Daniel Brooks',
+          body: 'Requesting prototype link for security review — action required.',
+          actionText: 'Share Link',
+          onActionAppId: 'teams',
           timestamp: 'Just now',
-          isCall: true,
         });
+        setDockBadges((prev) => ({ ...prev, teams: prev.teams + 1 }));
       }
 
-      // Dock badge update
+      // ── Dock Badge ──────────────────────────────────────────────────────────
       if (patch.type === 'dock_badge') {
         setDockBadges((prev) => ({
           ...prev,
@@ -257,7 +337,6 @@ export function useGameSession(sessionId: string | null) {
       socket.emit('leave_session', { session_id: sessionId });
       socket.disconnect();
       socketRef.current = null;
-      // Clear all dismiss timers
       dismissTimersRef.current.forEach((t) => clearTimeout(t));
       dismissTimersRef.current.clear();
     };
@@ -278,6 +357,7 @@ export function useGameSession(sessionId: string | null) {
       slack: dockBadges.slack + unreadSlackCount,
     },
     clock,
+    prototypeLinkRequest,
     dismissNotification,
     markMailRead,
   };

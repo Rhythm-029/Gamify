@@ -50,6 +50,10 @@ export const SIGNAL_CATALOG = {
   // Presentation & Outcome (10%)
   PRESENTATION_COHERENT: { dimension: 'presentation_outcome', baseValue: 8 },
   PRESENTATION_INCOMPLETE: { dimension: 'presentation_outcome', baseValue: 3 },
+
+  // Scope Management bonus signals
+  SCOPE_DECLINE_POLITE: { dimension: 'communication_integrity', baseValue: 10 },   // Player politely declined Emma's doc upload amendment after consulting Daniel
+  SCOPE_CREEP_ACCEPTED: { dimension: 'communication_integrity', baseValue: -8 },   // Player agreed to add doc upload to Phase 1 without checking timeline impact
 };
 
 // ── Snapshot scorer — called before final evaluation ─────────────────────────

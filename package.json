@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/start-all.js",
+    "vite": "vite",
     "server": "npx tsx server/index.ts",
     "build": "tsc -b && vite build",
     "lint": "oxlint",

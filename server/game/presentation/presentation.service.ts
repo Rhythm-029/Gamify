@@ -157,7 +157,7 @@ export async function uploadPresentationRecording(
 
   try {
     const audioStream = fs.createReadStream(audioFilePath);
-    const transcription = await openai.audio.transcriptions.create({
+    const transcription = await whisperClient.audio.transcriptions.create({
       model: WHISPER_MODEL,
       file: audioStream,
       response_format: 'verbose_json',

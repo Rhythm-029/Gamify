@@ -176,6 +176,52 @@ gameRouter.post('/character/:characterId/message', asyncHandler(async (req, res)
     characterId: req.params.characterId,
     incomingMessage: message,
   });
+
+  // ── Scope decision scoring: detect player politely declining Emma's doc upload amendment ──
+  // Fires only if: target is emma, daniel has already given his phase-2 verdict
+  if (req.params.characterId === 'emma') {
+    const { readWorldState, logSignal } = await import('../engine/worldState.engine');
+    const currentState = await readWorldState(session_id);
+    if (currentState?.fired_events.includes('daniel_document_upload_response')) {
+      const msgL = message.toLowerCase();
+      const isPoliteDecline = [
+        'phase 2', 'phase two', 'second phase', 'defer', 'not in scope',
+        'out of scope', 'timeline risk', 'can\'t fit', "won't fit", 'too tight',
+        'board review', 'after the board', 'log it', 'next phase',
+      ].some((kw) => msgL.includes(kw));
+
+      const isAcceptingScope = [
+        "we'll add", "we can add", "let's include", "will include", "adding it",
+        "put it in", "yes we can", "sure, we can", "definitely", "absolutely",
+      ].some((kw) => msgL.includes(kw));
+
+      if (isPoliteDecline && !currentState.fired_events.includes('scope_decline_scored')) {
+        await logSignal(session_id, {
+          dimension: 'communication_integrity',
+          signal_type: 'scope_decline_polite',
+          value: 10,
+          description: 'Player politely declined Emma\'s doc upload amendment after consulting Daniel — strong scope management decision.',
+        });
+        // Mark so we don't double-score
+        const { mutateWorldState } = await import('../engine/worldState.engine');
+        await mutateWorldState(session_id, (s) => ({
+          fired_events: [...s.fired_events, 'scope_decline_scored'],
+        }));
+      } else if (isAcceptingScope && !currentState.fired_events.includes('scope_creep_scored')) {
+        await logSignal(session_id, {
+          dimension: 'communication_integrity',
+          signal_type: 'scope_creep_accepted',
+          value: -8,
+          description: 'Player committed to adding doc upload to Phase 1 without assessing timeline impact.',
+        });
+        const { mutateWorldState } = await import('../engine/worldState.engine');
+        await mutateWorldState(session_id, (s) => ({
+          fired_events: [...s.fired_events, 'scope_creep_scored'],
+        }));
+      }
+    }
+  }
+
   res.json({ success: true, session_id, ...result });
 }));
 

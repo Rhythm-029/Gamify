@@ -133,7 +133,19 @@ export const FinalPresentationMeeting: React.FC = () => {
 
   const requestMedia = useCallback(async (): Promise<boolean> => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          aspectRatio: { ideal: 16 / 9 },
+          facingMode: 'user',
+        },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 44100,
+        },
+      });
       streamRef.current = stream;
       setIsCameraOn(true);
       if (playerVideoRef.current) {
