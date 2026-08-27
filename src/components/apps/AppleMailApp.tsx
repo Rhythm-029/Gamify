@@ -20,7 +20,7 @@ interface AppleMailAppProps {
 }
 
 export const AppleMailApp: React.FC<AppleMailAppProps> = ({ mails: propMails = [] }) => {
-  const { state, markMailRead, addSignal } = useGame();
+  const { state, markMailRead, addSignal, markStakeholderContacted, discoverRequirement } = useGame();
   const [isSending, setIsSending] = useState(false);
   const [extraMails, setExtraMails] = useState<GameMail[]>([]);
 
@@ -52,6 +52,22 @@ export const AppleMailApp: React.FC<AppleMailAppProps> = ({ mails: propMails = [
   const handleSelect = (mail: GameMail) => {
     setSelectedMail(mail);
     markMailRead(mail.id);
+    // Score: reading emails
+    if (!mail.read) {
+      addSignal('communication', `Read email from ${mail.sender_name}`, 3);
+      // Score: contacting a stakeholder by reading their email
+      const charId = mail.from_character_id;
+      if (['marcus', 'daniel', 'emma', 'aarav'].includes(charId)) {
+        markStakeholderContacted(charId as 'marcus' | 'daniel' | 'emma' | 'aarav');
+      }
+      // Score: hidden requirement discovery from Emma's document upload email
+      if (mail.event_id === 'emma_document_upload_mail') {
+        discoverRequirement('req_document_upload');
+      }
+      if (mail.event_id === 'daniel_brief_mail') {
+        addSignal('requirement_management', 'Read official Project Titan requirements brief', 5);
+      }
+    }
   };
 
   const filteredMails = allMails.filter((m) => m.folder === activeFolder || (m.folder === 'Inbox' && activeFolder === 'Inbox'));

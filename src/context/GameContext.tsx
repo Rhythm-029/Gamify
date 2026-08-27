@@ -28,6 +28,9 @@ import React, {
   type ReactNode,
 } from 'react';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+export { API_BASE };
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export type GamePhase =
@@ -246,14 +249,14 @@ function msToInGameClock(elapsedMs: number): Omit<InGameClock, 'paused' | 'realE
 // All events keyed by event_id. fireAtMs = realElapsedMs from clock start (0 = kickoff end).
 // condition: receives current GameState snapshot, returns bool.
 
-export type FrontendEventChannel = 'mail' | 'slack' | 'notification' | 'calendar';
+export type FrontendEventChannel = 'mail' | 'slack' | 'notification' | 'calendar' | 'signal';
 
 interface FrontendEvent {
   event_id: string;
   fireAtMs: number; // real ms from clock start (after kickoff)
   channel: FrontendEventChannel;
   condition?: (state: GameState) => boolean;
-  build: (state: GameState) => ScheduledMail | ScheduledSlackMsg | PendingNotification;
+  build: (state: GameState) => ScheduledMail | ScheduledSlackMsg | PendingNotification | { dimension: string; description: string; value: number };
 }
 
 // ── Character helpers ─────────────────────────────────────────────────────────
@@ -302,22 +305,52 @@ const TITAN_EVENTS: FrontendEvent[] = [
     channel: 'mail',
     build: () => makeMail(
       'daniel_brief_mail', 'daniel',
-      'Project Titan — Transformation Brief & Immediate Next Steps',
-      `Hi,
+      'Project Titan — Transformation Brief & Approved Requirements List',
+      `Hi Team,
 
-As promised — the project brief is attached. Please read it in full; there's a lot of context in there that we won't cover in every meeting.
+Following our kickoff meeting, here is the official, prioritized list of requirements agreed upon for the Project Titan Enterprise HR Portal transformation.
 
-Key points:
-• SSO is non-negotiable per Marcus — start there.
-• The board date is Day 14. That is firm.
-• Payroll integration has a constraint — the vendor API docs are outdated. Don't over-commit here.
-• Phase 2 items (Announcements, Approval Workflow automation, Notification Centre) are out of scope for now — flag with me if the client asks for them.
+=== APPROVED FEATURE REQUIREMENTS SCOPE ===
 
-Come to me with questions. I'd rather you ask twice than build the wrong thing.
+1. 🔐 EMPLOYEE SINGLE SIGN-ON (SSO & OIDC)
+   - Mandatory enterprise identity authentication for all employees and plant staff.
+   - Non-negotiable priority per CTO Marcus Reed.
 
+2. 📊 EXECUTIVE & EMPLOYEE DASHBOARD
+   - Personalized landing dashboard with real-time headcount, key metrics, and quick actions.
+
+3. 📂 EMPLOYEE DIRECTORY & ORG CHART
+   - Searchable directory of key personnel across all divisions.
+
+4. 📅 LEAVE MANAGEMENT & TIME OFF REQUESTS
+   - Self-service leave application, balance tracking, and manager routing.
+
+5. ⏱️ ATTENDANCE TRACKING & SHIFT CLOCKING
+   - Shift clock-in/out records tailored for plant floor terminals.
+
+6. ⚡ MANAGER APPROVAL WORKFLOW
+   - One-click approve/reject queue for pending team leave applications.
+
+7. 🛡️ ROLE-BASED ACCESS CONTROL (RBAC)
+   - Strict role hierarchy permissions (Employee / Manager / HR Specialist / Admin).
+
+8. 💰 PAYROLL INTEGRATION ENGINE
+   - Automated payroll payload calculation and dispatch reporting (August 2026 run).
+
+9. 📁 EMPLOYEE DOCUMENT UPLOAD
+   - Supporting document attachments for leave requests and HR certificates.
+   - [NOTE: Deferred to Sprint 2 / Post-Prototype Review per Daniel's brief constraint].
+
+=== KEY MILESTONE DATES ===
+• Day 7: Prototype Review & Stakeholder Demo
+• Day 14: Board of Directors Presentation (Firm Deadline)
+
+Please review this list thoroughly and align your prototype build accordingly.
+
+Best regards,
 Daniel Brooks
-Program Manager, Brained Consulting`,
-      'As promised — the project brief is attached.',
+Program Manager | Brained Consulting`,
+      'Official approved requirements list & milestone dates for Project Titan.',
       'High', 1, '09:18',
       { name: 'Project_Titan_Brief.pdf', size: '2.4 MB', type: 'pdf' }
     ),
@@ -395,13 +428,6 @@ HR Transformation Specialist`,
   // ── Day 2 ────────────────────────────────────────────────────────────────────
 
   {
-    event_id: 'notify_ide_ready',
-    fireAtMs: 50_000,
-    channel: 'notification',
-    build: () => makeNotif('notif_ide_ready', 'Calendar', '💻 Coding Task Ready', 'Click here to open Titan IDE and configure/build the HR Portal prototype codebase.', { subtitle: 'Titan IDE Workspace', onActionAppId: 'ide' }),
-  },
-
-  {
     event_id: 'prototype_review_calendar',
     fireAtMs: 120_000,
     channel: 'notification',
@@ -414,14 +440,6 @@ HR Transformation Specialist`,
     channel: 'notification',
     condition: (s) => !s.stakeholderContacted.daniel,
     build: () => makeNotif('notif_daniel_day2', 'Teams', 'Daniel Brooks', 'Quick check — how are you progressing? Any blockers?', { subtitle: 'Direct Message', onActionAppId: 'teams' }),
-  },
-
-  {
-    event_id: 'notify_ide_day2_nudge',
-    fireAtMs: 150_000,
-    channel: 'notification',
-    condition: (s) => !s.prototypeBuilt,
-    build: () => makeNotif('notif_ide_day2', 'Calendar', '💻 Titan IDE — Build Prototype', 'Prototype review is Day 7. Click to open Titan IDE & build your initial prototype.', { subtitle: 'Developer Task', onActionAppId: 'ide' }),
   },
 
   {
@@ -563,6 +581,14 @@ Emma Carter`,
     channel: 'notification',
     condition: (s) => !s.meetingState.prototypeReviewDone,
     build: () => makeNotif('notif_review_missed', 'Teams', 'Daniel Brooks', "The prototype review passed without you. This needs to be noted. Don't let this happen with the board presentation.", { subtitle: 'Direct Message' }),
+  },
+
+  {
+    event_id: 'missed_review_penalty_signal',
+    fireAtMs: 471_000,
+    channel: 'signal',
+    condition: (s) => !s.meetingState.prototypeReviewDone,
+    build: () => ({ dimension: 'delivery_management', description: 'Missed the Day 7 Prototype Review meeting', value: -15 }),
   },
 
   // ── Day 8 ────────────────────────────────────────────────────────────────────
@@ -845,6 +871,9 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (prev.pendingNotifications.some((n) => n.id === notif.id)) return prev;
             return { ...prev, pendingNotifications: [...prev.pendingNotifications, notif] };
           });
+        } else if (event.channel === 'signal') {
+          const sig = event.build(state) as { dimension: string; description: string; value: number };
+          addSignalInternal(sig.description, sig.dimension, `auto_${event.event_id}`, sig.value);
         }
       }
     }
@@ -884,14 +913,17 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setState((prev) => ({ ...prev, prototypeBuilt: true }));
     addSignalInternal('Player built prototype', 'delivery_management', 'ide_first_run', 10);
 
-    // Notify backend so orchestrator can fire olivia_review equivalent (now daniel_security)
     const sid = localStorage.getItem('brained_session_id');
     if (sid) {
-      fetch(`${API_BASE}/api/game/ide/run`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: sid }),
-      }).catch(() => {});
+      try {
+        fetch(`${API_BASE}/api/game/ide/run`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sid }),
+        }).catch(() => {});
+      } catch (err) {
+        console.warn('Backend IDE sync non-blocking error:', err);
+      }
     }
   }, []); // eslint-disable-line
 
@@ -923,7 +955,13 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       ...prev,
       meetingState: { ...prev.meetingState, momSubmitted: true, momText: text },
     }));
-    addSignalInternal('Player submitted MOM', 'documentation', 'mom_submitted', text.length > 200 ? 15 : 5);
+    // Score by quality: length + keyword richness
+    const keywords = ['requirement', 'feature', 'login', 'dashboard', 'leave', 'payroll', 'rbac', 'sso', 'attendance', 'approval', 'document', 'audit', 'daniel', 'marcus', 'emma', 'action'];
+    const textLower = text.toLowerCase();
+    const matchedKeywords = keywords.filter((kw) => textLower.includes(kw)).length;
+    const qualityScore = text.length > 400 ? 20 : text.length > 200 ? 15 : text.length > 100 ? 10 : 5;
+    const keywordBonus = Math.min(matchedKeywords * 2, 10);
+    addSignalInternal('Player submitted Meeting MOM', 'documentation', 'mom_submitted', qualityScore + keywordBonus);
     const sid = localStorage.getItem('brained_session_id');
     if (sid && text.trim()) {
       try {
@@ -1047,8 +1085,3 @@ export function useGame(): GameContextValue {
   if (!ctx) throw new Error('useGame must be used inside <GameProvider>');
   return ctx;
 }
-
-// ── Config ────────────────────────────────────────────────────────────────────
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000';
-export { API_BASE };

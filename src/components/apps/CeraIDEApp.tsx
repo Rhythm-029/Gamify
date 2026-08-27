@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useSyncExternalStore } from 'react';
 import { 
-  Sparkles, RotateCw, CheckCircle2, Zap, Download, Code2
+  Sparkles, RotateCw, CheckCircle2, Zap, Download, Code2, Globe
 } from 'lucide-react';
 import JSZip from 'jszip';
 import { CeraActivityBar, type ActivityTab } from './cera/CeraActivityBar';
@@ -10,78 +10,98 @@ import { CeraAIChatPanel } from './cera/CeraAIChatPanel';
 import { CeraTerminal } from './cera/CeraTerminal';
 import { CeraPreviewWindow } from './cera/CeraPreviewWindow';
 import { 
-  INITIAL_TIMELINE_STEPS, SIMULATION_PHASES,
-  type VirtualFile, type BuildTimelineStep
+  type VirtualFile
 } from './cera/ceraSimulationData';
+import { 
+  getCeraState, 
+  updateCeraState, 
+  subscribeCeraState, 
+  resetCeraSimulationState,
+  startCeraVibeCoding,
+  submitInteractiveChoice,
+  setPrototypeBuiltCallback
+} from './cera/ceraStore';
 import { useGame } from '../../context/GameContext';
 
-interface ChatMessage {
-  id: string;
-  sender: 'ai' | 'user';
-  text: string;
-  timestamp: string;
+class CeraErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error('[CERA IDE ErrorBoundary Caught Error]', error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="w-full h-full bg-[#080911] text-white flex flex-col items-center justify-center p-6 text-center select-none font-sans">
+          <div className="w-16 h-16 rounded-3xl bg-pink-500/20 border border-pink-500/30 flex items-center justify-center text-pink-400 mb-4 shadow-xl">
+            <Sparkles className="w-8 h-8 animate-pulse" />
+          </div>
+          <h3 className="text-lg font-bold text-white mb-1">Cera AI Workspace</h3>
+          <p className="text-slate-400 text-xs max-w-xs mb-4">Click below to open Cera IDE workspace.</p>
+          <button
+            onClick={() => {
+              resetCeraSimulationState();
+              this.setState({ hasError: false });
+            }}
+            className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white font-bold text-xs shadow-lg rounded-xl transition-all cursor-pointer"
+          >
+            Launch Cera Workspace
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
 }
 
 export const CeraIDEApp: React.FC = () => {
+  return (
+    <CeraErrorBoundary>
+      <CeraIDEContent />
+    </CeraErrorBoundary>
+  );
+};
+
+const CeraIDEContent: React.FC = () => {
   const { buildPrototype, addSignal } = useGame();
+  const cera = useSyncExternalStore(subscribeCeraState, getCeraState);
+
   const [activeActivityTab, setActiveActivityTab] = useState<ActivityTab>('explorer');
-  const [projectName, setProjectName] = useState<string | null>(null);
-  
-  // File State
-  const [generatedFiles, setGeneratedFiles] = useState<VirtualFile[]>([]);
-  const [openFiles, setOpenFiles] = useState<VirtualFile[]>([]);
-  const [activeFileId, setActiveFileId] = useState<string | null>(null);
 
-  // Simulation Timeline State
-  const [isAiBuilding, setIsAiBuilding] = useState(false);
-  const [isBuildFinished, setIsBuildFinished] = useState(false);
-  const [isDevServerRunning, setIsDevServerRunning] = useState(false);
-  const [currentStatus, setCurrentStatus] = useState<string>('');
-  const [speedMultiplier, setSpeedMultiplier] = useState<number>(1);
-  const [timelineSteps, setTimelineSteps] = useState<BuildTimelineStep[]>(INITIAL_TIMELINE_STEPS);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
-
-  const simulationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Clean up timer on unmount
   useEffect(() => {
-    return () => {
-      if (simulationTimerRef.current) clearTimeout(simulationTimerRef.current);
-    };
-  }, []);
+    setPrototypeBuiltCallback(() => {
+      buildPrototype();
+    });
+  }, [buildPrototype]);
+
+  const handleOpenLiveWebsite = () => {
+    // Switch to in-app live preview tab
+    setActiveActivityTab('preview');
+    addSignal('delivery_management', 'Opened live prototype preview (http://localhost:5173)', 8);
+  };
+
 
   const handleSelectFile = (file: VirtualFile) => {
-    if (!openFiles.some((f) => f.id === file.id)) {
-      setOpenFiles((prev) => [...prev, file]);
-    }
-    setActiveFileId(file.id);
+    const isAlreadyOpen = (cera.openFiles || []).some((f) => f && f.id === file.id);
+    const nextOpen = isAlreadyOpen ? (cera.openFiles || []) : [...(cera.openFiles || []), file];
+    updateCeraState({ openFiles: nextOpen, activeFileId: file.id });
     if (activeActivityTab === 'preview') {
       setActiveActivityTab('explorer');
     }
   };
 
   const handleCloseTab = (fileId: string) => {
-    const nextOpen = openFiles.filter((f) => f.id !== fileId);
-    setOpenFiles(nextOpen);
-    if (activeFileId === fileId) {
-      setActiveFileId(nextOpen.length > 0 ? nextOpen[nextOpen.length - 1].id : null);
-    }
+    const nextOpen = (cera.openFiles || []).filter((f) => f && f.id !== fileId);
+    const nextActive = cera.activeFileId === fileId 
+      ? (nextOpen.length > 0 ? nextOpen[nextOpen.length - 1].id : null)
+      : cera.activeFileId;
+    updateCeraState({ openFiles: nextOpen, activeFileId: nextActive });
   };
 
   const handleResetSimulation = () => {
-    if (simulationTimerRef.current) clearTimeout(simulationTimerRef.current);
-    setProjectName(null);
-    setGeneratedFiles([]);
-    setOpenFiles([]);
-    setActiveFileId(null);
-    setIsAiBuilding(false);
-    setIsBuildFinished(false);
-    setIsDevServerRunning(false);
-    setCurrentStatus('');
-    setTimelineSteps(INITIAL_TIMELINE_STEPS.map((s) => ({ ...s, status: 'pending' })));
-    setChatMessages([]);
-    setTerminalLogs([]);
+    resetCeraSimulationState();
   };
 
   const handleDownloadZip = async () => {
@@ -90,8 +110,10 @@ export const CeraIDEApp: React.FC = () => {
       const folder = zip.folder('titan-hr-portal-prototype');
       if (!folder) return;
 
-      generatedFiles.forEach((file) => {
-        folder.file(file.name, file.content);
+      (cera.generatedFiles || []).forEach((file) => {
+        if (file && file.name && file.content) {
+          folder.file(file.name, file.content);
+        }
       });
 
       const blob = await zip.generateAsync({ type: 'blob' });
@@ -110,122 +132,49 @@ export const CeraIDEApp: React.FC = () => {
     }
   };
 
-  const handleSubmitPrompt = (promptText: string) => {
-    handleResetSimulation();
-    setProjectName('Project Titan');
-    setIsAiBuilding(true);
-
-    // Call buildPrototype in GameContext so state is set and desktop folder opens
-    buildPrototype();
-
-    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    // User initial message
-    setChatMessages([
-      {
-        id: 'msg-user-1',
-        sender: 'user',
-        text: promptText,
-        timestamp: now,
-      },
-    ]);
-
-    setTerminalLogs(['Initializing Cera AI Engine (Enterprise Simulation)...']);
-
-    // Run multi-stage choreographed timeline simulation
-    let phaseIdx = 0;
-
-    const runNextPhase = () => {
-      if (phaseIdx >= SIMULATION_PHASES.length) {
-        setIsAiBuilding(false);
-        setIsBuildFinished(true);
-        setCurrentStatus('Project ready.');
-        buildPrototype();
-        return;
-      }
-
-      const phase = SIMULATION_PHASES[phaseIdx];
-      setCurrentStatus(phase.statusText);
-
-      // Update timeline checklist step status
-      if (phase.activeStepId) {
-        setTimelineSteps((prev) =>
-          prev.map((step) => {
-            if (step.id === phase.activeStepId) {
-              return { ...step, status: 'in_progress' };
-            }
-            // Mark previous steps as completed
-            const stepOrder = ['requirements', 'architecture', 'setup', 'backend', 'frontend', 'testing'];
-            const currentIdx = stepOrder.indexOf(phase.activeStepId || '');
-            const stepIdx = stepOrder.indexOf(step.id);
-            if (stepIdx < currentIdx) {
-              return { ...step, status: 'completed' };
-            }
-            return step;
-          })
-        );
-      }
-
-      // Add AI chat comment
-      if (phase.chatMessage) {
-        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        setChatMessages((prev) => [
-          ...prev,
-          {
-            id: `msg-ai-${phase.id}`,
-            sender: 'ai',
-            text: phase.chatMessage!,
-            timestamp: timeStr,
-          },
-        ]);
-      }
-
-      // Append terminal log
-      if (phase.terminalLog) {
-        setTerminalLogs((prev) => [...prev, phase.terminalLog!]);
-      }
-
-      // Add new file to Explorer & Editor
-      if (phase.newFile) {
-        setGeneratedFiles((prev) => {
-          if (!prev.some((f) => f.id === phase.newFile!.id)) {
-            return [...prev, phase.newFile!];
-          }
-          return prev;
-        });
-
-        setOpenFiles((prev) => {
-          if (!prev.some((f) => f.id === phase.newFile!.id)) {
-            return [...prev, phase.newFile!];
-          }
-          return prev;
-        });
-
-        setActiveFileId(phase.newFile.id);
-      }
-
-      phaseIdx++;
-
-      // Adjust duration based on speedMultiplier
-      const adjustedDuration = Math.max(300, phase.durationMs / speedMultiplier);
-      simulationTimerRef.current = setTimeout(runNextPhase, adjustedDuration);
-    };
-
-    runNextPhase();
-  };
-
   const handleStartDevServer = () => {
-    setIsDevServerRunning(true);
-    setTerminalLogs((prev) => [
-      ...prev,
-      '$ npm run dev',
-      'Starting development server...',
-      'VITE v7.0.2  ready in 1438 ms',
-      '➜  Local:   http://localhost:5173/',
-      '➜  Network: use --host to expose',
-      'Watching for file changes...',
-    ]);
+    updateCeraState((prev) => ({
+      isDevServerRunning: true,
+      terminalLogs: [
+        ...(prev.terminalLogs || []),
+        '$ npm run dev',
+        'Starting development server...',
+        'VITE v7.0.2  ready in 1438 ms',
+        '➜  Local:   http://localhost:5173/',
+        '➜  Network: use --host to expose',
+        'Watching for file changes...',
+      ],
+    }));
   };
+
+  const handleSubmitPrompt = (promptText: string) => {
+    buildPrototype();
+    startCeraVibeCoding(promptText);
+    addSignal('delivery_management', 'Started Cera AI feature framing wizard', 5);
+  };
+
+  const handleInteractiveSubmitOption = (selectedOptionId: string) => {
+    if (selectedOptionId === 'open_preview') {
+      setActiveActivityTab('preview');
+      return;
+    }
+
+    const prompt = cera.currentInteractivePrompt;
+    const chosen = prompt?.options.find((o: any) => o.id === selectedOptionId) || prompt?.options[0];
+    const marks = (chosen as any)?.marks ?? (
+      selectedOptionId === 'opt_sso' || selectedOptionId === 'opt_hr_escalate' || selectedOptionId === 'opt_payroll_dashboard' || selectedOptionId === 'opt_doc_upload' ? 15 : 0
+    );
+
+    submitInteractiveChoice(selectedOptionId);
+
+    if (marks > 0) {
+      addSignal('requirement_management', `Correct feature framing choice: ${chosen?.label || selectedOptionId}`, marks);
+    } else {
+      addSignal('requirement_management', `Incorrect feature framing (unapproved choice): ${chosen?.label || selectedOptionId}`, 0);
+    }
+  };
+
+  const safeGeneratedCount = cera.generatedFiles?.length || 0;
 
   return (
     <div className="w-full h-full bg-[#080911] text-white flex flex-col font-sans select-none overflow-hidden relative border border-white/10 rounded-xl shadow-2xl">
@@ -244,13 +193,13 @@ export const CeraIDEApp: React.FC = () => {
           <span className="text-slate-600">|</span>
 
           <span className="text-slate-300 font-mono text-[11px]">
-            {projectName ? `${projectName} — enterprise-hr-portal` : 'Cera AI Workspace (No project loaded)'}
+            {cera.projectName ? `${cera.projectName} — enterprise-hr-portal` : 'Cera AI Workspace (No project loaded)'}
           </span>
         </div>
 
         {/* Status Pill & Controls */}
         <div className="flex items-center space-x-3 text-xs">
-          {generatedFiles.length > 0 && (
+          {safeGeneratedCount > 0 && (
             <button
               onClick={handleDownloadZip}
               className="px-2.5 py-1 bg-pink-600 hover:bg-pink-500 border border-pink-400/40 text-white rounded-lg font-bold text-[11px] flex items-center space-x-1 cursor-pointer transition-colors shadow-sm"
@@ -261,35 +210,38 @@ export const CeraIDEApp: React.FC = () => {
             </button>
           )}
 
-          {isAiBuilding && (
+          {cera.isAiBuilding && (
             <div className="flex items-center space-x-1.5 bg-pink-500/20 border border-pink-500/40 px-2.5 py-0.5 rounded-full text-pink-300 text-[11px] font-semibold animate-pulse">
               <Sparkles className="w-3 h-3 text-pink-400 animate-spin" />
-              <span>{currentStatus || 'Building...'}</span>
+              <span>{cera.currentStatus || 'Building...'}</span>
             </div>
           )}
 
-          {isBuildFinished && (
-            <div className="flex items-center space-x-1.5 bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-0.5 rounded-full text-emerald-300 text-[11px] font-bold">
-              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-              <span>Build Complete</span>
-            </div>
+          {cera.isBuildFinished && (
+            <button
+              onClick={handleOpenLiveWebsite}
+              className="px-3 py-1 bg-emerald-500 hover:bg-emerald-400 border border-emerald-300 text-slate-950 rounded-lg font-extrabold text-[11px] flex items-center space-x-1.5 cursor-pointer transition-all shadow-lg shadow-emerald-500/20 hover:scale-105 animate-pulse"
+              title="Open Live App Preview (http://localhost:5173)"
+            >
+              <Globe className="w-3.5 h-3.5 text-slate-950" />
+              <span>Open Live Website (localhost:5173)</span>
+            </button>
           )}
 
           {/* Quick Speed Switcher */}
           <button
             onClick={() => {
-              if (speedMultiplier === 1) setSpeedMultiplier(2);
-              else if (speedMultiplier === 2) setSpeedMultiplier(4);
-              else setSpeedMultiplier(1);
+              const nextSpeed = cera.speedMultiplier === 1 ? 2 : cera.speedMultiplier === 2 ? 4 : 1;
+              updateCeraState({ speedMultiplier: nextSpeed });
             }}
             className="px-2 py-0.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-pink-300 font-mono text-[10px] flex items-center space-x-1 cursor-pointer transition-colors"
           >
             <Zap className="w-3 h-3 text-amber-400" />
-            <span>{speedMultiplier}x Speed</span>
+            <span>{cera.speedMultiplier || 1}x Speed</span>
           </button>
 
           {/* Reset Button */}
-          {(projectName || generatedFiles.length > 0) && (
+          {(cera.projectName || safeGeneratedCount > 0) && (
             <button
               onClick={handleResetSimulation}
               className="px-2 py-0.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-slate-300 hover:text-white text-[11px] flex items-center space-x-1 cursor-pointer transition-colors"
@@ -308,18 +260,18 @@ export const CeraIDEApp: React.FC = () => {
         <CeraActivityBar
           activeTab={activeActivityTab}
           setActiveTab={setActiveActivityTab}
-          isAiBuilding={isAiBuilding}
+          isAiBuilding={cera.isAiBuilding}
         />
 
         {/* Sidebar (Explorer / Drawer) */}
-        {activeActivityTab === 'explorer' && (
+        {activeActivityTab !== 'preview' && (
           <CeraSidebar
             activeTab={activeActivityTab}
-            projectName={projectName}
-            generatedFiles={generatedFiles}
-            activeFileId={activeFileId}
+            projectName={cera.projectName}
+            generatedFiles={cera.generatedFiles}
+            activeFileId={cera.activeFileId}
             onSelectFile={handleSelectFile}
-            isAiBuilding={isAiBuilding}
+            isAiBuilding={cera.isAiBuilding}
             onNewPromptClick={handleResetSimulation}
           />
         )}
@@ -329,26 +281,27 @@ export const CeraIDEApp: React.FC = () => {
           {/* Top View: Code Editor OR Live Preview Window */}
           {activeActivityTab === 'preview' ? (
             <CeraPreviewWindow
-              isDevServerRunning={isDevServerRunning}
+              isDevServerRunning={cera.isDevServerRunning}
               onStartDevServer={handleStartDevServer}
             />
           ) : (
             <CeraCodeEditor
-              openFiles={openFiles}
-              activeFileId={activeFileId}
-              onSelectTab={(id) => setActiveFileId(id)}
+              openFiles={cera.openFiles}
+              activeFileId={cera.activeFileId}
+              onSelectTab={(id) => updateCeraState({ activeFileId: id })}
               onCloseTab={handleCloseTab}
               onSubmitPrompt={handleSubmitPrompt}
-              isAiBuilding={isAiBuilding}
+              isAiBuilding={cera.isAiBuilding}
+              hasInteractivePrompt={!!cera.currentInteractivePrompt}
               onOpenPreview={() => setActiveActivityTab('preview')}
             />
           )}
 
           {/* Bottom Interactive Terminal */}
           <CeraTerminal
-            logs={terminalLogs}
-            isBuildFinished={isBuildFinished}
-            isDevServerRunning={isDevServerRunning}
+            logs={cera.terminalLogs}
+            isBuildFinished={cera.isBuildFinished}
+            isDevServerRunning={cera.isDevServerRunning}
             onStartDevServer={handleStartDevServer}
             onOpenPreview={() => setActiveActivityTab('preview')}
           />
@@ -356,14 +309,16 @@ export const CeraIDEApp: React.FC = () => {
 
         {/* Right Cera AI Chat Panel */}
         <CeraAIChatPanel
-          currentStatus={currentStatus}
-          timelineSteps={timelineSteps}
-          chatMessages={chatMessages}
-          isBuilding={isAiBuilding}
-          isComplete={isBuildFinished}
-          speedMultiplier={speedMultiplier}
-          setSpeedMultiplier={setSpeedMultiplier}
+          currentStatus={cera.currentStatus}
+          timelineSteps={cera.timelineSteps}
+          chatMessages={cera.chatMessages}
+          isBuilding={cera.isAiBuilding}
+          isComplete={cera.isBuildFinished}
+          speedMultiplier={cera.speedMultiplier}
+          setSpeedMultiplier={(s) => updateCeraState({ speedMultiplier: s })}
           onReset={handleResetSimulation}
+          interactivePrompt={cera.currentInteractivePrompt}
+          onSubmitOption={handleInteractiveSubmitOption}
         />
       </div>
     </div>

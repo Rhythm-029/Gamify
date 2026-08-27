@@ -12,6 +12,7 @@ interface CeraCodeEditorProps {
   onCloseTab: (fileId: string) => void;
   onSubmitPrompt: (promptText: string) => void;
   isAiBuilding: boolean;
+  hasInteractivePrompt?: boolean;
   onOpenPreview?: () => void;
 }
 
@@ -22,15 +23,17 @@ export const CeraCodeEditor: React.FC<CeraCodeEditorProps> = ({
   onCloseTab,
   onSubmitPrompt,
   isAiBuilding,
+  hasInteractivePrompt,
   onOpenPreview,
 }) => {
   const [promptInput, setPromptInput] = useState(STARTER_PROMPTS[0]);
   const [copied, setCopied] = useState(false);
 
-  const activeFile = openFiles.find((f) => f.id === activeFileId);
+  const safeOpenFiles = openFiles || [];
+  const activeFile = safeOpenFiles.find((f) => f && f.id === activeFileId) || (safeOpenFiles.length > 0 ? safeOpenFiles[0] : undefined);
 
   const handleCopy = () => {
-    if (activeFile) {
+    if (activeFile && activeFile.content) {
       navigator.clipboard.writeText(activeFile.content);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -46,10 +49,11 @@ export const CeraCodeEditor: React.FC<CeraCodeEditorProps> = ({
   return (
     <div className="flex-1 flex flex-col bg-[#0b0c16] h-full overflow-hidden relative font-sans">
       {/* TABS BAR (When files are opened) */}
-      {openFiles.length > 0 && (
+      {safeOpenFiles.length > 0 && (
         <div className="flex items-center bg-[#111322] border-b border-white/10 overflow-x-auto text-xs select-none scrollbar-none shrink-0">
-          {openFiles.map((file) => {
-            const isActive = file.id === activeFileId;
+          {safeOpenFiles.map((file) => {
+            if (!file) return null;
+            const isActive = activeFile && file.id === activeFile.id;
             return (
               <div
                 key={file.id}
@@ -88,8 +92,58 @@ export const CeraCodeEditor: React.FC<CeraCodeEditorProps> = ({
         </div>
       )}
 
-      {/* HERO / PROMPT INITIAL STATE (When no active file selected) */}
-      {!activeFile ? (
+      {/* WIZARD WAITING STATE — 4 questions being answered */}
+      {!activeFile && hasInteractivePrompt && !isAiBuilding ? (
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center max-w-xl mx-auto">
+          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-pink-600/30 via-purple-600/30 to-indigo-600/30 border-2 border-pink-500/40 p-4 shadow-2xl flex items-center justify-center mb-6">
+            <Sparkles className="w-10 h-10 text-pink-400 animate-pulse" />
+          </div>
+          <h2 className="text-xl font-extrabold text-white mb-2">
+            Feature Framing Wizard <span className="text-pink-400">Active</span>
+          </h2>
+          <p className="text-slate-400 text-xs leading-relaxed mb-6">
+            Please answer the 4 feature framing questions in the <strong className="text-pink-300">Cera AI Assistant panel</strong> on the right to align requirement specifications.
+          </p>
+          <div className="px-4 py-2 bg-pink-500/10 rounded-xl border border-pink-500/30 text-pink-300 text-xs font-mono font-bold animate-pulse">
+            ➜ Complete 4 questions to launch 2.5-min background build
+          </div>
+        </div>
+      ) : !activeFile && isAiBuilding ? (
+        /* BUILDING STATE — continuous background build after 4 questions answered */
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+          <div className="relative mb-8">
+            <div className="absolute -inset-4 rounded-full border-2 border-pink-500/20 animate-ping" />
+            <div className="absolute -inset-8 rounded-full border border-purple-500/10 animate-pulse" />
+            <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-pink-600 via-purple-600 to-indigo-600 p-5 shadow-2xl shadow-pink-500/40 border border-white/20 flex items-center justify-center">
+              <Sparkles className="w-12 h-12 text-white animate-spin" />
+            </div>
+          </div>
+
+          <h2 className="text-2xl font-extrabold text-white mb-2 tracking-tight">
+            Cera AI is <span className="bg-gradient-to-r from-pink-400 via-purple-300 to-blue-400 bg-clip-text text-transparent">building your project</span>
+          </h2>
+          <p className="text-slate-400 text-sm max-w-sm leading-relaxed mb-8">
+            Synthesizing enterprise codebase over 2.5 minutes (~2.5 days in-game). Build runs continuously even if Cera is minimized.
+          </p>
+
+          <div className="flex items-center space-x-2 mb-8">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div key={i} className="w-2.5 h-2.5 rounded-full bg-pink-500 animate-pulse" />
+            ))}
+          </div>
+
+          <div className="w-full max-w-md bg-[#080911] rounded-2xl border border-white/10 p-4 text-left font-mono text-[11px] text-slate-400 space-y-1.5 shadow-2xl">
+            <div className="text-pink-400">$ cera build --project="Project Titan" --background</div>
+            <div className="text-slate-400">Synthesizing full-stack modules...</div>
+            <div className="flex items-center space-x-2 text-emerald-400">
+              <span>✓</span><span>4 Feature Framing Questions Verified</span>
+            </div>
+            <div className="flex items-center space-x-2 text-slate-300 animate-pulse">
+              <span className="text-pink-400">⟳</span><span>Generating files (2.5-min background run)...</span>
+            </div>
+          </div>
+        </div>
+      ) : !activeFile ? (
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-3xl mx-auto w-full overflow-y-auto">
           {/* Logo & Headline */}
           <motion.div
@@ -135,6 +189,12 @@ export const CeraCodeEditor: React.FC<CeraCodeEditorProps> = ({
             <textarea
               value={promptInput}
               onChange={(e) => setPromptInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit();
+                }
+              }}
               placeholder="Describe what you'd like me to build..."
               disabled={isAiBuilding}
               className="w-full bg-transparent text-white text-sm focus:outline-none resize-none h-28 font-sans placeholder-slate-500"
@@ -179,7 +239,12 @@ export const CeraCodeEditor: React.FC<CeraCodeEditorProps> = ({
               {STARTER_PROMPTS.map((promptText, idx) => (
                 <button
                   key={idx}
-                  onClick={() => setPromptInput(promptText)}
+                  onClick={() => {
+                    setPromptInput(promptText);
+                    if (!isAiBuilding) {
+                      onSubmitPrompt(promptText);
+                    }
+                  }}
                   disabled={isAiBuilding}
                   className="p-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-pink-500/40 rounded-2xl text-xs text-slate-300 transition-all flex items-center justify-between group cursor-pointer"
                 >
@@ -223,29 +288,18 @@ export const CeraCodeEditor: React.FC<CeraCodeEditorProps> = ({
           <div className="flex-1 overflow-auto p-4 font-mono text-xs text-slate-200 bg-[#080911] leading-relaxed flex">
             {/* Line Numbers */}
             <div className="select-none text-slate-600 text-right pr-4 border-r border-white/10 space-y-1 font-mono text-[11px]">
-              {activeFile.content.split('\n').map((_, i) => (
+              {(activeFile.content || '').split('\n').map((_, i) => (
                 <div key={i}>{i + 1}</div>
               ))}
             </div>
 
             {/* Code Lines */}
             <pre className="pl-4 overflow-x-auto space-y-1 w-full text-slate-200 font-mono text-[12px]">
-              {activeFile.content.split('\n').map((line, idx) => {
-                // Simple highlight syntax simulation
-                let highlightedLine: React.ReactNode = line;
-                if (line.includes('import ') || line.includes('export ') || line.includes('function ') || line.includes('const ')) {
-                  highlightedLine = (
-                    <span>
-                      {line.replace(/(import|export|function|const|let|var|return|if|from)/g, '🔑 $1')}
-                    </span>
-                  );
-                }
-                return (
-                  <div key={idx} className="whitespace-pre">
-                    {highlightedLine}
-                  </div>
-                );
-              })}
+              {(activeFile.content || '').split('\n').map((line, idx) => (
+                <div key={idx} className="whitespace-pre">
+                  {line}
+                </div>
+              ))}
             </pre>
           </div>
         </div>

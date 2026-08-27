@@ -31,34 +31,35 @@ const DEFAULT_NOTES: NoteItem[] = [
     pinned: true,
     lastModified: 'Just now',
     isMOM: true,
-    content: `Project Titan — Kickoff Meeting Notes
-Date: Day 1
+    content: `Project Titan — Executive Kickoff Minutes of Meeting (MOM)
+Date: Day 1 · 09:00 AM
 
 PARTICIPANTS:
-- Marcus Reed (CTO)
-- Daniel Brooks (Program Manager)
-- Emma Carter (HR Transformation Specialist)
-- Sophia Bennett (VP HR, Titan Manufacturing)
-- [Your name] (Digital Transformation Consultant)
+• Marcus Reed (CTO, Brained Global)
+• Daniel Brooks (Program Manager)
+• Emma Carter (HR Transformation Specialist)
+• Aarav Kapoor (Senior Consultant)
+• Digital Transformation Lead (Consultant)
 
-SUMMARY:
+KEY DECISIONS & AGREED REQUIREMENTS LIST:
+1. Employee Single Sign-On (SSO / OIDC) — Non-negotiable identity auth per Marcus.
+2. Executive & Employee Dashboard — Real-time metrics, headcount & quick actions.
+3. Employee Directory & Org Chart — Searchable team directory.
+4. Leave Management & Time Off — Self-service leave request & balance tracking.
+5. Attendance Tracking — Clock in/out records for plant floor workers.
+6. Manager Approval Workflow — One-click leave approval/rejection queue.
+7. Role-Based Access Control (RBAC) — Strict Employee / Manager / HR permissions.
+8. Payroll Integration Engine — API payload calculation for August 2026 run.
+9. Employee Document Upload — [Deferred to Sprint 2 per Daniel's brief constraint].
 
-
-REQUIREMENTS DISCUSSED:
-
+MILESTONE DATES:
+• Day 7: Prototype Review & Live Demo
+• Day 14: Board of Directors Final Presentation
 
 ACTION ITEMS:
-- 
-- 
-
-TIMELINE:
-- Day 7: Prototype Review
-- Day 14: Board Presentation
-
-RISKS & CONCERNS:
-
-
-OPEN QUESTIONS:
+• Configure Cera IDE workspace & trigger initial prototype vibe coding.
+• Implement SSO, Dashboard, Directory, Leave, Attendance, Approvals, RBAC, and Payroll modules.
+• Document MOM and verify prototype readiness ahead of Day 7 review.
 `,
   },
   {

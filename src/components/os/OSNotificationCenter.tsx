@@ -16,7 +16,7 @@ const OSNotificationItem: React.FC<{
   onAction: (notif: OSNotification) => void;
   onTimeoutCall?: (notif: OSNotification) => void;
 }> = ({ notif, onDismiss, onAction, onTimeoutCall }) => {
-  const durationMs = notif.isCall ? 30000 : 15000;
+  const durationMs = notif.isCall ? 30000 : 10000;
 
   useEffect(() => {
     const timer = setTimeout(() => {

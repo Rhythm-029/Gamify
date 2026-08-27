@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useSyncExternalStore } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Folder, Code2, Bell } from 'lucide-react';
 import { BrainedMenuBar } from './BrainedMenuBar';
@@ -15,12 +15,15 @@ import { sound } from '../onboarding/SoundEngine';
 import { useGameSession } from '../../hooks/useGameSession';
 import { useGame } from '../../context/GameContext';
 
+import { FullscreenGate } from './FullscreenGate';
 import { INITIAL_OS_STATE } from '../../data/brainedOSData';
 import type { OSNotification } from '../../data/brainedOSData';
 
 // Simulation Apps
 import { TitanKickoffMeeting } from '../apps/TitanKickoffMeeting';
 import { CeraIDEApp } from '../apps/CeraIDEApp';
+import { CeraBottomNotification } from '../apps/cera/CeraBottomNotification';
+import { subscribeCeraState, getCeraState, setExternalNotifCallback, setActiveAppChecker, setExternalOpenBrowserCallback } from '../apps/cera/ceraStore';
 import { SlackOSApp } from '../apps/SlackOSApp';
 import { PostMeetingPrompt } from '../apps/PostMeetingPrompt';
 import { PrototypeReviewMeeting } from '../apps/PrototypeReviewMeeting';
@@ -77,9 +80,13 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
 
   // Live game session WebSocket hook
   const {
+    notifications: liveNotifications,
     dockBadges: liveDockBadges,
     dismissNotification: dismissLiveNotification,
   } = useGameSession(sessionId);
+
+  const cera = useSyncExternalStore(subscribeCeraState, getCeraState);
+  const [showCeraBottomNotif, setShowCeraBottomNotif] = useState(false);
 
   const [activeAppId, setActiveAppId] = useState<string | null>(null);
   const [openAppIds, setOpenAppIds] = useState<string[]>([]);
@@ -98,7 +105,44 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
   // OS Boot timer sequence states
   const [bootStep, setBootStep] = useState<'booting' | 'silence' | 'ready'>(firstBoot ? 'booting' : 'ready');
 
-  // Helper to push new notification (deduplicated & 1-time popup rule)
+  // Transition OS Boot loader screen ('booting' -> 'silence' -> 'ready')
+  useEffect(() => {
+    if (bootStep === 'booting') {
+      const timer = setTimeout(() => {
+        setBootStep('silence');
+      }, 3500);
+      return () => clearTimeout(timer);
+    }
+    if (bootStep === 'silence') {
+      const timer = setTimeout(() => {
+        setBootStep('ready');
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [bootStep]);
+
+  // Register Cera active app checker, external notification handler, and browser open callback
+  useEffect(() => {
+    setActiveAppChecker(() => activeAppId);
+    setExternalNotifCallback((notif: OSNotification) => {
+      pushNotification(notif);
+    });
+    setExternalOpenBrowserCallback((_url: string) => {
+      // Open the Browser app to show the prototype when Cera build completes
+      handleOpenApp('browser');
+    });
+  }, [activeAppId]); // eslint-disable-line
+
+  // Show Cera bottom-left notification ONLY when an interactive input is pending and user is NOT on Cera screen
+  useEffect(() => {
+    if (cera.pendingInputMessage && activeAppId !== 'cera' && activeAppId !== 'ide') {
+      setShowCeraBottomNotif(true);
+    } else {
+      setShowCeraBottomNotif(false);
+    }
+  }, [cera.pendingInputMessage, activeAppId]);
+
+  // Helper to push new notification (1 non-call toast rule + co-existing call rule)
   const pushNotification = (notif: OSNotification) => {
     if (seenNotifIds.current.has(notif.id)) return;
     seenNotifIds.current.add(notif.id);
@@ -117,10 +161,15 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
     });
 
     setBannerNotifications((prev) => {
-      if (prev.some((item) => item.title === notif.title && item.body === notif.body)) {
-        return prev;
+      if (notif.isCall) {
+        // Keep active non-call toast, replace existing call
+        const nonCalls = prev.filter((item) => !item.isCall);
+        return [...nonCalls, formatted];
+      } else {
+        // Only ONE non-call notification at a time — replace existing non-call toast, keep call
+        const calls = prev.filter((item) => item.isCall);
+        return [...calls, formatted];
       }
-      return [...prev, formatted];
     });
 
     if (notif.isCall) {
@@ -128,22 +177,22 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
     }
   };
 
+  // Sync liveNotifications from WebSocket into pushNotification
   useEffect(() => {
-    if (!firstBoot) return;
-
-    if (bootStep === 'booting') {
-      const timer = setTimeout(() => {
-        setBootStep('silence');
-      }, 3500);
-      return () => clearTimeout(timer);
+    if (!liveNotifications || liveNotifications.length === 0) return;
+    for (const ln of liveNotifications) {
+      if (!seenNotifIds.current.has(ln.id)) {
+        pushNotification(ln);
+      }
     }
+  }, [liveNotifications]);
 
-    if (bootStep === 'silence') {
+  // Guaranteed Kickoff Call Notification Popup on Boot
+  useEffect(() => {
+    if (!gameState.meetingState.kickoffDone) {
       const timer = setTimeout(() => {
-        setBootStep('ready');
-        // Kickoff call notification — opens TitanKickoffMeeting
         pushNotification({
-          id: 'notif-kickoff',
+          id: 'notif-kickoff-call',
           app: 'Teams',
           title: 'Microsoft Teams • Incoming Video Call',
           subtitle: 'Marcus Reed (CTO) • 4 participants',
@@ -153,10 +202,10 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
           onActionAppId: 'kickoff',
           isCall: true,
         });
-      }, 3500);
+      }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [bootStep, firstBoot]);
+  }, [gameState.meetingState.kickoffDone]); // eslint-disable-line
 
   // Show post-meeting prompt 3s after kickoff finishes
   useEffect(() => {
@@ -191,6 +240,10 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
   const handleOpenApp = (appId: string | null) => {
     if (appId && !openAppIds.includes(appId)) {
       setOpenAppIds((prev) => [...prev, appId]);
+      // Score: opening Cera IDE for the first time
+      if (appId === 'cera' || appId === 'ide') {
+        addSignal('delivery_management', 'Opened Cera AI IDE workspace', 5);
+      }
     }
     setActiveAppId(appId);
   };
@@ -294,7 +347,8 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
   const currentAppMeta = activeAppId ? appMetaMap[activeAppId] || { title: 'Finder', icon: null } : { title: 'Finder', icon: null };
 
   return (
-    <div className="w-full h-screen bg-[#0B0E18] text-white flex flex-col font-sans selection:bg-[#0A84FF] selection:text-white relative overflow-hidden select-none">
+    <FullscreenGate onApplyPenalty={handleApplyDecision}>
+      <div className="w-full h-screen bg-[#0B0E18] text-white flex flex-col font-sans selection:bg-[#0A84FF] selection:text-white relative overflow-hidden select-none">
       
       {/* Booting Loader Screen overlay */}
       <AnimatePresence>
@@ -410,6 +464,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
               isOpen={true}
               isFocused={true}
               onClose={() => handleCloseApp(activeAppId)}
+              onMinimize={() => setActiveAppId(null)}
               onFocus={() => {}}
             >
               {/* KICKOFF — replaces old Teams during meeting */}
@@ -476,6 +531,14 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
           )}
         </AnimatePresence>
       </main>
+
+      {/* CERA BOTTOM-LEFT ANTIGRAVITY NOTIFICATION TOAST — only shown when input is required */}
+      <CeraBottomNotification
+        visible={showCeraBottomNotif}
+        inputTitle={cera.pendingInputMessage || ''}
+        onOpenCera={() => handleOpenApp('cera')}
+        onDismiss={() => setShowCeraBottomNotif(false)}
+      />
 
       {/* TOP-RIGHT MAC OS TOAST BANNER NOTIFICATIONS (Suppressed during active meetings) */}
       {(() => {
@@ -554,5 +617,6 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
         onApplyDecision={handleApplyDecision}
       />
     </div>
+    </FullscreenGate>
   );
 };

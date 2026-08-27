@@ -107,28 +107,31 @@ export const CeraTerminal: React.FC<CeraTerminalProps> = ({
       {!isMinimized && (
         <div className="flex-1 p-3 overflow-y-auto font-mono text-[11px] text-slate-300 space-y-1 leading-relaxed bg-[#07080f]">
           {/* Output Logs */}
-          {logs.map((log, index) => (
-            <div key={index} className="whitespace-pre-wrap">
-              {log.includes('http://localhost:5173') ? (
-                <span>
-                  {log.split('http://localhost:5173')[0]}
-                  <button
-                    onClick={onOpenPreview}
-                    className="text-pink-400 underline font-bold hover:text-pink-300 cursor-pointer inline-flex items-center space-x-1 bg-pink-500/10 px-1.5 py-0.5 rounded border border-pink-500/30"
-                  >
-                    <span>http://localhost:5173</span>
-                  </button>
-                  {log.split('http://localhost:5173')[1]}
-                </span>
-              ) : log.includes('✔') ? (
-                <span className="text-emerald-400">{log}</span>
-              ) : log.includes('Installing') || log.includes('npm install') ? (
-                <span className="text-sky-300">{log}</span>
-              ) : (
-                <span>{log}</span>
-              )}
-            </div>
-          ))}
+          {(logs || []).map((log, index) => {
+            if (!log || typeof log !== 'string') return null;
+            return (
+              <div key={index} className="whitespace-pre-wrap">
+                {log.includes('http://localhost:5173') ? (
+                  <span>
+                    {(log.split('http://localhost:5173')[0] || '')}
+                    <button
+                      onClick={onOpenPreview}
+                      className="text-pink-400 underline font-bold hover:text-pink-300 cursor-pointer inline-flex items-center space-x-1 bg-pink-500/10 px-1.5 py-0.5 rounded border border-pink-500/30"
+                    >
+                      <span>http://localhost:5173</span>
+                    </button>
+                    {(log.split('http://localhost:5173')[1] || '')}
+                  </span>
+                ) : log.includes('✔') ? (
+                  <span className="text-emerald-400">{log}</span>
+                ) : log.includes('Installing') || log.includes('npm install') ? (
+                  <span className="text-sky-300">{log}</span>
+                ) : (
+                  <span>{log}</span>
+                )}
+              </div>
+            );
+          })}
 
           {/* Dev Server Output stream */}
           {isDevServerRunning && (

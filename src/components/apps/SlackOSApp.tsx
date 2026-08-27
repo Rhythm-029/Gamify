@@ -215,7 +215,13 @@ export const SlackOSApp: React.FC = () => {
 
     setPlayerMessages((prev) => [...prev, userMsg]);
     setMsgText('');
-    addSignal('communication', `Sent Slack message to ${activeChannel.name}`, 2);
+
+    // Score communication quality: DMs to characters = more valuable engagement
+    if (activeChannel.type === 'dm' && activeChannel.characterId) {
+      addSignal('communication', `Sent DM to ${activeChannel.name} on Slack`, 4);
+    } else {
+      addSignal('communication', `Posted message in #${activeChannel.name}`, 1);
+    }
 
     // Mark stakeholder contacted when player sends a DM
     if (activeChannel.characterId && ['daniel', 'emma', 'marcus', 'aarav'].includes(activeChannel.characterId)) {
