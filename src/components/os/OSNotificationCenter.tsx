@@ -133,7 +133,7 @@ export const OSNotificationCenter: React.FC<OSNotificationCenterProps> = ({
   onTimeoutCall,
 }) => {
   return (
-    <div className="fixed top-12 right-4 z-50 flex flex-col space-y-3 max-w-sm w-full pointer-events-none">
+    <div className="fixed top-14 right-4 z-[200] flex flex-col space-y-3 max-w-sm w-full pointer-events-none">
       <AnimatePresence>
         {notifications.map((notif) => (
           <OSNotificationItem

@@ -16,7 +16,7 @@ import { useGameSession } from '../../hooks/useGameSession';
 import { useGame } from '../../context/GameContext';
 
 import { FullscreenGate } from './FullscreenGate';
-import { INITIAL_OS_STATE } from '../../data/brainedOSData';
+import { INITIAL_OS_STATE, INITIAL_NOTIFICATIONS } from '../../data/brainedOSData';
 import type { OSNotification } from '../../data/brainedOSData';
 
 // Simulation Apps
@@ -93,7 +93,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
   
   // Notification States
   const [bannerNotifications, setBannerNotifications] = useState<OSNotification[]>([]);
-  const [historyNotifications, setHistoryNotifications] = useState<OSNotification[]>([]);
+  const [historyNotifications, setHistoryNotifications] = useState<OSNotification[]>(INITIAL_NOTIFICATIONS);
   const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] = useState(false);
   const seenNotifIds = useRef<Set<string>>(new Set());
 
@@ -540,17 +540,20 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
         onDismiss={() => setShowCeraBottomNotif(false)}
       />
 
-      {/* TOP-RIGHT MAC OS TOAST BANNER NOTIFICATIONS (Suppressed during active meetings) */}
+      {/* TOP-RIGHT MAC OS TOAST BANNER NOTIFICATIONS */}
       {(() => {
-        const meetingAppIds = ['kickoff', 'prototype_review', 'presentation'];
-        const isInMeeting =
-          openAppIds.some((id) => meetingAppIds.includes(id)) ||
-          (activeAppId !== null && meetingAppIds.includes(activeAppId)) ||
-          ['kickoff', 'prototype_review', 'presentation'].includes(gameState.phase);
+        const meetingAppIds = ['kickoff', 'prototype_review', 'presentation', 'review'];
+        const isMeetingFocused = activeAppId !== null && meetingAppIds.includes(activeAppId);
+
+        // When a video meeting call window is actively focused on screen, hide non-call toasts so they don't distract.
+        // Incoming video calls (isCall) and all normal toasts outside focused meetings are ALWAYS shown!
+        const visibleNotifications = isMeetingFocused
+          ? bannerNotifications.filter((n) => n.isCall)
+          : bannerNotifications;
 
         return (
           <OSNotificationCenter
-            notifications={isInMeeting ? [] : bannerNotifications}
+            notifications={visibleNotifications}
             onDismiss={handleDismissBanner}
             onAction={handleActionNotification}
             onTimeoutCall={handleTimeoutCallNotification}
