@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, X, Send } from 'lucide-react';
+import { useGame } from '../../context/GameContext';
 
 interface AIDirectorWidgetProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ export const AIDirectorWidget: React.FC<AIDirectorWidgetProps> = ({
   onClose,
   onSelectApp,
 }) => {
+  const { addSignal } = useGame();
   const [messages, setMessages] = useState([
     {
       sender: 'AI Director',
@@ -34,6 +36,8 @@ export const AIDirectorWidget: React.FC<AIDirectorWidgetProps> = ({
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim()) return;
+
+    addSignal('communication', 'Consulted AI Director Assistant for executive advice', 3);
 
     setMessages((prev) => [
       ...prev,
