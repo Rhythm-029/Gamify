@@ -156,6 +156,16 @@ export interface GameState {
   deliveredMails: ScheduledMail[];
   deliveredSlackMessages: ScheduledSlackMsg[];
   pendingNotifications: PendingNotification[];
+  // Persisted player DM threads — survives Slack app close/reopen
+  slackPlayerThreads: Record<string, Array<{
+    id: string;
+    role: 'player' | 'char';
+    senderId: string;
+    senderName: string;
+    senderAvatar: string;
+    content: string;
+    timestamp: string;
+  }>>;
 }
 
 // ── Initial state ─────────────────────────────────────────────────────────────
@@ -202,6 +212,7 @@ const INITIAL_GAME_STATE: GameState = {
   deliveredMails: [],
   deliveredSlackMessages: [],
   pendingNotifications: [],
+  slackPlayerThreads: {},
 };
 
 // ── Context ───────────────────────────────────────────────────────────────────
@@ -224,6 +235,7 @@ interface GameContextValue {
   dismissNotification: (id: string) => void;
   markMailRead: (id: string) => void;
   markSlackRead: (channelId: string) => void;
+  addPlayerSlackMsg: (channelId: string, msg: GameState['slackPlayerThreads'][string][number]) => void;
   clock: InGameClock;
 }
 
@@ -299,258 +311,198 @@ function makeNotif(id: string, app: string, title: string, body: string, opts?: 
 const TITAN_EVENTS: FrontendEvent[] = [
 
   // ── Day 1 · 09:00 — Desktop visible, game begins ──────────────────────────
-  // Player gets ~12 seconds to orient on the desktop before anything arrives.
+  // Player gets 15 seconds to see the desktop before anything arrives.
 
-  // 0:12 — Aarav welcome Slack
+  // 0:15 — Aarav welcome Slack (orientation)
   {
     event_id: 'aarav_welcome_slack',
-    fireAtMs: 12_000,
+    fireAtMs: 15_000,
     channel: 'slack',
     build: () => makeSlack(
       'aarav_welcome_slack', 'aarav', 'dm-aarav', 'Aarav Kapoor',
-      `Morning! Hope you survived the kickoff meeting.
+      `Morning. Quick orientation before you dive in.
 
-A quick heads up on how to get started:
+Check your email first — Daniel sent the project brief.
 
-Check your email inbox first. Daniel sent over the initial project brief with the scope list.
+Your main workspace is the Ideate and Impact Studio, the purple icon in your dock. That is where you set requirements, configure connectors, and trigger the prototype build.
 
-Your main workspace here is the Ideate and Impact Studio. It is the purple app icon in your dock. That is where you will define the solution scope, configure your system connectors, and trigger the prototype build when ready.
-
-Daniel is lead dev on this, so he is waiting on your scope decisions before he can write the backend integration code.
-
-Good luck with everything! Let me know if you hit any roadblocks.`,
+Daniel is waiting on your scope decisions before he can proceed with the backend. Prototype review is Day 7.`,
       'Day 1 · 09:02',
     ),
   },
-
-  // 0:14 — Notification for Aarav welcome
   {
     event_id: 'notify_aarav_welcome',
-    fireAtMs: 14_000,
+    fireAtMs: 17_000,
     channel: 'notification',
-    build: () => makeNotif('notif_aarav_welcome', 'Slack', 'Aarav Kapoor', 'Morning! Quick orientation before you dive in...', { subtitle: 'Direct Message' }),
+    build: () => makeNotif('notif_aarav_welcome', 'Slack', 'Aarav Kapoor', 'Morning — quick orientation before you dive in.', { subtitle: 'Direct Message' }),
   },
 
-  // 0:30 — Daniel's project brief mail
+  // 0:40 — Daniel's project brief mail
   {
     event_id: 'daniel_brief_mail',
-    fireAtMs: 30_000,
+    fireAtMs: 40_000,
     channel: 'mail',
     build: () => makeMail(
       'daniel_brief_mail', 'daniel',
       'Project Titan — Transformation Brief and Requirements List',
       `Hi,
 
-I am Lead Developer for Project Titan. I will be building out the HR portal implementation based on what we agree on for the transformation strategy.
+I am Lead Developer for Project Titan. I will build the HR portal implementation based on the transformation strategy we agree on.
 
-Below is the initial draft requirement list for sprint 1. Please review these in the Ideate and Impact Studio so we can lock in the tech scope.
+Below is the initial draft requirement list for sprint 1. Please review and confirm scope in the Ideate and Impact Studio.
 
 APPROVED FEATURE SCOPE (DRAFT)
 
 1. Enterprise Single Sign-On (SSO / OIDC)
-Mandatory corporate identity authentication. Marcus brought this up as top priority during kickoff.
+Mandatory corporate identity authentication. Marcus flagged this as top priority at kickoff.
 
 2. Employee Dashboard
-Central portal dashboard displaying key metrics and quick links for employees.
+Central portal landing page with key metrics and quick links.
 
 3. Employee Directory
-Searchable team directory across company divisions.
+Searchable team directory across all divisions.
 
 4. Leave Management and Requests
-Self-service leave logging. Plant staff need a fast workflow under 3 clicks.
+Self-service leave logging. Plant staff need a fast workflow — under 3 clicks.
 
 5. Shift Attendance and Clock-in
-Terminal clock-in for factory floors. Needs SSO configured first.
+Terminal-based clock-in for factory floors. Requires SSO first.
 
 6. Manager Approval Workflow
 One-click approval interface for team leads and managers.
 
 7. Role-Based Access Control (RBAC)
-Permission hierarchy separating regular staff, managers, and HR admins.
+Permission tiers separating regular staff, managers, and HR admins.
 
 8. Payroll Integration (SAP Workday)
-API integration for payroll processing. I have the Workday connector ready, but you need to activate it in the studio canvas for me to wire it up.
+API integration for payroll processing. I have the Workday connector ready — activate it in the studio canvas for me to wire it up.
 
 9. Document Upload
-Not in the initial brief, but Emma noted staff currently email attachments for leave requests. Let me know if we are including this.
+Not in the initial brief, but Emma flagged it. Staff currently email attachments manually. Let me know if it is in scope.
 
 NEXT STEPS:
-Please open the Ideate and Impact Studio from your dock, set the connectors and scope status, and hit Launch and Build Prototype once you are ready.
+Open the Ideate and Impact Studio, configure connectors and requirements, and click Launch and Build Prototype when ready.
 
-Prototype review is set for Day 7.
+Prototype review is Day 7. Do not miss it.
 
-Best,
 Daniel Brooks
 Lead Developer`,
-      'Official requirements brief. Action needed in Ideate & Impact Studio.',
+      'Official requirements brief. Action required in Ideate & Impact Studio.',
       'High', 1, '09:05',
       { name: 'Project_Titan_Scope_v1.pdf', size: '1.8 MB', type: 'pdf' }
     ),
   },
-
-  // 0:32 — Notification for Daniel's brief mail
   {
     event_id: 'notify_daniel_brief_mail',
-    fireAtMs: 32_000,
+    fireAtMs: 42_000,
     channel: 'notification',
-    build: () => makeNotif('notif_daniel_brief_mail', 'Mail', 'Daniel Brooks', 'Project Titan — Official Brief (Read First)', { subtitle: 'High Priority · Attachment included' }),
+    build: () => makeNotif('notif_daniel_brief_mail', 'Mail', 'Daniel Brooks', 'Project Titan — Official Brief (Action Required)', { subtitle: 'High Priority · Attachment' }),
   },
 
-  // 1:00 — Emma survey mail
+  // 1:10 — Emma survey mail (hidden requirement drop)
   {
     event_id: 'emma_survey_mail',
-    fireAtMs: 60_000,
+    fireAtMs: 70_000,
     channel: 'mail',
     build: () => makeMail(
       'emma_survey_mail', 'emma',
-      'HR Survey Findings — Plant Floor Requirements',
+      'HR Survey — Plant Floor Findings',
       `Hi,
 
-Here are the key notes from the survey I ran with plant floor supervisors last week:
+Here are the key notes from the plant floor supervisor survey I ran last week:
 
-1. Nearly 70% of staff do not know where to submit leave requests in the current system.
-2. Approvals currently take more than two working days because managers handle them manually.
-3. Night shift employees share computer terminals and run into login locks easily. Keep auth simple.
-4. Supervisors mentioned that staff regularly email medical certificates and paper forms as attachments. Having a document upload feature in the portal would save hours of manual admin.
+1. Nearly 70% of staff cannot find where to submit leave requests in the current system.
+2. Manager approvals currently take 2+ working days because they are handled manually via email.
+3. Night shift employees share terminals and run into login lockouts. Keep auth straightforward.
+4. Supervisors mentioned staff regularly email medical certificates and ID documents. A document upload feature in the portal would eliminate that entirely.
 
 I think document upload should be in scope for phase 1, but check with Daniel on dev bandwidth.
 
 Emma Carter
 HR Transformation Lead`,
-      'Survey results from plant employees regarding leave and document upload.',
+      'Survey results — plant employees raising document upload and leave flow issues.',
       'High', 1, '09:14',
     ),
   },
-
-  // 1:02 — Notification for Emma's survey
   {
     event_id: 'notify_emma_survey_mail',
-    fireAtMs: 62_000,
+    fireAtMs: 72_000,
     channel: 'notification',
-    build: () => makeNotif('notif_emma_survey', 'Mail', 'Emma Carter', 'HR Survey Findings — Plant Floor Requirements', { subtitle: 'High Priority' }),
+    build: () => makeNotif('notif_emma_survey', 'Mail', 'Emma Carter', 'HR Survey — Plant Floor Findings', { subtitle: 'High Priority' }),
   },
 
-  // 1:20 — Daniel Slack DM
+  // 1:30 — Daniel Slack: scope blockers (creates first real decision pressure)
   {
     event_id: 'daniel_ideate_nudge_slack',
-    fireAtMs: 80_000,
+    fireAtMs: 90_000,
     channel: 'slack',
     build: () => makeSlack(
       'daniel_ideate_nudge_slack', 'daniel', 'dm-daniel', 'Daniel Brooks',
-      `Hey, just checking if you saw my email.
+      `Hey — saw you got the brief. Quick blockers I need resolved today:
 
-I am working on auth scaffolding right now, but I have two quick blockers on scope:
+Payroll integration (SAP Workday) — if it is in scope, the architecture is completely different from a standalone portal.
 
-First, Payroll integration (SAP Workday). If we include this, the architecture is completely different.
-Second, Document Upload. If it is in scope, I need to setup storage bucket parameters today.
+Document Upload — if yes, I need to provision storage buckets today.
 
-Could you open the Ideate and Impact Studio app, toggle the connectors, and set the scope status? Once you do that, I can get moving on the backend.`,
+Open the Ideate and Impact Studio, toggle the connectors, and update the requirement status. Once that is done I can proceed.`,
       'Day 1 · 09:22',
       'req_payroll'
     ),
   },
-
-  // 1:22 — Notification for Daniel's Slack
   {
     event_id: 'notify_daniel_slack_ideate',
-    fireAtMs: 82_000,
+    fireAtMs: 92_000,
     channel: 'notification',
-    build: () => makeNotif('notif_daniel_slack_ideate', 'Slack', 'Daniel Brooks', 'Blocked on two scope decisions. Need input.', { subtitle: 'Direct Message' }),
+    build: () => makeNotif('notif_daniel_slack_ideate', 'Slack', 'Daniel Brooks', 'Two scope blockers — need decisions today.', { subtitle: 'Direct Message' }),
   },
 
-  // 1:40 — Aarav guide Slack
-  {
-    event_id: 'aarav_ideate_impact_guide',
-    fireAtMs: 100_000,
-    channel: 'slack',
-    build: () => makeSlack(
-      'aarav_ideate_impact_guide', 'aarav', 'dm-aarav', 'Aarav Kapoor',
-      `Hey, just wanted to explain how the studio canvas works in case you haven't used it before:
-
-Connectors tab: Enable system integrations like SSO, Payroll, and InfoSec. Daniel's dev build reads these directly.
-
-Requirements tab: Your functional scope table. Mark items as In Scope or Deferred.
-
-Stakeholder Dialogues tab: Notes and direct feedback from Marcus, Emma, and Daniel.
-
-Launch and Build Prototype button: Triggers the build pipeline once you are happy with the setup.
-
-Start by enabling SSO first, since Marcus will definitely look for that in the review.`,
-      'Day 1 · 09:40',
-    ),
-  },
-
-  // 1:42 — Notification for Aarav's guide
-  {
-    event_id: 'notify_aarav_ideate_guide',
-    fireAtMs: 102_000,
-    channel: 'notification',
-    build: () => makeNotif('notif_aarav_ideate_guide', 'Slack', 'Aarav Kapoor', 'Overview of the Ideate and Impact Studio workflow', { subtitle: 'Direct Message' }),
-  },
-
-  // 1:55 — Calendar notification
+  // 1:55 — Calendar reminder: Prototype Review Day 7
   {
     event_id: 'prototype_review_calendar',
     fireAtMs: 115_000,
     channel: 'notification',
-    build: () => makeNotif('notif_calendar_review', 'Calendar', 'Calendar — Prototype Review added', 'Day 7 · 10:00 AM · Marcus, Daniel, Emma', { subtitle: 'Day 7 · 10:00 AM', onActionAppId: 'calendar' }),
+    build: () => makeNotif('notif_calendar_review', 'Calendar', 'Prototype Review — Day 7', '10:00 AM · Marcus, Daniel, Emma · Do not be late.', { subtitle: 'Day 7 · 10:00 AM', onActionAppId: 'calendar' }),
   },
 
   // ── Day 2 ─────────────────────────────────────────────────────────────────────
+  // Space for player to actually work in Ideate and Impact
 
-  // 2:00 — Marcus Teams notification
+  // 2:10 — Marcus DM: SSO and security check
   {
     event_id: 'marcus_day2_teams',
-    fireAtMs: 120_000,
+    fireAtMs: 130_000,
     channel: 'notification',
-    build: () => makeNotif('notif_marcus_day2', 'Teams', 'Marcus Reed (CTO)', "Make sure Enterprise SSO is active in your scope setup. Security comes first.", { subtitle: 'Direct Message · Day 2' }),
+    build: () => makeNotif('notif_marcus_day2', 'Teams', 'Marcus Reed (CTO)', 'Make sure Enterprise SSO is active in your scope setup. Security is not optional.', { subtitle: 'Direct Message · Day 2' }),
   },
 
-  // 2:20 — Daniel Day 2 standup Slack
+  // 2:30 — Daniel Day 2 standup (conditional on no prototype yet)
   {
     event_id: 'daniel_day2_morning_slack',
-    fireAtMs: 140_000,
+    fireAtMs: 150_000,
     channel: 'slack',
+    condition: (s) => !s.prototypeBuilt,
     build: () => makeSlack(
       'daniel_day2_morning_slack', 'daniel', 'dm-daniel', 'Daniel Brooks',
-      `Morning update on dev progress:
+      `Morning. Quick update from my side:
 
-Auth scaffolding is underway and leave management DB schema is drafted.
+Auth scaffolding is underway. Leave management DB schema is drafted.
 
-Still waiting on your scope decisions for Payroll integration and Document Upload in the studio so I can finish the API configuration.
-
-Once you confirm scope in Ideate and Impact, I can proceed with the rest.`,
+Still waiting on scope decisions for Payroll and Document Upload in the studio. Once confirmed I can close the API layer and prep the demo build.`,
       'Day 2 · 09:00',
       'req_payroll'
     ),
   },
-
-  // 2:22 — Notification for Daniel's day 2 slack
   {
     event_id: 'notify_daniel_day2_slack',
-    fireAtMs: 142_000,
+    fireAtMs: 152_000,
     channel: 'notification',
-    build: () => makeNotif('notif_daniel_day2', 'Slack', 'Daniel Brooks', 'Morning dev status update', { subtitle: 'Direct Message' }),
-  },
-
-  // 2:40 — Aarav day 2 Slack
-  {
-    event_id: 'aarav_day2_nudge',
-    fireAtMs: 160_000,
-    channel: 'slack',
     condition: (s) => !s.prototypeBuilt,
-    build: () => makeSlack(
-      'aarav_day2_nudge', 'aarav', 'dm-aarav', 'Aarav Kapoor',
-      `Checking in. Don't worry too much about perfection right now. The goal is to make clear trade-offs, get connectors enabled, and give Daniel a clear scope to build against.
-
-Prototype review is coming up on Day 7, so try to lock in the initial scope soon.`,
-      'Day 2 · 09:45',
-    ),
+    build: () => makeNotif('notif_daniel_day2', 'Slack', 'Daniel Brooks', 'Day 2 dev update — still waiting on scope.', { subtitle: 'Direct Message' }),
   },
 
   // ── Day 3 ─────────────────────────────────────────────────────────────────────
 
-  // 3:00 — Marcus steering mail
+  // 3:00 — Marcus steering mail (RBAC, audit, SSO)
   {
     event_id: 'marcus_steering_mail',
     fireAtMs: 180_000,
@@ -560,22 +512,20 @@ Prototype review is coming up on Day 7, so try to lock in the initial scope soon
       'Project Titan — Architecture Priorities',
       `Hi,
 
-A few key priorities for the prototype review next week:
+A few non-negotiable priorities for the prototype review:
 
-1. SSO identity provider integration must be fully configured. Plant workers cannot be stuck with separate passwords.
-2. Role-based access control must be strictly defined so staff only see appropriate data.
-3. Audit logging for employee records is mandatory for compliance.
+1. SSO identity provider integration must be fully configured. Plant workers cannot be stuck with separate credentials.
+2. Role-based access control must be strictly defined. Staff, managers, and HR admins must have separate permission scopes.
+3. Audit logging for employee records is mandatory for compliance. Every access needs a full trail.
 
-We will review the functional prototype live on Day 7.
+I will check all three during the Day 7 review.
 
 Marcus Reed
 Chief Technology Officer`,
-      'CTO priorities regarding SSO, RBAC, and audit logging.',
+      'Architecture priorities — SSO, RBAC, audit logging. All mandatory.',
       'High', 3, '09:30',
     ),
   },
-
-  // 3:02 — Notification for Marcus steering mail
   {
     event_id: 'notify_marcus_steering',
     fireAtMs: 182_000,
@@ -583,89 +533,76 @@ Chief Technology Officer`,
     build: () => makeNotif('notif_marcus_steering', 'Mail', 'Marcus Reed (CTO)', 'Project Titan — Architecture Priorities', { subtitle: 'High Priority' }),
   },
 
-  // 3:20 — Board presentation calendar notification
-  {
-    event_id: 'board_presentation_calendar',
-    fireAtMs: 200_000,
-    channel: 'notification',
-    build: () => makeNotif('notif_calendar_board', 'Calendar', 'Calendar — Board Presentation added', 'Day 14 · 09:00 AM · All stakeholders', { subtitle: 'Day 14 · 09:00 AM' }),
-  },
-
   // ── Day 4 ─────────────────────────────────────────────────────────────────────
 
-  // 4:00 — Emma mail on Document Upload
+  // 4:00 — Emma follow-up on Document Upload
   {
     event_id: 'emma_document_upload_mail',
     fireAtMs: 240_000,
     channel: 'mail',
     build: () => makeMail(
       'emma_document_upload_mail', 'emma',
-      'Scope Note — Document Upload Requirement',
+      'Scope Note — Document Upload',
       `Hi,
 
-Following up on site conversations with HR leads this week. Staff currently have to email medical certificates and ID verification documents manually.
+Following up from the site visit. Staff are currently emailing medical certificates and ID verification documents because the portal does not support attachments.
 
-If we do not support document attachments in the portal, employees will still rely on heavy email threads.
-
-If bandwidth allows, I strongly recommend marking Document Upload as In Scope for phase 1.
+If we do not include document upload in phase 1, this manual process stays. I strongly recommend marking it as in scope.
 
 Let me know what you decide.
 
 Emma Carter`,
-      'Document upload requirement feedback from plant supervisors.',
+      'Document upload — plant staff still emailing attachments manually.',
       'High', 4, '10:00',
     ),
   },
-
-  // 4:02 — Notification
   {
     event_id: 'notify_emma_doc_upload',
     fireAtMs: 242_000,
     channel: 'notification',
-    build: () => makeNotif('notif_emma_doc_upload', 'Mail', 'Emma Carter', 'Scope Note — Document Upload Requirement', { subtitle: 'High Priority' }),
+    build: () => makeNotif('notif_emma_doc_upload', 'Mail', 'Emma Carter', 'Scope Note — Document Upload', { subtitle: 'High Priority' }),
   },
 
-  // 4:15 — Daniel Slack on Document Upload
+  // 4:20 — Daniel Slack: Document Upload decision needed
   {
     event_id: 'daniel_doc_upload_slack',
-    fireAtMs: 255_000,
+    fireAtMs: 260_000,
     channel: 'slack',
     build: () => makeSlack(
       'daniel_doc_upload_slack', 'daniel', 'dm-daniel', 'Daniel Brooks',
-      `Saw Emma's note regarding document uploads.
+      `Saw Emma's message on document uploads.
 
-If we include document upload in scope, I will provision storage buckets and upload microservice handling today. If we defer it, I will spend the extra time refining leave approvals.
+If it is in scope, I will provision storage buckets and the upload microservice today. If it is deferred, I will put that time into refining the leave approval flow.
 
-Update the item status in the Requirements tab of Ideate and Impact whenever you are ready so I know which path to take.`,
+Update the requirement status in Ideate and Impact when you are ready.`,
       'Day 4 · 11:00',
       'req_document_upload'
     ),
   },
-
-  // 4:17 — Notification for Daniel's doc slack
   {
     event_id: 'notify_daniel_doc_slack',
-    fireAtMs: 257_000,
+    fireAtMs: 262_000,
     channel: 'notification',
-    build: () => makeNotif('notif_daniel_doc_slack', 'Slack', 'Daniel Brooks', 'Architecture decision needed on Document Upload.', { subtitle: 'Direct Message' }),
+    build: () => makeNotif('notif_daniel_doc_slack', 'Slack', 'Daniel Brooks', 'Need a call on Document Upload today.', { subtitle: 'Direct Message' }),
   },
 
-  // 4:35 — Emma in #project-titan channel
+  // 4:45 — Emma in #project-titan (hidden discovery: UX spec)
   {
     event_id: 'emma_plant_hr_slack',
-    fireAtMs: 275_000,
+    fireAtMs: 285_000,
     channel: 'slack',
     build: () => makeSlack(
       'emma_plant_hr_slack', 'emma', 'ch-titan', '#project-titan',
-      `Quick note from the site visit: current leave requests take 8 clicks from login to completion. We should aim for 3 clicks or less so plant workers can submit leave quickly during shifts.`,
+      `Site visit note: current leave submission takes 8 clicks from login to confirmation. Plant workers have said anything above 3 steps during a shift break is too slow. Keep it under 3 clicks.`,
       'Day 4 · 14:30',
       'req_document_upload'
     ),
   },
 
   // ── Day 5 ─────────────────────────────────────────────────────────────────────
+  // PRESSURE BUILDS — prototype review is 2 days away
 
-  // 5:00 — Daniel Slack: Payroll reminder
+  // 5:00 — Daniel: Payroll reminder + implicit urgency
   {
     event_id: 'daniel_payroll_reminder_slack',
     fireAtMs: 300_000,
@@ -673,29 +610,27 @@ Update the item status in the Requirements tab of Ideate and Impact whenever you
     condition: (s) => !s.prototypeBuilt,
     build: () => makeSlack(
       'daniel_payroll_reminder_slack', 'daniel', 'dm-daniel', 'Daniel Brooks',
-      `Quick reminder on Payroll integration. If you want Workday sync in the prototype demo, make sure the Workday connector is enabled in Ideate and Impact. Otherwise I will set up a static fallback.`,
+      `Two days to review. If Workday payroll sync is in scope, the connector needs to be enabled in Ideate and Impact today — not tomorrow. Otherwise I will configure a static fallback and move on.`,
       'Day 5 · 09:00',
     ),
   },
-
-  // 5:02 — Notification for Daniel's payroll reminder
   {
     event_id: 'notify_daniel_payroll_reminder',
     fireAtMs: 302_000,
     channel: 'notification',
     condition: (s) => !s.prototypeBuilt,
-    build: () => makeNotif('notif_daniel_payroll_reminder', 'Slack', 'Daniel Brooks', 'Pending decision on Payroll connector', { subtitle: 'Direct Message' }),
+    build: () => makeNotif('notif_daniel_payroll_reminder', 'Slack', 'Daniel Brooks', 'Two days to review — payroll decision needed today.', { subtitle: 'Direct Message' }),
   },
 
-  // 5:20 — Marcus Teams ping
+  // 5:20 — Marcus Teams: RBAC check
   {
     event_id: 'marcus_rbac_reminder',
     fireAtMs: 320_000,
     channel: 'notification',
-    build: () => makeNotif('notif_marcus_rbac', 'Teams', 'Marcus Reed (CTO)', "Checking in to ensure role-based permissions are set up before the prototype demo.", { subtitle: 'Direct Message' }),
+    build: () => makeNotif('notif_marcus_rbac', 'Teams', 'Marcus Reed (CTO)', 'Checking in — role-based permissions need to be set before the review. This is a compliance item.', { subtitle: 'Direct Message' }),
   },
 
-  // 5:40 — Aarav day 5 check-in
+  // 5:40 — Aarav day 5 check-in (if no prototype yet, creates real tension)
   {
     event_id: 'aarav_day5_checkin',
     fireAtMs: 340_000,
@@ -703,42 +638,41 @@ Update the item status in the Requirements tab of Ideate and Impact whenever you
     condition: (s) => !s.prototypeBuilt,
     build: () => makeSlack(
       'aarav_day5_checkin', 'aarav', 'dm-aarav', 'Aarav Kapoor',
-      `We are getting close to Day 7. Make sure your core connectors are active and hit the Launch and Build Prototype button when you feel the scope is ready. Daniel will take care of the rest.`,
+      `We are 2 days out. Your core connectors need to be active and scope locked before you build. Once you click Launch and Build Prototype, Daniel handles the rest. Do not leave it to Day 6 morning.`,
       'Day 5 · 10:00',
     ),
   },
 
   // ── Day 6 ─────────────────────────────────────────────────────────────────────
+  // FINAL DAY before review — escalating urgency
 
-  // 6:00 — Emma mail: progress check
+  // 6:00 — Emma: status check mail
   {
     event_id: 'emma_client_pressure_mail',
     fireAtMs: 360_000,
     channel: 'mail',
     build: () => makeMail(
       'emma_client_pressure_mail', 'emma',
-      'Status Check — Portal Prototype Progress',
+      'Status Check — Prototype Progress',
       `Hi,
 
-The HR stakeholders asked for a quick update on prototype progress. They are eager to see the leave request flow in action during tomorrow's review meeting.
+The HR stakeholders on Titan's side asked me for a status update. They are particularly eager to see the leave request flow and directory in the demo tomorrow.
 
-Let me know if everything is on track for tomorrow morning.
+Is the prototype on track for the 10:00 AM review?
 
 Emma`,
-      'HR stakeholders asking for a prototype status update.',
+      'Titan client team asking for a status update before tomorrow\'s review.',
       'Normal', 6, '09:00',
     ),
   },
-
-  // 6:05 — Notification for Emma mail
   {
     event_id: 'notify_emma_pressure_mail',
-    fireAtMs: 365_000,
+    fireAtMs: 362_000,
     channel: 'notification',
-    build: () => makeNotif('notif_emma_pressure', 'Mail', 'Emma Carter', 'Status Check — Portal Prototype Progress', { subtitle: 'Normal Priority' }),
+    build: () => makeNotif('notif_emma_pressure', 'Mail', 'Emma Carter', 'Status check — client team wants a prototype update.', { subtitle: 'Normal Priority' }),
   },
 
-  // 6:15 — Daniel Day 6 Slack
+  // 6:15 — Daniel urgent slack (if prototype not built — creates real stress)
   {
     event_id: 'daniel_day6_urgent_slack',
     fireAtMs: 375_000,
@@ -746,20 +680,18 @@ Emma`,
     condition: (s) => !s.prototypeBuilt,
     build: () => makeSlack(
       'daniel_day6_urgent_slack', 'daniel', 'dm-daniel', 'Daniel Brooks',
-      `Prototype review is tomorrow at 10:00 AM. Dev build items are ready on my side.
+      `Review is tomorrow at 10:00 AM. Dev build is ready on my side.
 
-As soon as you click Launch and Build Prototype in Ideate and Impact, the build will finalize so we have a live demo ready for Marcus and Emma.`,
+You need to click Launch and Build Prototype in Ideate and Impact today. The build takes a few minutes to finalize and we need a live demo ready for Marcus.`,
       'Day 6 · 09:30',
     ),
   },
-
-  // 6:17 — Notification for Daniel day 6 urgent
   {
     event_id: 'notify_daniel_day6_urgent',
     fireAtMs: 377_000,
     channel: 'notification',
     condition: (s) => !s.prototypeBuilt,
-    build: () => makeNotif('notif_daniel_day6', 'Slack', 'Daniel Brooks', 'Dev side is ready — launch prototype build when ready.', { subtitle: 'Direct Message' }),
+    build: () => makeNotif('notif_daniel_day6', 'Slack', 'Daniel Brooks', 'Review tomorrow — launch build today or we have nothing to show.', { subtitle: 'Direct Message' }),
   },
 
   // 6:30 — Aarav final push
@@ -770,23 +702,32 @@ As soon as you click Launch and Build Prototype in Ideate and Impact, the build 
     condition: (s) => !s.prototypeBuilt,
     build: () => makeSlack(
       'aarav_day6_pressure', 'aarav', 'dm-aarav', 'Aarav Kapoor',
-      `Tomorrow is the Day 7 review. Open Ideate and Impact, review your connectors and requirements, and launch the prototype build when ready. You've got this!`,
-      'Day 6 · 16:12',
+      `Review is tomorrow morning. Open Ideate and Impact now, review your connectors and requirements one final time, and launch the prototype build. You have the information — act on it.`,
+      'Day 6 · 16:00',
     ),
   },
 
-  // 6:50 — Marcus 10-minute warning
+  // 6:50 — Signal penalty if no prototype by Day 6 end
+  {
+    event_id: 'no_prototype_day6_penalty',
+    fireAtMs: 410_000,
+    channel: 'signal',
+    condition: (s) => !s.prototypeBuilt,
+    build: () => ({ dimension: 'delivery_execution', description: 'Prototype not built by Day 6 end', value: -20 }),
+  },
+
+  // 6:52 — Marcus 10-minute warning
   {
     event_id: 'marcus_prototype_10min_warning',
-    fireAtMs: 410_000,
+    fireAtMs: 412_000,
     channel: 'notification',
     condition: (s) => s.meetingState.kickoffDone,
-    build: () => makeNotif('notif_marcus_10min', 'Teams', 'Marcus Reed (CTO)', "Prototype review starts in 10 minutes. See you in the meeting.", { subtitle: 'Direct Message · Day 7' }),
+    build: () => makeNotif('notif_marcus_10min', 'Teams', 'Marcus Reed (CTO)', 'Prototype review in 10 minutes. See you there.', { subtitle: 'Direct Message · Day 7' }),
   },
 
   // ── Day 7 — PROTOTYPE REVIEW ──────────────────────────────────────────────────
 
-  // 7:00 — Prototype Review Teams call notification
+  // 7:00 — Prototype Review call (joins the meeting app)
   {
     event_id: 'prototype_review_notification',
     fireAtMs: 420_000,
@@ -795,7 +736,7 @@ As soon as you click Launch and Build Prototype in Ideate and Impact, the build 
     build: () => makeNotif(
       'notif-prototype-review', 'Teams',
       'Microsoft Teams · Prototype Review',
-      'Marcus, Daniel, and Emma are in the meeting room. Join now.',
+      'Marcus, Daniel, and Emma are in the meeting. Join now.',
       { subtitle: 'Day 7 · 10:00 AM', actionText: 'Join Review', onActionAppId: 'review', isCall: true }
     ),
   },
@@ -806,7 +747,7 @@ As soon as you click Launch and Build Prototype in Ideate and Impact, the build 
     fireAtMs: 470_000,
     channel: 'notification',
     condition: (s) => !s.meetingState.prototypeReviewDone,
-    build: () => makeNotif('notif_review_missed', 'Teams', 'Daniel Brooks', "We started the meeting without you. We will need to regroup before the board presentation.", { subtitle: 'Direct Message' }),
+    build: () => makeNotif('notif_review_missed', 'Teams', 'Daniel Brooks', 'We started without you. We will need to regroup before the board presentation.', { subtitle: 'Direct Message' }),
   },
 
   {
@@ -1281,6 +1222,24 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }));
   }, []);
 
+  const addPlayerSlackMsg = useCallback(
+    (channelId: string, msg: GameState['slackPlayerThreads'][string][number]) => {
+      setState((prev) => {
+        const existing = prev.slackPlayerThreads[channelId] ?? [];
+        // Deduplicate by id
+        if (existing.some((m) => m.id === msg.id)) return prev;
+        return {
+          ...prev,
+          slackPlayerThreads: {
+            ...prev.slackPlayerThreads,
+            [channelId]: [...existing, msg],
+          },
+        };
+      });
+    },
+    []
+  );
+
   // ── Internal signal helper ─────────────────────────────────────────────────
 
   function addSignalInternal(description: string, dimension: string, _key: string, value: number) {
@@ -1297,7 +1256,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setKickoffDone, submitMOM, setPrototypeReviewDone, setPresentationDone,
     markStakeholderContacted, addSignal,
     pauseGame, resumeGame, setSessionId,
-    dismissNotification, markMailRead, markSlackRead,
+    dismissNotification, markMailRead, markSlackRead, addPlayerSlackMsg,
     clock: state.clock,
   };
 
