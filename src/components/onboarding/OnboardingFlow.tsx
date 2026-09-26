@@ -882,5 +882,8 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
           )}
         </AnimatePresence>
       </div>
+    );
+  }
+
   return null;
 };
