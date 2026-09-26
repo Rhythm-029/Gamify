@@ -15,7 +15,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Hash, Send, MessageSquare, ChevronDown } from 'lucide-react';
 import { useGame, API_BASE } from '../../context/GameContext';
-import type { ScheduledSlackMsg } from '../../context/GameContext';
+import type { ScheduledSlackMsg, GameState } from '../../context/GameContext';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -200,15 +200,12 @@ const SEED_MESSAGES: LocalMsg[] = [
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export const SlackOSApp: React.FC = () => {
-  const { state, discoverRequirement, markStakeholderContacted, addSignal, markSlackRead } = useGame();
+  const { state, discoverRequirement, markStakeholderContacted, addSignal, markSlackRead, addPlayerSlackMsg } = useGame();
 
   const [activeId, setActiveId] = useState('ch-titan');
-  const [playerMessages, setPlayerMessages] = useState<(LocalMsg & { channelId: string })[]>([]);
-  const [charReplies, setCharReplies] = useState<(LocalMsg & { channelId: string })[]>([]);
   const [msgText, setMsgText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const replyIndexRef = useRef<Record<string, number>>({});
 
   // Delivered Slack messages from GameContext scheduler
   const scheduledMessages = state.deliveredSlackMessages;
@@ -227,7 +224,7 @@ export const SlackOSApp: React.FC = () => {
   const unread = unreadByChannel();
   const totalUnread = Object.values(unread).reduce((a, b) => a + b, 0);
 
-  // Build messages for active channel
+  // Build messages for active channel — merges seeds, scheduled, and context-persisted player threads
   const allMessagesForChannel = useCallback((channelId: string): LocalMsg[] => {
     const scheduled: LocalMsg[] = scheduledMessages
       .filter((m) => m.channel === channelId)
@@ -236,11 +233,13 @@ export const SlackOSApp: React.FC = () => {
         senderAvatar: m.senderAvatar, content: m.content, timestamp: m.timestamp,
       }));
     const seeds = SEED_MESSAGES.filter((m) => m.channelId === channelId);
-    const player = playerMessages.filter((m) => m.channelId === channelId);
-    const replies = charReplies.filter((m) => m.channelId === channelId);
-    // Merge: seeds first, then scheduled (by arrival), then player/replies interleaved
-    return [...seeds, ...scheduled, ...player, ...replies];
-  }, [scheduledMessages, playerMessages, charReplies]);
+    // Player + char replies come from context (persisted across close/reopen)
+    const persisted = (state.slackPlayerThreads[channelId] ?? []).map((m) => ({
+      id: m.id, senderId: m.senderId, senderName: m.senderName,
+      senderAvatar: m.senderAvatar, content: m.content, timestamp: m.timestamp,
+    }));
+    return [...seeds, ...scheduled, ...persisted];
+  }, [scheduledMessages, state.slackPlayerThreads]);
 
   const activeChannel = CHANNEL_DEFS.find((c) => c.id === activeId) ?? CHANNEL_DEFS[1];
   const activeMessages = allMessagesForChannel(activeId);
@@ -275,9 +274,9 @@ export const SlackOSApp: React.FC = () => {
     if (!msgText.trim()) return;
 
     const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const userMsg: LocalMsg & { channelId: string } = {
+    const playerMsg: GameState['slackPlayerThreads'][string][number] = {
       id: `m-${Date.now()}`,
-      channelId: activeId,
+      role: 'player',
       senderId: 'player',
       senderName: 'You',
       senderAvatar: '',
@@ -285,7 +284,7 @@ export const SlackOSApp: React.FC = () => {
       timestamp: now,
     };
 
-    setPlayerMessages((prev) => [...prev, userMsg]);
+    addPlayerSlackMsg(activeId, playerMsg);
     setMsgText('');
 
     // Score communication quality: DMs to characters = more valuable engagement
@@ -321,41 +320,32 @@ export const SlackOSApp: React.FC = () => {
         .then((res) => res.json())
         .then((data) => {
           setIsTyping(false);
-          const reply = data.replyText || data.text || getCharReply(char, sentText);
-
-          setCharReplies((prev) => [
-            ...prev,
-            {
-              id: `m-${Date.now()}-r`,
-              channelId: currentChannelId,
-              senderId: charId,
-              senderName: char.name,
-              senderAvatar: char.avatar,
-              content: reply,
-              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            },
-          ]);
+          const replyText = data.replyText || data.text || getCharReply(char, sentText);
+          addPlayerSlackMsg(currentChannelId, {
+            id: `m-${Date.now()}-r`,
+            role: 'char',
+            senderId: charId,
+            senderName: char.name,
+            senderAvatar: char.avatar,
+            content: replyText,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          });
         })
         .catch((err) => {
           console.warn('[SLACK AI] Backend call failed, using fallback:', err);
           setIsTyping(false);
-          const reply = getCharReply(char, sentText);
-
-          setCharReplies((prev) => [
-            ...prev,
-            {
-              id: `m-${Date.now()}-r`,
-              channelId: currentChannelId,
-              senderId: charId,
-              senderName: char.name,
-              senderAvatar: char.avatar,
-              content: reply,
-              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            },
-          ]);
+          addPlayerSlackMsg(currentChannelId, {
+            id: `m-${Date.now()}-r`,
+            role: 'char',
+            senderId: charId,
+            senderName: char.name,
+            senderAvatar: char.avatar,
+            content: getCharReply(char, sentText),
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          });
         });
     }
-  }, [msgText, activeId, activeChannel, state.sessionId, addSignal, markStakeholderContacted]);
+  }, [msgText, activeId, activeChannel, state.sessionId, addSignal, markStakeholderContacted, addPlayerSlackMsg]);
 
   return (
     <div className="flex-1 flex flex-row overflow-hidden bg-[#1a1d21] text-white font-sans text-xs">
