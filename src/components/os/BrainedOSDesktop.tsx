@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useSyncExternalStore } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Folder, Code2, Bell } from 'lucide-react';
+import { Folder, Code2, Bell, Sparkles } from 'lucide-react';
 import { BrainedMenuBar } from './BrainedMenuBar';
 import { BrainedDock } from './BrainedDock';
 import { BrainedWindow } from './BrainedWindow';
@@ -22,6 +22,7 @@ import type { OSNotification } from '../../data/brainedOSData';
 // Simulation Apps
 import { TitanKickoffMeeting } from '../apps/TitanKickoffMeeting';
 import { CeraIDEApp } from '../apps/CeraIDEApp';
+import { IdeateImpactApp } from '../apps/IdeateImpactApp';
 import { CeraBottomNotification } from '../apps/cera/CeraBottomNotification';
 import { subscribeCeraState, getCeraState, setExternalNotifCallback, setActiveAppChecker, setExternalOpenBrowserCallback } from '../apps/cera/ceraStore';
 import { SlackOSApp } from '../apps/SlackOSApp';
@@ -240,9 +241,9 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
   const handleOpenApp = (appId: string | null) => {
     if (appId && !openAppIds.includes(appId)) {
       setOpenAppIds((prev) => [...prev, appId]);
-      // Score: opening Cera IDE for the first time
-      if (appId === 'cera' || appId === 'ide') {
-        addSignal('delivery_management', 'Opened Cera AI IDE workspace', 5);
+      // Score: opening Ideate & Impact Studio for the first time
+      if (appId === 'ideate') {
+        addSignal('delivery_management', 'Opened Ideate & Impact Studio workspace', 5);
       }
     }
     setActiveAppId(appId);
@@ -326,6 +327,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
     kickoff: { title: 'Microsoft Teams — Project Titan Kickoff', icon: <span>📹</span> },
     review: { title: 'Microsoft Teams — Prototype Review · Day 7', icon: <span>📹</span> },
     presentation: { title: 'Microsoft Teams — Final Presentation · Day 14', icon: <span>📹</span> },
+    ideate: { title: 'Ideate & Impact Studio — Digital Transformer Hub', icon: <Sparkles className="w-4 h-4 text-indigo-400" /> },
     ide: { title: 'Cera IDE — AI Software Engineer Workspace', icon: <Code2 className="w-4 h-4 text-pink-400" /> },
     cera: { title: 'Cera IDE — AI Software Engineer Workspace', icon: <Code2 className="w-4 h-4 text-pink-400" /> },
     dashboard: { title: 'Brained OS — Executive Dashboard', icon: <BrainedLogoIcon className="w-4 h-4" /> },
@@ -418,23 +420,23 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
         {/* DESKTOP WIDGETS (CLOCK & STREAK) */}
         <DesktopWidgets osState={osState} onOpenApp={handleOpenApp} />
 
-        {/* DESKTOP SHORTCUT ICONS (Project Code Folder shortcut ONLY visible after prompt submission in Cera IDE) */}
+        {/* DESKTOP SHORTCUT ICONS (Project Code Folder shortcut) */}
         {gameState.prototypeBuilt && (
-          <div className="absolute top-72 left-8 z-10 flex flex-col space-y-5 pointer-events-auto">
+          <div className="absolute top-72 left-8 z-10 flex flex-col space-y-4 pointer-events-auto">
             <motion.button
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
               onClick={() => handleOpenApp('finder')}
               className="flex flex-col items-center p-2 rounded-2xl hover:bg-white/10 group transition-all cursor-pointer w-24"
-              title="Open Project Titan Source Code Folder"
+              title="Open Project Titan Solution Folder"
             >
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 via-sky-600 to-blue-600 p-3 shadow-2xl border border-white/25 group-hover:scale-105 transition-transform flex items-center justify-center relative">
                 <Folder className="w-8 h-8 text-white" />
                 <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-slate-900" />
               </div>
               <span className="text-[11px] font-bold text-white mt-1 text-center drop-shadow-lg group-hover:text-amber-300">
-                Project Code
+                Project Solution
               </span>
             </motion.button>
           </div>
@@ -473,6 +475,8 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
               {activeAppId === 'review' && <PrototypeReviewMeeting />}
               {/* FINAL PRESENTATION — Day 14 */}
               {activeAppId === 'presentation' && <FinalPresentationMeeting />}
+              {/* IDEATE & IMPACT — Digital Transformer Hub */}
+              {activeAppId === 'ideate' && <IdeateImpactApp />}
               {/* CERA IDE — AI Software Engineer Workspace */}
               {(activeAppId === 'ide' || activeAppId === 'cera') && <CeraIDEApp />}
               {activeAppId === 'inbox' && <AppleMailApp />}
