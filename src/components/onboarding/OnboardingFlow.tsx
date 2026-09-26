@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ArrowRight, CheckCircle2, Mail, Key, RefreshCw, AlertCircle, Check, 
+  ArrowRight, CheckCircle2, RefreshCw, 
   Globe, User, Briefcase, Building, Volume2, VolumeX
 } from 'lucide-react';
 import { INITIAL_PLAYER_STATE } from '../../data/simulationData';
@@ -20,12 +20,6 @@ interface OnboardingFlowProps {
     email?: string;
     linkedin?: string;
   }) => void;
-}
-
-declare global {
-  interface Window {
-    google?: any;
-  }
 }
 
 const STAKEHOLDERS = [
@@ -97,15 +91,8 @@ const STAKEHOLDERS = [
 ];
 
 export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
-  // Authentication & Form States (Step 1, Step 2, Step 3)
-  const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [emailInput, setEmailInput] = useState('');
-  const [otpInput, setOtpInput] = useState('');
-  const [isOtpSent, setIsOtpSent] = useState(false);
-  const [isAuthLoading, setIsAuthLoading] = useState(false);
-  const [authVerified, setAuthVerified] = useState(false);
-  const [authEmail, setAuthEmail] = useState('');
-  const [authMessage, setAuthMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  // Form States (Step 1: Profile & Identity, Step 2: Clearance & Launch)
+  const [step, setStep] = useState<1 | 2>(1);
 
   const [linkedinUrl, setLinkedinUrl] = useState('');
   const [isScraping, setIsScraping] = useState(false);
@@ -138,151 +125,6 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
 
   // Stakes state
   const [stakesPhase, setStakesPhase] = useState<1 | 2>(1);
-
-  // Dynamically load Google GSI OAuth Script on Step 1
-  useEffect(() => {
-    if (step === 1 && !cinematicActive) {
-      const scriptId = 'google-gsi-script';
-      if (!document.getElementById(scriptId)) {
-        const script = document.createElement('script');
-        script.id = scriptId;
-        script.src = 'https://accounts.google.com/gsi/client';
-        script.async = true;
-        script.defer = true;
-        script.onload = () => initGoogleSignIn();
-        document.body.appendChild(script);
-      } else {
-        setTimeout(initGoogleSignIn, 100);
-      }
-    }
-  }, [step, cinematicActive]);
-
-  const initGoogleSignIn = () => {
-    if (window.google?.accounts?.id) {
-      window.google.accounts.id.initialize({
-        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '579864871614-o90r392pup5745p87u54opq0skf52q19.apps.googleusercontent.com',
-        callback: handleGoogleCredentialResponse,
-      });
-
-      const btnContainer = document.getElementById('googleSignInContainer');
-      if (btnContainer) {
-        window.google.accounts.id.renderButton(btnContainer, {
-          theme: 'outline',
-          size: 'large',
-          width: 320,
-          text: 'signin_with',
-          shape: 'pill',
-        });
-      }
-    }
-  };
-
-  const handleGoogleCredentialResponse = async (response: any) => {
-    if (!response.credential) return;
-
-    setIsAuthLoading(true);
-    setAuthMessage(null);
-
-    try {
-      const res = await fetch('http://localhost:4000/api/auth/google', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ credential: response.credential }),
-      });
-      const data = await res.json();
-
-      if (data.success && data.user) {
-        setAuthVerified(true);
-        setAuthEmail(data.user.email);
-        setProfileForm((prev) => ({
-          ...prev,
-          name: prev.name || data.user.name || '',
-          avatar: prev.avatar || data.user.picture || '',
-        }));
-        setAuthMessage({ type: 'success', text: `Signed in as ${data.user.email}` });
-      } else {
-        setAuthMessage({ type: 'error', text: data.error || 'Google Sign-In failed.' });
-      }
-    } catch (err) {
-      setAuthVerified(true);
-      setAuthEmail('user@gmail.com');
-      setAuthMessage({ type: 'success', text: 'Google Account authenticated successfully.' });
-    } finally {
-      setIsAuthLoading(false);
-    }
-  };
-
-  // MAIL OTP HANDLERS
-  const handleSendOtp = async () => {
-    if (!emailInput.trim() || !emailInput.includes('@')) {
-      setAuthMessage({ type: 'error', text: 'Please enter a valid email address.' });
-      return;
-    }
-
-    setIsAuthLoading(true);
-    setAuthMessage(null);
-
-    try {
-      const res = await fetch('http://localhost:4000/api/auth/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailInput.trim() }),
-      });
-      const data = await res.json();
-
-      if (data.success) {
-        setIsOtpSent(true);
-        setAuthMessage({ 
-          type: 'success', 
-          text: `Verification code sent to ${emailInput}.${data.devOtpHint ? ` (DEV CODE: ${data.devOtpHint})` : ''}` 
-        });
-      } else {
-        setAuthMessage({ type: 'error', text: data.error || 'Failed to send verification code.' });
-      }
-    } catch (err) {
-      setIsOtpSent(true);
-      setAuthMessage({ type: 'success', text: `Verification code sent to ${emailInput} (Dev code: 123456).` });
-    } finally {
-      setIsAuthLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    if (!otpInput.trim() || otpInput.trim().length < 4) {
-      setAuthMessage({ type: 'error', text: 'Please enter the verification code.' });
-      return;
-    }
-
-    setIsAuthLoading(true);
-    setAuthMessage(null);
-
-    try {
-      const res = await fetch('http://localhost:4000/api/auth/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailInput.trim(), code: otpInput.trim() }),
-      });
-      const data = await res.json();
-
-      if (data.success && data.user) {
-        setAuthVerified(true);
-        setAuthEmail(data.user.email);
-        setProfileForm((prev) => ({
-          ...prev,
-          name: prev.name || data.user.name || emailInput.split('@')[0],
-        }));
-        setAuthMessage({ type: 'success', text: `Email verified: ${data.user.email}` });
-      } else {
-        setAuthMessage({ type: 'error', text: data.error || 'Invalid code.' });
-      }
-    } catch (err) {
-      setAuthVerified(true);
-      setAuthEmail(emailInput);
-      setAuthMessage({ type: 'success', text: 'Email verified successfully.' });
-    } finally {
-      setIsAuthLoading(false);
-    }
-  };
 
   // LINKEDIN LINK SCRAPER & AUTO-FILL
   const handleScrapeLinkedin = async (targetUrl?: string) => {
@@ -334,18 +176,12 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
 
   const handleNextStep = () => {
     if (step === 1) {
-      if (!authVerified) {
-        setAuthMessage({ type: 'error', text: 'Please complete authentication to continue.' });
-        return;
-      }
-      setStep(2);
-    } else if (step === 2) {
       if (!profileForm.name.trim()) {
         setProfileForm((prev) => ({ ...prev, name: 'Executive Leader' }));
       }
-      setStep(3);
+      setStep(2);
     } else {
-      // Step 3 clicks Launch Brained OS Workspace: Initiate Cinematic!
+      // Step 2 clicks Launch Brained OS Workspace: Initiate Cinematic!
       sound.startAmbientMusic();
       sound.playSystemClearance();
       setCinematicActive(true);
@@ -671,7 +507,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
           company: profileForm.company || 'Enterprise Systems',
           industry: 'Technology & Enterprise',
           avatar: profileForm.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(profileForm.name || 'User')}`,
-          email: authEmail || emailInput,
+          email: profileForm.name ? `${profileForm.name.toLowerCase().replace(/\s+/g, '.')}@brained.os` : 'executive@brained.os',
           linkedin: linkedinUrl
         });
       }, 4000);
@@ -728,9 +564,9 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
         {/* Top Progression Timeline Indicator */}
         {cinematicScreen === 'office' && (
           <div className="absolute top-20 left-1/2 -translate-x-1/2 hidden md:flex items-center justify-center space-x-2 bg-slate-950/60 backdrop-blur-xl border border-white/10 px-5 py-2 rounded-full z-45 select-none max-w-5xl shadow-xl">
-            {STAKEHOLDERS.map((st, idx) => {
-              const isActive = idx === activeStakeholderIndex;
-              const isCompleted = idx < activeStakeholderIndex;
+            {STAKEHOLDERS.slice(0, 4).map((st, idx) => {
+              const isActive = idx === activeStakeholderIndex || (activeStakeholderIndex === 4 && idx === 0);
+              const isCompleted = idx < activeStakeholderIndex && !isActive;
               return (
                 <React.Fragment key={`${st.name}-${idx}`}>
                   <div className="flex items-center space-x-1.5">
@@ -757,7 +593,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
                       {st.name}
                     </span>
                   </div>
-                  {idx < STAKEHOLDERS.length - 1 && (
+                  {idx < 3 && (
                     <div className={`h-[1px] w-4 sm:w-6 transition-all duration-500 ${
                       idx < activeStakeholderIndex ? 'bg-indigo-500/70' : 'bg-white/5'
                     }`} />
@@ -1062,7 +898,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
 
           {/* Progress Indicators */}
           <div className="flex space-x-1.5">
-            {[1, 2, 3].map((s) => (
+            {[1, 2].map((s) => (
               <div
                 key={s}
                 className={`h-2 rounded-full transition-all duration-300 ${
@@ -1073,93 +909,8 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
           </div>
         </div>
 
-        {/* STEP 1: UNIFIED AUTHENTICATION */}
+        {/* STEP 1: LINKEDIN SYNC & EXECUTIVE DETAILS FORM */}
         {step === 1 && (
-          <motion.div initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} className="space-y-5 text-left">
-            <div>
-              <h2 className="text-xl font-extrabold text-white tracking-tight">Authentication Required</h2>
-              <p className="text-xs text-slate-400 mt-1">Sign in with your Google Account or verify via Email OTP.</p>
-            </div>
-
-            {/* 1. Google OAuth Official Button */}
-            <div className="p-5 bg-slate-900/80 border border-white/10 rounded-2xl flex flex-col items-center justify-center shadow-inner">
-              <div id="googleSignInContainer" className="flex justify-center w-full min-h-11 items-center" />
-            </div>
-
-            {/* 2. Divider */}
-            <div className="flex items-center space-x-3 text-xs text-slate-500">
-              <div className="flex-1 h-px bg-white/10" />
-              <span className="font-mono text-[10px] uppercase font-bold tracking-wider text-slate-400">or continue with email</span>
-              <div className="flex-1 h-px bg-white/10" />
-            </div>
-
-            {/* 3. Mail OTP Form */}
-            <div className="space-y-3 bg-slate-900/60 p-4 rounded-2xl border border-white/10">
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Email Address</label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-                  <input
-                    type="email"
-                    value={emailInput}
-                    onChange={(e) => setEmailInput(e.target.value)}
-                    placeholder="name@company.com"
-                    disabled={authVerified}
-                    className="w-full bg-slate-950/80 border border-white/10 rounded-xl pl-9 pr-24 py-2.5 text-xs text-white focus:outline-none focus:border-pink-500 font-mono"
-                  />
-                  <button
-                    onClick={handleSendOtp}
-                    disabled={isAuthLoading || authVerified || !emailInput.trim()}
-                    className="absolute right-1.5 top-1.5 px-3 py-1.5 rounded-lg bg-pink-600 hover:bg-pink-500 text-white font-bold text-[11px] transition-all cursor-pointer disabled:opacity-50"
-                  >
-                    {isAuthLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : isOtpSent ? 'Resend' : 'Send'}
-                  </button>
-                </div>
-              </div>
-
-              {/* 6-Digit OTP Code Input */}
-              {isOtpSent && (
-                <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="space-y-2 pt-2">
-                  <label className="block text-xs font-semibold text-slate-300">Enter 6-Digit Code</label>
-                  <div className="flex space-x-2">
-                    <div className="relative flex-1">
-                      <Key className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-                      <input
-                        type="text"
-                        maxLength={6}
-                        value={otpInput}
-                        onChange={(e) => setOtpInput(e.target.value)}
-                        placeholder="e.g. 849201"
-                        disabled={authVerified}
-                        className="w-full bg-slate-950/80 border border-pink-500/40 rounded-xl pl-9 pr-4 py-2.5 text-sm text-pink-300 font-mono tracking-widest focus:outline-none"
-                      />
-                    </div>
-                    <button
-                      onClick={handleVerifyOtp}
-                      disabled={isAuthLoading || authVerified}
-                      className="px-5 py-2.5 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all cursor-pointer"
-                    >
-                      {authVerified ? <Check className="w-4 h-4 text-white" /> : 'Verify Code'}
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </div>
-
-            {/* Notification Banner */}
-            {authMessage && (
-              <div className={`p-3 rounded-xl text-xs flex items-center space-x-2 ${
-                authMessage.type === 'success' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-red-500/20 text-red-300 border border-red-500/30'
-              }`}>
-                {authMessage.type === 'success' ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
-                <span className="font-medium">{authMessage.text}</span>
-              </div>
-            )}
-          </motion.div>
-        )}
-
-        {/* STEP 2: LINKEDIN SYNC & EXECUTIVE DETAILS FORM */}
-        {step === 2 && (
           <motion.div initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} className="space-y-5 text-left">
             <div>
               <h2 className="text-xl font-extrabold text-white tracking-tight flex items-center space-x-2">
@@ -1271,8 +1022,8 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
           </motion.div>
         )}
 
-        {/* STEP 3: EXECUTIVE CLEARANCE & WORKSPACE HANDOFF */}
-        {step === 3 && (
+        {/* STEP 2: EXECUTIVE CLEARANCE & WORKSPACE HANDOFF */}
+        {step === 2 && (
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-4 space-y-5">
             <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-pink-500 via-purple-600 to-indigo-600 p-3 mx-auto shadow-2xl shadow-pink-500/30 border border-white/20 flex items-center justify-center animate-pulse">
               <BrainedLogoIcon className="w-full h-full object-contain filter drop-shadow-xl" />
@@ -1301,8 +1052,8 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
               />
               <div className="text-xs truncate">
                 <div className="font-bold text-white truncate">{profileForm.name || 'Executive Member'}</div>
-                <div className="text-[11px] text-sky-300 truncate">{profileForm.role} {profileForm.company ? `• ${profileForm.company}` : ''}</div>
-                <div className="text-[10px] text-pink-400 font-mono truncate">{authEmail || 'Authenticated SSO Account'}</div>
+                <div className="text-[11px] text-sky-300 truncate">{profileForm.role || 'Software Engineer'} {profileForm.company ? `• ${profileForm.company}` : ''}</div>
+                <div className="text-[10px] text-pink-400 font-mono truncate">{profileForm.name ? `${profileForm.name.toLowerCase().replace(/\s+/g, '.')}@brained.os` : 'executive@brained.os'}</div>
               </div>
             </div>
           </motion.div>
@@ -1312,7 +1063,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
         <div className="mt-8 pt-4 border-t border-white/10 flex items-center justify-between">
           {step > 1 ? (
             <button
-              onClick={() => setStep((step - 1) as any)}
+              onClick={() => setStep(1)}
               className="text-xs text-slate-400 hover:text-white transition-colors cursor-pointer"
             >
               ← Back
@@ -1323,7 +1074,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
             onClick={handleNextStep}
             className="px-6 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white font-bold text-xs transition-all shadow-lg shadow-pink-500/25 flex items-center space-x-2 cursor-pointer hover:scale-105"
           >
-            <span>{step === 3 ? 'Launch Brained OS Workspace' : 'Continue'}</span>
+            <span>{step === 2 ? 'Launch Brained OS Workspace' : 'Continue'}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
