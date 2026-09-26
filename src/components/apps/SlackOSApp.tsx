@@ -38,49 +38,121 @@ interface SlackChannel {
 
 // ── Characters (no Sophia, no Olivia) ────────────────────────────────────────
 
-const CHARS: Record<string, { name: string; avatar: string; fallbacks: string[] }> = {
+// ── Context-aware reply engine ────────────────────────────────────────────────
+// Each character has keyword groups mapped to specific replies.
+// Falls back to general replies when no keyword matches.
+
+interface CharDef {
+  name: string;
+  avatar: string;
+  replies: Array<{ keywords: string[]; response: string }>;
+  fallbacks: string[];
+}
+
+function getCharReply(char: CharDef, playerMsg: string): string {
+  const msg = playerMsg.toLowerCase();
+  for (const entry of char.replies) {
+    if (entry.keywords.some(kw => msg.includes(kw))) {
+      return entry.response;
+    }
+  }
+  // Fallback: rotate through general replies
+  return char.fallbacks[Math.floor(Math.random() * char.fallbacks.length)];
+}
+
+const CHARS: Record<string, CharDef> = {
   daniel: {
     name: 'Daniel Brooks',
     avatar: '/character/Daniel_Brooks/DanielDP.png',
+    replies: [
+      { keywords: ['sso', 'single sign', 'auth', 'login', 'authentication'], response: "SSO is confirmed as the auth method. We're using the client's existing identity provider — do not reinvent this. Cera should generate the login scaffold, you just need to confirm the provider config." },
+      { keywords: ['rbac', 'role', 'permission', 'access control', 'admin'], response: "Three roles: Employee, Manager, HR Admin. Employees see their own data. Managers see their team. HR Admin sees everything with audit trail. That is the access model — build to it." },
+      { keywords: ['payroll', 'salary', 'vendor', 'api', 'integration'], response: "Payroll integration is in scope but flagged — the vendor API docs are outdated. Scope it as an integration layer for Phase 1, with the actual sync to be confirmed with the vendor before go-live." },
+      { keywords: ['audit', 'log', 'trail', 'gdpr', 'compliance'], response: "Audit logging is a compliance requirement. Every access to employee personal data needs a full trail. This is non-negotiable for the board sign-off — get it in the prototype." },
+      { keywords: ['document', 'upload', 'attach', 'file', 'emma'], response: "Emma's document upload request came in post-kickoff. It is a reasonable ask, but adding it to Phase 1 is a timeline risk. My recommendation: propose it for Phase 2 and document the decision." },
+      { keywords: ['timeline', 'deadline', 'week', 'day', 'when', 'days left'], response: "Two weeks firm. Board review is locked. If scope is threatening the timeline, flag it now — not at Day 12." },
+      { keywords: ['mom', 'minutes', 'notes', 'documentation', 'kickoff notes'], response: "MOM should already be on file for the kickoff. If it is not submitted yet, do it now — it is a process requirement and the board will ask." },
+      { keywords: ['prototype', 'build', 'cera', 'ide', 'features'], response: "Core features need to be in: SSO, dashboard, directory, leave, attendance, RBAC. Hidden requirements that were surfaced should also be included. Do not build what was not agreed." },
+      { keywords: ['marcus', 'cto', 'board', 'presentation', 'review'], response: "Marcus wants to see the architecture documented — not just screens. Roles, auth, data flow. Prepare for that before the board review." },
+      { keywords: ['hi', 'hello', 'hey', 'morning', 'afternoon'], response: "Hi. What do you need?" },
+      { keywords: ['thanks', 'thank you', 'great', 'good', 'perfect'], response: "Noted. Keep moving." },
+      { keywords: ['stuck', 'blocked', 'issue', 'problem', 'help', 'confused'], response: "Tell me the specific blocker. Vague problems get vague answers. What exactly is stuck?" },
+    ],
     fallbacks: [
-      "Let me check on that and get back to you quickly.",
-      "Good question. Keep this moving — prototype review is Day 7.",
-      "I'll flag this with Marcus if needed. What's your current blockers?",
-      "Timeline's tight. Prioritise the core workflow first, then layer in the additions.",
-      "Thanks for the update. Keep communicating — no surprises at the review.",
+      "Timeline is tight. What specifically do you need?",
+      "Good question — but loop in the right person if it's out of my lane.",
+      "Keep it documented. Undocumented decisions become undocumented risks.",
+      "What is the decision you're trying to make? That will help me give you a useful answer.",
     ],
   },
+
   emma: {
     name: 'Emma Carter',
     avatar: '/character/Emma_Carter/EmmaDP.png',
+    replies: [
+      { keywords: ['leave', 'absence', 'holiday', 'vacation', 'time off'], response: "Leave management is one of the biggest pain points for Titan employees right now. Requests go through email and sometimes just get lost. The new system needs to make this dead simple — request, approval, done." },
+      { keywords: ['attendance', 'clock', 'shift', 'check in', 'timesheet'], response: "Attendance tracking is tricky at Titan because some employees are on shift work. They need to be able to log in from shared terminals on the plant floor, not just from desks. Keep the UX very simple." },
+      { keywords: ['directory', 'org chart', 'find', 'contact', 'employee search'], response: "The directory is actually one of the first things I'd show the board. Employees genuinely cannot find each other right now. If the search is good and the profiles are clean, that will make a real impression." },
+      { keywords: ['document', 'upload', 'attach', 'certificate', 'medical', 'id proof'], response: "Yes — this came from the plant HR leads. Employees need to be able to attach things like ID proof and medical certificates directly when filing requests. It came up post-kickoff but it is a real need." },
+      { keywords: ['adoption', 'training', 'simple', 'easy', 'ux', 'user'], response: "Employee adoption is everything. If the tool is not intuitive on first use, people will not switch. The plant floor workers especially are not comfortable with complex interfaces." },
+      { keywords: ['dashboard', 'home', 'landing', 'welcome'], response: "The dashboard should feel like a home page — what matters to that employee on that day. Leave balance, upcoming requests, maybe a quick directory search. Keep it personal." },
+      { keywords: ['payroll', 'salary', 'pay slip', 'payslip'], response: "Payslips being separate from the main HR portal is one of Titan's biggest frustrations. I know Daniel is handling the payroll vendor side — but from the employee perspective, having it in one place matters a lot." },
+      { keywords: ['hi', 'hello', 'hey', 'morning', 'afternoon'], response: "Hi! What can I help with on the HR side?" },
+      { keywords: ['thanks', 'thank you', 'great', 'helpful'], response: "Of course! Let me know if you need anything else from the employee experience angle." },
+      { keywords: ['phase 2', 'later', 'defer', 'future', 'next phase'], response: "I understand if something needs to wait for Phase 2 — I just want to make sure it is logged so it does not get forgotten. Employees are counting on this." },
+    ],
     fallbacks: [
-      "Happy to help clarify the HR side of things!",
-      "The employees at Titan are used to simple tools — keep the UX straightforward.",
-      "From an HR process perspective, the approval flow should be seamless for managers.",
-      "Some employees access HR from shared terminals on the plant floor — keep it simple.",
-      "Employee adoption is the main concern. If it's not easy, they won't use it.",
+      "From the employee perspective, what matters most is simplicity and reliability.",
+      "The HR leads at the plant facilities have strong opinions on this — happy to share more context.",
+      "I'd run that by Daniel for the technical side — I can only speak to what the employees need.",
+      "Good question, actually. Let me think about how that would land with the HR teams.",
     ],
   },
+
   marcus: {
     name: 'Marcus Reed',
     avatar: '/character/marcus_reed/MarcusDP.png',
+    replies: [
+      { keywords: ['sso', 'auth', 'authentication', 'login', 'identity'], response: "SSO is non-negotiable. If the identity provider is not confirmed, nothing else matters. What provider is Titan using?" },
+      { keywords: ['rbac', 'role', 'permission', 'access'], response: "RBAC is a compliance requirement, not a feature. Get the access model documented — employee, manager, HR admin. Three tiers minimum." },
+      { keywords: ['audit', 'log', 'compliance', 'gdpr', 'security'], response: "Audit trail is mandatory. Every access to personal data needs to be logged. This is the board's first question and you need a clean answer." },
+      { keywords: ['architecture', 'stack', 'tech', 'cera', 'build'], response: "Show me the architecture, not just the screens. Auth, roles, data model, integrations. That is what I need to sign off." },
+      { keywords: ['timeline', 'deadline', 'week', 'days'], response: "Two weeks. I confirmed this at kickoff. If you are asking about the timeline, something is already going wrong." },
+      { keywords: ['payroll', 'vendor', 'integration', 'api'], response: "Payroll integration strategy is yours to manage. The vendor API constraint is a risk — document it and set expectations with the client now." },
+      { keywords: ['prototype', 'demo', 'board', 'presentation'], response: "The board wants to click through something real. Not wireframes, not slides. A working prototype with the core flows." },
+      { keywords: ['hi', 'hello', 'hey', 'morning'], response: "What do you need?" },
+      { keywords: ['thanks', 'thank', 'great', 'good'], response: "Keep moving." },
+      { keywords: ['scope', 'add', 'feature', 'extra', 'new requirement'], response: "What is the timeline impact? Scope changes need to go through me and Daniel before anything is committed." },
+    ],
     fallbacks: [
-      "Need more detail on the architecture. Document it.",
-      "That's acceptable. Keep it lean — we're solving a business problem, not building a platform.",
-      "Security review before production. Non-negotiable.",
-      "What's the access model? Don't assume everyone gets the same permissions.",
-      "Good. Don't over-engineer it.",
+      "Not enough detail. Give me specifics.",
+      "That is acceptable. Don't over-engineer it.",
+      "Security review before production. Not optional.",
+      "Document the decision. Whatever it is.",
     ],
   },
+
   aarav: {
     name: 'Aarav Kapoor',
     avatar: '/character/AaravDP.png',
+    replies: [
+      { keywords: ['mom', 'minutes', 'notes', 'document', 'kickoff'], response: "MOM is one of those things that feels admin but is actually strategy. If you have not filed it yet, do it now. What did you capture from the kickoff?" },
+      { keywords: ['stuck', 'confused', 'blocked', 'not sure', 'help'], response: "Good that you're flagging it. What specifically are you unsure about — the technical side, the stakeholder side, or the scope?" },
+      { keywords: ['emma', 'document upload', 'scope', 'phase 2', 'decline'], response: "Managing scope well is one of the clearest signals of consulting maturity. If the timeline cannot absorb it, say so clearly — but always offer a path forward. What is your plan?" },
+      { keywords: ['marcus', 'cto', 'intimidating', 'nervous', 'scared'], response: "Marcus is direct, not hostile. Give him specifics and he respects you for it. Vague answers are what frustrate him. What are you going to say?" },
+      { keywords: ['prototype', 'cera', 'ide', 'build', 'features'], response: "Before you run Cera, make sure you know what you are asking it to build. The requirements you have discovered so far — are they captured somewhere? Who have you talked to?" },
+      { keywords: ['requirement', 'discover', 'find', 'missing', 'hidden'], response: "Good consultants earn requirements — they are not handed them. Who have you spoken to that is not on the obvious stakeholder list?" },
+      { keywords: ['presentation', 'board', 'final', 'prepare', 'rehearse'], response: "The board wants the transformation story, not a feature list. Why did Titan need this, what did you build, what did you choose not to build, and what comes next. Can you answer those four?" },
+      { keywords: ['hi', 'hello', 'hey', 'morning'], response: "Good to hear from you. How is the engagement going so far?" },
+      { keywords: ['thanks', 'thank you', 'helpful', 'appreciate'], response: "Glad that helped. What is the next move?" },
+      { keywords: ['audit', 'rbac', 'security', 'compliance'], response: "Those are compliance gates — if they are not in the prototype, the board cannot sign off. Have you had the architecture conversation with Daniel yet?" },
+      { keywords: ['stakeholder', 'contact', 'reach out', 'who', 'client'], response: "Have you reached out to all four of them? Daniel, Emma, Marcus — and there is a fourth. Think about who is conspicuously quiet on this engagement." },
+    ],
     fallbacks: [
-      "You're doing well. Think about what the client actually needs — not what's technically elegant.",
-      "Prototype review is coming up — make sure you can explain the employee journey end-to-end.",
-      "Good consultants discover requirements, they don't wait to be handed them.",
-      "The hidden requirements are there for a reason. Keep exploring.",
-      "How's the documentation coming along? The MOM matters.",
+      "What does your gut say? That is usually a good starting point.",
+      "Who have you not spoken to yet on this engagement?",
+      "Good consultants don't wait. They ask the question, document the answer, and move.",
+      "The MOM — has it been filed? That is always my first question.",
     ],
   },
 };
@@ -249,8 +321,7 @@ export const SlackOSApp: React.FC = () => {
         .then((res) => res.json())
         .then((data) => {
           setIsTyping(false);
-          const reply = data.replyText || data.text || char.fallbacks[(replyIndexRef.current[charId] ?? 0) % char.fallbacks.length];
-          replyIndexRef.current[charId] = (replyIndexRef.current[charId] ?? 0) + 1;
+          const reply = data.replyText || data.text || getCharReply(char, sentText);
 
           setCharReplies((prev) => [
             ...prev,
@@ -268,9 +339,7 @@ export const SlackOSApp: React.FC = () => {
         .catch((err) => {
           console.warn('[SLACK AI] Backend call failed, using fallback:', err);
           setIsTyping(false);
-          const idx = replyIndexRef.current[charId] ?? 0;
-          const reply = char.fallbacks[idx % char.fallbacks.length];
-          replyIndexRef.current[charId] = idx + 1;
+          const reply = getCharReply(char, sentText);
 
           setCharReplies((prev) => [
             ...prev,
