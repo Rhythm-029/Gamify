@@ -43,10 +43,10 @@ export const ENV = {
 
   LLM_MODEL: process.env.LLM_MODEL || (() => {
     const key = process.env.GROK_API_KEY || process.env.GROQ_API_KEY || process.env.XAI_API_KEY || process.env.OPENAI_API_KEY || '';
-    if (key.startsWith('gsk_')) return 'openai/gpt-oss-20b';
+    if (key.startsWith('gsk_')) return 'openai/gpt-oss-120b';
     if (key.startsWith('xai-')) return 'grok-2-1212';
     if (key.startsWith('sk-')) return 'gpt-4o-mini';
-    return 'openai/gpt-oss-20b';
+    return 'openai/gpt-oss-120b';
   })(),
 
   // ── Whisper (transcription) ───────────────────────────────────────────────
