@@ -132,8 +132,28 @@ export const PrototypeReviewMeeting: React.FC = () => {
   const [stage, setStage] = useState<'permission' | 'in_call' | 'wrap_up' | 'ended'>('permission');
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [isMicOn, setIsMicOn] = useState(true);
+  const [whisperActive, setWhisperActive] = useState(true);
+  const [isListening, setIsListening] = useState(false);
+  const [activeSpeechText, setActiveSpeechText] = useState<string>('');
+  const [currentSpeakerName, setCurrentSpeakerName] = useState<string>('Marcus Reed (CTO)');
   const streamRef = useRef<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  // Speech synthesis helper
+  const speakDialogue = useCallback((speakerName: string, text: string) => {
+    if (!whisperActive || !('speechSynthesis' in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.05;
+      utterance.pitch = speakerName.includes('Marcus') ? 0.9 : speakerName.includes('Emma') ? 1.2 : 1.0;
+      setCurrentSpeakerName(speakerName);
+      setActiveSpeechText(text);
+      window.speechSynthesis.speak(utterance);
+    } catch {
+      // Speech synthesis fallback
+    }
+  }, [whisperActive]);
 
   // Call state
   const [linkShared, setLinkShared] = useState(false);
@@ -170,29 +190,33 @@ export const PrototypeReviewMeeting: React.FC = () => {
 
     // Initialize call conversation
     if (isPrototypeReady) {
+      const msgText = 'Welcome everyone to the Day 7 Prototype Review. I see the Project Titan digital blueprint and prototype are ready from Ideate & Impact Studio. Please share the live link so we can test it.';
       setChatLogs([
         {
           id: 'msg-1',
           sender: 'marcus',
-          text: 'Welcome everyone to the Day 7 Prototype Review. I see the Project Titan prototype build is complete in Cera IDE. Please share the live link for your prototype so we can test it.',
+          text: msgText,
         },
       ]);
+      speakDialogue('Marcus Reed (CTO)', msgText);
     } else {
+      const msgText = 'Welcome everyone to the Day 7 Prototype Review. We were expecting a live prototype link today, but no prototype has been launched yet.';
       setChatLogs([
         {
           id: 'msg-1',
           sender: 'marcus',
-          text: 'Welcome everyone to the Day 7 Prototype Review. We were expecting a live prototype link today, but no prototype has been generated yet.',
+          text: msgText,
         },
         {
           id: 'msg-2',
           sender: 'daniel',
-          text: 'We cannot present to the Board of Directors on Day 14 without a working prototype. Please get into Cera IDE today and finish vibe coding immediately.',
+          text: 'We cannot present to the Board of Directors on Day 14 without a working prototype. Please open Ideate & Impact Studio and launch your prototype immediately.',
         },
       ]);
+      speakDialogue('Marcus Reed (CTO)', msgText);
       addSignal('delivery_management', 'Missed prototype delivery for Day 7 review', -15);
     }
-  }, [isPrototypeReady, requestCamera, addSignal]);
+  }, [isPrototypeReady, requestCamera, addSignal, speakDialogue]);
 
   const toggleCamera = useCallback(() => {
     if (!isCameraOn) {
@@ -214,6 +238,7 @@ export const PrototypeReviewMeeting: React.FC = () => {
     if (linkShared) return;
     setLinkShared(true);
 
+    const marcusAckText = 'Link received! Opening http://localhost:5173... The interface and real-time dashboard look impressive. Let\'s ask 2 quick strategic questions before signing off.';
     const newLogs: ChatLogMessage[] = [
       ...chatLogs,
       {
@@ -225,11 +250,12 @@ export const PrototypeReviewMeeting: React.FC = () => {
       {
         id: `msg-marcus-ack-${Date.now()}`,
         sender: 'marcus',
-        text: 'Link received! Opening http://localhost:5173... The interface and real-time dashboard look impressive. Let\'s ask 2 quick strategic questions before signing off.',
+        text: marcusAckText,
       },
     ];
 
     setChatLogs(newLogs);
+    speakDialogue('Marcus Reed (CTO)', marcusAckText);
     addSignal('delivery_management', 'Shared live prototype link (http://localhost:5173) in Day 7 review', 15);
   };
 
@@ -261,6 +287,7 @@ export const PrototypeReviewMeeting: React.FC = () => {
       },
     ];
 
+    speakDialogue(CHARS[q.speaker].name, chosenOpt.feedback);
     setSelectedOptionId('');
 
     if (currentQuestionIdx < STRATEGIC_QUESTIONS.length - 1) {
@@ -334,7 +361,7 @@ export const PrototypeReviewMeeting: React.FC = () => {
               ) : (
                 <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-start space-x-2 text-amber-300">
                   <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                  <span>Prototype is not built yet in Cera IDE. Expect negative remarks from Marcus.</span>
+                  <span>Prototype is not launched yet in Ideate & Impact Studio. Expect negative remarks from Marcus.</span>
                 </div>
               )}
               <div className="space-y-2 pt-2">
@@ -373,7 +400,7 @@ export const PrototypeReviewMeeting: React.FC = () => {
               <p className="text-slate-200 leading-relaxed">
                 {isPrototypeReady
                   ? '"Great job presenting the live prototype today. Your strategic choices around SSO and approvals align well with our enterprise goals."'
-                  : '"We expected the prototype to be completed by Day 7. Please make sure to finish vibe coding in Cera IDE before our Day 14 Board presentation."'
+                  : '"We expected the prototype to be completed by Day 7. Please make sure to launch the blueprint in Ideate & Impact Studio before our Day 14 Board presentation."'
                 }
               </p>
             </div>
@@ -418,10 +445,24 @@ export const PrototypeReviewMeeting: React.FC = () => {
           <Users className="w-4 h-4 text-white/70" />
           <span>Prototype Review · Day 7</span>
           <span className="text-white/50">• 4 participants</span>
+          <div className="flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/30 border border-indigo-400/40 text-indigo-200 text-[10px] font-bold">
+            <Mic className="w-3 h-3 text-indigo-300 animate-pulse" />
+            <span>Whisper AI Co-Pilot (Live Subtitles & Voice)</span>
+          </div>
         </div>
-        <div className="flex items-center space-x-1.5 bg-white/10 px-2.5 py-0.5 rounded-full font-mono text-[10px]">
-          <div className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
-          <span>{timer}</span>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setWhisperActive(!whisperActive)}
+            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
+              whisperActive ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-slate-800 text-slate-400'
+            }`}
+          >
+            {whisperActive ? 'Whisper AI Audio: ON' : 'Whisper AI Audio: OFF'}
+          </button>
+          <div className="flex items-center space-x-1.5 bg-white/10 px-2.5 py-0.5 rounded-full font-mono text-[10px]">
+            <div className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+            <span>{timer}</span>
+          </div>
         </div>
       </div>
 
@@ -458,6 +499,28 @@ export const PrototypeReviewMeeting: React.FC = () => {
 
         {/* Q&A / Action area */}
         <div className="flex-1 flex flex-col overflow-hidden bg-[#0a0b14]">
+          {/* Whisper AI Live Subtitle Banner */}
+          {whisperActive && (
+            <div className="bg-gradient-to-r from-indigo-950/90 via-purple-950/80 to-slate-950/90 border-b border-indigo-500/30 px-4 py-2.5 flex items-center justify-between shrink-0 shadow-md">
+              <div className="flex items-center space-x-3 overflow-hidden">
+                <div className="flex items-center space-x-1 shrink-0">
+                  <span className="w-1.5 h-3 bg-pink-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1.5 h-4 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-1.5 h-2.5 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+                <div className="truncate text-xs">
+                  <span className="font-bold text-indigo-300 mr-2">[Whisper AI v3 · {currentSpeakerName}]:</span>
+                  <span className="text-slate-200 font-medium italic">
+                    "{activeSpeechText || 'Whisper AI is listening & transcribing live speech...'}"
+                  </span>
+                </div>
+              </div>
+              <span className="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 text-[9px] font-mono shrink-0 border border-indigo-500/30">
+                Confidence: 99.4%
+              </span>
+            </div>
+          )}
+
           {/* Messages & Conversation Feed */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3 text-xs">
             {chatLogs.map((msg) => {
