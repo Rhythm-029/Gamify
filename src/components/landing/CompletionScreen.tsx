@@ -639,6 +639,32 @@ Playing the role of a Senior Digital Transformation Consultant, I led an enterpr
         )}
 
       </div>
+
+      {/* ── WHATSAPP COMMUNITY BANNER (below all tabs, always visible) ── */}
+      <div className="border-t border-white/10 bg-[#060810]">
+        <div className="max-w-5xl mx-auto px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-center sm:text-left">
+            <div className="flex items-center gap-2 mb-1 justify-center sm:justify-start">
+              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              <span className="text-xs font-bold text-green-400 uppercase tracking-widest">Community</span>
+            </div>
+            <h3 className="text-white font-bold text-base">Join Digital Transformers</h3>
+            <p className="text-white/40 text-xs mt-0.5">Connect with consultants who've completed Project Titan. Share experiences, discuss decisions, compare scores.</p>
+          </div>
+          <a
+            href="https://chat.whatsapp.com/REPLACE_WITH_YOUR_LINK"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 flex items-center gap-2.5 px-6 py-3 rounded-xl font-bold text-sm text-white border border-green-500/40 bg-green-500/10 hover:bg-green-500/20 transition-all"
+          >
+            <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+              <path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.116 1.523 5.847L.057 23.858a.5.5 0 00.615.614l6.01-1.466A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.882a9.868 9.868 0 01-5.022-1.366l-.36-.214-3.726.909.931-3.624-.236-.374A9.898 9.898 0 012.118 12C2.118 6.537 6.537 2.118 12 2.118S21.882 6.537 21.882 12 17.463 21.882 12 21.882z"/>
+            </svg>
+            Join the WhatsApp Community
+          </a>
+        </div>
+      </div>
     </div>
   );
 };
