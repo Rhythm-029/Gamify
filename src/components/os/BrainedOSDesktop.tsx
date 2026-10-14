@@ -476,7 +476,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
               {/* FINAL PRESENTATION — Day 14 */}
               {activeAppId === 'presentation' && <FinalPresentationMeeting />}
               {/* IDEATE & IMPACT — Digital Transformer Hub */}
-              {activeAppId === 'ideate' && <IdeateImpactApp />}
+              {activeAppId === 'ideate' && <IdeateImpactApp onLaunchApp={handleOpenApp} />}
               {/* CERA IDE — AI Software Engineer Workspace */}
               {(activeAppId === 'ide' || activeAppId === 'cera') && <CeraIDEApp />}
               {activeAppId === 'inbox' && <AppleMailApp />}
