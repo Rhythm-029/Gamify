@@ -5,10 +5,19 @@ import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
 import { FinalReportScreen } from './components/apps/FinalReportScreen';
 import { CompletionScreen } from './components/landing/CompletionScreen';
 import { GameProvider, useGame } from './context/GameContext';
+import { ChapterSelectHub } from './components/os/ChapterSelectHub';
 
 // ── Inner app — reads GameContext for phase transitions ─────────────────────────
 
-function InnerApp({ playerConfig, onCompletion }: { playerConfig: any; onCompletion?: () => void }) {
+function InnerApp({
+  playerConfig,
+  onCompletion,
+  onReturnToChapterSelect,
+}: {
+  playerConfig: any;
+  onCompletion?: () => void;
+  onReturnToChapterSelect?: () => void;
+}) {
   const { state } = useGame();
 
   if (state.phase === 'report') {
@@ -26,6 +35,7 @@ function InnerApp({ playerConfig, onCompletion }: { playerConfig: any; onComplet
     <BrainedOSDesktop
       playerConfig={playerConfig}
       firstBoot={true}
+      onReturnToChapterSelect={onReturnToChapterSelect}
     />
   );
 }
@@ -48,7 +58,8 @@ function EvaluationBridge({ playerConfig, onCompletion }: { playerConfig: any; o
 
 // ── Root App ──────────────────────────────────────────────────────────────────
 
-type ViewMode = 'landing' | 'onboarding' | 'workspace' | 'completion';
+type ViewMode = 'landing' | 'onboarding' | 'chapter_select' | 'workspace' | 'completion';
+type ActiveChapter = number | null;
 
 export function App() {
   const [viewMode, setViewMode] = useState<ViewMode>('landing');
@@ -56,6 +67,7 @@ export function App() {
     name: string; role: string; company: string; email: string; linkedin: string;
   } | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(() => localStorage.getItem('brained_session_id'));
+  const [activeChapter, setActiveChapter] = useState<ActiveChapter>(null);
 
   const handleStartOnboarding = () => setViewMode('onboarding');
 
@@ -95,6 +107,12 @@ export function App() {
         setSessionId(localId);
       });
 
+    // Go to chapter select instead of workspace directly
+    setViewMode('chapter_select');
+  };
+
+  const handleStartChapter = (chapterId: number) => {
+    setActiveChapter(chapterId);
     setViewMode('workspace');
   };
 
@@ -110,6 +128,15 @@ export function App() {
 
   if (viewMode === 'onboarding') {
     return <OnboardingFlow onComplete={handleOnboardingComplete} />;
+  }
+
+  if (viewMode === 'chapter_select') {
+    return (
+      <ChapterSelectHub
+        playerConfig={playerConfig}
+        onStartChapter={handleStartChapter}
+      />
+    );
   }
 
   if (viewMode === 'completion') {
@@ -132,13 +159,22 @@ export function App() {
       <GamePhaseRouter
         playerConfig={playerConfig}
         onCompletion={() => setViewMode('completion')}
+        onReturnToChapterSelect={() => setViewMode('chapter_select')}
       />
     </GameProvider>
   );
 }
 
 // Watches for phase=report and routes to completion screen
-function GamePhaseRouter({ playerConfig, onCompletion }: { playerConfig: any; onCompletion: () => void }) {
+function GamePhaseRouter({
+  playerConfig,
+  onCompletion,
+  onReturnToChapterSelect,
+}: {
+  playerConfig: any;
+  onCompletion: () => void;
+  onReturnToChapterSelect: () => void;
+}) {
   const { state, setPhase } = useGame();
   const completionFiredRef = useRef(false);
 
@@ -154,11 +190,16 @@ function GamePhaseRouter({ playerConfig, onCompletion }: { playerConfig: any; on
   useEffect(() => {
     if (state.phase === 'report' && !completionFiredRef.current) {
       // Allow FinalReportScreen to show first, transition on explicit user action
-      // This is handled inside FinalReportScreen via onReturnToDashboard
     }
   }, [state.phase, onCompletion]);
 
-  return <InnerApp playerConfig={playerConfig} onCompletion={onCompletion} />;
+  return (
+    <InnerApp
+      playerConfig={playerConfig}
+      onCompletion={onCompletion}
+      onReturnToChapterSelect={onReturnToChapterSelect}
+    />
+  );
 }
 
 export default App;

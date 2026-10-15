@@ -76,59 +76,27 @@ export interface BrowserTab {
 
 export const INITIAL_OS_STATE = {
   user: {
-    name: "Alex Vance",
-    role: "Lead Digital Transformer",
-    company: "Apex Global Enterprise",
+    name: "Consultant",
+    role: "Digital Transformer",
+    company: "Enterprise Systems",
     avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250",
-    workstation: "Alex's MacBook Pro (Brained OS v3.2)",
+    workstation: "Brained OS Workstation",
   },
-  streakDays: 7,
-  xp: 1450,
-  trustScore: 84,
-  currentDay: 3,
-  totalDays: 10,
+  streakDays: 1,
+  xp: 100,
+  trustScore: 100,
+  currentDay: 1,
+  totalDays: 12,
   dockBadges: {
-    inbox: 3,
-    slack: 5,
-    notes: 1,
-    calendar: 2,
-    teams: 1,
+    inbox: 0,
+    slack: 0,
+    notes: 0,
+    calendar: 0,
+    teams: 0,
   }
 };
 
-export const INITIAL_NOTIFICATIONS: OSNotification[] = [
-  {
-    id: "notif-teams-1",
-    app: "Teams",
-    title: "Microsoft Teams • Incoming Video Call",
-    subtitle: "Marcus (CTO)",
-    body: "Project Titan Kickoff Briefing — Please join immediately.",
-    timestamp: "Just now",
-    actionText: "Accept Call",
-    onActionAppId: "teams",
-    isCall: true,
-  },
-  {
-    id: "notif-slack-1",
-    app: "Slack",
-    title: "Slack • #hr-portal-transformation",
-    subtitle: "Daniel (Business Head)",
-    body: "Need clarification: Should the payroll SSO integration use OAuth2 PKCE or JWT tokens?",
-    timestamp: "2m ago",
-    actionText: "Reply on Slack",
-    onActionAppId: "slack",
-  },
-  {
-    id: "notif-sec-1",
-    app: "Security",
-    title: "Brained OS Security Sentinel",
-    subtitle: "Olivia (InfoSec Lead)",
-    body: "CRITICAL: Audit scan flagged zero-trust authentication vulnerability in proposed SDK.",
-    timestamp: "10m ago",
-    actionText: "Review Security Report",
-    onActionAppId: "documents",
-  }
-];
+export const INITIAL_NOTIFICATIONS: OSNotification[] = [];
 
 export const OS_MAILS: MailItem[] = [
   {
@@ -222,35 +190,13 @@ Apex Global Enterprise is modernizing its legacy HR ecosystem within a 6-week ex
 export const OS_CALENDAR_EVENTS: CalendarEvent[] = [
   {
     id: "cal-1",
-    title: "Executive Steering Committee Standup",
-    time: "09:00 AM - 09:30 AM",
+    title: "Digital Transformation Roadmap Review",
+    time: "10:00 AM - 11:00 AM",
     day: "Today",
-    location: "Microsoft Teams (Live)",
-    organizer: "Marcus Boss (CTO)",
-    attendees: ["Marcus Boss (CTO)", "Elena Marshal (CHRO)", "David Knox (CISO)", "Alex Vance"],
+    location: "Enterprise Boardroom",
+    organizer: "Digital Transformation Office",
+    attendees: ["Strategy Team"],
     category: "Executive",
-    meetingLinkAvailable: true,
-  },
-  {
-    id: "cal-2",
-    title: "InfoSec Zero-Trust OAuth Gate Review",
-    time: "11:30 AM - 12:15 PM",
-    day: "Today",
-    location: "Conference Room 4B / Teams",
-    organizer: "David Knox (CISO)",
-    attendees: ["David Knox (CISO)", "Tariq Dev", "Alex Vance"],
-    category: "Security",
-    meetingLinkAvailable: true,
-  },
-  {
-    id: "cal-3",
-    title: "Payroll API Microservice Architectural Review",
-    time: "02:00 PM - 03:00 PM",
-    day: "Today",
-    location: "Microsoft Teams",
-    organizer: "Tariq Dev",
-    attendees: ["Missy Chen (VP Finance)", "Tariq Dev", "Alex Vance"],
-    category: "Engineering",
     meetingLinkAvailable: false,
   }
 ];

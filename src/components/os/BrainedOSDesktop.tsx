@@ -21,12 +21,12 @@ import type { OSNotification } from '../../data/brainedOSData';
 
 // Simulation Apps
 import { TitanKickoffMeeting } from '../apps/TitanKickoffMeeting';
+import { ReadMeAIApp } from '../apps/ReadMeAIApp';
 import { CeraIDEApp } from '../apps/CeraIDEApp';
 import { IdeateImpactApp } from '../apps/IdeateImpactApp';
 import { CeraBottomNotification } from '../apps/cera/CeraBottomNotification';
 import { subscribeCeraState, getCeraState, setExternalNotifCallback, setActiveAppChecker, setExternalOpenBrowserCallback } from '../apps/cera/ceraStore';
 import { SlackOSApp } from '../apps/SlackOSApp';
-import { PostMeetingPrompt } from '../apps/PostMeetingPrompt';
 import { PrototypeReviewMeeting } from '../apps/PrototypeReviewMeeting';
 import { FinalPresentationMeeting } from '../apps/FinalPresentationMeeting';
 
@@ -56,9 +56,10 @@ interface BrainedOSDesktopProps {
     linkedin: string;
   };
   firstBoot?: boolean;
+  onReturnToChapterSelect?: () => void;
 }
 
-export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig, firstBoot }) => {
+export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig, firstBoot, onReturnToChapterSelect }) => {
   const [osState, setOsState] = useState(() => {
     const defaultState = { ...INITIAL_OS_STATE };
     if (playerConfig) {
@@ -101,7 +102,6 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
   const [isSpotlightOpen, setIsSpotlightOpen] = useState(false);
   const [isAIDirectorOpen, setIsAIDirectorOpen] = useState(false);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
-  const [showPostMeetingPrompt, setShowPostMeetingPrompt] = useState(false);
 
   // OS Boot timer sequence states
   const [bootStep, setBootStep] = useState<'booting' | 'silence' | 'ready'>(firstBoot ? 'booting' : 'ready');
@@ -121,6 +121,27 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
       return () => clearTimeout(timer);
     }
   }, [bootStep]);
+
+  // ── Chapter 1 Kickoff Call — auto-fires ~5s after desktop is ready ──────────
+  useEffect(() => {
+    if (bootStep !== 'ready') return;
+    const callTimer = setTimeout(() => {
+      pushNotification({
+        id: 'ch1_kickoff_call',
+        app: 'Teams',
+        title: 'Sophia Chen is calling…',
+        subtitle: 'Project Titan — Kickoff Meeting',
+        body: 'Incoming video call · Project Titan Kickoff — all hands required',
+        timestamp: 'Now',
+        actionText: 'Join Call',
+        onActionAppId: 'kickoff',
+        isCall: true,
+      });
+    }, 5000);
+    return () => clearTimeout(callTimer);
+  }, [bootStep]); // eslint-disable-line
+
+
 
   // Register Cera active app checker, external notification handler, and browser open callback
   useEffect(() => {
@@ -188,33 +209,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
     }
   }, [liveNotifications]);
 
-  // Guaranteed Kickoff Call Notification Popup on Boot
-  useEffect(() => {
-    if (!gameState.meetingState.kickoffDone) {
-      const timer = setTimeout(() => {
-        pushNotification({
-          id: 'notif-kickoff-call',
-          app: 'Teams',
-          title: 'Microsoft Teams • Incoming Video Call',
-          subtitle: 'Marcus Reed (CTO) • 4 participants',
-          body: 'Project Titan Kickoff — Please join immediately.',
-          timestamp: 'Just now',
-          actionText: 'Accept Call',
-          onActionAppId: 'kickoff',
-          isCall: true,
-        });
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [gameState.meetingState.kickoffDone]); // eslint-disable-line
 
-  // Show post-meeting prompt 3s after kickoff finishes
-  useEffect(() => {
-    if (gameState.meetingState.kickoffDone && !gameState.meetingState.momSubmitted) {
-      const timer = setTimeout(() => setShowPostMeetingPrompt(true), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [gameState.meetingState.kickoffDone, gameState.meetingState.momSubmitted]);
 
   // Sync pendingNotifications from GameContext FrontendEventScheduler into local notification list
   useEffect(() => {
@@ -288,31 +283,10 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
     }
   };
 
-  // Timeout handler for Call notifications (30s timeout -> Missed Call + Penalty)
+  // Timeout handler for Call notifications
   const handleTimeoutCallNotification = (notif: OSNotification) => {
     sound.stopTeamsRingtone();
     setBannerNotifications((prev) => prev.filter((n) => n.id !== notif.id));
-
-    // Update history entry as Missed Call
-    setHistoryNotifications((prev) =>
-      prev.map((n) => {
-        if (n.id === notif.id) {
-          return {
-            ...n,
-            title: '❌ Missed Teams Call',
-            subtitle: '30s Timeout • Penalty Applied (-10 Trust)',
-            body: 'You did not answer the video call on time. Trust Score reduced (-10).',
-            missed: true,
-            read: false,
-          };
-        }
-        return n;
-      })
-    );
-
-    // Apply Penalty
-    handleApplyDecision(-10, 0);
-    addSignal('delivery_management', 'Missed urgent Teams meeting call (-10 Trust)', -10);
   };
 
   const handleApplyDecision = (trustDelta: number, xpDelta: number) => {
@@ -325,6 +299,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
 
   const appMetaMap: Record<string, { title: string; icon: React.ReactNode }> = {
     kickoff: { title: 'Microsoft Teams — Project Titan Kickoff', icon: <span>📹</span> },
+    readme: { title: 'ReadMe AI — Project Amigo Minutes of Meeting', icon: <span>⚡</span> },
     review: { title: 'Microsoft Teams — Prototype Review · Day 7', icon: <span>📹</span> },
     presentation: { title: 'Microsoft Teams — Final Presentation · Day 14', icon: <span>📹</span> },
     ideate: { title: 'Ideate & Impact Studio — Digital Transformer Hub', icon: <Sparkles className="w-4 h-4 text-indigo-400" /> },
@@ -470,7 +445,24 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
               onFocus={() => {}}
             >
               {/* KICKOFF — replaces old Teams during meeting */}
-              {activeAppId === 'kickoff' && <TitanKickoffMeeting />}
+              {activeAppId === 'kickoff' && (
+                <TitanKickoffMeeting
+                  onReturnToChapterSelect={() => {
+                    handleCloseApp('kickoff');
+                    if (onReturnToChapterSelect) onReturnToChapterSelect();
+                  }}
+                />
+              )}
+              {/* README AI — Project Amigo Kickoff MoM Document Editor */}
+              {activeAppId === 'readme' && (
+                <ReadMeAIApp
+                  onDone={() => handleCloseApp('readme')}
+                  onReturnToChapterSelect={() => {
+                    handleCloseApp('readme');
+                    if (onReturnToChapterSelect) onReturnToChapterSelect();
+                  }}
+                />
+              )}
               {/* PROTOTYPE REVIEW — Day 7 */}
               {activeAppId === 'review' && <PrototypeReviewMeeting />}
               {/* FINAL PRESENTATION — Day 14 */}
@@ -601,12 +593,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
         }}
       />
 
-      {/* POST-MEETING PROMPT */}
-      <PostMeetingPrompt
-        visible={showPostMeetingPrompt && !gameState.meetingState.momSubmitted}
-        onOpenNotes={() => { setShowPostMeetingPrompt(false); handleOpenApp('notes'); }}
-        onLater={() => setShowPostMeetingPrompt(false)}
-      />
+
 
       {/* PAUSE / EXIT GATE */}
       <PauseExitGate onConfirmExit={() => setBootStep('booting')} />
