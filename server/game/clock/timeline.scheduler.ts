@@ -41,48 +41,7 @@ interface TimelineEntry {
  * Conditional events (manager_checkin, cto_security_nudge, olivia_review)
  * are evaluated by the orchestrator, NOT pre-scheduled.
  */
-export const TIMELINE: TimelineEntry[] = [
-  // Day 1 — 0:45 real: Daniel sends brief + attachment
-  { event_id: 'daniel_brief_mail', offset_ms: 45_000, always: true, pre_schedule: true },
-  // Day 1 — 1:00 real: Emma sends survey findings
-  { event_id: 'emma_survey_mail', offset_ms: 60_000, always: true, pre_schedule: true },
-  // Day 2 — 2:00 real: Calendar: Prototype Review added
-  { event_id: 'calendar_prototype_event', offset_ms: 120_000, always: true, pre_schedule: true },
-  // Day 3 — 3:00 real: Daniel Slack payroll hint
-  { event_id: 'daniel_slack_payroll_hint', offset_ms: 180_000, always: true, pre_schedule: true },
-  // Day 3 — Daniel check-in (CONDITIONAL — orchestrator handles if player hasn't messaged him)
-  { event_id: 'manager_checkin', offset_ms: 150_000, always: false, pre_schedule: false },
-  // Day 4 — CTO security nudge (CONDITIONAL — orchestrator handles)
-  { event_id: 'cto_security_nudge', offset_ms: 240_000, always: false, pre_schedule: false },
-  // Day 5 — 4:30 real: Calendar: Board Presentation added
-  { event_id: 'calendar_board_event', offset_ms: 270_000, always: true, pre_schedule: true },
-  // Day 6 — 6:00 real: Emma Slack plant hint
-  { event_id: 'emma_slack_plant_hint', offset_ms: 360_000, always: true, pre_schedule: true },
-  // Day 7 — 7:30 real: Sophia prototype ask mail
-  { event_id: 'client_prototype_ask', offset_ms: 450_000, always: true, pre_schedule: true },
-  // Day 7 — 9:00 real: Prototype Review checkpoint notification
-  { event_id: 'prototype_review_notif', offset_ms: 540_000, always: true, pre_schedule: true },
-  // Day 8 — 8:00 real: Emma Document Upload amendment (AFTER prototype review, more realistic)
-  { event_id: 'hr_amendment', offset_ms: 480_000, always: true, pre_schedule: true },
-  // Day 9 — Marcus Slack group @mention architecture chase
-  { event_id: 'marcus_slack_group_tag', offset_ms: 540_000, always: true, pre_schedule: true },
-  // Day 10 — Daniel requests prototype link for security review
-  { event_id: 'daniel_prototype_link_request', offset_ms: 600_000, always: true, pre_schedule: true },
-  // Day 11 — Sophia follow-up (CONDITIONAL — only if prototype not ready)
-  { event_id: 'sophia_follow_up', offset_ms: 660_000, always: false, pre_schedule: false },
-  // Day 11 — Aarav check-in asking for update
-  { event_id: 'aarav_checkin_teams', offset_ms: 660_000, always: true, pre_schedule: true },
-  // Day 12 — Olivia RBAC reminder (CONDITIONAL — only if req_rbac not discovered)
-  { event_id: 'olivia_rbac_reminder', offset_ms: 720_000, always: false, pre_schedule: false },
-  // Day 13 — Calendar: Final Presentation added
-  { event_id: 'final_presentation_calendar', offset_ms: 780_000, always: true, pre_schedule: true },
-  // Day 13 — Teams call: Final Presentation
-  { event_id: 'final_presentation_call', offset_ms: 810_000, always: true, pre_schedule: true },
-  // Day 14 — Board deadline (auto-starts presentation)
-  { event_id: 'board_deadline', offset_ms: 840_000, always: true, pre_schedule: true },
-  // Hard session end
-  { event_id: 'session_end', offset_ms: 900_000, always: true, pre_schedule: true },
-];
+export const TIMELINE: TimelineEntry[] = [];
 
 // ── Pre-schedule all "always" events at session start ─────────────────────────
 
