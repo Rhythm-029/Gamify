@@ -6,15 +6,20 @@ import { FinalReportScreen } from './components/apps/FinalReportScreen';
 import { CompletionScreen } from './components/landing/CompletionScreen';
 import { GameProvider, useGame } from './context/GameContext';
 import { ChapterSelectHub } from './components/os/ChapterSelectHub';
+import { resetChapterStatuses } from './data/chaptersData';
 
 // ── Inner app — reads GameContext for phase transitions ─────────────────────────
 
 function InnerApp({
   playerConfig,
+  activeChapter,
+  onStartChapter,
   onCompletion,
   onReturnToChapterSelect,
 }: {
   playerConfig: any;
+  activeChapter?: number | null;
+  onStartChapter?: (id: number) => void;
   onCompletion?: () => void;
   onReturnToChapterSelect?: () => void;
 }) {
@@ -35,6 +40,8 @@ function InnerApp({
     <BrainedOSDesktop
       playerConfig={playerConfig}
       firstBoot={true}
+      activeChapter={activeChapter ?? 1}
+      onStartChapter={onStartChapter}
       onReturnToChapterSelect={onReturnToChapterSelect}
     />
   );
@@ -69,7 +76,15 @@ export function App() {
   const [sessionId, setSessionId] = useState<string | null>(() => localStorage.getItem('brained_session_id'));
   const [activeChapter, setActiveChapter] = useState<ActiveChapter>(null);
 
-  const handleStartOnboarding = () => setViewMode('onboarding');
+  useEffect(() => {
+    // Reset chapter progression to session start (Chapter 1 unlocked, 2-12 locked)
+    resetChapterStatuses();
+  }, []);
+
+  const handleStartOnboarding = () => {
+    resetChapterStatuses();
+    setViewMode('onboarding');
+  };
 
   const handleOnboardingComplete = (userConfig: any) => {
     setPlayerConfig(userConfig);
@@ -158,6 +173,8 @@ export function App() {
     <GameProvider>
       <GamePhaseRouter
         playerConfig={playerConfig}
+        activeChapter={activeChapter}
+        onStartChapter={handleStartChapter}
         onCompletion={() => setViewMode('completion')}
         onReturnToChapterSelect={() => setViewMode('chapter_select')}
       />
@@ -168,10 +185,14 @@ export function App() {
 // Watches for phase=report and routes to completion screen
 function GamePhaseRouter({
   playerConfig,
+  activeChapter,
+  onStartChapter,
   onCompletion,
   onReturnToChapterSelect,
 }: {
   playerConfig: any;
+  activeChapter: number | null;
+  onStartChapter: (id: number) => void;
   onCompletion: () => void;
   onReturnToChapterSelect: () => void;
 }) {
@@ -196,6 +217,8 @@ function GamePhaseRouter({
   return (
     <InnerApp
       playerConfig={playerConfig}
+      activeChapter={activeChapter}
+      onStartChapter={onStartChapter}
       onCompletion={onCompletion}
       onReturnToChapterSelect={onReturnToChapterSelect}
     />

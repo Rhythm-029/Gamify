@@ -22,6 +22,10 @@ import type { OSNotification } from '../../data/brainedOSData';
 // Simulation Apps
 import { TitanKickoffMeeting } from '../apps/TitanKickoffMeeting';
 import { ReadMeAIApp } from '../apps/ReadMeAIApp';
+import { ProjectAmigoScopeAssignment, type ScopeAssignmentResult } from '../apps/ProjectAmigoScopeAssignment';
+import { ProjectAmigoInternalBriefViewer } from '../apps/ProjectAmigoInternalBriefViewer';
+import { getSessionAssignmentResult, setSessionAssignmentResult } from '../../data/chaptersData';
+import { Chapter1CompletionModal } from '../apps/Chapter1CompletionModal';
 import { CeraIDEApp } from '../apps/CeraIDEApp';
 import { IdeateImpactApp } from '../apps/IdeateImpactApp';
 import { CeraBottomNotification } from '../apps/cera/CeraBottomNotification';
@@ -46,6 +50,25 @@ import { SettingsApp } from '../workspace/SettingsApp';
 import { AIDirectorWidget } from '../overlays/AIDirectorWidget';
 import { SimulationEventModal } from '../overlays/SimulationEventModal';
 
+// Chapter 2 Components & Data
+import type { Chapter2State, InfrastructureOption, CommunicationOption, UiUxOption } from '../../types/chapter2';
+import {
+  getChapter2SessionState,
+  setChapter2SessionState,
+  computeChapter2Score,
+  EMAIL_INFRASTRUCTURE_PREREQ,
+  EMAIL_UIUX_SIGNOFF,
+  EMAIL_SPRINT1_GREENLIGHT,
+} from '../../data/chapter2Data';
+import { Chapter2Banner } from '../chapter2/Chapter2Banner';
+import { InfrastructureIncidentPanel } from '../chapter2/InfrastructureIncidentPanel';
+import { CommunicationSetupPanel } from '../chapter2/CommunicationSetupPanel';
+import { DesignReviewWorkspace } from '../chapter2/DesignReviewWorkspace';
+import { SprintReadinessDashboard } from '../chapter2/SprintReadinessDashboard';
+import { Chapter2ScorecardModal } from '../chapter2/Chapter2ScorecardModal';
+import { ProjectAmigoWorkspaceApp } from '../chapter2/ProjectAmigoWorkspaceApp';
+import { EmailComposerModal } from '../chapter2/EmailComposerModal';
+
 interface BrainedOSDesktopProps {
   onOpenEventModal?: () => void;
   playerConfig?: {
@@ -56,10 +79,18 @@ interface BrainedOSDesktopProps {
     linkedin: string;
   };
   firstBoot?: boolean;
+  activeChapter?: number;
+  onStartChapter?: (chapterId: number) => void;
   onReturnToChapterSelect?: () => void;
 }
 
-export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig, firstBoot, onReturnToChapterSelect }) => {
+export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
+  playerConfig,
+  firstBoot,
+  activeChapter = 1,
+  onStartChapter,
+  onReturnToChapterSelect,
+}) => {
   const [osState, setOsState] = useState(() => {
     const defaultState = { ...INITIAL_OS_STATE };
     if (playerConfig) {
@@ -122,16 +153,301 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
     }
   }, [bootStep]);
 
+  const [isChapter1CompletionOpen, setIsChapter1CompletionOpen] = useState(false);
+  const [hasReadBrief, setHasReadBrief] = useState(false);
+  const [assignmentResult, setAssignmentResult] = useState<ScopeAssignmentResult | null>(() => {
+    return getSessionAssignmentResult();
+  });
+
+  const handleKickoffMoMComplete = () => {
+    handleCloseApp('kickoff');
+    handleCloseApp('readme');
+
+    // Simulate file download chime for Project_Amigo_Internal_Brief.pdf
+    sound.playDownloadComplete();
+
+    // Increment Teams badge
+    setOsState((prev) => ({
+      ...prev,
+      dockBadges: {
+        ...prev.dockBadges,
+        teams: (prev.dockBadges.teams || 0) + 1,
+      },
+    }));
+
+    // Ensure notification is not blocked by previous playthroughs
+    seenNotifIds.current.delete('aarav_brief_notification');
+
+    // Wait exactly 2 seconds after ReadMe AI confirmation, then display desktop notification
+    setTimeout(() => {
+      sound.playMessagePing();
+      pushNotification({
+        id: 'aarav_brief_notification',
+        app: 'Teams',
+        title: 'Aarav Kapoor',
+        subtitle: 'Project Manager',
+        body: "Good work getting the meeting documented. I've shared a short project brief for you to review before we decide our priorities.",
+        timestamp: 'Now',
+        actionText: 'Open in Teams',
+        onActionAppId: 'teams',
+      });
+    }, 1000);
+  };
+
+  // ── Chapter 2 Interactive Simulation State ──
+  const [chapter2State, setChapter2State] = useState<Chapter2State>(() => getChapter2SessionState());
+  const [isChapter2ScorecardOpen, setIsChapter2ScorecardOpen] = useState(false);
+  const [emailComposer, setEmailComposer] = useState<{
+    isOpen: boolean;
+    to: string;
+    cc?: string;
+    subject: string;
+    body: string;
+    attachments?: string[];
+    buttonText?: string;
+    onSend: (body: string) => void;
+  } | null>(null);
+
+  const handleChapter2InfrastructureDecision = (opt: InfrastructureOption) => {
+    setChapter2State((prev) => {
+      const next: Chapter2State = {
+        ...prev,
+        infrastructure: {
+          ...prev.infrastructure,
+          initialDecision: opt,
+          recoveryRequired: opt !== 'secure',
+        },
+      };
+      setChapter2SessionState(next);
+      return next;
+    });
+
+    if (opt === 'secure') {
+      sound.playClick();
+      handleOpenChapter2EmailModal('infra');
+    }
+  };
+
+  const handleChapter2CommunicationDecision = (opt: CommunicationOption) => {
+    setChapter2State((prev) => {
+      const next: Chapter2State = {
+        ...prev,
+        communication: {
+          ...prev.communication,
+          initialDecision: prev.communication.initialDecision ?? opt,
+          finalStructure: opt,
+          channelCreated: opt === 'dual-track',
+          executiveReportingConfigured: opt === 'dual-track',
+        },
+      };
+      setChapter2SessionState(next);
+      return next;
+    });
+
+    if (opt === 'dual-track') {
+      sound.playSystemClearance();
+      pushNotification({
+        id: 'ch2_channel_created',
+        app: 'Teams',
+        title: 'Martha Vance',
+        subtitle: 'Delivery Operations · Project Amigo',
+        body: 'Engineering channel #amigo-dev-ops created. Executive reporting route mapped to weekly dashboards.',
+        timestamp: 'Just now',
+        actionText: 'View in Teams',
+        onActionAppId: 'teams',
+      });
+    }
+  };
+
+  const handleChapter2UiUxDecision = (opt: UiUxOption) => {
+    setChapter2State((prev) => {
+      const next: Chapter2State = {
+        ...prev,
+        uiux: {
+          ...prev.uiux,
+          initialDecision: prev.uiux.initialDecision ?? opt,
+          recoveryRequired: opt === 'verbal',
+        },
+      };
+      setChapter2SessionState(next);
+      return next;
+    });
+  };
+
+  const handleOpenChapter2EmailModal = (type: 'infra' | 'uiux' | 'greenlight') => {
+    if (type === 'infra') {
+      setEmailComposer({
+        isOpen: true,
+        to: EMAIL_INFRASTRUCTURE_PREREQ.to,
+        cc: EMAIL_INFRASTRUCTURE_PREREQ.cc,
+        subject: EMAIL_INFRASTRUCTURE_PREREQ.subject,
+        body: EMAIL_INFRASTRUCTURE_PREREQ.body,
+        buttonText: 'Send Email',
+        onSend: () => {
+          setEmailComposer(null);
+          setChapter2State((prev) => {
+            const next: Chapter2State = {
+              ...prev,
+              infrastructure: {
+                ...prev.infrastructure,
+                requestSent: true,
+                recoveryCompleted: true,
+              },
+            };
+            setChapter2SessionState(next);
+            return next;
+          });
+
+          pushNotification({
+            id: 'ch2_infra_sent',
+            app: 'Teams',
+            title: 'Martha Vance',
+            subtitle: 'Delivery Operations',
+            body: 'Infrastructure request sent. I have recorded the network and LDAP dependencies in the project workspace.',
+            timestamp: 'Just now',
+            actionText: 'Open Teams',
+            onActionAppId: 'teams',
+          });
+
+          setTimeout(() => {
+            setChapter2State((prev) => {
+              const next: Chapter2State = {
+                ...prev,
+                infrastructure: {
+                  ...prev.infrastructure,
+                  bankITResolved: true,
+                  stagingVerified: true,
+                },
+              };
+              setChapter2SessionState(next);
+              return next;
+            });
+            pushNotification({
+              id: 'ch2_it_cleared',
+              app: 'Teams',
+              title: 'Martha Vance',
+              subtitle: 'Delivery Operations',
+              body: 'Bank IT has cleared the firewall request. Port 443 is open, the proxy routes are configured, and LDAP sandbox credentials are available.',
+              timestamp: 'Just now',
+              actionText: 'View in Teams',
+              onActionAppId: 'teams',
+            });
+          }, 4500);
+        },
+      });
+    } else if (type === 'uiux') {
+      setEmailComposer({
+        isOpen: true,
+        to: EMAIL_UIUX_SIGNOFF.to,
+        cc: EMAIL_UIUX_SIGNOFF.cc,
+        subject: EMAIL_UIUX_SIGNOFF.subject,
+        body: EMAIL_UIUX_SIGNOFF.body,
+        attachments: EMAIL_UIUX_SIGNOFF.attachments,
+        buttonText: 'Send for Approval',
+        onSend: () => {
+          setEmailComposer(null);
+          setChapter2State((prev) => {
+            const next: Chapter2State = {
+              ...prev,
+              uiux: {
+                ...prev.uiux,
+                signoffSent: true,
+              },
+            };
+            setChapter2SessionState(next);
+            return next;
+          });
+
+          setTimeout(() => {
+            sound.playMessagePing();
+            setChapter2State((prev) => {
+              const next: Chapter2State = {
+                ...prev,
+                uiux: {
+                  ...prev.uiux,
+                  approvalReceived: true,
+                },
+                infrastructure: {
+                  ...prev.infrastructure,
+                  bankITResolved: true,
+                  stagingVerified: true,
+                },
+              };
+              setChapter2SessionState(next);
+              return next;
+            });
+
+            pushNotification({
+              id: 'ch2_marcus_approval',
+              app: 'Mail',
+              title: 'Marcus Reed',
+              subtitle: 'CTO / Senior Stakeholder',
+              body: 'Re: Project Amigo — UI/UX Prototype Review and Formal Signoff: Reviewed. I approve the attached prototype versions for the current design baseline.',
+              timestamp: 'Just now',
+              actionText: 'Open in Mail',
+              onActionAppId: 'inbox',
+            });
+          }, 2500);
+        },
+      });
+    } else if (type === 'greenlight') {
+      setEmailComposer({
+        isOpen: true,
+        to: EMAIL_SPRINT1_GREENLIGHT.to,
+        cc: EMAIL_SPRINT1_GREENLIGHT.cc,
+        subject: EMAIL_SPRINT1_GREENLIGHT.subject,
+        body: EMAIL_SPRINT1_GREENLIGHT.body,
+        buttonText: 'Issue Development Greenlight',
+        onSend: () => {
+          setEmailComposer(null);
+          const computed = computeChapter2Score(chapter2State, assignmentResult);
+          setChapter2State((prev) => {
+            const next: Chapter2State = {
+              ...prev,
+              sprint: {
+                ...prev.sprint,
+                greenlightIssued: true,
+                readinessVerified: true,
+              },
+              scorecard: {
+                shown: true,
+                ...computed,
+              },
+            };
+            setChapter2SessionState(next);
+            return next;
+          });
+
+          sound.playSystemClearance();
+          pushNotification({
+            id: 'ch2_greenlight_sent',
+            app: 'Mail',
+            title: 'Project Amigo — Sprint 1 Greenlight',
+            subtitle: 'Engineering Operations',
+            body: 'Official greenlight dispatched to amigo-dev-ops. Approved development work can now proceed.',
+            timestamp: 'Just now',
+            actionText: 'View Scorecard',
+            onActionAppId: 'workspace_amigo',
+          });
+
+          setTimeout(() => {
+            setIsChapter2ScorecardOpen(true);
+          }, 1000);
+        },
+      });
+    }
+  };
+
   // ── Chapter 1 Kickoff Call — auto-fires ~5s after desktop is ready ──────────
   useEffect(() => {
-    if (bootStep !== 'ready') return;
+    if (bootStep !== 'ready' || activeChapter !== 1) return;
     const callTimer = setTimeout(() => {
       pushNotification({
         id: 'ch1_kickoff_call',
         app: 'Teams',
-        title: 'Sophia Chen is calling…',
-        subtitle: 'Project Titan — Kickoff Meeting',
-        body: 'Incoming video call · Project Titan Kickoff — all hands required',
+        title: 'Sophia Bennett is calling…',
+        subtitle: 'Project Amigo — Executive Kickoff Call',
+        body: 'Incoming video call · Project Amigo Kickoff — all hands required',
         timestamp: 'Now',
         actionText: 'Join Call',
         onActionAppId: 'kickoff',
@@ -139,7 +455,28 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
       });
     }, 5000);
     return () => clearTimeout(callTimer);
-  }, [bootStep]); // eslint-disable-line
+  }, [bootStep, activeChapter]);
+
+  // ── Chapter 2 Kickoff Notification — auto-fires ~2s after desktop is ready ──
+  useEffect(() => {
+    if (bootStep !== 'ready' || activeChapter !== 2) return;
+    if (seenNotifIds.current.has('ch2_daniel_blocker')) return;
+
+    const timer = setTimeout(() => {
+      sound.playMessagePing();
+      pushNotification({
+        id: 'ch2_daniel_blocker',
+        app: 'Teams',
+        title: 'Daniel Brooks',
+        subtitle: 'Lead Backend Developer · Project Amigo',
+        body: "We can't connect to ICICI's staging environment. Port 443 is blocked, the proxy isn't configured, and LDAP access is still unconfirmed.",
+        timestamp: 'Now',
+        actionText: 'Open in Teams',
+        onActionAppId: 'teams',
+      });
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [bootStep, activeChapter]);
 
 
 
@@ -298,8 +635,15 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
   };
 
   const appMetaMap: Record<string, { title: string; icon: React.ReactNode }> = {
-    kickoff: { title: 'Microsoft Teams — Project Titan Kickoff', icon: <span>📹</span> },
+    kickoff: { title: 'Microsoft Teams — Project Amigo Kickoff', icon: <span>📹</span> },
     readme: { title: 'ReadMe AI — Project Amigo Minutes of Meeting', icon: <span>⚡</span> },
+    incident: { title: 'Infrastructure Incident — Blocker Investigation', icon: <span>🚨</span> },
+    communication: { title: 'Workspace Setup — Communication Configuration', icon: <span>💬</span> },
+    design_review: { title: 'Design Review — UI/UX Prototypes Baseline', icon: <span>🎨</span> },
+    readiness: { title: 'Sprint 1 Readiness Dashboard — Greenlight Gate', icon: <span>🛡️</span> },
+    workspace_amigo: { title: 'Project Amigo — Sprint 1 Workspace', icon: <span>💼</span> },
+    brief: { title: 'Preview — Project_Amigo_Internal_Brief.pdf', icon: <span>📄</span> },
+    assignment: { title: 'Project Amigo — Initial Planning · Assignment 01', icon: <span>📋</span> },
     review: { title: 'Microsoft Teams — Prototype Review · Day 7', icon: <span>📹</span> },
     presentation: { title: 'Microsoft Teams — Final Presentation · Day 14', icon: <span>📹</span> },
     ideate: { title: 'Ideate & Impact Studio — Digital Transformer Hub', icon: <Sparkles className="w-4 h-4 text-indigo-400" /> },
@@ -307,7 +651,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
     cera: { title: 'Cera IDE — AI Software Engineer Workspace', icon: <Code2 className="w-4 h-4 text-pink-400" /> },
     dashboard: { title: 'Brained OS — Executive Dashboard', icon: <BrainedLogoIcon className="w-4 h-4" /> },
     inbox: { title: 'Apple Mail — Priority Inbox', icon: <span>✉️</span> },
-    teams: { title: 'Microsoft Teams — Project Titan', icon: <span>📹</span> },
+    teams: { title: 'Microsoft Teams — Project Amigo', icon: <span>💬</span> },
     slack: { title: 'Slack — Brained Workspace', icon: <span>💬</span> },
     notes: { title: 'Notes — MOM & Working Notes', icon: <span>📝</span> },
     calendar: { title: 'Calendar — Schedule & Milestones', icon: <span>📅</span> },
@@ -390,6 +734,11 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
         clockWidget={<InGameClock />}
       />
 
+      {/* CHAPTER 2 STATUS BANNER */}
+      {activeChapter === 2 && (
+        <Chapter2Banner onOpenWorkspace={() => handleOpenApp('workspace_amigo')} />
+      )}
+
       {/* DESKTOP CANVAS */}
       <main className="flex-1 relative z-10 pt-16 pb-24 px-8 overflow-hidden flex flex-col justify-between">
         {/* DESKTOP WIDGETS (CLOCK & STREAK) */}
@@ -451,6 +800,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
                     handleCloseApp('kickoff');
                     if (onReturnToChapterSelect) onReturnToChapterSelect();
                   }}
+                  onMoMComplete={handleKickoffMoMComplete}
                 />
               )}
               {/* README AI — Project Amigo Kickoff MoM Document Editor */}
@@ -461,6 +811,46 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
                     handleCloseApp('readme');
                     if (onReturnToChapterSelect) onReturnToChapterSelect();
                   }}
+                  onMoMSubmitted={handleKickoffMoMComplete}
+                />
+              )}
+              {/* PROJECT AMIGO INTERNAL BRIEF PDF VIEWER */}
+              {activeAppId === 'brief' && (
+                <ProjectAmigoInternalBriefViewer
+                  onOpenAssignment={() => {
+                    setHasReadBrief(true);
+                    handleOpenApp('assignment');
+                  }}
+                  onOpenTeams={() => {
+                    setHasReadBrief(true);
+                    handleOpenApp('teams');
+                  }}
+                  onBriefRead={() => setHasReadBrief(true)}
+                />
+              )}
+              {/* PROJECT AMIGO INITIAL PLANNING & ASSIGNMENT 01 */}
+              {activeAppId === 'assignment' && (
+                <ProjectAmigoScopeAssignment
+                  onSubmitted={(result) => {
+                    setSessionAssignmentResult(result);
+                    setAssignmentResult(result);
+                    seenNotifIds.current.delete('aarav_assignment_response');
+                    setTimeout(() => {
+                      sound.playMessagePing();
+                      pushNotification({
+                        id: 'aarav_assignment_response',
+                        app: 'Teams',
+                        title: 'Aarav Kapoor',
+                        subtitle: 'Project Manager',
+                        body: result.evaluation.aaravResponse.slice(0, 110) + '...',
+                        timestamp: 'Just now',
+                        actionText: 'View in Teams',
+                        onActionAppId: 'teams',
+                      });
+                    }, 1000);
+                  }}
+                  onOpenTeams={() => handleOpenApp('teams')}
+                  onClose={() => handleCloseApp('assignment')}
                 />
               )}
               {/* PROTOTYPE REVIEW — Day 7 */}
@@ -472,14 +862,90 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
               {/* CERA IDE — AI Software Engineer Workspace */}
               {(activeAppId === 'ide' || activeAppId === 'cera') && <CeraIDEApp />}
               {activeAppId === 'inbox' && <AppleMailApp />}
-              {activeAppId === 'teams' && <MSTeamsApp onPenalty={handleApplyDecision} />}
+              {activeAppId === 'teams' && (
+                <MSTeamsApp
+                  onPenalty={handleApplyDecision}
+                  onOpenAssignment={() => handleOpenApp('assignment')}
+                  onOpenBrief={() => {
+                    setHasReadBrief(true);
+                    handleOpenApp('brief');
+                  }}
+                  hasReadBrief={hasReadBrief}
+                  onOpenChapterCompletion={() => setIsChapter1CompletionOpen(true)}
+                  initialChatId={activeChapter === 2 ? 'daniel' : 'aarav'}
+                  activeChapter={activeChapter}
+                  chapter2State={chapter2State}
+                  onOpenIncidentPanel={() => handleOpenApp('incident')}
+                  onOpenCommunicationSetup={() => handleOpenApp('communication')}
+                  onOpenDesignReview={() => handleOpenApp('design_review')}
+                  onOpenSprintReadiness={() => handleOpenApp('readiness')}
+                />
+              )}
+              {/* CHAPTER 2 SIMULATION APPS */}
+              {activeAppId === 'incident' && (
+                <InfrastructureIncidentPanel
+                  initialDecision={chapter2State.infrastructure.initialDecision}
+                  recoveryRequired={chapter2State.infrastructure.recoveryRequired}
+                  recoveryCompleted={chapter2State.infrastructure.recoveryCompleted}
+                  requestSent={chapter2State.infrastructure.requestSent}
+                  bankITResolved={chapter2State.infrastructure.bankITResolved}
+                  stagingVerified={chapter2State.infrastructure.stagingVerified}
+                  onApplyDecision={(opt) => handleChapter2InfrastructureDecision(opt)}
+                  onProceedToEmail={() => handleOpenChapter2EmailModal('infra')}
+                />
+              )}
+              {activeAppId === 'communication' && (
+                <CommunicationSetupPanel
+                  initialDecision={chapter2State.communication.initialDecision}
+                  finalStructure={chapter2State.communication.finalStructure}
+                  channelCreated={chapter2State.communication.channelCreated}
+                  onSelectStructure={(opt) => handleChapter2CommunicationDecision(opt)}
+                  onProceedToDesignReview={() => handleOpenApp('design_review')}
+                />
+              )}
+              {activeAppId === 'design_review' && (
+                <DesignReviewWorkspace
+                  initialDecision={chapter2State.uiux.initialDecision}
+                  signoffSent={chapter2State.uiux.signoffSent}
+                  approvalReceived={chapter2State.uiux.approvalReceived}
+                  approvedVersions={chapter2State.uiux.approvedVersions}
+                  onSelectOption={(opt) => handleChapter2UiUxDecision(opt)}
+                  onRequestSignoffEmail={() => handleOpenChapter2EmailModal('uiux')}
+                  onProceedToSprintReadiness={() => handleOpenApp('readiness')}
+                />
+              )}
+              {activeAppId === 'readiness' && (
+                <SprintReadinessDashboard
+                  infrastructureVerified={chapter2State.infrastructure.stagingVerified}
+                  communicationConfigured={chapter2State.communication.channelCreated}
+                  uiuxApproved={chapter2State.uiux.approvalReceived}
+                  greenlightIssued={chapter2State.sprint.greenlightIssued}
+                  onTriggerGreenlightEmail={() => handleOpenChapter2EmailModal('greenlight')}
+                  onProceedToScorecard={() => setIsChapter2ScorecardOpen(true)}
+                />
+              )}
+              {activeAppId === 'workspace_amigo' && (
+                <ProjectAmigoWorkspaceApp
+                  chapter2State={chapter2State}
+                  onOpenApp={handleOpenApp}
+                />
+              )}
               {activeAppId === 'slack' && <SlackOSApp />}
               {activeAppId === 'notes' && <AppleNotesApp />}
               {activeAppId === 'calendar' && <AppleCalendarApp />}
               {activeAppId === 'documents' && <DocumentsApp />}
               {activeAppId === 'tasks' && <JiraKanbanApp />}
               {activeAppId === 'browser' && <FakeBrowserApp />}
-              {activeAppId === 'finder' && <FinderApp />}
+              {activeAppId === 'finder' && (
+                <FinderApp
+                  onOpenAssignment={() => handleOpenApp('assignment')}
+                  onOpenBrief={() => {
+                    setHasReadBrief(true);
+                    handleOpenApp('brief');
+                  }}
+                  onOpenDesignReview={() => handleOpenApp('design_review')}
+                />
+              )}
               {activeAppId === 'terminal' && <TerminalApp />}
               {activeAppId === 'stakeholders' && <StakeholdersApp onSelectApp={handleOpenApp} />}
               {activeAppId === 'certificate' && (
@@ -597,6 +1063,64 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({ playerConfig
 
       {/* PAUSE / EXIT GATE */}
       <PauseExitGate onConfirmExit={() => setBootStep('booting')} />
+
+      {/* CHAPTER 1 COMPLETION MODAL */}
+      {isChapter1CompletionOpen && (
+        <Chapter1CompletionModal
+          assignmentResult={assignmentResult}
+          onContinueToChapter2={() => {
+            setIsChapter1CompletionOpen(false);
+            handleCloseApp('teams');
+            handleCloseApp('assignment');
+            localStorage.setItem('brained_just_unlocked_chapter', '2');
+            localStorage.setItem('brained_auto_launch_chapter', '2');
+            if (onReturnToChapterSelect) {
+              onReturnToChapterSelect();
+            } else if (onStartChapter) {
+              onStartChapter(2);
+            }
+          }}
+          onReturnToJourney={() => {
+            setIsChapter1CompletionOpen(false);
+            handleCloseApp('teams');
+            handleCloseApp('assignment');
+            if (onReturnToChapterSelect) onReturnToChapterSelect();
+          }}
+        />
+      )}
+
+      {/* CHAPTER 2 EMAIL COMPOSER MODAL */}
+      {emailComposer && (
+        <EmailComposerModal
+          to={emailComposer.to}
+          cc={emailComposer.cc}
+          subject={emailComposer.subject}
+          body={emailComposer.body}
+          attachments={emailComposer.attachments}
+          buttonText={emailComposer.buttonText}
+          onSend={emailComposer.onSend}
+          onClose={() => setEmailComposer(null)}
+        />
+      )}
+
+      {/* CHAPTER 2 SCORECARD MODAL */}
+      {isChapter2ScorecardOpen && (
+        <Chapter2ScorecardModal
+          scorecardData={chapter2State.scorecard}
+          onContinueToChapter3={() => {
+            setIsChapter2ScorecardOpen(false);
+            if (onStartChapter) {
+              onStartChapter(3);
+            } else if (onReturnToChapterSelect) {
+              onReturnToChapterSelect();
+            }
+          }}
+          onReturnToChapterSelect={() => {
+            setIsChapter2ScorecardOpen(false);
+            if (onReturnToChapterSelect) onReturnToChapterSelect();
+          }}
+        />
+      )}
 
       {/* OVERLAYS */}
       <AIDirectorWidget

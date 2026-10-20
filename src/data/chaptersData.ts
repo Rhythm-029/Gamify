@@ -59,20 +59,21 @@ export const CHAPTERS: Chapter[] = [
   {
     id: 2,
     slug: 'chapter-2',
-    title: 'Stakeholder Triage',
-    subtitle: 'Reading the Room',
+    title: 'Environment Prerequisites, Network Gates & UI/UX Signoff',
+    subtitle: 'Act I — Sprint 1 Readiness',
     act: 'I',
     actLabel: 'Act I — Foundation',
     day: 'Day 2–3',
-    duration: '~25 mins',
+    duration: '~2 mins',
     difficulty: 'Moderate',
     xpReward: 300,
     description:
-      'Navigate a minefield of competing agendas. The CFO wants ROI in 60 days. The CHRO wants change management. The IT Head wants autonomy. Who do you align with first?',
+      'The engineering team is blocked on the staging environment. Establish a secure path forward, configure stakeholder communication channels, and secure formal written UI/UX signoff for Sprint 1.',
     objectives: [
-      { label: 'Map the political landscape', type: 'stakeholder' },
-      { label: 'Choose your alliance strategy', type: 'decision' },
-      { label: 'Respond to conflicting Slack/email demands', type: 'communication' },
+      { label: 'Resolve staging environment blockers & security boundaries', type: 'decision' },
+      { label: 'Configure dual-track stakeholder communication channels', type: 'communication' },
+      { label: 'Secure written UI/UX prototype baseline signoff', type: 'decision' },
+      { label: 'Verify prerequisite gates and issue development greenlight', type: 'delivery' },
     ],
     primaryColor: '#f59e0b',
     secondaryColor: '#ef4444',
@@ -329,17 +330,42 @@ export const ACTS = [
   { id: 'IV', label: 'Act IV', subtitle: 'Value', chapters: [10, 11, 12], color: '#f59e0b' },
 ];
 
+// Session-only chapter progression & assignment state (in-memory)
+// Persistent database storage will be connected when authentication & user database are introduced.
+let sessionChapterStatuses: Record<number, ChapterStatus> = { 1: 'unlocked' };
+let sessionChapter1Assignment: any = null;
+
+// Wipe any legacy localStorage data on initial load
+try {
+  localStorage.removeItem('brained_chapter_statuses');
+  localStorage.removeItem('brained_just_unlocked_chapter');
+  localStorage.removeItem('brained_chapter1_assignment');
+} catch {}
+
 export function getStoredChapterStatuses(): Record<number, ChapterStatus> {
-  try {
-    const raw = localStorage.getItem('brained_chapter_statuses');
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return { 1: 'unlocked' };
+  return { ...sessionChapterStatuses };
 }
 
 export function updateChapterStatus(chapterId: number, status: ChapterStatus) {
-  const current = getStoredChapterStatuses();
-  current[chapterId] = status;
-  localStorage.setItem('brained_chapter_statuses', JSON.stringify(current));
+  sessionChapterStatuses[chapterId] = status;
 }
+
+export function getSessionAssignmentResult(): any {
+  return sessionChapter1Assignment;
+}
+
+export function setSessionAssignmentResult(result: any) {
+  sessionChapter1Assignment = result;
+}
+
+export function resetChapterStatuses() {
+  sessionChapterStatuses = { 1: 'unlocked' };
+  sessionChapter1Assignment = null;
+  try {
+    localStorage.removeItem('brained_chapter_statuses');
+    localStorage.removeItem('brained_just_unlocked_chapter');
+    localStorage.removeItem('brained_chapter1_assignment');
+  } catch {}
+}
+
 

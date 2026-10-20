@@ -4,7 +4,8 @@ import {
   Lock, Unlock, ChevronDown, ChevronLeft, ChevronRight,
   Sparkles, CheckCircle2, Play, ArrowRight, RotateCcw
 } from 'lucide-react';
-import { CHAPTERS, type Chapter, getStoredChapterStatuses, updateChapterStatus } from '../../data/chaptersData';
+import { CHAPTERS, type Chapter, getStoredChapterStatuses, updateChapterStatus, resetChapterStatuses } from '../../data/chaptersData';
+import { sound } from '../onboarding/SoundEngine';
 
 interface ChapterSelectHubProps {
   playerConfig: {
@@ -27,9 +28,9 @@ const CHAPTER_VISUALS: Record<number, { title: string; subtitle: string; descrip
     yOffset: 0,
   },
   2: {
-    title: 'Scope & Alignment',
-    subtitle: 'Act I · Stakeholder Triage',
-    description: 'Navigate a minefield of competing agendas. The CFO wants ROI in 60 days. The CHRO wants change management. Who do you align with first?',
+    title: 'PREREQUISITES & UI/UX SIGNOFF',
+    subtitle: 'Act I · Environment Gates & Design Baseline',
+    description: 'Resolve staging environment blockers, establish secure enterprise development, organize stakeholder communication, and secure formal written UI/UX baseline signoff.',
     thumb: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=300&auto=format&fit=crop&q=80',
     yOffset: 14,
   },
@@ -114,6 +115,7 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
   const [hoveredChapter, setHoveredChapter] = useState<number | null>(null);
   const [deniedToast, setDeniedToast] = useState<string | null>(null);
   const [unlockedBanner, setUnlockedBanner] = useState<string | null>(null);
+  const [autoLaunchCountdown, setAutoLaunchCountdown] = useState<number | null>(null);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const playerName = playerConfig?.name || localStorage.getItem('brained_player_name') || 'Riya Mehta';
@@ -122,6 +124,8 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
   // Check if Chapter 2 was just unlocked from previous completion
   useEffect(() => {
     const justUnlocked = localStorage.getItem('brained_just_unlocked_chapter');
+    const autoLaunch = localStorage.getItem('brained_auto_launch_chapter');
+
     if (justUnlocked === '2') {
       localStorage.removeItem('brained_just_unlocked_chapter');
 
@@ -132,19 +136,39 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
         // Shift golden boundary and larger box from Chapter 1 to Chapter 2
         setSelectedChapterId(2);
         setChapterStatuses(getStoredChapterStatuses());
-        setUnlockedBanner('CHAPTER 02 UNLOCKED: SCOPE & ALIGNMENT');
+        setUnlockedBanner('CHAPTER 02 UNLOCKED: PREREQUISITES & UI/UX SIGNOFF');
+        sound.playSystemClearance();
 
         // Smooth scroll container to frame Chapter 2 comfortably
         if (scrollContainerRef.current) {
-          scrollContainerRef.current.scrollTo({ left: 80, behavior: 'smooth' });
+          scrollContainerRef.current.scrollTo({ left: 100, behavior: 'smooth' });
+        }
+
+        if (autoLaunch === '2') {
+          localStorage.removeItem('brained_auto_launch_chapter');
+          setAutoLaunchCountdown(3);
         }
 
         setTimeout(() => setUnlockedBanner(null), 3500);
-      }, 500);
+      }, 700);
 
       return () => clearTimeout(timer);
     }
   }, []);
+
+  // Auto-launch countdown effect
+  useEffect(() => {
+    if (autoLaunchCountdown === null) return;
+    if (autoLaunchCountdown <= 0) {
+      setAutoLaunchCountdown(null);
+      onStartChapter(2);
+      return;
+    }
+    const timer = setTimeout(() => {
+      setAutoLaunchCountdown((prev) => (prev !== null ? prev - 1 : null));
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [autoLaunchCountdown, onStartChapter]);
 
   const handleCardClick = (chId: number) => {
     const status = chapterStatuses[chId] || (chId === 1 ? 'unlocked' : 'locked');
@@ -162,6 +186,14 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
       const scrollAmount = direction === 'left' ? -380 : 380;
       scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
     }
+  };
+
+  const handleResetProgress = () => {
+    resetChapterStatuses();
+    setChapterStatuses(getStoredChapterStatuses());
+    setSelectedChapterId(1);
+    setDeniedToast('Simulation reset: Chapter 1 is unlocked');
+    setTimeout(() => setDeniedToast(null), 2500);
   };
 
   const unlockedCount = Object.values(chapterStatuses).filter(s => s === 'unlocked' || s === 'completed').length;
@@ -203,18 +235,29 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
           </div>
         </div>
 
-        {/* Right: Executive Profile Dropdown Pill */}
-        <div className="flex items-center space-x-3 bg-white/[0.06] hover:bg-white/[0.10] transition-all border border-white/10 rounded-full py-1.5 pl-2 pr-4 backdrop-blur-md cursor-pointer shadow-lg">
-          <img 
-            src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80" 
-            className="w-8 h-8 rounded-full object-cover ring-1 ring-amber-400/60 shadow-[0_0_8px_rgba(245,158,11,0.3)]" 
-            alt={playerName} 
-          />
-          <div className="text-left">
-            <div className="text-xs font-semibold text-white leading-tight">{playerName}</div>
-            <div className="text-[10px] text-slate-400 leading-tight">{playerRole}</div>
+        {/* Right: Controls & Executive Profile Dropdown Pill */}
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={handleResetProgress}
+            title="Reset simulation to Chapter 1"
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white text-xs font-mono transition-all cursor-pointer"
+          >
+            <RotateCcw className="w-3 h-3 text-amber-400" />
+            <span>Reset Progress</span>
+          </button>
+
+          <div className="flex items-center space-x-3 bg-white/[0.06] hover:bg-white/[0.10] transition-all border border-white/10 rounded-full py-1.5 pl-2 pr-4 backdrop-blur-md cursor-pointer shadow-lg">
+            <img 
+              src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80" 
+              className="w-8 h-8 rounded-full object-cover ring-1 ring-amber-400/60 shadow-[0_0_8px_rgba(245,158,11,0.3)]" 
+              alt={playerName} 
+            />
+            <div className="text-left">
+              <div className="text-xs font-semibold text-white leading-tight">{playerName}</div>
+              <div className="text-[10px] text-slate-400 leading-tight">{playerRole}</div>
+            </div>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-1" />
           </div>
-          <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-1" />
         </div>
       </header>
 
@@ -268,9 +311,38 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
         </motion.div>
       </div>
 
-      {/* ── CELEBRATORY UNLOCKED BANNER ── */}
+      {/* ── CELEBRATORY UNLOCKED BANNER / AUTO-LAUNCH CARD ── */}
       <AnimatePresence>
-        {unlockedBanner && (
+        {autoLaunchCountdown !== null ? (
+          <motion.div
+            initial={{ opacity: 0, y: -25, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -25, scale: 0.95 }}
+            className="absolute top-24 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl bg-[#0f1424]/95 border-2 border-amber-400/80 shadow-[0_0_45px_rgba(245,158,11,0.55)] backdrop-blur-2xl text-white flex items-center space-x-4 select-none"
+          >
+            <div className="w-8 h-8 rounded-full bg-amber-400/20 border border-amber-400/50 flex items-center justify-center shrink-0">
+              <Sparkles className="w-4 h-4 text-amber-400 animate-spin" />
+            </div>
+            <div>
+              <div className="text-[10px] font-mono tracking-widest text-amber-400 uppercase font-bold">
+                PROGRESSION UNLOCKED
+              </div>
+              <div className="text-xs font-bold text-white">
+                Transitioning to Chapter 2 in {autoLaunchCountdown}s...
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setAutoLaunchCountdown(null);
+                onStartChapter(2);
+              }}
+              className="ml-3 px-4 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center space-x-1.5 shadow-lg cursor-pointer transition-all"
+            >
+              <span>Enter Now</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </motion.div>
+        ) : unlockedBanner ? (
           <motion.div
             initial={{ opacity: 0, y: -25, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -280,7 +352,7 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
             <Sparkles className="w-4 h-4 text-amber-400 animate-spin" />
             <span>{unlockedBanner}</span>
           </motion.div>
-        )}
+        ) : null}
       </AnimatePresence>
 
       {/* ═══════════════════════════════════════════════════════════════════
