@@ -356,6 +356,81 @@ class SoundEngine {
     }
   }
 
+  // Soft high-fidelity Teams message notification chime
+  playMessagePing() {
+    this.init();
+    if (!this.ctx || this.isMuted) return;
+    try {
+      const time = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, time);
+      osc.frequency.exponentialRampToValueAtTime(1320, time + 0.1);
+      gain.gain.setValueAtTime(0, time);
+      gain.gain.linearRampToValueAtTime(0.12, time + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.35);
+      osc.connect(gain);
+      if (this.masterGain) gain.connect(this.masterGain);
+      osc.start(time);
+      osc.stop(time + 0.36);
+    } catch {}
+  }
+
+  // Microsoft Teams participant joined call chime
+  playTeamsJoin() {
+    this.init();
+    if (!this.ctx || this.isMuted) return;
+    try {
+      const time = this.ctx.currentTime;
+      const osc1 = this.ctx.createOscillator();
+      const osc2 = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(587.33, time); // D5
+      osc1.frequency.setValueAtTime(880.00, time + 0.1); // A5
+
+      osc2.type = 'triangle';
+      osc2.frequency.setValueAtTime(880.00, time);
+      osc2.frequency.setValueAtTime(1174.66, time + 0.1); // D6
+
+      gain.gain.setValueAtTime(0, time);
+      gain.gain.linearRampToValueAtTime(0.08, time + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.38);
+
+      osc1.connect(gain);
+      osc2.connect(gain);
+      if (this.masterGain) gain.connect(this.masterGain);
+
+      osc1.start(time);
+      osc2.start(time);
+      osc1.stop(time + 0.4);
+      osc2.stop(time + 0.4);
+    } catch {}
+  }
+
+  // Soft file download completed chime
+  playDownloadComplete() {
+    this.init();
+    if (!this.ctx || this.isMuted) return;
+    try {
+      const time = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(523.25, time); // C5
+      osc.frequency.setValueAtTime(659.25, time + 0.08); // E5
+      gain.gain.setValueAtTime(0, time);
+      gain.gain.linearRampToValueAtTime(0.08, time + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.3);
+      osc.connect(gain);
+      if (this.masterGain) gain.connect(this.masterGain);
+      osc.start(time);
+      osc.stop(time + 0.32);
+    } catch {}
+  }
+
   stopAll() {
     this.stopOfficeHum();
     this.stopTeamsRingtone();

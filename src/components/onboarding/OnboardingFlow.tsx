@@ -138,78 +138,11 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
 
     const timer = setTimeout(() => {
       setCinematicScreen('init');
-      sound.playTyping();
+      sound.playClick();
     }, 1800);
 
     return () => clearTimeout(timer);
   }, []);
-
-  // LINKEDIN LINK SCRAPER & AUTO-FILL
-  const handleScrapeLinkedin = async (targetUrl?: string) => {
-    const urlToScrape = targetUrl || linkedinUrl;
-    if (!urlToScrape.trim()) return;
-
-    setIsScraping(true);
-
-    try {
-      const res = await fetch('http://localhost:4000/api/linkedin/fetch-profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ linkedinUrl: urlToScrape.trim() }),
-      });
-      const data = await res.json();
-
-      if (data.success && data.profile) {
-        const p = data.profile;
-        setProfileForm((prev) => ({
-          ...prev,
-          name: p.name || prev.name,
-          role: p.jobStatus || p.headline || prev.role || 'Software Engineer & Tech Lead',
-          company: p.company || prev.company || 'Enterprise Systems',
-          avatar: p.avatar || prev.avatar || `https://unavatar.io/linkedin/${p.username}`,
-        }));
-      }
-    } catch (err) {
-      const match = urlToScrape.match(/linkedin\.com\/in\/([^\/\?#]+)/i);
-      if (match && match[1]) {
-        const parsedName = match[1]
-          .replace(/-[a-f0-9]{6,12}$/i, '')
-          .replace(/[-_]/g, ' ')
-          .replace(/\b\w/g, (c) => c.toUpperCase())
-          .replace(/\d+/g, '')
-          .trim();
-
-        if (parsedName) {
-          setProfileForm((prev) => ({
-            ...prev,
-            name: parsedName,
-            avatar: prev.avatar || `https://unavatar.io/linkedin/${match[1]}`,
-          }));
-        }
-      }
-    } finally {
-      setIsScraping(false);
-    }
-  };
-
-  const handleNextStep = () => {
-    if (step === 1) {
-      if (!profileForm.name.trim()) {
-        setProfileForm((prev) => ({ ...prev, name: 'Executive Leader' }));
-      }
-      setStep(2);
-    } else {
-      // Step 2 clicks Launch Brained OS Workspace: Initiate Cinematic!
-      sound.startAmbientMusic();
-      sound.playSystemClearance();
-      setCinematicActive(true);
-      setCinematicScreen('transition');
-      
-      setTimeout(() => {
-        setCinematicScreen('init');
-      }, 2500);
-    }
-  };
 
   // Sound Engine Muting Effect
   useEffect(() => {

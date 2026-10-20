@@ -1,0 +1,117 @@
+{
+  "chapter": 1,
+  "chapterTitle": "The Briefing — Project Amigo Kickoff",
+  "audioBasePath": "/audio/chapter1",
+  "files": [
+    {
+      "filename": "01_marcus_project_amigo.mp3",
+      "speaker": "Marcus Reed",
+      "role": "Chief Technology Officer · Brained",
+      "gender": "Male",
+      "voiceCharacteristics": "Deep, authoritative, executive, measured British or American accent",
+      "dialogue": "This is Project Amigo: an HRMS transformation for 80,000 ICICI Bank employees.",
+      "durationEstimateMs": 7000,
+      "context": "Meeting Part 1: Marcus opens the Project Amigo executive call."
+    },
+    {
+      "filename": "02_sophia_deadline_demand.mp3",
+      "speaker": "Sophia Bennett",
+      "role": "Head of HR Operations · ICICI Bank",
+      "gender": "Female",
+      "voiceCharacteristics": "Confident, polished corporate banking executive, Indian or international accent, firm and polite",
+      "dialogue": "We need 12 HRMS modules, including appraisals, attendance and leave. The appraisal cycle opens in 90 days, and everything is expected to be ready before then.",
+      "durationEstimateMs": 8000,
+      "context": "Meeting Part 1: Sophia sets the client's aggressive 90-day 12-module demand."
+    },
+    {
+      "filename": "03_marcus_feasibility_challenge.mp3",
+      "speaker": "Marcus Reed",
+      "role": "Chief Technology Officer · Brained",
+      "gender": "Male",
+      "voiceCharacteristics": "Skeptical, analytical, firm technical pushback",
+      "dialogue": "Twelve modules in 90 days? We need to establish what's actually feasible before we commit.",
+      "durationEstimateMs": 4500,
+      "context": "Meeting Part 1: Marcus pushes back on Sophia's unvalidated deadline."
+    },
+    {
+      "filename": "04a_player_decision_a.mp3",
+      "speaker": "Player (Consultant)",
+      "role": "Digital Transformation Lead",
+      "gender": "Neutral / Dynamic",
+      "voiceCharacteristics": "Over-eager, accommodating, trying to please the client without validation",
+      "dialogue": "We can deliver everything in 90 days. Let's work out the details as we go.",
+      "durationEstimateMs": 4500,
+      "context": "Meeting Decision Option A: Committing to 90 days without technical validation."
+    },
+    {
+      "filename": "04b_player_decision_b.mp3",
+      "speaker": "Player (Consultant)",
+      "role": "Digital Transformation Lead",
+      "gender": "Neutral / Dynamic",
+      "voiceCharacteristics": "Blunt, defensive, direct confrontation with client",
+      "dialogue": "If engineering says it isn't feasible, we need to reject the deadline.",
+      "durationEstimateMs": 4000,
+      "context": "Meeting Decision Option B: Premature rejection of client timeline."
+    },
+    {
+      "filename": "04c_player_decision_c.mp3",
+      "speaker": "Player (Consultant)",
+      "role": "Digital Transformation Lead",
+      "gender": "Neutral / Dynamic",
+      "voiceCharacteristics": "Calm, master consultant, diplomatic, highly authoritative and balanced",
+      "dialogue": "Let's validate the scope, capacity, peak load and dependencies before agreeing on a realistic delivery plan.",
+      "durationEstimateMs": 6000,
+      "context": "Meeting Decision Option C: Recommended senior consulting governance answer."
+    },
+    {
+      "filename": "05_marcus_peak_traffic.mp3",
+      "speaker": "Marcus Reed",
+      "role": "Chief Technology Officer · Brained",
+      "gender": "Male",
+      "voiceCharacteristics": "Technical gravity, architectural risk warning",
+      "dialogue": "Peak traffic could reach 30,000 simultaneous logins. We haven't validated whether the legacy system can handle it.",
+      "durationEstimateMs": 6500,
+      "context": "Meeting Part 2: Marcus highlights technical scalability risk."
+    },
+    {
+      "filename": "06_daniel_ldap_credentials.mp3",
+      "speaker": "Daniel Brooks",
+      "role": "Program Manager · Brained",
+      "gender": "Male",
+      "voiceCharacteristics": "Operational, urgent, pragmatic project manager",
+      "dialogue": "And we still lack the LDAP sandbox credentials needed to validate single sign-on end to end.",
+      "durationEstimateMs": 5500,
+      "context": "Meeting Part 2: Daniel surfaces the third-party dependency obstacle."
+    },
+    {
+      "filename": "07_aarav_readme_instruction.mp3",
+      "speaker": "Aarav Kapoor",
+      "role": "Senior Consultant · Brained",
+      "gender": "Male",
+      "voiceCharacteristics": "Composed, senior partner tone, mentoring Indian or international accent",
+      "dialogue": "DT, review ReadMe AI's minutes, correct what it missed, and submit the official record before we commit to a plan.",
+      "durationEstimateMs": 6000,
+      "context": "Meeting Part 2: Aarav tasks the player with fixing ReadMe AI MoM."
+    },
+    {
+      "filename": "08_aarav_teams_briefing.mp3",
+      "speaker": "Aarav Kapoor",
+      "role": "Senior Consultant · Brained",
+      "gender": "Male",
+      "voiceCharacteristics": "Supportive, direct, strategic consultant audio note",
+      "dialogue": "Good work getting the meeting documented. We now have a clearer picture of what the client wants, but twelve modules in 90 days is going to need careful planning. Before the team starts building, I need your initial priorities. Review the scope-planning document and complete the assignment inside it before we move forward.",
+      "durationEstimateMs": 14000,
+      "context": "Teams Post-MoM: Aarav's message to player attaching Project_Amigo_Initial_Scope_Planning.pdf."
+    },
+    {
+      "filename": "09_aarav_teams_feedback.mp3",
+      "speaker": "Aarav Kapoor",
+      "role": "Senior Consultant · Brained",
+      "gender": "Male",
+      "voiceCharacteristics": "Satisfied, approving senior feedback",
+      "dialogue": "Solid breakdown. Prioritizing Appraisals, Attendance, and Leave hits the critical path, and treating LDAP as an explicit dependency prevents premature blockages. You're ready to proceed to Chapter 2.",
+      "durationEstimateMs": 12000,
+      "context": "Teams Assignment Evaluation: Aarav reviews and approves player's scope assignment."
+    }
+  ]
+}
