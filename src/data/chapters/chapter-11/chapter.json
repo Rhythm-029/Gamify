@@ -1,0 +1,32 @@
+{
+  "id": 11,
+  "slug": "chapter-11",
+  "title": "The Final Presentation",
+  "subtitle": "Board-Level Stakes & Strategic Defense",
+  "act": "IV",
+  "actLabel": "Act IV — Value",
+  "day": "Day 19",
+  "duration": "~30 mins",
+  "difficulty": "Expert",
+  "xpReward": 600,
+  "description": "You present to the Board of Directors. Every stakeholder you've managed, every decision you've made, every signal you've sent — it all comes to the surface here. Deliver the knockout.",
+  "stakeholders": [
+    { "name": "Chairman of the Board", "role": "ICICI Bank Board of Directors", "agenda": "Evaluating long-term enterprise modernization capability and risk mitigation." },
+    { "name": "Marcus Reed", "role": "CTO · Brained", "agenda": "Co-defending architectural resilience and engineering standards." },
+    { "name": "Sophia Bennett", "role": "Head of HR Operations", "agenda": "Validating user satisfaction and enterprise change adoption success." }
+  ],
+  "objectives": [
+    { "label": "Deliver an articulate board-level executive transformation defense", "type": "stakeholder" },
+    { "label": "Handle hostile board member challenge on long-term vendor dependency", "type": "decision" },
+    { "label": "Secure unanimous board mandate and investment approval for Phase 2 expansion", "type": "stakeholder" }
+  ],
+  "deliverables": [
+    "Board Executive Transformation Dossier",
+    "Long-Term Enterprise Roadmap & Capability Transfer Plan",
+    "Board Resolution on Digital Modernization"
+  ],
+  "primaryColor": "#7c3aed",
+  "secondaryColor": "#ec4899",
+  "accentColor": "#c084fc",
+  "backgroundIcon": "👔"
+}

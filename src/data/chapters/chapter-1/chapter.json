@@ -1,0 +1,60 @@
+{
+  "id": 1,
+  "slug": "chapter-1",
+  "title": "The Briefing",
+  "subtitle": "Project Titan Kickoff & Project Amigo Scope Planning",
+  "act": "I",
+  "actLabel": "Act I — Foundation",
+  "day": "Day 1",
+  "duration": "~20 mins",
+  "difficulty": "Starter",
+  "xpReward": 250,
+  "description": "You've just joined Titan Manufacturing as a Digital Transformation Consultant on behalf of Brained. The executive kickoff call for Project Amigo with ICICI Bank's 80,000 employees begins now. Orient yourself, navigate high-stakes executive tension between Marcus Reed (CTO) and Sophia Bennett (ICICI Client Lead), document the official record in ReadMe AI, and complete Aarav Kapoor's initial scope-planning assignment.",
+  "stakeholders": [
+    {
+      "id": "marcus",
+      "name": "Marcus Reed",
+      "role": "Chief Technology Officer · Brained",
+      "avatar": "/character/marcus_reed/MarcusDP.png",
+      "agenda": "Architectural integrity, technical feasibility, avoiding unvetted delivery promises."
+    },
+    {
+      "id": "sophia",
+      "name": "Sophia Bennett",
+      "role": "Head of HR Operations · ICICI Bank",
+      "avatar": "/character/Sophia_bennett/SophiaDP.png",
+      "agenda": "Deliver all 12 HRMS modules strictly before the 90-day nationwide appraisal window."
+    },
+    {
+      "id": "daniel",
+      "name": "Daniel Brooks",
+      "role": "Program Manager · Brained",
+      "avatar": "/character/Daniel_Brooks/DanielDP.png",
+      "agenda": "Managing infrastructure bottlenecks, resolving LDAP credentials access for Single Sign-On."
+    },
+    {
+      "id": "aarav",
+      "name": "Aarav Kapoor",
+      "role": "Senior Consultant · Project Manager · Brained",
+      "avatar": "/character/AaravDP.png",
+      "agenda": "Senior governance, accurate MoM capture, structured scope prioritization."
+    }
+  ],
+  "objectives": [
+    { "label": "Attend the Project Amigo Kickoff Call with camera engagement", "type": "decision" },
+    { "label": "Respond to Sophia's 90-day deadline demand under CTO scrutiny", "type": "decision" },
+    { "label": "Review and correct AI-generated minutes in ReadMe AI", "type": "communication" },
+    { "label": "Prioritize high-impact modules in Project Amigo Initial Scope Planning", "type": "analysis" },
+    { "label": "Formulate LDAP sandbox dependency strategy without stalling the engagement", "type": "decision" },
+    { "label": "Establish mandatory architectural validation gates before sprint commencement", "type": "delivery" }
+  ],
+  "deliverables": [
+    "Project Amigo Kickoff Minutes of Meeting (MoM)",
+    "Project Amigo Initial Scope Planning & Assignment 01 Submission",
+    "Aarav Kapoor Teams Alignment Confirmation"
+  ],
+  "primaryColor": "#3b82f6",
+  "secondaryColor": "#8b5cf6",
+  "accentColor": "#60a5fa",
+  "backgroundIcon": "🚀"
+}

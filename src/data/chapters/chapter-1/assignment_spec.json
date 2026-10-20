@@ -1,0 +1,58 @@
+{
+  "assignmentId": "project_amigo_scope_assignment_01",
+  "title": "Project Amigo — Initial Scope Planning & Assignment 01",
+  "document": "Project_Amigo_Initial_Scope_Planning.pdf",
+  "tasks": [
+    {
+      "taskNumber": 1,
+      "title": "Select 3 Initial Delivery Capabilities",
+      "instruction": "Select the three modules that must be delivered first based on the client's mandatory appraisal deadline and day-to-day operations.",
+      "maxSelections": 3,
+      "options": [
+        { "id": "Appraisals", "title": "Appraisals", "isIdeal": true, "reason": "Explicitly requested for 90-day cycle" },
+        { "id": "Attendance", "title": "Attendance", "isIdeal": true, "reason": "Fundamental daily operational telemetry" },
+        { "id": "Leave", "title": "Leave Management", "isIdeal": true, "reason": "Core HR baseline required alongside attendance" },
+        { "id": "Payroll", "title": "Payroll Integration", "isIdeal": false, "reason": "High complexity financial dependency; defer to Phase 2" },
+        { "id": "Recruitment", "title": "Recruitment ATS", "isIdeal": false, "reason": "Non-critical path for the existing 80,000 workforce" },
+        { "id": "Learning", "title": "L&D Learning Portal", "isIdeal": false, "reason": "Nice-to-have; non-blocking" }
+      ]
+    },
+    {
+      "taskNumber": 2,
+      "title": "LDAP Dependency Strategy",
+      "instruction": "How should engineering proceed while waiting for the bank's security team to provision LDAP sandbox credentials?",
+      "options": [
+        {
+          "id": "A",
+          "label": "Proceed on assumptions and defer SSO access setup to the end of development.",
+          "risk": "Critical",
+          "scoreDelta": 5
+        },
+        {
+          "id": "B",
+          "label": "Record the LDAP sandbox credentials as an explicit dependency, proceed with modules that do not require SSO, and follow up immediately with the security team.",
+          "risk": "Minimal",
+          "scoreDelta": 35,
+          "isRecommended": true
+        },
+        {
+          "id": "C",
+          "label": "Pause all project work until the bank provisions the credentials.",
+          "risk": "High",
+          "scoreDelta": 10
+        }
+      ]
+    },
+    {
+      "taskNumber": 3,
+      "title": "Mandatory Validation Gates",
+      "instruction": "Select all essential technical gates that must be satisfied before sprint kickoff.",
+      "options": [
+        { "id": "peak_load", "label": "Simulate and validate peak load capacity of 30,000 concurrent logins", "isEssential": true },
+        { "id": "core_flows", "label": "Define core data flows and database schemas for prioritized modules", "isEssential": true },
+        { "id": "ui_mockups", "label": "Complete all visual UI mockups for all 12 modules", "isEssential": false },
+        { "id": "hardware", "label": "Procure dedicated on-premise hardware before writing any code", "isEssential": false }
+      ]
+    }
+  ]
+}

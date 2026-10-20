@@ -1,0 +1,31 @@
+{
+  "id": 8,
+  "slug": "chapter-8",
+  "title": "The Pivot",
+  "subtitle": "When the Plan Breaks & Regulatory Shock",
+  "act": "III",
+  "actLabel": "Act III — Delivery",
+  "day": "Day 14",
+  "duration": "~25 mins",
+  "difficulty": "Expert",
+  "xpReward": 500,
+  "description": "Midway through rollout, a regulatory compliance issue surfaces. The entire deployment plan must be re-evaluated in 48 hours. Your credibility is on the line.",
+  "stakeholders": [
+    { "name": "Reserve Bank Compliance Auditor", "role": "Regulatory Liaison", "agenda": "Enforcing strict localized data residency and statutory audit trails." },
+    { "name": "Aarav Kapoor", "role": "Senior Consultant · Brained", "agenda": "Assessing impact on contract deliverables and steering committee optics." }
+  ],
+  "objectives": [
+    { "label": "Assess regulatory compliance risk impact on existing cloud architecture", "type": "analysis" },
+    { "label": "Propose and defend a zero-downtime architectural pivot strategy", "type": "decision" },
+    { "label": "Maintain stakeholder confidence while revising milestone commitments", "type": "stakeholder" }
+  ],
+  "deliverables": [
+    "Regulatory Compliance Impact Assessment",
+    "Revised Deployment Pivot Plan",
+    "Emergency Steering Committee Briefing Deck"
+  ],
+  "primaryColor": "#dc2626",
+  "secondaryColor": "#7c3aed",
+  "accentColor": "#f43f5e",
+  "backgroundIcon": "⚠️"
+}

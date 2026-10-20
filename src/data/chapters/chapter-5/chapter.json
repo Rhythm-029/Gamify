@@ -1,0 +1,31 @@
+{
+  "id": 5,
+  "slug": "chapter-5",
+  "title": "Build Sprint",
+  "subtitle": "Prototype Under Fire & Cera AI Execution",
+  "act": "II",
+  "actLabel": "Act II — Design",
+  "day": "Day 8–10",
+  "duration": "~35 mins",
+  "difficulty": "Hard",
+  "xpReward": 450,
+  "description": "Cera AI begins building. You manage scope, quality, and speed. A critical bug surfaces. A stakeholder demands a feature that wasn't scoped. Ship or slip?",
+  "stakeholders": [
+    { "name": "Cera AI", "role": "Autonomous Software Engineer Agent", "agenda": "Fast iterative code synthesis, automated test suites, pull request generation." },
+    { "name": "Daniel Brooks", "role": "Program Manager", "agenda": "Tracking sprint burndown, flagging blocking dependency tickets." }
+  ],
+  "objectives": [
+    { "label": "Direct Cera AI through sprint execution and code generation prompts", "type": "delivery" },
+    { "label": "Handle scope creep under extreme deadline pressure", "type": "decision" },
+    { "label": "Ensure prototype quality gates and security audits pass successfully", "type": "delivery" }
+  ],
+  "deliverables": [
+    "Working Interactive Prototype in Cera IDE",
+    "Automated Cypress/Playwright End-to-End Test Suite",
+    "Sprint Velocity and Scope Deviation Report"
+  ],
+  "primaryColor": "#f97316",
+  "secondaryColor": "#eab308",
+  "accentColor": "#fb923c",
+  "backgroundIcon": "⚡"
+}

@@ -1,0 +1,31 @@
+{
+  "id": 7,
+  "slug": "chapter-7",
+  "title": "The Resistance",
+  "subtitle": "Change Management Crisis & Cultural Friction",
+  "act": "III",
+  "actLabel": "Act III — Delivery",
+  "day": "Day 12–13",
+  "duration": "~30 mins",
+  "difficulty": "Expert",
+  "xpReward": 500,
+  "description": "The workforce is pushing back. A union rep files a concern. Middle management sabotages the training sessions. This is where most transformations die. How do you lead through resistance?",
+  "stakeholders": [
+    { "name": "Arun Verma", "role": "Employee Union Representative", "agenda": "Concerned biometric attendance tracking infringes on worker privacy." },
+    { "name": "Meera Joshi", "role": "Regional Branch Operations Manager", "agenda": "Frustrated with additional data entry overhead on branch employees." }
+  ],
+  "objectives": [
+    { "label": "De-escalate the union concern through transparent privacy policy alignment", "type": "stakeholder" },
+    { "label": "Design a targeted, empathetic change management and enablement program", "type": "delivery" },
+    { "label": "Turn a resistant regional manager into an enthusiastic transformation champion", "type": "stakeholder" }
+  ],
+  "deliverables": [
+    "Transformation Privacy & Data Ethics Charter",
+    "Change Enablement & Champion Network Plan",
+    "Branch Operational Efficiency Agreement"
+  ],
+  "primaryColor": "#ef4444",
+  "secondaryColor": "#f97316",
+  "accentColor": "#f87171",
+  "backgroundIcon": "🔥"
+}

@@ -1,0 +1,30 @@
+{
+  "id": 12,
+  "slug": "chapter-12",
+  "title": "The Reckoning",
+  "subtitle": "Your Legacy Score & Executive Certification",
+  "act": "IV",
+  "actLabel": "Act IV — Value",
+  "day": "Day 20",
+  "duration": "~20 mins",
+  "difficulty": "Expert",
+  "xpReward": 750,
+  "description": "The simulation ends. Every choice evaluated. Every signal scored. Your transformation legacy is calculated. Your certificate generated. How did you do?",
+  "stakeholders": [
+    { "name": "Brained Executive Evaluation Committee", "role": "Global Certification Board", "agenda": "Auditing consulting signals, trust trajectory, and business value generated." }
+  ],
+  "objectives": [
+    { "label": "Review your comprehensive decision trajectory and behavioral signals", "type": "analysis" },
+    { "label": "Receive your definitive Brained Transformation Leadership Score", "type": "analysis" },
+    { "label": "Earn your personalized, cryptographically verifiable Brained Certification", "type": "delivery" }
+  ],
+  "deliverables": [
+    "Transformation Consultant Performance Evaluation",
+    "Executive Behavioral Competency Radar Chart",
+    "Brained Certified Digital Transformation Leader Credential"
+  ],
+  "primaryColor": "#f59e0b",
+  "secondaryColor": "#dc2626",
+  "accentColor": "#fcd34d",
+  "backgroundIcon": "🏆"
+}

@@ -1,0 +1,32 @@
+{
+  "id": 2,
+  "slug": "chapter-2",
+  "title": "Stakeholder Triage",
+  "subtitle": "Reading the Room & Alliance Mapping",
+  "act": "I",
+  "actLabel": "Act I — Foundation",
+  "day": "Day 2–3",
+  "duration": "~25 mins",
+  "difficulty": "Moderate",
+  "xpReward": 300,
+  "description": "Navigate a minefield of competing agendas. The CFO wants ROI in 60 days. The CHRO wants change management. The IT Head wants autonomy. Who do you align with first?",
+  "stakeholders": [
+    { "name": "Vikram Malhotra", "role": "Chief Financial Officer", "agenda": "Demanding tangible operational cost reduction within 60 days." },
+    { "name": "Sunita Rao", "role": "Chief Human Resources Officer", "agenda": "Demanding zero employee friction and intensive change management." },
+    { "name": "Rajesh Nair", "role": "Head of Enterprise IT", "agenda": "Fiercely protective of legacy mainframe architecture and IT autonomy." }
+  ],
+  "objectives": [
+    { "label": "Map the political and influence landscape across executive leadership", "type": "stakeholder" },
+    { "label": "Choose your core alliance strategy without creating executive adversaries", "type": "decision" },
+    { "label": "Respond to conflicting Slack and email demands under tight timelines", "type": "communication" }
+  ],
+  "deliverables": [
+    "Stakeholder Power-Interest Matrix",
+    "Executive Alignment Memo",
+    "Conflict Resolution Communication Log"
+  ],
+  "primaryColor": "#f59e0b",
+  "secondaryColor": "#ef4444",
+  "accentColor": "#fbbf24",
+  "backgroundIcon": "🎯"
+}

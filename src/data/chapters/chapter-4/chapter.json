@@ -1,0 +1,31 @@
+{
+  "id": 4,
+  "slug": "chapter-4",
+  "title": "The Architecture",
+  "subtitle": "Designing the Future State & Tech Selection",
+  "act": "II",
+  "actLabel": "Act II — Design",
+  "day": "Day 6–7",
+  "duration": "~30 mins",
+  "difficulty": "Hard",
+  "xpReward": 400,
+  "description": "Blueprint the solution. Prioritize use cases. Define the technology stack. Every choice has trade-offs. The board meets in 7 days. Your architecture needs to hold.",
+  "stakeholders": [
+    { "name": "Marcus Reed", "role": "CTO · Brained", "agenda": "Enforcing microservices vs modular monolith trade-offs." },
+    { "name": "Enterprise Security Team", "role": "Infosec Committee", "agenda": "Zero-trust compliance, encryption at rest, SSO token expiry standards." }
+  ],
+  "objectives": [
+    { "label": "Define To-Be target solution architecture and data models", "type": "delivery" },
+    { "label": "Select and defend technology choices against legacy constraints", "type": "decision" },
+    { "label": "Align architecture with business budget and SLA constraints", "type": "analysis" }
+  ],
+  "deliverables": [
+    "Target Architecture Blueprint (C4 Model)",
+    "API Specification & Microservice Contracts",
+    "Security & Compliance Architecture Validation"
+  ],
+  "primaryColor": "#8b5cf6",
+  "secondaryColor": "#ec4899",
+  "accentColor": "#a78bfa",
+  "backgroundIcon": "🏗️"
+}

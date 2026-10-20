@@ -1,0 +1,31 @@
+{
+  "id": 3,
+  "slug": "chapter-3",
+  "title": "Diagnostic Sprint",
+  "subtitle": "Finding the Real Problem & As-Is Discovery",
+  "act": "I",
+  "actLabel": "Act I — Foundation",
+  "day": "Day 4–5",
+  "duration": "~30 mins",
+  "difficulty": "Moderate",
+  "xpReward": 350,
+  "description": "Data interviews. Process walkthroughs. Legacy system discovery. The real transformation problem is hidden under layers of organizational theatre. Find it.",
+  "stakeholders": [
+    { "name": "Deepa Sharma", "role": "Lead Systems Analyst", "agenda": "Revealing hidden database schema discrepancies and data debt." },
+    { "name": "Karan Singhania", "role": "Plant Operations Lead", "agenda": "Explaining manual spreadsheet workarounds on the factory floor." }
+  ],
+  "objectives": [
+    { "label": "Complete 3 diagnostic stakeholder sessions with operational leaders", "type": "analysis" },
+    { "label": "Identify the core process breakdown in legacy attendance logging", "type": "analysis" },
+    { "label": "Draft your authoritative As-Is Diagnostic Assessment", "type": "delivery" }
+  ],
+  "deliverables": [
+    "As-Is Process Map",
+    "Data Discrepancy & Technical Debt Register",
+    "Diagnostic Findings Presentation"
+  ],
+  "primaryColor": "#10b981",
+  "secondaryColor": "#3b82f6",
+  "accentColor": "#34d399",
+  "backgroundIcon": "🔍"
+}

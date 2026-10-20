@@ -1,0 +1,31 @@
+{
+  "id": 6,
+  "slug": "chapter-6",
+  "title": "The Prototype Review",
+  "subtitle": "Defending Your Build & Live Demonstration",
+  "act": "II",
+  "actLabel": "Act II — Design",
+  "day": "Day 11",
+  "duration": "~25 mins",
+  "difficulty": "Hard",
+  "xpReward": 400,
+  "description": "Your prototype goes live with the review committee. The CTO finds a gap. The CHRO says adoption will fail. The business sponsor loves it. Defend, adapt, persuade.",
+  "stakeholders": [
+    { "name": "Marcus Reed", "role": "CTO · Brained", "agenda": "Scrutinizing latency, failover mechanisms, and concurrency thresholds." },
+    { "name": "Sophia Bennett", "role": "Head of HR Operations", "agenda": "Evaluating employee UX simplicity and mobile responsiveness." }
+  ],
+  "objectives": [
+    { "label": "Present live interactive prototype to executive review committee", "type": "stakeholder" },
+    { "label": "Handle live critical technical challenge regarding offline sync", "type": "decision" },
+    { "label": "Document revised feedback and Phase 2 backlog items in ReadMe MoM", "type": "communication" }
+  ],
+  "deliverables": [
+    "Live Prototype Demonstration Walkthrough",
+    "Committee Feedback & Backlog Triage MoM",
+    "Phase 2 Engineering Roadmap"
+  ],
+  "primaryColor": "#06b6d4",
+  "secondaryColor": "#3b82f6",
+  "accentColor": "#22d3ee",
+  "backgroundIcon": "🎬"
+}

@@ -1,0 +1,89 @@
+{
+  "meetingId": "project_amigo_kickoff",
+  "title": "Project Amigo Executive Kickoff Call",
+  "participants": [
+    { "id": "marcus", "name": "Marcus Reed", "role": "CTO · Brained", "avatar": "/character/marcus_reed/MarcusDP.png" },
+    { "id": "sophia", "name": "Sophia Bennett", "role": "Head of HR Ops · ICICI Bank", "avatar": "/character/Sophia_bennett/SophiaDP.png" },
+    { "id": "daniel", "name": "Daniel Brooks", "role": "Program Manager · Brained", "avatar": "/character/Daniel_Brooks/DanielDP.png" },
+    { "id": "aarav", "name": "Aarav Kapoor", "role": "Senior Consultant · Brained", "avatar": "/character/AaravDP.png" }
+  ],
+  "scriptPart1": [
+    {
+      "id": "line_1_marcus",
+      "speaker": "marcus",
+      "text": "This is Project Amigo: an HRMS transformation for 80,000 ICICI Bank employees.",
+      "durationMs": 7000,
+      "audioSrc": "/audio/chapter1/01_marcus_project_amigo.mp3"
+    },
+    {
+      "id": "line_2_sophia",
+      "speaker": "sophia",
+      "text": "We need 12 HRMS modules, including appraisals, attendance and leave. The appraisal cycle opens in 90 days, and everything is expected to be ready before then.",
+      "durationMs": 8000,
+      "audioSrc": "/audio/chapter1/02_sophia_deadline_demand.mp3"
+    },
+    {
+      "id": "line_3_marcus",
+      "speaker": "marcus",
+      "text": "Twelve modules in 90 days? We need to establish what's actually feasible before we commit.",
+      "durationMs": 4500,
+      "audioSrc": "/audio/chapter1/03_marcus_feasibility_challenge.mp3"
+    }
+  ],
+  "mcqDecision": {
+    "question": "How do you respond to the 90-day deadline demand under CTO scrutiny?",
+    "options": [
+      {
+        "id": "A",
+        "text": "We can deliver everything in 90 days. Let's work out the details as we go.",
+        "signal": "risk_management",
+        "scoreDelta": -10,
+        "audioSrc": "/audio/chapter1/04a_player_decision_a.mp3"
+      },
+      {
+        "id": "B",
+        "text": "If engineering says it isn't feasible, we need to reject the deadline.",
+        "signal": "stakeholder_management",
+        "scoreDelta": -5,
+        "audioSrc": "/audio/chapter1/04b_player_decision_b.mp3"
+      },
+      {
+        "id": "C",
+        "text": "Let's validate the scope, capacity, peak load and dependencies before agreeing on a realistic delivery plan.",
+        "signal": "governance",
+        "scoreDelta": 25,
+        "isRecommended": true,
+        "audioSrc": "/audio/chapter1/04c_player_decision_c.mp3"
+      }
+    ]
+  },
+  "scriptPart2": [
+    {
+      "id": "line_5_marcus",
+      "speaker": "marcus",
+      "text": "Peak traffic could reach 30,000 simultaneous logins. We haven't validated whether the legacy system can handle it.",
+      "durationMs": 6500,
+      "audioSrc": "/audio/chapter1/04_marcus_peak_traffic.mp3"
+    },
+    {
+      "id": "line_6_daniel",
+      "speaker": "daniel",
+      "text": "And we still lack the LDAP sandbox credentials needed to validate single sign-on end to end.",
+      "durationMs": 5500,
+      "audioSrc": "/audio/chapter1/05_daniel_ldap_credentials.mp3"
+    },
+    {
+      "id": "line_7_aarav",
+      "speaker": "aarav",
+      "text": "DT, review ReadMe AI's minutes, correct what it missed, and submit the official record before we commit to a plan.",
+      "durationMs": 6000,
+      "audioSrc": "/audio/chapter1/06_aarav_readme_instruction.mp3"
+    }
+  ],
+  "postMeetingBriefing": {
+    "speaker": "aarav",
+    "teamsMessage": "Good work getting the meeting documented. We now have a clearer picture of what the client wants, but twelve modules in 90 days is going to need careful planning. Before the team starts building, I need your initial priorities. Review the scope-planning document and complete the assignment inside it before we move forward.",
+    "audioSrc": "/audio/chapter1/08_aarav_teams_briefing.mp3",
+    "attachment": "Project_Amigo_Initial_Scope_Planning.pdf"
+  }
+}

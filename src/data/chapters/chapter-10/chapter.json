@@ -1,0 +1,31 @@
+{
+  "id": 10,
+  "slug": "chapter-10",
+  "title": "Measuring Impact",
+  "subtitle": "Proving the Value & ROI Frameworks",
+  "act": "IV",
+  "actLabel": "Act IV — Value",
+  "day": "Day 17–18",
+  "duration": "~25 mins",
+  "difficulty": "Hard",
+  "xpReward": 450,
+  "description": "Post-launch. Now you need to prove it worked. The CFO demands ROI evidence. Adoption rates are lower than projected. Construct your measurement framework and tell the data story.",
+  "stakeholders": [
+    { "name": "Vikram Malhotra", "role": "Chief Financial Officer", "agenda": "Auditing operational expenditure reductions and labor hours saved." },
+    { "name": "Analytics & Business Intelligence Lead", "role": "Data Governance", "agenda": "Synthesizing usage telemetry and user satisfaction scores." }
+  ],
+  "objectives": [
+    { "label": "Build comprehensive transformation impact and adoption dashboard", "type": "analysis" },
+    { "label": "Respond to CFO's aggressive financial ROI challenge with hard data", "type": "decision" },
+    { "label": "Identify adoption gap root causes and launch remediation intervention", "type": "delivery" }
+  ],
+  "deliverables": [
+    "Transformation ROI Financial Model",
+    "Executive Impact Dashboard & KPI Scorecard",
+    "Regional Adoption Remediation Action Plan"
+  ],
+  "primaryColor": "#0ea5e9",
+  "secondaryColor": "#10b981",
+  "accentColor": "#38bdf8",
+  "backgroundIcon": "📊"
+}
