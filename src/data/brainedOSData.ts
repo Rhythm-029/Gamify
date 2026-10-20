@@ -284,6 +284,46 @@ export default function TitanHRPortal() {
     kind: "PDF Document",
     lastModified: "2 hours ago",
     content: "SOC2 Compliance evaluation report submitted by CISO David Knox flagging OAuth token lifetime flags."
+  },
+  {
+    id: "file-internal-brief-pdf",
+    name: "Project_Amigo_Internal_Brief.pdf",
+    path: "/Downloads/Project_Amigo_Internal_Brief.pdf",
+    folder: "Downloads",
+    size: "185 KB",
+    kind: "PDF Document",
+    lastModified: "Just now",
+    content: `PROJECT AMIGO\nInternal Project Brief\n\nPrepared by: Aarav Kapoor, Project Manager\nProject: ICICI Bank HRMS Modernization\nDocument status: Internal — Initial Discovery\nDate: Project Day 1\n\n1. Business Context\n\nICICI Bank plans to modernize the HRMS experience for approximately 80,000 employees across India.\n\nThe initiative is expected to simplify everyday employee activities, reduce manual HR processes, and provide a more consistent digital experience across the organization.\n\nThe business is working towards a 90-day delivery window ahead of the annual appraisal cycle.\n\n2. What the Business Needs\n\nThe initial request covers multiple capabilities, including performance appraisals, attendance, leave management, employee tax documents, learning management, and digital employee profiles.\n\nThe business expects the solution to be useful during the appraisal period, when employees and managers will need reliable access to performance-related workflows.\n\nThe complete list of requested modules and detailed requirements will be shared separately.\n\n3. Points to Keep in Mind\n\nBusiness continuity\nThe appraisal cycle is a fixed business event. Delays affecting essential employee and manager workflows could have a direct business impact.\n\nExpected usage\nThe kickoff discussion raised the possibility of approximately 30,000 concurrent logins during peak periods. This estimate needs to be validated, and the technical approach must be assessed against the expected demand.\n\nSystem access\nThe team has not yet confirmed access to the LDAP sandbox. This may affect authentication integration and end-to-end testing.\n\n4. Before We Commit\n\nThe project team still needs to establish which capabilities deserve early attention, which technical dependencies require action, and whether the proposed delivery window is achievable.\n\nInitial priorities should reflect business needs, not simply the order in which requirements were received.\n\nInternal note: This brief captures the current understanding of the project. Scope, architecture, dependencies, and delivery dates remain subject to validation and stakeholder approval.\n\nProject Amigo | Internal Working Document`
+  },
+  {
+    id: "file-proto-appraisal",
+    name: "Appraisal_Dashboard_v1.pdf",
+    path: "/Documents/Prototypes/Appraisal_Dashboard_v1.pdf",
+    folder: "Documents",
+    size: "420 KB",
+    kind: "PDF Document",
+    lastModified: "Today at 09:15 AM",
+    content: "PROJECT AMIGO — High-Fidelity Prototype Export\nComponent: Appraisal Dashboard (v1.0 Baseline)\nReviewed & Approved by Marcus Reed (CTO)\nFeatures: KPI goal weighting, competency matrix, and 1-click rating submission for managers."
+  },
+  {
+    id: "file-proto-leave",
+    name: "Leave_Request_Screen_v1.pdf",
+    path: "/Documents/Prototypes/Leave_Request_Screen_v1.pdf",
+    folder: "Documents",
+    size: "310 KB",
+    kind: "PDF Document",
+    lastModified: "Today at 09:15 AM",
+    content: "PROJECT AMIGO — High-Fidelity Prototype Export\nComponent: Leave Request Screen (v1.0 Baseline)\nReviewed & Approved by Marcus Reed (CTO)\nFeatures: Live balances (Privilege, Casual, Sick), calendar sync, automated holiday exclusion, and instant manager approvals."
+  },
+  {
+    id: "file-proto-form16",
+    name: "Form16_Downloader_v1.pdf",
+    path: "/Documents/Prototypes/Form16_Downloader_v1.pdf",
+    folder: "Documents",
+    size: "280 KB",
+    kind: "PDF Document",
+    lastModified: "Today at 09:15 AM",
+    content: "PROJECT AMIGO — High-Fidelity Prototype Export\nComponent: Form 16 Downloader (v1.0 Baseline)\nReviewed & Approved by Marcus Reed (CTO)\nFeatures: Assessment year selector (FY 2024-25), digital e-signature verification status, and password-protected PDF export."
   }
 ];
 

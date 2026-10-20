@@ -4,10 +4,16 @@ import { OS_FINDER_FILES } from '../../data/brainedOSData';
 import type { FinderFile } from '../../data/brainedOSData';
 import { useGame } from '../../context/GameContext';
 
-export const FinderApp: React.FC = () => {
+interface FinderAppProps {
+  onOpenAssignment?: () => void;
+  onOpenBrief?: () => void;
+  onOpenDesignReview?: () => void;
+}
+
+export const FinderApp: React.FC<FinderAppProps> = ({ onOpenAssignment, onOpenBrief, onOpenDesignReview }) => {
   const { state: gameState } = useGame();
   const [files] = useState<FinderFile[]>(OS_FINDER_FILES);
-  const [selectedFolder, setSelectedFolder] = useState<string>('Desktop');
+  const [selectedFolder, setSelectedFolder] = useState<string>('Downloads');
 
   // Filter out project files until Cera IDE prompt build is executed
   const visibleFiles = files.filter((f) => {
@@ -17,7 +23,10 @@ export const FinderApp: React.FC = () => {
     return f.folder === selectedFolder;
   });
 
-  const [selectedFile, setSelectedFile] = useState<FinderFile | null>(() => visibleFiles[0] || null);
+  const [selectedFile, setSelectedFile] = useState<FinderFile | null>(() => {
+    const briefFile = files.find(f => f.id === 'file-internal-brief-pdf' || f.name.includes('Internal_Brief'));
+    return briefFile || visibleFiles[0] || null;
+  });
 
   const handleDownloadFile = (file: FinderFile) => {
     const blob = new Blob([file.content], { type: 'text/plain;charset=utf-8' });
@@ -107,13 +116,46 @@ export const FinderApp: React.FC = () => {
               </div>
             </div>
 
-            <button
-              onClick={() => handleDownloadFile(selectedFile)}
-              className="mt-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center space-x-2 cursor-pointer shadow-lg shadow-blue-500/30"
-            >
-              <Download className="w-4 h-4" />
-              <span>Download {selectedFile.name}</span>
-            </button>
+            <div className="flex flex-col sm:flex-row gap-2 mt-4">
+              {(selectedFile.id === 'file-internal-brief-pdf' || selectedFile.name.includes('Internal_Brief')) && (
+                <>
+                  {onOpenBrief && (
+                    <button
+                      onClick={onOpenBrief}
+                      className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center space-x-2 cursor-pointer shadow-lg shadow-blue-500/30 transition-all"
+                    >
+                      <FileText className="w-4 h-4" />
+                      <span>Open Project Brief (PDF)</span>
+                    </button>
+                  )}
+                  {onOpenAssignment && (
+                    <button
+                      onClick={onOpenAssignment}
+                      className="py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center justify-center space-x-2 cursor-pointer shadow-lg shadow-indigo-500/30 transition-all"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      <span>Start Assignment</span>
+                    </button>
+                  )}
+                </>
+              )}
+              {selectedFile.name.includes('_v1.pdf') && onOpenDesignReview && (
+                <button
+                  onClick={onOpenDesignReview}
+                  className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center space-x-2 cursor-pointer shadow-lg shadow-blue-500/30 transition-all"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Inspect in UI/UX Design Review</span>
+                </button>
+              )}
+              <button
+                onClick={() => handleDownloadFile(selectedFile)}
+                className="py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center justify-center space-x-2 cursor-pointer border border-white/10 transition-all"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download {selectedFile.name}</span>
+              </button>
+            </div>
           </>
         ) : (
           <div className="flex items-center justify-center h-full text-slate-500">No file selected</div>
