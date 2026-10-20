@@ -11,6 +11,7 @@ import { updateChapterStatus } from '../../data/chaptersData';
 interface ReadMeAIAppProps {
   onDone?: () => void;
   onReturnToChapterSelect?: () => void;
+  onMoMSubmitted?: () => void;
 }
 
 const INITIAL_MOM_DRAFT = `ReadMe AI
@@ -32,7 +33,7 @@ Action items
 - Validate architecture and performance assumptions — Marcus.
 - Review delivery feasibility and dependencies — Aarav and Daniel.`;
 
-export const ReadMeAIApp: React.FC<ReadMeAIAppProps> = ({ onDone, onReturnToChapterSelect }) => {
+export const ReadMeAIApp: React.FC<ReadMeAIAppProps> = ({ onDone, onReturnToChapterSelect, onMoMSubmitted }) => {
   const { submitMOM, addSignal } = useGame();
   const [docContent, setDocContent] = useState<string>(INITIAL_MOM_DRAFT);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -107,14 +108,18 @@ export const ReadMeAIApp: React.FC<ReadMeAIAppProps> = ({ onDone, onReturnToChap
 
     setTimeout(() => {
       setIsSubmitting(false);
-      // Step 1: Pop up "MOM sent" toast
+      // Step 1: Pop up "MOM sent" confirmation toast
       setShowMomSentToast(true);
 
-      // Step 2: Show Chapter 01 Complete modal shortly after
+      // Step 2: Transition to desktop and trigger Aarav's 2s notification sequence
       setTimeout(() => {
         setShowMomSentToast(false);
-        setShowCompletionModal(true);
-      }, 1200);
+        if (onMoMSubmitted) {
+          onMoMSubmitted();
+        } else {
+          setShowCompletionModal(true);
+        }
+      }, 1000);
     }, 600);
   };
 
@@ -260,8 +265,8 @@ export const ReadMeAIApp: React.FC<ReadMeAIAppProps> = ({ onDone, onReturnToChap
               <CheckCircle2 className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-xs font-bold text-white tracking-wide">MOM Sent</div>
-              <div className="text-[11px] text-emerald-200">Minutes of Meeting officially delivered to Steering Committee.</div>
+              <div className="text-xs font-bold text-white tracking-wide">MOM Delivered & Documented</div>
+              <div className="text-[11px] text-emerald-200">Official record filed. Opening Microsoft Teams for Aarav's scope assignment...</div>
             </div>
           </motion.div>
         )}

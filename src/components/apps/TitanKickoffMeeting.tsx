@@ -8,10 +8,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Video, VideoOff, Mic, MicOff, PhoneOff,
   Users, Wifi, CheckCircle2, AlertTriangle,
-  Sparkles, Radio, HelpCircle, ArrowRight, FileText
+  Sparkles, Radio, HelpCircle, ArrowRight, FileText,
+  Pin, UserPlus
 } from 'lucide-react';
 import { useGame } from '../../context/GameContext';
 import { ReadMeAIApp } from './ReadMeAIApp';
+import { sound } from '../onboarding/SoundEngine';
 
 // ── Characters Metadata ───────────────────────────────────────────────────────
 const CHARS = {
@@ -70,6 +72,7 @@ interface MeetingLine {
   text: string;
   durationMs: number;
   isMarcusCameraOn?: boolean;
+  audioSrc?: string;
 }
 
 // ── Master Script Definition ──────────────────────────────────────────────────
@@ -78,8 +81,9 @@ const SCRIPT_PART_1: MeetingLine[] = [
     id: 'line_1_marcus',
     speaker: 'marcus',
     text: "This is Project Amigo: an HRMS transformation for 80,000 ICICI Bank employees.",
-    durationMs: 7000,
+    durationMs: 10000,
     isMarcusCameraOn: true,
+    audioSrc: undefined, // Native audio in /chapter1/chapter1-meet.mp4
   },
   {
     id: 'line_2_sophia',
@@ -87,6 +91,7 @@ const SCRIPT_PART_1: MeetingLine[] = [
     text: "We need 12 HRMS modules, including appraisals, attendance and leave. The appraisal cycle opens in 90 days, and everything is expected to be ready before then.",
     durationMs: 8000,
     isMarcusCameraOn: false,
+    audioSrc: '/audio/chapter1/02_sophia_deadline_demand.mp3',
   },
   {
     id: 'line_3_marcus',
@@ -94,6 +99,7 @@ const SCRIPT_PART_1: MeetingLine[] = [
     text: "Twelve modules in 90 days? We need to establish what's actually feasible before we commit.",
     durationMs: 4500,
     isMarcusCameraOn: false,
+    audioSrc: '/audio/chapter1/03_marcus_feasibility_challenge.mp3',
   },
 ];
 
@@ -103,26 +109,33 @@ const SCRIPT_PART_2: MeetingLine[] = [
     speaker: 'marcus',
     text: "Peak traffic could reach 30,000 simultaneous logins. We haven't validated whether the legacy system can handle it.",
     durationMs: 6500,
+    audioSrc: '/audio/chapter1/05_marcus_peak_traffic.mp3',
   },
   {
     id: 'line_6_daniel',
     speaker: 'daniel',
     text: "And we still lack the LDAP sandbox credentials needed to validate single sign-on end to end.",
     durationMs: 5500,
+    audioSrc: '/audio/chapter1/06_daniel_ldap_credentials.mp3',
   },
   {
     id: 'line_7_aarav',
     speaker: 'aarav',
     text: "DT, review ReadMe AI's minutes, correct what it missed, and submit the official record before we commit to a plan.",
     durationMs: 6000,
+    audioSrc: '/audio/chapter1/07_aarav_readme_instruction.mp3',
   },
 ];
 
 interface TitanKickoffMeetingProps {
   onReturnToChapterSelect?: () => void;
+  onMoMComplete?: () => void;
 }
 
-export const TitanKickoffMeeting: React.FC<TitanKickoffMeetingProps> = ({ onReturnToChapterSelect }) => {
+export const TitanKickoffMeeting: React.FC<TitanKickoffMeetingProps> = ({
+  onReturnToChapterSelect,
+  onMoMComplete,
+}) => {
   const { setKickoffDone, addSignal } = useGame();
 
   const [stage, setStage] = useState<'permission' | 'in_call' | 'post_meeting_readme'>('permission');
@@ -137,12 +150,17 @@ export const TitanKickoffMeeting: React.FC<TitanKickoffMeetingProps> = ({ onRetu
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
   const [scriptPart, setScriptPart] = useState<'part1' | 'mcq' | 'part2' | 'finished'>('part1');
   const [marcusCameraActive, setMarcusCameraActive] = useState(true);
+  const [isMarcusPinned, setIsMarcusPinned] = useState(true);
+  const [joinedParticipants, setJoinedParticipants] = useState<Set<CharId>>(new Set(['marcus', 'player']));
+  const [joinToast, setJoinToast] = useState<{ name: string; role: string; dp: string } | null>(null);
   const [activeSpeaker, setActiveSpeaker] = useState<CharId>('marcus');
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [selectedDecision, setSelectedDecision] = useState<'A' | 'B' | 'C' | null>(null);
   const [playerSpeechText, setPlayerSpeechText] = useState<string | null>(null);
 
-  // Sound & Speech Synthesis
+  // Sound & Speech Synthesis with real MP3 audio file support
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+
   const speakLine = (text: string, char: typeof CHARS[keyof typeof CHARS]) => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
@@ -150,6 +168,29 @@ export const TitanKickoffMeeting: React.FC<TitanKickoffMeetingProps> = ({ onRetu
       utterance.rate = char.rate || 1.0;
       utterance.pitch = char.pitch || 1.0;
       window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  const playLineAudio = (line: MeetingLine, char: typeof CHARS[keyof typeof CHARS]) => {
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current = null;
+    }
+
+    // Line 1 is spoken by Marcus directly through /chapter1/chapter1-meet.mp4
+    if (line.id === 'line_1_marcus') {
+      return;
+    }
+
+    if (line.audioSrc) {
+      const audio = new Audio(line.audioSrc);
+      currentAudioRef.current = audio;
+      audio.play().catch(() => {
+        // Fallback to speech synthesis if MP3 audio hasn't been placed yet
+        speakLine(line.text, char);
+      });
+    } else {
+      speakLine(line.text, char);
     }
   };
 
@@ -186,6 +227,54 @@ export const TitanKickoffMeeting: React.FC<TitanKickoffMeetingProps> = ({ onRetu
     }
   }, []);
 
+  // ── Joining Sequence Timers (Sophia at 2.2s, Daniel at 4.8s, Aarav at 7.2s) ──
+  useEffect(() => {
+    if (stage !== 'in_call') return;
+
+    // Start with Marcus (host) and Player (joined)
+    setJoinedParticipants(new Set(['marcus', 'player']));
+
+    const tSophia = setTimeout(() => {
+      setJoinedParticipants((prev) => new Set([...prev, 'sophia']));
+      setJoinToast({ name: CHARS.sophia.name, role: CHARS.sophia.role, dp: CHARS.sophia.dp });
+      sound.playTeamsJoin();
+      setTimeout(() => setJoinToast((curr) => (curr?.name === CHARS.sophia.name ? null : curr)), 2800);
+    }, 2200);
+
+    const tDaniel = setTimeout(() => {
+      setJoinedParticipants((prev) => new Set([...prev, 'daniel']));
+      setJoinToast({ name: CHARS.daniel.name, role: CHARS.daniel.role, dp: CHARS.daniel.dp });
+      sound.playTeamsJoin();
+      setTimeout(() => setJoinToast((curr) => (curr?.name === CHARS.daniel.name ? null : curr)), 2800);
+    }, 4800);
+
+    const tAarav = setTimeout(() => {
+      setJoinedParticipants((prev) => new Set([...prev, 'aarav']));
+      setJoinToast({ name: CHARS.aarav.name, role: CHARS.aarav.role, dp: CHARS.aarav.dp });
+      sound.playTeamsJoin();
+      setTimeout(() => setJoinToast((curr) => (curr?.name === CHARS.aarav.name ? null : curr)), 2800);
+    }, 7200);
+
+    return () => {
+      clearTimeout(tSophia);
+      clearTimeout(tDaniel);
+      clearTimeout(tAarav);
+    };
+  }, [stage]);
+
+  // ── Video Playback Volume Handler ───────────────────────────────────────────
+  useEffect(() => {
+    if (stage === 'in_call' && marcusCameraActive && marcusVideoRef.current) {
+      marcusVideoRef.current.volume = 1.0;
+      marcusVideoRef.current.play().catch(() => {
+        if (marcusVideoRef.current) {
+          marcusVideoRef.current.muted = true;
+          marcusVideoRef.current.play();
+        }
+      });
+    }
+  }, [stage, marcusCameraActive]);
+
   // ── Meeting Flow Execution ──────────────────────────────────────────────────
   useEffect(() => {
     if (stage !== 'in_call') return;
@@ -199,8 +288,10 @@ export const TitanKickoffMeeting: React.FC<TitanKickoffMeetingProps> = ({ onRetu
       }
 
       setActiveSpeaker(current.speaker);
-      setMarcusCameraActive(current.speaker === 'marcus' && currentLineIndex === 0);
-      speakLine(current.text, CHARS[current.speaker]);
+      const isMarcusIntro = current.speaker === 'marcus' && currentLineIndex === 0;
+      setMarcusCameraActive(isMarcusIntro);
+      setIsMarcusPinned(isMarcusIntro);
+      playLineAudio(current, CHARS[current.speaker]);
 
       const timeout = setTimeout(() => {
         if (currentLineIndex + 1 < SCRIPT_PART_1.length) {
@@ -225,7 +316,7 @@ export const TitanKickoffMeeting: React.FC<TitanKickoffMeetingProps> = ({ onRetu
       }
 
       setActiveSpeaker(current.speaker);
-      speakLine(current.text, CHARS[current.speaker]);
+      playLineAudio(current, CHARS[current.speaker]);
 
       const timeout = setTimeout(() => {
         if (currentLineIndex + 1 < SCRIPT_PART_2.length) {
@@ -247,17 +338,35 @@ export const TitanKickoffMeeting: React.FC<TitanKickoffMeetingProps> = ({ onRetu
   const handleConfirmDecision = () => {
     if (!selectedDecision) return;
 
-    // Consequence and score calculation (stored without displaying numerical value)
+    let speech = '';
+    const decisionAudioMap: Record<string, string> = {
+      A: '/audio/chapter1/04a_player_decision_a.mp3',
+      B: '/audio/chapter1/04b_player_decision_b.mp3',
+      C: '/audio/chapter1/04c_player_decision_c.mp3',
+    };
+
     if (selectedDecision === 'C') {
       addSignal('Strategic governance: Validated scope & dependencies before committing', 'governance', 25);
-      setPlayerSpeechText("Let's validate the scope, capacity, peak load and dependencies before agreeing on a realistic delivery plan.");
+      speech = "Let's validate the scope, capacity, peak load and dependencies before agreeing on a realistic delivery plan.";
     } else if (selectedDecision === 'A') {
       addSignal('Premature delivery commitment made without technical validation', 'risk_management', -10);
-      setPlayerSpeechText("We can deliver everything in 90 days. Let's work out the details as we go.");
+      speech = "We can deliver everything in 90 days. Let's work out the details as we go.";
     } else if (selectedDecision === 'B') {
       addSignal('Premature refusal: Closed dialogue before architectural validation', 'stakeholder_management', -5);
-      setPlayerSpeechText("If engineering says it isn't feasible, we need to reject the deadline.");
+      speech = "If engineering says it isn't feasible, we need to reject the deadline.";
     }
+
+    setPlayerSpeechText(speech);
+    playLineAudio(
+      {
+        id: 'player_decision',
+        speaker: 'player',
+        text: speech,
+        durationMs: 5500,
+        audioSrc: decisionAudioMap[selectedDecision],
+      },
+      CHARS.player
+    );
 
     // Set player as active speaker briefly
     setActiveSpeaker('player');
@@ -271,6 +380,10 @@ export const TitanKickoffMeeting: React.FC<TitanKickoffMeetingProps> = ({ onRetu
       streamRef.current?.getTracks().forEach((t) => t.stop());
       if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
         window.speechSynthesis.cancel();
+      }
+      if (currentAudioRef.current) {
+        currentAudioRef.current.pause();
+        currentAudioRef.current = null;
       }
     };
   }, []);
@@ -376,7 +489,12 @@ export const TitanKickoffMeeting: React.FC<TitanKickoffMeetingProps> = ({ onRetu
   // STAGE 3: POST-MEETING README AI MOM APPLICATION
   // ─────────────────────────────────────────────────────────────────────────
   if (stage === 'post_meeting_readme') {
-    return <ReadMeAIApp onReturnToChapterSelect={onReturnToChapterSelect} />;
+    return (
+      <ReadMeAIApp
+        onReturnToChapterSelect={onReturnToChapterSelect}
+        onMoMSubmitted={onMoMComplete}
+      />
+    );
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -393,9 +511,10 @@ export const TitanKickoffMeeting: React.FC<TitanKickoffMeetingProps> = ({ onRetu
           <span className="font-bold text-white text-xs tracking-wide">Project Amigo · Kickoff Meeting</span>
           <span className="text-white/20">|</span>
           <span className="text-[11px] text-slate-400">ICICI Bank Transformation</span>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 text-slate-300">
-            5 Participants
-          </span>
+          <div className="flex items-center space-x-1.5 text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-slate-300">
+            <Users className="w-3 h-3 text-sky-400" />
+            <span>{joinedParticipants.size} / 5 In Call</span>
+          </div>
         </div>
 
         {/* Live Call Telemetry */}
@@ -412,193 +531,385 @@ export const TitanKickoffMeeting: React.FC<TitanKickoffMeetingProps> = ({ onRetu
         </div>
       </div>
 
-      {/* ── MAIN VIDEO TILES STAGE (BALANCED & PROPORTIONAL) ── */}
+      {/* ── MAIN VIDEO TILES STAGE ── */}
       <div className="flex-1 p-3 overflow-hidden flex flex-col justify-between relative">
         
-        {/* 5-Tile Stage: 4 Stakeholders + Player */}
-        <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-3 auto-rows-fr max-h-[calc(100%-80px)]">
-          
-          {/* Tile 1: MARCUS REED (Displays video opening during 00:00–00:07, then avatar) */}
-          <div 
-            className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
-              activeSpeaker === 'marcus' ? 'border-[#38bdf8] shadow-[0_0_25px_rgba(56,189,248,0.35)]' : 'border-white/10'
-            }`}
-          >
-            {marcusCameraActive ? (
-              <video
-                ref={marcusVideoRef}
-                src="/start_video/make_a_animation_video_of_thsi.mp4"
-                autoPlay
-                playsInline
-                className="w-full h-full object-cover"
-              />
-            ) : (
+        {/* Teams Join Toast Alert */}
+        <AnimatePresence>
+          {joinToast && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ duration: 0.25 }}
+              className="absolute top-4 left-1/2 -translate-x-1/2 z-40 flex items-center space-x-2.5 px-4 py-2 rounded-2xl bg-slate-900/95 border border-sky-400/40 text-white shadow-2xl backdrop-blur-xl pointer-events-none"
+            >
+              <div className="w-6 h-6 rounded-full overflow-hidden border border-sky-400/50 bg-slate-800 shrink-0">
+                <img src={joinToast.dp} alt={joinToast.name} className="w-full h-full object-cover" />
+              </div>
+              <div className="flex items-center space-x-1.5 text-xs">
+                <span className="font-bold text-sky-300">{joinToast.name}</span>
+                <span className="text-slate-300">joined the meeting</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Dynamic Stage View: Pinned Spotlight (During video intro) vs Balanced Grid */}
+        {isMarcusPinned ? (
+          <div className="flex-1 flex flex-col md:flex-row gap-3 max-h-[calc(100%-80px)] overflow-hidden">
+            
+            {/* ── PINNED SPOTLIGHT TILE: MARCUS REED ── */}
+            <div className="flex-[3] relative rounded-2xl overflow-hidden bg-slate-950 border-2 border-[#38bdf8] shadow-[0_0_35px_rgba(56,189,248,0.35)] flex items-center justify-center min-h-[280px]">
+              {marcusCameraActive ? (
+                <video
+                  ref={marcusVideoRef}
+                  src="/chapter1/chapter1-meet.mp4"
+                  autoPlay
+                  playsInline
+                  className="w-full h-full object-cover"
+                  onEnded={() => {
+                    setMarcusCameraActive(false);
+                    setIsMarcusPinned(false);
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
+                  <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-sky-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
+                    <img src={CHARS.marcus.dp} alt="Marcus Reed" className="w-full h-full object-cover object-top" />
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-500 mt-2">Camera Off</span>
+                </div>
+              )}
+
+              {/* Spotlight / Pinned Indicator Badge */}
+              <div className="absolute top-3 left-3 z-10 flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-black/75 backdrop-blur-md border border-sky-400/50 text-sky-200 text-xs font-bold shadow-xl">
+                <Pin className="w-3.5 h-3.5 text-sky-400" />
+                <span>Spotlight · Marcus Reed</span>
+              </div>
+
+              {/* Marcus Bottom Info Overlay */}
+              <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between pointer-events-none">
+                <div className="px-3 py-1.5 rounded-xl bg-black/80 backdrop-blur-md text-xs font-bold text-white flex items-center space-x-2">
+                  <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
+                  <span>Marcus Reed (Chief Technology Officer · Brained)</span>
+                </div>
+                {activeSpeaker === 'marcus' && (
+                  <div className="flex items-center space-x-0.5 bg-black/70 px-2.5 py-1.5 rounded-lg">
+                    {[1, 2, 3, 4].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="w-1 rounded-full bg-sky-400"
+                        animate={{ height: [4, 16, 4] }}
+                        transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* ── COMPANION 2x2 SQUARE GRID: PARTICIPANTS JOINING 1-BY-1 ── */}
+            <div className="w-full md:w-[280px] lg:w-[320px] grid grid-cols-2 grid-rows-2 gap-2.5 shrink-0 h-full overflow-y-auto">
+              
+              {/* Tile 1: Player (Always Present — Square) */}
+              <div className="relative rounded-2xl overflow-hidden bg-slate-900/90 border border-white/10 flex flex-col items-center justify-center p-2.5 shadow-md aspect-square">
+                {isCameraOn && streamRef.current ? (
+                  <video ref={videoElementRef} autoPlay muted playsInline className="w-full h-full object-cover scale-x-[-1]" />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center p-2 bg-gradient-to-b from-slate-900 to-slate-950">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-emerald-950 border-2 border-emerald-500/40 flex items-center justify-center text-emerald-300 font-bold text-sm shadow-md">
+                      DT
+                    </div>
+                    <span className="text-[10px] font-mono text-slate-400 mt-2">Digital Transformer</span>
+                  </div>
+                )}
+                <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded bg-black/75 backdrop-blur-md text-[9px] font-bold text-white flex items-center space-x-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <span>You</span>
+                </div>
+              </div>
+
+              {/* Tile 2: Sophia Bennett (Joins at 2.2s — Square) */}
+              {joinedParticipants.has('sophia') ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                  className="relative rounded-2xl overflow-hidden bg-slate-900/90 border border-pink-500/30 shadow-[0_0_15px_rgba(236,72,153,0.15)] flex flex-col items-center justify-center p-2.5 aspect-square"
+                >
+                  <div className="w-full h-full flex flex-col items-center justify-center p-2 bg-gradient-to-b from-slate-900 to-slate-950">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-pink-400/50 bg-slate-800 shadow-md">
+                      <img src={CHARS.sophia.dp} alt="Sophia Bennett" className="w-full h-full object-cover object-top" />
+                    </div>
+                    <span className="text-[10px] font-mono text-slate-400 mt-2">Sophia Bennett</span>
+                  </div>
+                  <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded bg-black/75 backdrop-blur-md text-[9px] font-bold text-white flex items-center space-x-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-pink-400" />
+                    <span>Sophia (ICICI)</span>
+                  </div>
+                </motion.div>
+              ) : (
+                <div className="relative rounded-2xl overflow-hidden bg-slate-950/60 border border-dashed border-white/10 flex flex-col items-center justify-center p-2.5 aspect-square">
+                  <div className="w-11 h-11 rounded-full overflow-hidden border border-white/10 bg-slate-800/80 opacity-30 filter grayscale">
+                    <img src={CHARS.sophia.dp} alt="Sophia" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex items-center space-x-1.5 mt-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-pink-400/60 animate-ping" />
+                    <span className="text-[10px] font-mono text-slate-400">Joining...</span>
+                  </div>
+                  <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded bg-black/60 text-[9px] font-medium text-slate-500">
+                    Sophia Bennett
+                  </div>
+                </div>
+              )}
+
+              {/* Tile 3: Daniel Brooks (Joins at 4.8s — Square) */}
+              {joinedParticipants.has('daniel') ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                  className="relative rounded-2xl overflow-hidden bg-slate-900/90 border border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.15)] flex flex-col items-center justify-center p-2.5 aspect-square"
+                >
+                  <div className="w-full h-full flex flex-col items-center justify-center p-2 bg-gradient-to-b from-slate-900 to-slate-950">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-orange-400/50 bg-slate-800 shadow-md">
+                      <img src={CHARS.daniel.dp} alt="Daniel Brooks" className="w-full h-full object-cover object-top" />
+                    </div>
+                    <span className="text-[10px] font-mono text-slate-400 mt-2">Daniel Brooks</span>
+                  </div>
+                  <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded bg-black/75 backdrop-blur-md text-[9px] font-bold text-white flex items-center space-x-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                    <span>Daniel (PM)</span>
+                  </div>
+                </motion.div>
+              ) : (
+                <div className="relative rounded-2xl overflow-hidden bg-slate-950/60 border border-dashed border-white/10 flex flex-col items-center justify-center p-2.5 aspect-square">
+                  <div className="w-11 h-11 rounded-full overflow-hidden border border-white/10 bg-slate-800/80 opacity-30 filter grayscale">
+                    <img src={CHARS.daniel.dp} alt="Daniel" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex items-center space-x-1.5 mt-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-orange-400/60 animate-ping" />
+                    <span className="text-[10px] font-mono text-slate-400">Joining...</span>
+                  </div>
+                  <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded bg-black/60 text-[9px] font-medium text-slate-500">
+                    Daniel Brooks
+                  </div>
+                </div>
+              )}
+
+              {/* Tile 4: Aarav Kapoor (Joins at 7.2s — Square) */}
+              {joinedParticipants.has('aarav') ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                  className="relative rounded-2xl overflow-hidden bg-slate-900/90 border border-amber-500/30 shadow-[0_0_15px_rgba(234,179,8,0.15)] flex flex-col items-center justify-center p-2.5 aspect-square"
+                >
+                  <div className="w-full h-full flex flex-col items-center justify-center p-2 bg-gradient-to-b from-slate-900 to-slate-950">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-amber-400/50 bg-slate-800 shadow-md">
+                      <img src={CHARS.aarav.dp} alt="Aarav Kapoor" className="w-full h-full object-cover object-top" />
+                    </div>
+                    <span className="text-[10px] font-mono text-slate-400 mt-2">Aarav Kapoor</span>
+                  </div>
+                  <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded bg-black/75 backdrop-blur-md text-[9px] font-bold text-white flex items-center space-x-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                    <span>Aarav (Lead)</span>
+                  </div>
+                </motion.div>
+              ) : (
+                <div className="relative rounded-2xl overflow-hidden bg-slate-950/60 border border-dashed border-white/10 flex flex-col items-center justify-center p-2.5 aspect-square">
+                  <div className="w-11 h-11 rounded-full overflow-hidden border border-white/10 bg-slate-800/80 opacity-30 filter grayscale">
+                    <img src={CHARS.aarav.dp} alt="Aarav" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex items-center space-x-1.5 mt-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400/60 animate-ping" />
+                    <span className="text-[10px] font-mono text-slate-400">Joining...</span>
+                  </div>
+                  <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded bg-black/60 text-[9px] font-medium text-slate-500">
+                    Aarav Kapoor
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </div>
+        ) : (
+          /* ── BALANCED 5-TILE GALLERY GRID (STANDARD MEETING STAGE) ── */
+          <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-3 auto-rows-fr max-h-[calc(100%-80px)]">
+            
+            {/* Tile 1: MARCUS REED */}
+            <div 
+              className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
+                activeSpeaker === 'marcus' ? 'border-[#38bdf8] shadow-[0_0_25px_rgba(56,189,248,0.35)]' : 'border-white/10'
+              }`}
+            >
               <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
                 <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-sky-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
                   <img src={CHARS.marcus.dp} alt="Marcus Reed" className="w-full h-full object-cover object-top" />
                 </div>
                 <span className="text-[10px] font-mono text-slate-500 mt-2">Camera Off</span>
               </div>
-            )}
 
-            {/* Badge & Speaking Wave */}
-            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
-              <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
-                <span>Marcus Reed (CTO)</span>
-              </div>
-              {activeSpeaker === 'marcus' && (
-                <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
-                  {[1, 2, 3, 4].map((i) => (
-                    <motion.div
-                      key={i}
-                      className="w-1 rounded-full bg-sky-400"
-                      animate={{ height: [4, 14, 4] }}
-                      transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
-                    />
-                  ))}
+              {/* Badge & Speaking Wave */}
+              <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+                <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
+                  <span>Marcus Reed (CTO)</span>
                 </div>
-              )}
-            </div>
-          </div>
-
-          {/* Tile 2: SOPHIA BENNETT (ICICI Bank Business Lead) */}
-          <div 
-            className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
-              activeSpeaker === 'sophia' ? 'border-[#ec4899] shadow-[0_0_25px_rgba(236,72,153,0.35)]' : 'border-white/10'
-            }`}
-          >
-            <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-pink-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
-                <img src={CHARS.sophia.dp} alt="Sophia Bennett" className="w-full h-full object-cover object-top" />
+                {activeSpeaker === 'marcus' && (
+                  <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
+                    {[1, 2, 3, 4].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="w-1 rounded-full bg-sky-400"
+                        animate={{ height: [4, 14, 4] }}
+                        transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
-              <span className="text-[10px] font-mono text-slate-500 mt-2">Client Sponsor</span>
             </div>
 
-            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
-              <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-pink-400" />
-                <span>Sophia Bennett (ICICI Bank)</span>
-              </div>
-              {activeSpeaker === 'sophia' && (
-                <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
-                  {[1, 2, 3, 4].map((i) => (
-                    <motion.div
-                      key={i}
-                      className="w-1 rounded-full bg-pink-400"
-                      animate={{ height: [4, 14, 4] }}
-                      transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Tile 3: DANIEL BROOKS (Program Manager) */}
-          <div 
-            className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
-              activeSpeaker === 'daniel' ? 'border-[#f97316] shadow-[0_0_25px_rgba(249,115,22,0.35)]' : 'border-white/10'
-            }`}
-          >
-            <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-orange-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
-                <img src={CHARS.daniel.dp} alt="Daniel Brooks" className="w-full h-full object-cover object-top" />
-              </div>
-              <span className="text-[10px] font-mono text-slate-500 mt-2">Tech Architecture</span>
-            </div>
-
-            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
-              <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-orange-400" />
-                <span>Daniel Brooks (PM)</span>
-              </div>
-              {activeSpeaker === 'daniel' && (
-                <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
-                  {[1, 2, 3, 4].map((i) => (
-                    <motion.div
-                      key={i}
-                      className="w-1 rounded-full bg-orange-400"
-                      animate={{ height: [4, 14, 4] }}
-                      transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Tile 4: AARAV KAPOOR (Senior Consultant) */}
-          <div 
-            className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
-              activeSpeaker === 'aarav' ? 'border-[#eab308] shadow-[0_0_25px_rgba(234,179,8,0.35)]' : 'border-white/10'
-            }`}
-          >
-            <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-amber-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
-                <img src={CHARS.aarav.dp} alt="Aarav Kapoor" className="w-full h-full object-cover object-top" />
-              </div>
-              <span className="text-[10px] font-mono text-slate-500 mt-2">Lead Strategist</span>
-            </div>
-
-            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
-              <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                <span>Aarav Kapoor (Senior Consultant)</span>
-              </div>
-              {activeSpeaker === 'aarav' && (
-                <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
-                  {[1, 2, 3, 4].map((i) => (
-                    <motion.div
-                      key={i}
-                      className="w-1 rounded-full bg-amber-400"
-                      animate={{ height: [4, 14, 4] }}
-                      transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Tile 5: PLAYER (YOU) */}
-          <div 
-            className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
-              activeSpeaker === 'player' ? 'border-emerald-400 shadow-[0_0_25px_rgba(52,211,153,0.35)]' : 'border-white/10'
-            }`}
-          >
-            {isCameraOn && streamRef.current ? (
-              <video ref={videoElementRef} autoPlay muted playsInline className="w-full h-full object-cover scale-x-[-1]" />
-            ) : (
+            {/* Tile 2: SOPHIA BENNETT */}
+            <div 
+              className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
+                activeSpeaker === 'sophia' ? 'border-[#ec4899] shadow-[0_0_25px_rgba(236,72,153,0.35)]' : 'border-white/10'
+              }`}
+            >
               <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-emerald-950 border-2 border-emerald-500/40 flex items-center justify-center text-emerald-300 font-bold text-xl shadow-xl">
-                  DT
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-pink-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
+                  <img src={CHARS.sophia.dp} alt="Sophia Bennett" className="w-full h-full object-cover object-top" />
                 </div>
-                <span className="text-[10px] font-mono text-slate-500 mt-2">Digital Transformer</span>
+                <span className="text-[10px] font-mono text-slate-500 mt-2">Client Sponsor</span>
               </div>
-            )}
 
-            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
-              <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span>You (DT Lead)</span>
+              <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+                <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-pink-400" />
+                  <span>Sophia Bennett (ICICI Bank)</span>
+                </div>
+                {activeSpeaker === 'sophia' && (
+                  <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
+                    {[1, 2, 3, 4].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="w-1 rounded-full bg-pink-400"
+                        animate={{ height: [4, 14, 4] }}
+                        transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
-              {activeSpeaker === 'player' && (
-                <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
-                  {[1, 2, 3, 4].map((i) => (
-                    <motion.div
-                      key={i}
-                      className="w-1 rounded-full bg-emerald-400"
-                      animate={{ height: [4, 14, 4] }}
-                      transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
-                    />
-                  ))}
+            </div>
+
+            {/* Tile 3: DANIEL BROOKS */}
+            <div 
+              className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
+                activeSpeaker === 'daniel' ? 'border-[#f97316] shadow-[0_0_25px_rgba(249,115,22,0.35)]' : 'border-white/10'
+              }`}
+            >
+              <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-orange-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
+                  <img src={CHARS.daniel.dp} alt="Daniel Brooks" className="w-full h-full object-cover object-top" />
+                </div>
+                <span className="text-[10px] font-mono text-slate-500 mt-2">Tech Architecture</span>
+              </div>
+
+              <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+                <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                  <span>Daniel Brooks (PM)</span>
+                </div>
+                {activeSpeaker === 'daniel' && (
+                  <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
+                    {[1, 2, 3, 4].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="w-1 rounded-full bg-orange-400"
+                        animate={{ height: [4, 14, 4] }}
+                        transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Tile 4: AARAV KAPOOR */}
+            <div 
+              className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
+                activeSpeaker === 'aarav' ? 'border-[#eab308] shadow-[0_0_25px_rgba(234,179,8,0.35)]' : 'border-white/10'
+              }`}
+            >
+              <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-amber-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
+                  <img src={CHARS.aarav.dp} alt="Aarav Kapoor" className="w-full h-full object-cover object-top" />
+                </div>
+                <span className="text-[10px] font-mono text-slate-500 mt-2">Lead Strategist</span>
+              </div>
+
+              <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+                <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                  <span>Aarav Kapoor (Senior Consultant)</span>
+                </div>
+                {activeSpeaker === 'aarav' && (
+                  <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
+                    {[1, 2, 3, 4].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="w-1 rounded-full bg-amber-400"
+                        animate={{ height: [4, 14, 4] }}
+                        transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Tile 5: PLAYER (YOU) */}
+            <div 
+              className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
+                activeSpeaker === 'player' ? 'border-emerald-400 shadow-[0_0_25px_rgba(52,211,153,0.35)]' : 'border-white/10'
+              }`}
+            >
+              {isCameraOn && streamRef.current ? (
+                <video ref={videoElementRef} autoPlay muted playsInline className="w-full h-full object-cover scale-x-[-1]" />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-emerald-950 border-2 border-emerald-500/40 flex items-center justify-center text-emerald-300 font-bold text-xl shadow-xl">
+                    DT
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-500 mt-2">Digital Transformer</span>
                 </div>
               )}
-            </div>
-          </div>
 
-        </div>
+              <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+                <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <span>You (DT Lead)</span>
+                </div>
+                {activeSpeaker === 'player' && (
+                  <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
+                    {[1, 2, 3, 4].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="w-1 rounded-full bg-emerald-400"
+                        animate={{ height: [4, 14, 4] }}
+                        transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+          </div>
+        )}
 
         {/* ── LIVE CLOSED CAPTIONS & SUBTITLES BAR ── */}
         {captionsEnabled && (

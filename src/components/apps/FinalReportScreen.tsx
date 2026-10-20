@@ -70,7 +70,7 @@ const OUTCOME = {
   },
 };
 
-const DIMENSION_ICON: Record<string, React.FC<{ className?: string }>> = {
+const DIMENSION_ICON: Record<string, React.FC<{ className?: string; style?: React.CSSProperties }>> = {
   kickoff_engagement: Users,
   stakeholder_management: Users,
   requirement_discovery: Search,

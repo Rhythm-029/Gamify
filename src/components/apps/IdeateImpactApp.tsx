@@ -86,7 +86,7 @@ export const IdeateImpactApp: React.FC<IdeateImpactAppProps> = ({ onLaunchApp })
         isAiBuilding: false,
         currentStatus: 'Impact Prototype Built & Active',
         generatedFiles: [
-          { id: 'f1', name: 'App.tsx', content: '// Titan HR Transformation Solution Built', language: 'typescript' },
+          { id: 'f1', name: 'App.tsx', path: '/src/App.tsx', content: '// Titan HR Transformation Solution Built', language: 'typescript' },
         ],
       });
       addSignal('delivery_management', 'Launched & Built Digital Transformation Prototype in Ideate & Impact Studio', 25);
