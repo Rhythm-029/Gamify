@@ -69,6 +69,18 @@ import { Chapter2ScorecardModal } from '../chapter2/Chapter2ScorecardModal';
 import { ProjectAmigoWorkspaceApp } from '../chapter2/ProjectAmigoWorkspaceApp';
 import { EmailComposerModal } from '../chapter2/EmailComposerModal';
 
+// Chapter 3 Components & Data
+import type { Chapter3State, Chapter3DecisionKey, Chapter3ActionKey } from '../../types/chapter3';
+import {
+  getChapter3SessionState,
+  setChapter3SessionState,
+  computeChapter3Score,
+  CHAPTER3_DECISION_OPTIONS,
+} from '../../data/chapter3Data';
+import { Chapter3Banner } from '../chapter3/Chapter3Banner';
+import { DataIntegrityTriageApp } from '../chapter3/DataIntegrityTriageApp';
+import { Chapter3ScorecardModal } from '../chapter3/Chapter3ScorecardModal';
+
 interface BrainedOSDesktopProps {
   onOpenEventModal?: () => void;
   playerConfig?: {
@@ -478,6 +490,96 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
     return () => clearTimeout(timer);
   }, [bootStep, activeChapter]);
 
+  // ── Chapter 3 Interactive Simulation State ──
+  const [chapter3State, setChapter3State] = useState<Chapter3State>(() => getChapter3SessionState());
+  const [isChapter3ScorecardOpen, setIsChapter3ScorecardOpen] = useState(false);
+
+  const handleChapter3Decision = (opt: Chapter3DecisionKey) => {
+    setChapter3State((prev) => {
+      const optionConfig = CHAPTER3_DECISION_OPTIONS.find((o) => o.key === opt);
+      const next: Chapter3State = {
+        ...prev,
+        decision: opt,
+        decisionFeedback: optionConfig?.feedback || null,
+        activeBeat: 'decision',
+      };
+      setChapter3SessionState(next);
+      return next;
+    });
+  };
+
+  const handleChapter3ActionToggle = (key: Chapter3ActionKey) => {
+    setChapter3State((prev) => {
+      const alreadySelected = prev.selectedActions.includes(key);
+      const nextActions = alreadySelected
+        ? prev.selectedActions.filter((a) => a !== key)
+        : [...prev.selectedActions, key];
+      const next: Chapter3State = {
+        ...prev,
+        selectedActions: nextActions,
+      };
+      setChapter3SessionState(next);
+      return next;
+    });
+  };
+
+  const handleChapter3PlanSubmit = () => {
+    if (chapter3State.planSubmitted) return;
+
+    const computed = computeChapter3Score(chapter3State, chapter2State?.scorecard);
+    setChapter3State((prev) => {
+      const next: Chapter3State = {
+        ...prev,
+        planSubmitted: true,
+        activeBeat: 'completed',
+        completed: true,
+        scorecard: {
+          ...computed,
+          shown: true,
+        },
+      };
+      setChapter3SessionState(next);
+      return next;
+    });
+
+    sound.playSystemClearance();
+    pushNotification({
+      id: 'ch3_plan_confirmed',
+      app: 'Teams',
+      title: 'Aarav Kapoor',
+      subtitle: 'Senior Consultant · Project Manager',
+      body: 'Validation plan confirmed. Affected records quarantined; Daniel assigned to verify source mappings while unaffected development continues.',
+      timestamp: 'Just now',
+      actionText: 'View Scorecard',
+      onActionAppId: 'data_integrity',
+    });
+
+    setTimeout(() => {
+      setIsChapter3ScorecardOpen(true);
+    }, 1200);
+  };
+
+  // ── Chapter 3 Kickoff Notification — auto-fires ~2s after desktop is ready ──
+  useEffect(() => {
+    if (bootStep !== 'ready' || activeChapter !== 3) return;
+    if (seenNotifIds.current.has('ch3_daniel_data_defect')) return;
+
+    const timer = setTimeout(() => {
+      sound.playMessagePing();
+      pushNotification({
+        id: 'ch3_daniel_data_defect',
+        app: 'Teams',
+        title: 'Daniel Brooks',
+        subtitle: 'Lead Developer · Project Amigo',
+        body: "Hey, I found two inconsistencies during validation. A few appraisal records appear to be linked to the wrong employee IDs, and some leave balances don't match our source data. I've only seen this in the prototype test data so far. We should investigate before calling these modules ready.",
+        timestamp: 'Now',
+        actionText: 'Open in Teams',
+        onActionAppId: 'teams',
+      });
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [bootStep, activeChapter]);
+
 
 
   // Register Cera active app checker, external notification handler, and browser open callback
@@ -642,6 +744,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
     design_review: { title: 'Design Review — UI/UX Prototypes Baseline', icon: <span>🎨</span> },
     readiness: { title: 'Sprint 1 Readiness Dashboard — Greenlight Gate', icon: <span>🛡️</span> },
     workspace_amigo: { title: 'Project Amigo — Sprint 1 Workspace', icon: <span>💼</span> },
+    data_integrity: { title: 'Project Amigo — Data Integrity Triage', icon: <span>🛡️</span> },
     brief: { title: 'Preview — Project_Amigo_Internal_Brief.pdf', icon: <span>📄</span> },
     assignment: { title: 'Project Amigo — Initial Planning · Assignment 01', icon: <span>📋</span> },
     review: { title: 'Microsoft Teams — Prototype Review · Day 7', icon: <span>📹</span> },
@@ -737,6 +840,11 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
       {/* CHAPTER 2 STATUS BANNER */}
       {activeChapter === 2 && (
         <Chapter2Banner onOpenWorkspace={() => handleOpenApp('workspace_amigo')} />
+      )}
+
+      {/* CHAPTER 3 STATUS BANNER */}
+      {activeChapter === 3 && (
+        <Chapter3Banner onOpenWorkspace={() => handleOpenApp('data_integrity')} />
       )}
 
       {/* DESKTOP CANVAS */}
@@ -872,13 +980,19 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
                   }}
                   hasReadBrief={hasReadBrief}
                   onOpenChapterCompletion={() => setIsChapter1CompletionOpen(true)}
-                  initialChatId={activeChapter === 2 ? 'daniel' : 'aarav'}
+                  initialChatId={activeChapter >= 2 ? 'daniel' : 'aarav'}
                   activeChapter={activeChapter}
                   chapter2State={chapter2State}
+                  chapter3State={chapter3State}
                   onOpenIncidentPanel={() => handleOpenApp('incident')}
                   onOpenCommunicationSetup={() => handleOpenApp('communication')}
                   onOpenDesignReview={() => handleOpenApp('design_review')}
                   onOpenSprintReadiness={() => handleOpenApp('readiness')}
+                  onOpenDataIntegrityTriage={() => handleOpenApp('data_integrity')}
+                  onSelectChapter3Decision={handleChapter3Decision}
+                  onToggleChapter3Action={handleChapter3ActionToggle}
+                  onSubmitChapter3Plan={handleChapter3PlanSubmit}
+                  onOpenChapter3Scorecard={() => setIsChapter3ScorecardOpen(true)}
                 />
               )}
               {/* CHAPTER 2 SIMULATION APPS */}
@@ -928,6 +1042,16 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
                 <ProjectAmigoWorkspaceApp
                   chapter2State={chapter2State}
                   onOpenApp={handleOpenApp}
+                />
+              )}
+              {/* CHAPTER 3 SIMULATION APPS */}
+              {activeAppId === 'data_integrity' && (
+                <DataIntegrityTriageApp
+                  chapter3State={chapter3State}
+                  onSelectDecision={handleChapter3Decision}
+                  onToggleAction={handleChapter3ActionToggle}
+                  onSubmitPlan={handleChapter3PlanSubmit}
+                  onOpenScorecard={() => setIsChapter3ScorecardOpen(true)}
                 />
               )}
               {activeAppId === 'slack' && <SlackOSApp />}
@@ -1117,6 +1241,21 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
           }}
           onReturnToChapterSelect={() => {
             setIsChapter2ScorecardOpen(false);
+            if (onReturnToChapterSelect) onReturnToChapterSelect();
+          }}
+        />
+      )}
+
+      {/* CHAPTER 3 SCORECARD MODAL */}
+      {isChapter3ScorecardOpen && (
+        <Chapter3ScorecardModal
+          scorecardData={chapter3State.scorecard}
+          onProceedToNextChapter={() => {
+            setIsChapter3ScorecardOpen(false);
+            if (onReturnToChapterSelect) onReturnToChapterSelect();
+          }}
+          onReturnToChapterSelect={() => {
+            setIsChapter3ScorecardOpen(false);
             if (onReturnToChapterSelect) onReturnToChapterSelect();
           }}
         />
