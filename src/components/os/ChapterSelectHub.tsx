@@ -35,10 +35,10 @@ const CHAPTER_VISUALS: Record<number, { title: string; subtitle: string; descrip
     yOffset: 14,
   },
   3: {
-    title: 'The Delivery Plan',
-    subtitle: 'Act I · Milestones & Architecture',
-    description: 'Translate ambiguous client demands into a structured agile delivery sprint roadmap with verifiable milestone checkpoints.',
-    thumb: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=300&auto=format&fit=crop&q=80',
+    title: 'THE DATA INTEGRITY CRISIS',
+    subtitle: 'Act I · Prototype Validation & Containment',
+    description: 'Investigate appraisal and leave-balance mismatches in prototype test data. Contain defects responsibly without freezing unaffected development.',
+    thumb: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=300&auto=format&fit=crop&q=80',
     yOffset: 26,
   },
   4: {
@@ -110,18 +110,21 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
   const [chapterStatuses, setChapterStatuses] = useState<Record<number, string>>(() => getStoredChapterStatuses());
   const [selectedChapterId, setSelectedChapterId] = useState<number>(() => {
     const statuses = getStoredChapterStatuses();
-    return statuses[2] === 'unlocked' ? 2 : 1;
+    if (statuses[3] === 'unlocked' || statuses[3] === 'in_progress') return 3;
+    if (statuses[2] === 'unlocked' || statuses[2] === 'in_progress') return 2;
+    return 1;
   });
   const [hoveredChapter, setHoveredChapter] = useState<number | null>(null);
   const [deniedToast, setDeniedToast] = useState<string | null>(null);
   const [unlockedBanner, setUnlockedBanner] = useState<string | null>(null);
   const [autoLaunchCountdown, setAutoLaunchCountdown] = useState<number | null>(null);
+  const [autoLaunchTarget, setAutoLaunchTarget] = useState<number>(2);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const playerName = playerConfig?.name || localStorage.getItem('brained_player_name') || 'Riya Mehta';
   const playerRole = playerConfig?.role || 'Digital Transformer';
 
-  // Check if Chapter 2 was just unlocked from previous completion
+  // Check if Chapter 2, 3, or 4 was just unlocked from previous completion
   useEffect(() => {
     const justUnlocked = localStorage.getItem('brained_just_unlocked_chapter');
     const autoLaunch = localStorage.getItem('brained_auto_launch_chapter');
@@ -146,7 +149,55 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
 
         if (autoLaunch === '2') {
           localStorage.removeItem('brained_auto_launch_chapter');
+          setAutoLaunchTarget(2);
           setAutoLaunchCountdown(3);
+        }
+
+        setTimeout(() => setUnlockedBanner(null), 3500);
+      }, 700);
+
+      return () => clearTimeout(timer);
+    } else if (justUnlocked === '3') {
+      localStorage.removeItem('brained_just_unlocked_chapter');
+
+      // Start on Chapter 2, then smoothly slide the golden boundary to Chapter 3!
+      setSelectedChapterId(2);
+      
+      const timer = setTimeout(() => {
+        // Shift golden boundary and larger box to Chapter 3
+        setSelectedChapterId(3);
+        setChapterStatuses(getStoredChapterStatuses());
+        setUnlockedBanner('CHAPTER 03 UNLOCKED: THE DATA INTEGRITY CRISIS');
+        sound.playSystemClearance();
+
+        // Smooth scroll container to frame Chapter 3 comfortably
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTo({ left: 320, behavior: 'smooth' });
+        }
+
+        if (autoLaunch === '3') {
+          localStorage.removeItem('brained_auto_launch_chapter');
+          setAutoLaunchTarget(3);
+          setAutoLaunchCountdown(3);
+        }
+
+        setTimeout(() => setUnlockedBanner(null), 3500);
+      }, 700);
+
+      return () => clearTimeout(timer);
+    } else if (justUnlocked === '4') {
+      localStorage.removeItem('brained_just_unlocked_chapter');
+
+      setSelectedChapterId(3);
+      
+      const timer = setTimeout(() => {
+        setSelectedChapterId(4);
+        setChapterStatuses(getStoredChapterStatuses());
+        setUnlockedBanner('CHAPTER 04 UNLOCKED');
+        sound.playSystemClearance();
+
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTo({ left: 540, behavior: 'smooth' });
         }
 
         setTimeout(() => setUnlockedBanner(null), 3500);
@@ -161,14 +212,14 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
     if (autoLaunchCountdown === null) return;
     if (autoLaunchCountdown <= 0) {
       setAutoLaunchCountdown(null);
-      onStartChapter(2);
+      onStartChapter(autoLaunchTarget);
       return;
     }
     const timer = setTimeout(() => {
       setAutoLaunchCountdown((prev) => (prev !== null ? prev - 1 : null));
     }, 1000);
     return () => clearTimeout(timer);
-  }, [autoLaunchCountdown, onStartChapter]);
+  }, [autoLaunchCountdown, autoLaunchTarget, onStartChapter]);
 
   const handleCardClick = (chId: number) => {
     const status = chapterStatuses[chId] || (chId === 1 ? 'unlocked' : 'locked');
@@ -328,13 +379,13 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
                 PROGRESSION UNLOCKED
               </div>
               <div className="text-xs font-bold text-white">
-                Transitioning to Chapter 2 in {autoLaunchCountdown}s...
+                Transitioning to Chapter {autoLaunchTarget} in {autoLaunchCountdown}s...
               </div>
             </div>
             <button
               onClick={() => {
                 setAutoLaunchCountdown(null);
-                onStartChapter(2);
+                onStartChapter(autoLaunchTarget);
               }}
               className="ml-3 px-4 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center space-x-1.5 shadow-lg cursor-pointer transition-all"
             >
