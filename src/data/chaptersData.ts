@@ -84,25 +84,25 @@ export const CHAPTERS: Chapter[] = [
   {
     id: 3,
     slug: 'chapter-3',
-    title: 'Diagnostic Sprint',
-    subtitle: 'Finding the Real Problem',
+    title: 'The Data Integrity Crisis',
+    subtitle: 'The prototype works. But can the team trust its data?',
     act: 'I',
     actLabel: 'Act I — Foundation',
-    day: 'Day 4–5',
-    duration: '~30 mins',
+    day: 'Day 3–4',
+    duration: '~1m 45s',
     difficulty: 'Moderate',
     xpReward: 350,
     description:
-      'Data interviews. Process walkthroughs. Legacy system discovery. The real transformation problem is hidden under layers of organizational theatre. Find it.',
+      'During early validation of the Project Amigo prototype, inconsistencies appear in employee appraisal records and leave balances. Make a practical delivery decision: contain the defect, validate the mappings, and protect unaffected velocity.',
     objectives: [
-      { label: 'Complete 3 diagnostic stakeholder sessions', type: 'analysis' },
-      { label: 'Identify the core process breakdown', type: 'analysis' },
-      { label: 'Draft your As-Is assessment', type: 'delivery' },
+      { label: 'Triage reported data inconsistencies in prototype test records', type: 'analysis' },
+      { label: 'Decide containment approach without halting safe development', type: 'decision' },
+      { label: 'Create and confirm the structured Data Validation Plan', type: 'delivery' },
     ],
-    primaryColor: '#10b981',
-    secondaryColor: '#3b82f6',
-    accentColor: '#34d399',
-    backgroundIcon: '🔍',
+    primaryColor: '#0284c7',
+    secondaryColor: '#4f46e5',
+    accentColor: '#38bdf8',
+    backgroundIcon: '🛡️',
     status: 'locked',
   },
   {
@@ -358,13 +358,17 @@ export function setSessionAssignmentResult(result: any) {
   sessionChapter1Assignment = result;
 }
 
+import { resetChapter3SessionState } from './chapter3Data';
+
 export function resetChapterStatuses() {
   sessionChapterStatuses = { 1: 'unlocked' };
   sessionChapter1Assignment = null;
+  resetChapter3SessionState();
   try {
     localStorage.removeItem('brained_chapter_statuses');
     localStorage.removeItem('brained_just_unlocked_chapter');
     localStorage.removeItem('brained_chapter1_assignment');
+    localStorage.removeItem('brained_chapter3_state');
   } catch {}
 }
 
