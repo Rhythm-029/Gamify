@@ -1,9 +1,10 @@
-# Chapter 3 Dossier: Diagnostic Sprint (Finding the Real Problem)
+# Chapter 3 Dossier: The Data Integrity Crisis (Project Amigo)
 
 ## 📌 Executive Summary
-Organizations rarely suffer from the problem they claim to have. In this diagnostic sprint, you uncover shadow IT, fragmented databases across branch locations, and manual spreadsheet workarounds that mask system downtime.
+Development is progressing following the Sprint 1 greenlight. During early validation of the Project Amigo prototype, Daniel discovers inconsistencies in employee appraisal records and leave balances. A working interface does not guarantee reliable data. The player must make a disciplined delivery decision: isolate and contain the defect, establish an authoritative validation plan, and keep unaffected engineering moving safely.
 
 ## 🎯 Key Discoveries
-- Legacy attendance systems drop 8% of morning clock-in packets under peak load.
-- Managers maintain unauthorized shadow spreadsheets to reconcile payroll mismatches.
-- Root cause: unindexed queries hitting an unpartitioned 12-year-old SQL database.
+- Appraisal review mappings in prototype test data link to incorrect employee IDs (EMP-84021 mapped to EMP-84099).
+- Leave balances in prototype display values inconsistent with ICICI authoritative databases (Casual Leave shows 24 vs 12; Privilege Leave calculation underflow).
+- Contained strictly within prototype test data; no production incident.
+- Core lesson: Contain the defect, establish what is wrong, assign ownership, and let unaffected work continue safely.
