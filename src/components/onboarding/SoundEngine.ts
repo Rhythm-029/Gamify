@@ -117,6 +117,11 @@ class SoundEngine {
     osc2.stop(time + 0.35);
   }
 
+  // Alias for playSystemClearance to ensure resilience against missing method calls
+  playSuccessSound() {
+    this.playSystemClearance();
+  }
+
   // Simulates corporate office atmospheric hum (A/C rumble & distant server fans)
   startOfficeHum() {
     this.init();

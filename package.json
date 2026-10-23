@@ -9,7 +9,7 @@
     "server": "npx tsx server/index.ts",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "test": "npx tsx scripts/test-chapter3-evaluation.ts && npx tsx scripts/test-chapter3-integration.ts",
+    "test": "npx tsx scripts/test-chapter3-evaluation.ts && npx tsx scripts/test-chapter3-integration.ts && npx tsx scripts/test-chapter5-evaluation.ts && npx tsx scripts/test-chapter5-integration.ts",
     "preview": "vite preview"
   },
   "dependencies": {
