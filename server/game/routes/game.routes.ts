@@ -398,4 +398,22 @@ gameRouter.post('/chapter4/evaluate', asyncHandler(async (req, res) => {
   res.json({ success: true, scorecard });
 }));
 
+/** POST /api/game/chapter5/evaluate — evaluate Chapter 5 submission deterministically on backend */
+gameRouter.post('/chapter5/evaluate', asyncHandler(async (req, res) => {
+  const { session_id, state, ch4_baseline } = req.body as {
+    session_id: string;
+    state: any;
+    ch4_baseline?: any;
+  };
+  if (!session_id || !state) {
+    res.status(400).json({ success: false, error: 'session_id and state required' });
+    return;
+  }
+
+  const { evaluateChapter5Submission } = await import('../scoring/chapter5.service');
+  const scorecard = await evaluateChapter5Submission(session_id, state, ch4_baseline);
+  res.json({ success: true, scorecard });
+}));
+
+
 
