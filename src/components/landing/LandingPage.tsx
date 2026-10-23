@@ -2,11 +2,15 @@ import React, { useRef, useEffect, useState } from 'react';
 import { ArrowRight, Volume2, VolumeX, Trophy, ChevronRight } from 'lucide-react';
 import { sound } from '../onboarding/SoundEngine';
 import { Leaderboard } from './Leaderboard';
+/* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */
+import { TemporaryLandingChapterSkip } from '../dev/TemporaryChapterSkip';
 
 interface LandingPageProps {
   onStartOnboarding: () => void;
   onViewLeaderboard: () => void;
   onViewCertificate: () => void;
+  /* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */
+  onDevJumpChapter?: (chapterId: number) => void;
 }
 
 // ──────────────────────────────────────────────────────────────────
@@ -93,6 +97,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onStartOnboarding,
   onViewLeaderboard: _onViewLeaderboard,
   onViewCertificate: _onViewCertificate,
+  /* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */
+  onDevJumpChapter,
 }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -228,6 +234,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
         {/* Right: Controls (Leaderboard + Sound) */}
         <div className="flex items-center space-x-3">
+          {/* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */}
+          {onDevJumpChapter && (
+            <TemporaryLandingChapterSkip onSelectChapter={onDevJumpChapter} />
+          )}
+
           <button
             onClick={() => setShowLeaderboard(!showLeaderboard)}
             className="flex items-center space-x-2 backdrop-blur-md transition-all cursor-pointer shadow-lg px-3.5 py-1.5 rounded-full text-xs font-mono font-bold border bg-[#0f0f1e]/80 text-amber-300 border-amber-500/40 hover:bg-[#16162a]"

@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import { CHAPTERS, type Chapter, getStoredChapterStatuses, updateChapterStatus, resetChapterStatuses } from '../../data/chaptersData';
 import { sound } from '../onboarding/SoundEngine';
+/* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */
+import { TemporaryHubChapterSkip, TEMPORARY_CHAPTER_SKIP_ACTIVE } from '../dev/TemporaryChapterSkip';
 
 interface ChapterSelectHubProps {
   playerConfig: {
@@ -49,10 +51,10 @@ const CHAPTER_VISUALS: Record<number, { title: string; subtitle: string; descrip
     yOffset: 40,
   },
   5: {
-    title: 'The First Prototype',
-    subtitle: 'Act II · Cera AI Build',
-    description: 'Cera AI begins code generation. Manage scope, architectural integrity, and speed while pressure mounts from leadership.',
-    thumb: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=300&auto=format&fit=crop&q=80',
+    title: 'The Launch Decision',
+    subtitle: 'Act II · Controlled Pilot Rollout',
+    description: 'Production readiness is demonstrated through evidence, not assumed from successful development. Triage release evidence, resolve blockers, and build the 500-user pilot rollout plan.',
+    thumb: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=300&auto=format&fit=crop&q=80',
     yOffset: 56,
   },
   6: {
@@ -192,6 +194,25 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
       }, 700);
 
       return () => clearTimeout(timer);
+    } else if (justUnlocked === '5') {
+      localStorage.removeItem('brained_just_unlocked_chapter');
+
+      setSelectedChapterId(4);
+      
+      const timer = setTimeout(() => {
+        setSelectedChapterId(5);
+        setChapterStatuses(getStoredChapterStatuses());
+        setUnlockedBanner('CHAPTER 05 UNLOCKED: THE LAUNCH DECISION');
+        sound.playSystemClearance();
+
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTo({ left: 780, behavior: 'smooth' });
+        }
+
+        setTimeout(() => setUnlockedBanner(null), 3500);
+      }, 700);
+
+      return () => clearTimeout(timer);
     }
   }, []);
 
@@ -210,11 +231,14 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
   }, [autoLaunchCountdown, autoLaunchTarget, onStartChapter]);
 
   const handleCardClick = (chId: number) => {
-    const status = chapterStatuses[chId] || (chId === 1 ? 'unlocked' : 'locked');
-    if (status === 'locked') {
-      setDeniedToast(`Chapter ${chId} is locked. Complete Chapter ${chId - 1} to unlock.`);
-      setTimeout(() => setDeniedToast(null), 2500);
-      return;
+    /* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */
+    if (!TEMPORARY_CHAPTER_SKIP_ACTIVE) {
+      const status = chapterStatuses[chId] || (chId === 1 ? 'unlocked' : 'locked');
+      if (status === 'locked') {
+        setDeniedToast(`Chapter ${chId} is locked. Complete Chapter ${chId - 1} to unlock.`);
+        setTimeout(() => setDeniedToast(null), 2500);
+        return;
+      }
     }
     // Select chapter with sliding golden border
     setSelectedChapterId(chId);
@@ -235,7 +259,10 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
     setTimeout(() => setDeniedToast(null), 2500);
   };
 
-  const unlockedCount = Object.values(chapterStatuses).filter(s => s === 'unlocked' || s === 'completed').length;
+  /* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */
+  const unlockedCount = TEMPORARY_CHAPTER_SKIP_ACTIVE
+    ? 5
+    : Object.values(chapterStatuses).filter(s => s === 'unlocked' || s === 'completed').length;
 
   return (
     <div className="relative w-full h-screen bg-[#070b14] text-white overflow-hidden flex flex-col font-sans select-none">
@@ -276,6 +303,9 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
 
         {/* Right: Controls & Executive Profile Dropdown Pill */}
         <div className="flex items-center space-x-3">
+          {/* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */}
+          <TemporaryHubChapterSkip onSelectChapter={onStartChapter} />
+
           <button
             onClick={handleResetProgress}
             title="Reset simulation to Chapter 1"
@@ -471,7 +501,9 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
 
               const status = chapterStatuses[ch.id] || (ch.id === 1 ? 'unlocked' : 'locked');
               const isCompleted = status === 'completed';
-              const isUnlocked = status === 'unlocked' || isCompleted;
+              /* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */
+              const isDevUnlocked = TEMPORARY_CHAPTER_SKIP_ACTIVE && ch.id <= 5;
+              const isUnlocked = isDevUnlocked || status === 'unlocked' || isCompleted;
               const isSelected = selectedChapterId === ch.id;
               const isHovered = hoveredChapter === ch.id;
 
@@ -520,11 +552,16 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
                         {String(ch.id).padStart(2, '0')}
                       </span>
 
-                      {/* Status indicator: Completed check or Lock icon */}
+                      {/* Status indicator: Completed check, Dev Skip badge, or Lock icon */}
                       {isCompleted ? (
                         <span className="px-2 py-0.5 rounded-full bg-white/10 text-slate-300 text-[9px] font-mono font-bold flex items-center space-x-1">
                           <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                           <span>COMPLETED</span>
+                        </span>
+                      ) : isDevUnlocked && status === 'locked' ? (
+                        <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[9px] font-mono font-bold flex items-center space-x-1">
+                          <Unlock className="w-3 h-3 text-amber-400" />
+                          <span>DEV SKIP</span>
                         </span>
                       ) : !isUnlocked ? (
                         <Lock className="w-3.5 h-3.5 text-slate-500" />

@@ -16,12 +16,15 @@ function InnerApp({
   onStartChapter,
   onCompletion,
   onReturnToChapterSelect,
+  /* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */
+  chapterInstanceKey,
 }: {
   playerConfig: any;
   activeChapter?: number | null;
   onStartChapter?: (id: number) => void;
   onCompletion?: () => void;
   onReturnToChapterSelect?: () => void;
+  chapterInstanceKey?: number;
 }) {
   const { state } = useGame();
 
@@ -38,8 +41,10 @@ function InnerApp({
 
   return (
     <BrainedOSDesktop
+      /* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */
+      key={`${activeChapter ?? 1}_${chapterInstanceKey ?? 0}`}
       playerConfig={playerConfig}
-      firstBoot={true}
+      firstBoot={false}
       activeChapter={activeChapter ?? 1}
       onStartChapter={onStartChapter}
       onReturnToChapterSelect={onReturnToChapterSelect}
@@ -75,6 +80,8 @@ export function App() {
   } | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(() => localStorage.getItem('brained_session_id'));
   const [activeChapter, setActiveChapter] = useState<ActiveChapter>(null);
+  /* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */
+  const [chapterInstanceKey, setChapterInstanceKey] = useState(0);
 
   useEffect(() => {
     // Reset chapter progression to session start (Chapter 1 unlocked, 2-12 locked)
@@ -128,7 +135,23 @@ export function App() {
 
   const handleStartChapter = (chapterId: number) => {
     setActiveChapter(chapterId);
+    /* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */
+    setChapterInstanceKey((prev) => prev + 1);
     setViewMode('workspace');
+  };
+
+  /* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */
+  const handleDevJumpChapter = (chapterId: number) => {
+    if (!playerConfig) {
+      setPlayerConfig({
+        name: localStorage.getItem('brained_player_name') || 'Riya Mehta',
+        role: 'Digital Transformation Consultant',
+        company: localStorage.getItem('brained_player_company') || 'ICICI Bank / Brained',
+        email: localStorage.getItem('brained_player_email') || 'riya.mehta@brained.io',
+        linkedin: '',
+      });
+    }
+    handleStartChapter(chapterId);
   };
 
   if (viewMode === 'landing') {
@@ -137,6 +160,8 @@ export function App() {
         onStartOnboarding={handleStartOnboarding}
         onViewLeaderboard={() => {}}
         onViewCertificate={() => {}}
+        /* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */
+        onDevJumpChapter={handleDevJumpChapter}
       />
     );
   }
@@ -177,6 +202,8 @@ export function App() {
         onStartChapter={handleStartChapter}
         onCompletion={() => setViewMode('completion')}
         onReturnToChapterSelect={() => setViewMode('chapter_select')}
+        /* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */
+        chapterInstanceKey={chapterInstanceKey}
       />
     </GameProvider>
   );
@@ -189,12 +216,15 @@ function GamePhaseRouter({
   onStartChapter,
   onCompletion,
   onReturnToChapterSelect,
+  /* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */
+  chapterInstanceKey,
 }: {
   playerConfig: any;
   activeChapter: number | null;
   onStartChapter: (id: number) => void;
   onCompletion: () => void;
   onReturnToChapterSelect: () => void;
+  chapterInstanceKey?: number;
 }) {
   const { state, setPhase } = useGame();
   const completionFiredRef = useRef(false);
@@ -221,6 +251,8 @@ function GamePhaseRouter({
       onStartChapter={onStartChapter}
       onCompletion={onCompletion}
       onReturnToChapterSelect={onReturnToChapterSelect}
+      /* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */
+      chapterInstanceKey={chapterInstanceKey}
     />
   );
 }

@@ -4,6 +4,8 @@ import {
 } from 'lucide-react';
 import { INITIAL_OS_STATE } from '../../data/brainedOSData';
 import { BrainedLogoIcon } from '../common/BrainedLogoIcon';
+/* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */
+import { TemporaryMenuBarChapterSkip } from '../dev/TemporaryChapterSkip';
 
 interface BrainedMenuBarProps {
   activeAppName: string;
@@ -15,6 +17,10 @@ interface BrainedMenuBarProps {
   onToggleNotificationDrawer?: () => void;
   unreadNotifCount?: number;
   clockWidget?: React.ReactNode;
+  /* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */
+  activeChapter?: number;
+  onStartChapter?: (id: number) => void;
+  onReturnToChapterSelect?: () => void;
 }
 
 export const BrainedMenuBar: React.FC<BrainedMenuBarProps> = ({
@@ -27,6 +33,10 @@ export const BrainedMenuBar: React.FC<BrainedMenuBarProps> = ({
   onToggleNotificationDrawer,
   unreadNotifCount = 0,
   clockWidget,
+  /* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */
+  activeChapter,
+  onStartChapter,
+  onReturnToChapterSelect,
 }) => {
   return (
     <header className="h-11 w-full apple-header-glass fixed top-0 left-0 right-0 z-50 px-5 flex items-center justify-between text-xs select-none border-b border-white/20 text-slate-100 backdrop-blur-2xl bg-slate-900/90 shadow-lg">
@@ -62,6 +72,15 @@ export const BrainedMenuBar: React.FC<BrainedMenuBarProps> = ({
 
       {/* RIGHT: Game Metrics & System Indicators */}
       <div className="flex items-center space-x-3 text-xs">
+        {/* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */}
+        {onStartChapter && (
+          <TemporaryMenuBarChapterSkip
+            activeChapter={activeChapter}
+            onSelectChapter={onStartChapter}
+            onReturnToHub={onReturnToChapterSelect}
+          />
+        )}
+
         {/* Spotlight Search Trigger (⌘K) */}
         <button
           onClick={onOpenSpotlight}
