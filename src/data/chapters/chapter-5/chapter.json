@@ -1,31 +1,33 @@
 {
   "id": 5,
   "slug": "chapter-5",
-  "title": "Build Sprint",
-  "subtitle": "Prototype Under Fire & Cera AI Execution",
+  "title": "The Launch Decision",
+  "subtitle": "Controlled User Group Rollout · Production Readiness & Pilot Assessment",
   "act": "II",
   "actLabel": "Act II — Design",
-  "day": "Day 8–10",
-  "duration": "~35 mins",
+  "day": "Day 10–14",
+  "duration": "~2–3 mins",
   "difficulty": "Hard",
   "xpReward": 450,
-  "description": "Cera AI begins building. You manage scope, quality, and speed. A critical bug surfaces. A stakeholder demands a feature that wasn't scoped. Ship or slip?",
+  "description": "The Phase 1 build is deployed to staging and has passed initial functional tests. Evaluate production readiness evidence across 80,000 bank employees, isolate critical launch blockers, configure a 500-user 48-hour pilot, and establish evidence-based expansion gates.",
   "stakeholders": [
-    { "name": "Cera AI", "role": "Autonomous Software Engineer Agent", "agenda": "Fast iterative code synthesis, automated test suites, pull request generation." },
-    { "name": "Daniel Brooks", "role": "Program Manager", "agenda": "Tracking sprint burndown, flagging blocking dependency tickets." }
+    { "name": "Daniel Kapoor", "role": "Developer Lead", "agenda": "Confirming core functional tests, API gateway connectivity, and technical checklist." },
+    { "name": "Aarav Kapoor", "role": "Project Manager", "agenda": "Protecting delivery baseline, separating prerequisites from pilot tasks, and ensuring user safety." },
+    { "name": "Marcus Reed", "role": "Chief Technology Officer", "agenda": "Enforcing 80,000-employee scale validation, strict InfoSec approvals, and zero unverified rollouts." }
   ],
   "objectives": [
-    { "label": "Direct Cera AI through sprint execution and code generation prompts", "type": "delivery" },
-    { "label": "Handle scope creep under extreme deadline pressure", "type": "decision" },
-    { "label": "Ensure prototype quality gates and security audits pass successfully", "type": "delivery" }
+    { "label": "Review Phase 1 readiness evidence across functional, security, and load domains", "type": "analysis" },
+    { "label": "Identify non-negotiable launch blockers and establish recovery acceptance criteria", "type": "decision" },
+    { "label": "Build a controlled 500-user pilot rollout plan with monitoring and rollback gates", "type": "delivery" }
   ],
   "deliverables": [
-    "Working Interactive Prototype in Cera IDE",
-    "Automated Cypress/Playwright End-to-End Test Suite",
-    "Sprint Velocity and Scope Deviation Report"
+    "Production Readiness Evidence Assessment",
+    "Pre-Pilot Launch Blocker Remediation Gates",
+    "Controlled 500-User 48-Hour Pilot Configuration",
+    "Phased Rollout Authorization Submission"
   ],
-  "primaryColor": "#f97316",
-  "secondaryColor": "#eab308",
-  "accentColor": "#fb923c",
-  "backgroundIcon": "⚡"
+  "primaryColor": "#10b981",
+  "secondaryColor": "#0d9488",
+  "accentColor": "#34d399",
+  "backgroundIcon": "🚀"
 }
