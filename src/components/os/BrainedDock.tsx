@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { 
   Folder, Mail, MessageSquare, Calendar, FileText, 
-  Kanban, Globe, Terminal, Award, Trophy, Settings, Trash2, Video, Code2, Sparkles
+  Kanban, Globe, Terminal, Award, Trophy, Settings, Trash2, Video, Code2, Sparkles, FileCheck2
 } from 'lucide-react';
 
 interface BrainedDockProps {
@@ -19,6 +19,7 @@ export const BrainedDock: React.FC<BrainedDockProps> = ({
   badges,
 }) => {
   const dockApps = [
+    { id: 'release_readiness', name: 'Release Readiness Board', icon: FileCheck2, color: 'bg-gradient-to-tr from-emerald-600 via-teal-600 to-cyan-600' },
     { id: 'ideate', name: 'Ideate & Impact Studio', icon: Sparkles, color: 'bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-600' },
     { id: 'finder', name: 'Finder', icon: Folder, color: 'bg-gradient-to-tr from-[#1D70B8] to-[#428BCA]' },
     { id: 'inbox', name: 'Mail', icon: Mail, color: 'bg-gradient-to-tr from-[#007AFF] to-[#58A6FF]', badge: badges.inbox },

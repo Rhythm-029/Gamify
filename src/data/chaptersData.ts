@@ -3,6 +3,8 @@
  * Master data for all 12 chapters of Brained: The Transformation Room
  */
 import { resetChapter3SessionState } from './chapter3Data';
+import { resetChapter4SessionState } from './chapter4Data';
+import { resetChapter5SessionState } from './chapter5Data';
 
 export type ChapterStatus = 'locked' | 'unlocked' | 'in_progress' | 'completed';
 
@@ -133,25 +135,25 @@ export const CHAPTERS: Chapter[] = [
   {
     id: 5,
     slug: 'chapter-5',
-    title: 'Build Sprint',
-    subtitle: 'Prototype Under Fire',
+    title: 'The Launch Decision',
+    subtitle: 'Controlled User Group Rollout · Production Readiness & Pilot Assessment',
     act: 'II',
     actLabel: 'Act II — Design',
-    day: 'Day 8–10',
-    duration: '~35 mins',
+    day: 'Day 10–14',
+    duration: '~2–3 mins',
     difficulty: 'Hard',
     xpReward: 450,
     description:
-      `Cera AI begins building. You manage scope, quality, and speed. A critical bug surfaces. A stakeholder demands a feature that wasn't scoped. Ship or slip?`,
+      'The Phase 1 build has passed functional tests in staging. Evaluate production readiness evidence across 80,000 bank employees, isolate critical launch blockers, configure a 500-user 48-hour pilot, and establish evidence-based expansion gates.',
     objectives: [
-      { label: 'Direct Cera through sprint execution', type: 'delivery' },
-      { label: 'Handle scope creep under deadline pressure', type: 'decision' },
-      { label: 'Ensure prototype quality gates', type: 'delivery' },
+      { label: 'Review Phase 1 readiness evidence across functional, security, and load domains', type: 'analysis' },
+      { label: 'Identify non-negotiable launch blockers and establish recovery acceptance criteria', type: 'decision' },
+      { label: 'Build a controlled 500-user pilot rollout plan with monitoring and rollback gates', type: 'delivery' },
     ],
-    primaryColor: '#f97316',
-    secondaryColor: '#eab308',
-    accentColor: '#fb923c',
-    backgroundIcon: '⚡',
+    primaryColor: '#10b981',
+    secondaryColor: '#0d9488',
+    accentColor: '#34d399',
+    backgroundIcon: '🚀',
     status: 'locked',
   },
   {
@@ -363,11 +365,15 @@ export function resetChapterStatuses() {
   sessionChapterStatuses = { 1: 'unlocked' };
   sessionChapter1Assignment = null;
   resetChapter3SessionState();
+  resetChapter4SessionState();
+  resetChapter5SessionState();
   try {
     localStorage.removeItem('brained_chapter_statuses');
     localStorage.removeItem('brained_just_unlocked_chapter');
     localStorage.removeItem('brained_chapter1_assignment');
     localStorage.removeItem('brained_chapter3_state');
+    localStorage.removeItem('brained_chapter4_state');
+    localStorage.removeItem('brained_chapter5_state');
   } catch {}
 }
 

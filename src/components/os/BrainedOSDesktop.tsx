@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useSyncExternalStore } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Folder, Code2, Bell, Sparkles } from 'lucide-react';
+import { Folder, Code2, Bell, Sparkles, FileCheck2 } from 'lucide-react';
 import { BrainedMenuBar } from './BrainedMenuBar';
 import { BrainedDock } from './BrainedDock';
 import { BrainedWindow } from './BrainedWindow';
@@ -91,6 +91,17 @@ import { Chapter4Banner } from '../chapter4/Chapter4Banner';
 import { Chapter4MeetingApp } from '../chapter4/Chapter4MeetingApp';
 import { IdeateImpactStudioApp } from '../chapter4/IdeateImpactStudioApp';
 import { Chapter4ScorecardModal } from '../chapter4/Chapter4ScorecardModal';
+
+// Chapter 5 Components & Data
+import type { Chapter5State } from '../../types/chapter5';
+import {
+  getChapter5SessionState,
+  setChapter5SessionState,
+} from '../../data/chapter5Data';
+import { Chapter5Banner } from '../chapter5/Chapter5Banner';
+import { Chapter5MeetingApp } from '../chapter5/Chapter5MeetingApp';
+import { ReleaseReadinessBoardApp } from '../chapter5/ReleaseReadinessBoardApp';
+import { Chapter5ScorecardModal } from '../chapter5/Chapter5ScorecardModal';
 
 interface BrainedOSDesktopProps {
   onOpenEventModal?: () => void;
@@ -529,6 +540,20 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
     });
   };
 
+  // ── Chapter 5 Interactive Simulation State ──
+  const [chapter5State, setChapter5State] = useState<Chapter5State>(() => getChapter5SessionState());
+  const [isChapter5ScorecardOpen, setIsChapter5ScorecardOpen] = useState(false);
+
+  const handleUpdateChapter5State = (
+    updater: Partial<Chapter5State> | ((prev: Chapter5State) => Chapter5State)
+  ) => {
+    setChapter5State((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : { ...prev, ...updater };
+      setChapter5SessionState(next);
+      return next;
+    });
+  };
+
   // ── Chapter 3 Kickoff Incoming Call Notification — auto-fires ~1.5s after desktop is ready ──
   useEffect(() => {
     if (bootStep !== 'ready' || activeChapter !== 3) return;
@@ -614,6 +639,49 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
     }, 500);
     return () => clearTimeout(timer);
   }, [chapter4State.studioAccessGranted, activeChapter]);
+
+  // ── Chapter 5 Kickoff Incoming Call Notification (Sprint 1 Release Check) ──
+  useEffect(() => {
+    if (bootStep !== 'ready' || activeChapter !== 5) return;
+    if (seenNotifIds.current.has('ch5_release_check')) return;
+
+    const timer = setTimeout(() => {
+      sound.playMessagePing();
+      pushNotification({
+        id: 'ch5_release_check',
+        app: 'Teams',
+        title: 'Project Amigo — Sprint 1 Release Check',
+        subtitle: 'Daniel Kapoor (Dev Lead) · Production Readiness Review',
+        body: 'Good news! The Phase 1 build is deployed to staging. Join the release check call to determine next steps.',
+        timestamp: 'Now',
+        actionText: 'Join Call',
+        onActionAppId: 'chapter5_meeting',
+        isCall: true,
+      });
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [bootStep, activeChapter]);
+
+  // ── Chapter 5 Release Readiness Board Active Notification ──
+  useEffect(() => {
+    if (activeChapter !== 5 || !chapter5State.meetingCompleted) return;
+    if (seenNotifIds.current.has('ch5_board_unlocked_notif')) return;
+
+    const timer = setTimeout(() => {
+      sound.playSystemClearance();
+      pushNotification({
+        id: 'ch5_board_unlocked_notif',
+        app: 'Teams',
+        title: 'RELEASE READINESS BOARD ACTIVE',
+        subtitle: 'Review Readiness & Configure Pilot',
+        body: 'Evaluate the 5 readiness cards, identify launch blockers, and build the controlled rollout plan.',
+        timestamp: 'Now',
+        actionText: 'Open Board',
+        onActionAppId: 'release_readiness',
+      });
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [chapter5State.meetingCompleted, activeChapter]);
 
 
 
@@ -784,6 +852,8 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
     chapter3_meeting: { title: 'Microsoft Teams — Emergency Engineering Call', icon: <span>📹</span> },
     chapter4_meeting: { title: 'Microsoft Teams — Project Amigo Change Request Call', icon: <span>📹</span> },
     ideate_studio: { title: 'Ideate & Impact Studio — Project Amigo', icon: <Sparkles className="w-4 h-4 text-purple-400" /> },
+    chapter5_meeting: { title: 'Microsoft Teams — Project Amigo Sprint 1 Release Check', icon: <span>📹</span> },
+    release_readiness: { title: 'Release Readiness Board — Project Amigo', icon: <FileCheck2 className="w-4 h-4 text-emerald-400" /> },
     brief: { title: 'Preview — Project_Amigo_Internal_Brief.pdf', icon: <span>📄</span> },
     assignment: { title: 'Project Amigo — Initial Planning · Assignment 01', icon: <span>📋</span> },
     review: { title: 'Microsoft Teams — Prototype Review · Day 7', icon: <span>📹</span> },
@@ -821,7 +891,9 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 1.0 }}
-            className="absolute inset-0 bg-[#070913] flex flex-col items-center justify-center z-[100] select-none"
+            className="absolute inset-0 bg-[#070913] flex flex-col items-center justify-center z-[100] select-none cursor-pointer"
+            onClick={() => setBootStep('ready')}
+            title="Click anywhere to skip boot sequence"
           >
             <div className="space-y-6 text-center">
               {/* Brained Logo Centered */}
@@ -840,6 +912,9 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
                   animate={{ width: '100%' }}
                   transition={{ duration: 3.0, ease: 'easeInOut' }}
                 />
+              </div>
+              <div className="text-[9px] text-slate-500 font-mono tracking-wider pt-1 hover:text-amber-400 transition-colors">
+                [ Click anywhere to skip boot ]
               </div>
             </div>
             {/* Tiny debug system console logs in bottom corner */}
@@ -874,6 +949,10 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
         onToggleNotificationDrawer={() => setIsNotificationDrawerOpen((prev) => !prev)}
         unreadNotifCount={historyNotifications.filter((n) => !n.read).length}
         clockWidget={<InGameClock />}
+        /* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */
+        activeChapter={activeChapter}
+        onStartChapter={onStartChapter}
+        onReturnToChapterSelect={onReturnToChapterSelect}
       />
 
       {/* CHAPTER 2 STATUS BANNER */}
@@ -896,6 +975,15 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
           onOpenMeeting={() => handleOpenApp('chapter4_meeting')}
           onOpenStudio={() => handleOpenApp('ideate_studio')}
           studioUnlocked={chapter4State.studioAccessGranted}
+        />
+      )}
+
+      {/* CHAPTER 5 STATUS BANNER */}
+      {activeChapter === 5 && (
+        <Chapter5Banner
+          onOpenMeeting={() => handleOpenApp('chapter5_meeting')}
+          onOpenBoard={() => handleOpenApp('release_readiness')}
+          boardUnlocked={chapter5State.meetingCompleted || chapter5State.boardOpened}
         />
       )}
 
@@ -1129,6 +1217,23 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
                   onSubmitCompleteAnalysis={() => handleOpenApp('chapter4_meeting')}
                 />
               )}
+              {/* CHAPTER 5 SIMULATION APPS */}
+              {activeAppId === 'chapter5_meeting' && (
+                <Chapter5MeetingApp
+                  chapter5State={chapter5State}
+                  onUpdateState={handleUpdateChapter5State}
+                  onOpenBoard={() => handleOpenApp('release_readiness')}
+                  onOpenScorecard={() => setIsChapter5ScorecardOpen(true)}
+                />
+              )}
+              {activeAppId === 'release_readiness' && (
+                <ReleaseReadinessBoardApp
+                  chapter5State={chapter5State}
+                  onUpdateState={handleUpdateChapter5State}
+                  onReturnToMeeting={() => handleOpenApp('chapter5_meeting')}
+                  onSubmitCompletePlan={() => handleOpenApp('chapter5_meeting')}
+                />
+              )}
               {activeAppId === 'slack' && <SlackOSApp />}
               {activeAppId === 'notes' && <AppleNotesApp />}
               {activeAppId === 'calendar' && <AppleCalendarApp />}
@@ -1349,6 +1454,21 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
           }}
           onReturnToChapterSelect={() => {
             setIsChapter4ScorecardOpen(false);
+            if (onReturnToChapterSelect) onReturnToChapterSelect();
+          }}
+        />
+      )}
+
+      {/* CHAPTER 5 SCORECARD MODAL */}
+      {isChapter5ScorecardOpen && (
+        <Chapter5ScorecardModal
+          scorecardData={chapter5State.scorecard}
+          onProceedToNextChapter={() => {
+            setIsChapter5ScorecardOpen(false);
+            if (onReturnToChapterSelect) onReturnToChapterSelect();
+          }}
+          onReturnToChapterSelect={() => {
+            setIsChapter5ScorecardOpen(false);
             if (onReturnToChapterSelect) onReturnToChapterSelect();
           }}
         />
