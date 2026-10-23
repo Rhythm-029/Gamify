@@ -164,34 +164,52 @@ export const IdeateImpactStudioApp: React.FC<IdeateImpactStudioAppProps> = ({
 
     setIsSubmitting(true);
     setSubmissionError(null);
-    sound.playSuccessSound();
 
     try {
-      // 1. Send to backend evaluation endpoint
-      const response = await fetch('/api/game/chapter4/evaluate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: 'current_session',
-          state: {
-            featurePlacement: chapter4State.featurePlacement,
-            assessmentSchedule: chapter4State.assessmentSchedule,
-            assessmentDependencies: chapter4State.assessmentDependencies,
-            assessmentSecurity: chapter4State.assessmentSecurity,
-            assessmentBusinessValue: chapter4State.assessmentBusinessValue,
-            assessmentApproval: chapter4State.assessmentApproval,
-            finalRecommendation: chapter4State.finalRecommendation,
-            writtenJustification: chapter4State.writtenJustification,
-          },
-        }),
-      });
+      sound.playSystemClearance();
+    } catch {
+      // Sound failure should never block submission
+    }
 
-      let evaluationResult;
-      if (response.ok) {
-        evaluationResult = await response.json();
-      } else {
-        // Fallback to local deterministic computation
-        evaluationResult = computeChapter4Score(chapter4State);
+    try {
+      // Precompute local deterministic scorecard as immediate reliable baseline
+      let evaluationResult = computeChapter4Score(chapter4State);
+
+      // Attempt backend evaluation with an AbortController timeout of 2.5s
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
+
+        const response = await fetch('/api/game/chapter4/evaluate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+          body: JSON.stringify({
+            session_id: 'current_session',
+            sessionId: 'current_session',
+            state: {
+              featurePlacement: chapter4State.featurePlacement,
+              assessmentSchedule: chapter4State.assessmentSchedule,
+              assessmentDependencies: chapter4State.assessmentDependencies,
+              assessmentSecurity: chapter4State.assessmentSecurity,
+              assessmentBusinessValue: chapter4State.assessmentBusinessValue,
+              assessmentApproval: chapter4State.assessmentApproval,
+              finalRecommendation: chapter4State.finalRecommendation,
+              writtenJustification: chapter4State.writtenJustification,
+            },
+          }),
+        });
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data?.scorecard) {
+            evaluationResult = data.scorecard;
+          }
+        }
+      } catch (netErr) {
+        // Backend timeout or offline — continue seamlessly with local evaluation
+        console.warn('Backend evaluation call timed out or failed, using deterministic evaluation:', netErr);
       }
 
       // Update state
@@ -216,8 +234,9 @@ export const IdeateImpactStudioApp: React.FC<IdeateImpactStudioAppProps> = ({
       // Return to Teams meeting where Aarav, Sophia, and Daniel give their reactions
       onSubmitCompleteAnalysis();
       onReturnToMeeting();
-    } catch {
-      // Fallback deterministic calculation if network error
+    } catch (err) {
+      console.error('Fatal submission error:', err);
+      // Fallback deterministic calculation if any unexpected error occurs
       const localResult = computeChapter4Score(chapter4State);
       onUpdateState({
         submitted: true,
@@ -237,6 +256,8 @@ export const IdeateImpactStudioApp: React.FC<IdeateImpactStudioAppProps> = ({
       setShowSubmitModal(false);
       onSubmitCompleteAnalysis();
       onReturnToMeeting();
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

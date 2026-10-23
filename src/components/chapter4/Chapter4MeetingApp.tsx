@@ -56,6 +56,13 @@ export const Chapter4MeetingApp: React.FC<Chapter4MeetingAppProps> = ({
   const [activeSpeaker, setActiveSpeaker] = useState<'sophia' | 'aarav' | 'daniel' | 'player' | null>('sophia');
   const [subtitleText, setSubtitleText] = useState<string>('');
 
+  // Synchronize stage if submission state updates
+  useEffect(() => {
+    if (chapter4State.completed || chapter4State.submitted) {
+      setStage('outcome_reaction');
+    }
+  }, [chapter4State.completed, chapter4State.submitted]);
+
   // ── Meeting Sequence ──
   useEffect(() => {
     if (stage === 'connecting') {
