@@ -166,7 +166,7 @@ export const Chapter2ScorecardModal: React.FC<Chapter2ScorecardModalProps> = ({
             onClick={handleProceed}
             className="ml-auto px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider flex items-center space-x-2 shadow-[0_0_20px_rgba(59,130,246,0.45)] cursor-pointer transition-all"
           >
-            <span>Continue to Chapter 3</span>
+            <span>Proceed to Chapter Select</span>
             <ArrowRight className="w-4 h-4" />
           </motion.button>
         </div>

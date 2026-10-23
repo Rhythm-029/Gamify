@@ -913,14 +913,14 @@ export const TitanKickoffMeeting: React.FC<TitanKickoffMeetingProps> = ({
 
         {/* ── LIVE CLOSED CAPTIONS & SUBTITLES BAR ── */}
         {captionsEnabled && (
-          <div className="mt-2.5 px-4 py-2.5 rounded-xl bg-black/85 backdrop-blur-md border border-white/10 flex items-center space-x-3 shrink-0">
+          <div className="mt-2.5 px-4 py-3 rounded-2xl bg-black/90 backdrop-blur-md border border-white/15 flex items-start sm:items-center space-x-3 shrink-0 shadow-xl">
             <div 
-              className="text-[11px] font-black uppercase font-mono px-2 py-0.5 rounded border"
+              className="text-xs font-black uppercase font-mono px-2.5 py-1 rounded-lg border shrink-0"
               style={{ color: currentSpeakerMeta.color, borderColor: `${currentSpeakerMeta.color}40`, background: `${currentSpeakerMeta.color}15` }}
             >
               {currentSpeakerMeta.name}
             </div>
-            <p className="text-xs text-white font-medium leading-relaxed truncate">
+            <p className="text-sm sm:text-[15px] text-white font-medium leading-relaxed">
               "{currentSubtitle}"
             </p>
           </div>

@@ -297,10 +297,105 @@ gameRouter.get('/report/:sessionId', asyncHandler(async (req, res) => {
   res.json({ success: true, report });
 }));
 
-// ── Leaderboard ───────────────────────────────────────────────────────────────
-
-/** GET /api/game/leaderboard — get top scores across all MongoDB sessions */
 gameRouter.get('/leaderboard', asyncHandler(async (_req, res) => {
   const leaderboard = await getLeaderboardFromDb();
   res.json({ success: true, leaderboard });
 }));
+
+// ── Chapter 3: The Integration Trap ──────────────────────────────────────────
+
+/** GET /api/game/chapter3/state/:sessionId — fetch Chapter 3 state */
+gameRouter.get('/chapter3/state/:sessionId', asyncHandler(async (req, res) => {
+  const state = await readWorldState(req.params.sessionId);
+  if (!state) {
+    res.status(404).json({ success: false, error: 'Session not found' });
+    return;
+  }
+  const ch3 = (state as any).chapter3 || null;
+  res.json({ success: true, chapter3: ch3 });
+}));
+
+/** POST /api/game/chapter3/state — persist Chapter 3 state */
+gameRouter.post('/chapter3/state', asyncHandler(async (req, res) => {
+  const { session_id, chapter3_state } = req.body as { session_id: string; chapter3_state: any };
+  if (!session_id || !chapter3_state) {
+    res.status(400).json({ success: false, error: 'session_id and chapter3_state required' });
+    return;
+  }
+  const { mutateWorldState } = await import('../engine/worldState.engine');
+  await mutateWorldState(session_id, (ws) => ({
+    ...ws,
+    chapter3: {
+      ...((ws as any).chapter3 || {}),
+      state: chapter3_state,
+      updated_at: new Date(),
+    },
+  } as any));
+  res.json({ success: true, message: 'Chapter 3 state persisted' });
+}));
+
+/** POST /api/game/chapter3/evaluate — evaluate Chapter 3 submission deterministically on backend */
+gameRouter.post('/chapter3/evaluate', asyncHandler(async (req, res) => {
+  const { session_id, state, ch2_baseline } = req.body as {
+    session_id: string;
+    state: any;
+    ch2_baseline?: any;
+  };
+  if (!session_id || !state) {
+    res.status(400).json({ success: false, error: 'session_id and state required' });
+    return;
+  }
+
+  const { evaluateChapter3Submission } = await import('../scoring/chapter3.service');
+  const scorecard = await evaluateChapter3Submission(session_id, state, ch2_baseline);
+  res.json({ success: true, scorecard });
+}));
+
+// ── Chapter 4: Change Request & Impact Analysis ─────────────────────────────
+
+/** GET /api/game/chapter4/state/:sessionId — retrieve stored Chapter 4 state */
+gameRouter.get('/chapter4/state/:sessionId', asyncHandler(async (req, res) => {
+  const { sessionId } = req.params;
+  const { readWorldState } = await import('../engine/worldState.engine');
+  const worldState = await readWorldState(sessionId as string);
+  const ch4 = (worldState as any)?.chapter4 || null;
+  res.json({ success: true, chapter4: ch4 });
+}));
+
+/** POST /api/game/chapter4/state — persist Chapter 4 state */
+gameRouter.post('/chapter4/state', asyncHandler(async (req, res) => {
+  const { session_id, chapter4_state } = req.body as { session_id: string; chapter4_state: any };
+  if (!session_id || !chapter4_state) {
+    res.status(400).json({ success: false, error: 'session_id and chapter4_state required' });
+    return;
+  }
+  const { mutateWorldState } = await import('../engine/worldState.engine');
+  await mutateWorldState(session_id, (ws) => ({
+    ...ws,
+    chapter4: {
+      ...((ws as any).chapter4 || {}),
+      state: chapter4_state,
+      updated_at: new Date(),
+    },
+  } as any));
+  res.json({ success: true, message: 'Chapter 4 state persisted' });
+}));
+
+/** POST /api/game/chapter4/evaluate — evaluate Chapter 4 submission deterministically on backend */
+gameRouter.post('/chapter4/evaluate', asyncHandler(async (req, res) => {
+  const { session_id, state, ch3_baseline } = req.body as {
+    session_id: string;
+    state: any;
+    ch3_baseline?: any;
+  };
+  if (!session_id || !state) {
+    res.status(400).json({ success: false, error: 'session_id and state required' });
+    return;
+  }
+
+  const { evaluateChapter4Submission } = await import('../scoring/chapter4.service');
+  const scorecard = await evaluateChapter4Submission(session_id, state, ch3_baseline);
+  res.json({ success: true, scorecard });
+}));
+
+

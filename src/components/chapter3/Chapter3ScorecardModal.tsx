@@ -9,10 +9,11 @@ import {
   Zap,
   CheckCircle2,
   AlertTriangle,
+  RotateCcw,
 } from 'lucide-react';
 import { updateChapterStatus } from '../../data/chaptersData';
 import type { Chapter3Scorecard } from '../../types/chapter3';
-import { CHAPTER3_CLOSING_INSIGHT } from '../../data/chapter3Data';
+import { CHAPTER3_LEARNING_POINTS } from '../../data/chapter3Data';
 
 interface Chapter3ScorecardModalProps {
   scorecardData: Chapter3Scorecard;
@@ -35,18 +36,18 @@ export const Chapter3ScorecardModal: React.FC<Chapter3ScorecardModalProps> = ({
   const getStatusBadge = () => {
     if (scorecardData.outcomeType === 'strong') {
       return {
-        text: 'DATA DEFECT CONTAINED',
+        text: 'INTEGRATION ARCHITECTURE APPROVED',
         className: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30',
       };
     }
     if (scorecardData.outcomeType === 'partial') {
       return {
-        text: 'PARTIAL CONTAINMENT',
+        text: 'PARTIAL INTEGRATION ALIGNMENT',
         className: 'bg-amber-500/20 text-amber-300 border border-amber-500/30',
       };
     }
     return {
-      text: 'CONTAINMENT DEFICIT',
+      text: 'GOVERNANCE & VELOCITY DEFICIT',
       className: 'bg-rose-500/20 text-rose-300 border border-rose-500/30',
     };
   };
@@ -61,7 +62,7 @@ export const Chapter3ScorecardModal: React.FC<Chapter3ScorecardModalProps> = ({
         transition={{ type: 'spring', stiffness: 350, damping: 26 }}
         className="max-w-2xl w-full bg-[#0d1222] border border-sky-500/40 rounded-3xl p-6 sm:p-8 shadow-[0_0_60px_rgba(14,165,233,0.25)] space-y-5 relative overflow-hidden"
       >
-        {/* Glow */}
+        {/* Ambient Glow */}
         <div className="absolute top-0 right-0 w-80 h-80 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
 
         {/* Header */}
@@ -71,10 +72,10 @@ export const Chapter3ScorecardModal: React.FC<Chapter3ScorecardModalProps> = ({
               CHAPTER 3 COMPLETE
             </div>
             <h2 className="text-xl sm:text-2xl font-serif font-black text-white tracking-tight">
-              The Data Integrity Crisis
+              INTEGRATION TRIAGE COMPLETE
             </h2>
             <div className="text-xs font-semibold text-slate-300 mt-0.5">
-              Project Amigo · Prototype Validation & Containment Triage
+              Project Amigo · Core Banking APIs, SOAP/REST Integration & LDAP/SSO Dependencies
             </div>
           </div>
 
@@ -168,8 +169,8 @@ export const Chapter3ScorecardModal: React.FC<Chapter3ScorecardModalProps> = ({
               {scorecardData.outcomeType === 'strong'
                 ? 'Strong Outcome'
                 : scorecardData.outcomeType === 'partial'
-                ? 'Partial Containment'
-                : 'Containment Gap'}
+                ? 'Partial Alignment'
+                : 'Governance Gap'}
             </div>
             <p className="text-xs font-medium text-slate-100 leading-relaxed">
               {scorecardData.outcomeText}
@@ -177,36 +178,40 @@ export const Chapter3ScorecardModal: React.FC<Chapter3ScorecardModalProps> = ({
           </div>
         </div>
 
-        {/* Aarav's Closing Teams Message */}
-        <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-start space-x-3 shadow-sm">
-          <div className="w-8 h-8 rounded-full overflow-hidden border border-slate-700 shrink-0">
-            <img src="/character/AaravDP.png" alt="Aarav Kapoor" className="w-full h-full object-cover" />
+        {/* 3 Master Learning Points */}
+        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
+          <div className="text-[10px] font-mono uppercase tracking-wider text-sky-400 font-bold">
+            KEY INTEGRATION LEARNINGS
           </div>
-          <div className="flex-1">
-            <div className="flex items-center space-x-2">
-              <span className="font-bold text-white text-xs">Aarav Kapoor</span>
-              <span className="text-[10px] text-slate-400 font-mono">Project Manager · Teams</span>
-            </div>
-            <p className="text-xs text-slate-200 mt-0.5 leading-relaxed">
-              “Good delivery leadership is about surgical containment. You verified that the prototype interface works, but guarded against treating unverified data as ready. Daniel has clear investigative ownership, and the rest of the team continues building without interruption.”
-            </p>
+          <div className="space-y-2 text-xs">
+            {CHAPTER3_LEARNING_POINTS.map((lp, idx) => (
+              <div key={idx} className="flex items-start space-x-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-sky-400 mt-1.5 shrink-0" />
+                <div>
+                  <span className="font-bold text-white mr-1.5">{lp.title}:</span>
+                  <span className="text-slate-300">{lp.body}</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Takeaway Card */}
-        <div className="rounded-2xl p-4 bg-gradient-to-r from-sky-500/15 via-[#101729] to-[#0d1222] border border-sky-500/35 flex items-start space-x-3.5 shadow-sm">
-          <div className="w-9 h-9 rounded-full bg-sky-500/20 border border-sky-500/40 flex items-center justify-center flex-shrink-0 text-sky-400 mt-0.5">
-            <Lightbulb className="w-4 h-4" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-[9px] font-mono tracking-[0.2em] text-sky-400 font-bold uppercase">
-              YOUR TAKEAWAY
+        {/* Personalized Feedback Observation */}
+        {scorecardData.personalizedTakeaway && (
+          <div className="rounded-2xl p-4 bg-gradient-to-r from-sky-500/15 via-[#101729] to-[#0d1222] border border-sky-500/35 flex items-start space-x-3.5 shadow-sm">
+            <div className="w-9 h-9 rounded-full bg-sky-500/20 border border-sky-500/40 flex items-center justify-center flex-shrink-0 text-sky-400 mt-0.5">
+              <Lightbulb className="w-4 h-4" />
             </div>
-            <p className="text-xs sm:text-sm font-bold text-white mt-0.5 leading-snug">
-              {CHAPTER3_CLOSING_INSIGHT}
-            </p>
+            <div className="flex-1 min-w-0">
+              <div className="text-[9px] font-mono tracking-[0.2em] text-sky-400 font-bold uppercase">
+                YOUR PERFORMANCE PROFILE
+              </div>
+              <p className="text-xs sm:text-sm font-bold text-white mt-0.5 leading-snug">
+                "{scorecardData.personalizedTakeaway}"
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Footer Actions */}
         <div className="pt-2 flex items-center justify-between border-t border-slate-800">
@@ -225,7 +230,7 @@ export const Chapter3ScorecardModal: React.FC<Chapter3ScorecardModalProps> = ({
             onClick={handleProceed}
             className="ml-auto px-6 py-3 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider flex items-center space-x-2 shadow-[0_0_20px_rgba(14,165,233,0.45)] cursor-pointer transition-all"
           >
-            <span>Complete Chapter 3 & Return to Hub</span>
+            <span>Complete Chapter 3 & Unlock Chapter 4</span>
             <ArrowRight className="w-4 h-4" />
           </motion.button>
         </div>

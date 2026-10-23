@@ -70,16 +70,27 @@ import { ProjectAmigoWorkspaceApp } from '../chapter2/ProjectAmigoWorkspaceApp';
 import { EmailComposerModal } from '../chapter2/EmailComposerModal';
 
 // Chapter 3 Components & Data
-import type { Chapter3State, Chapter3DecisionKey, Chapter3ActionKey } from '../../types/chapter3';
+import type { Chapter3State } from '../../types/chapter3';
 import {
   getChapter3SessionState,
   setChapter3SessionState,
   computeChapter3Score,
-  CHAPTER3_DECISION_OPTIONS,
 } from '../../data/chapter3Data';
 import { Chapter3Banner } from '../chapter3/Chapter3Banner';
-import { DataIntegrityTriageApp } from '../chapter3/DataIntegrityTriageApp';
+import { Chapter3MeetingApp } from '../chapter3/Chapter3MeetingApp';
+import { IntegrationPortalApp } from '../chapter3/IntegrationPortalApp';
 import { Chapter3ScorecardModal } from '../chapter3/Chapter3ScorecardModal';
+
+// Chapter 4 Components & Data
+import type { Chapter4State } from '../../types/chapter4';
+import {
+  getChapter4SessionState,
+  setChapter4SessionState,
+} from '../../data/chapter4Data';
+import { Chapter4Banner } from '../chapter4/Chapter4Banner';
+import { Chapter4MeetingApp } from '../chapter4/Chapter4MeetingApp';
+import { IdeateImpactStudioApp } from '../chapter4/IdeateImpactStudioApp';
+import { Chapter4ScorecardModal } from '../chapter4/Chapter4ScorecardModal';
 
 interface BrainedOSDesktopProps {
   onOpenEventModal?: () => void;
@@ -494,91 +505,115 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
   const [chapter3State, setChapter3State] = useState<Chapter3State>(() => getChapter3SessionState());
   const [isChapter3ScorecardOpen, setIsChapter3ScorecardOpen] = useState(false);
 
-  const handleChapter3Decision = (opt: Chapter3DecisionKey) => {
+  const handleUpdateChapter3State = (
+    updater: Partial<Chapter3State> | ((prev: Chapter3State) => Chapter3State)
+  ) => {
     setChapter3State((prev) => {
-      const optionConfig = CHAPTER3_DECISION_OPTIONS.find((o) => o.key === opt);
-      const next: Chapter3State = {
-        ...prev,
-        decision: opt,
-        decisionFeedback: optionConfig?.feedback || null,
-        activeBeat: 'decision',
-      };
+      const next = typeof updater === 'function' ? updater(prev) : { ...prev, ...updater };
       setChapter3SessionState(next);
       return next;
     });
   };
 
-  const handleChapter3ActionToggle = (key: Chapter3ActionKey) => {
-    setChapter3State((prev) => {
-      const alreadySelected = prev.selectedActions.includes(key);
-      const nextActions = alreadySelected
-        ? prev.selectedActions.filter((a) => a !== key)
-        : [...prev.selectedActions, key];
-      const next: Chapter3State = {
-        ...prev,
-        selectedActions: nextActions,
-      };
-      setChapter3SessionState(next);
+  // ── Chapter 4 Interactive Simulation State ──
+  const [chapter4State, setChapter4State] = useState<Chapter4State>(() => getChapter4SessionState());
+  const [isChapter4ScorecardOpen, setIsChapter4ScorecardOpen] = useState(false);
+
+  const handleUpdateChapter4State = (
+    updater: Partial<Chapter4State> | ((prev: Chapter4State) => Chapter4State)
+  ) => {
+    setChapter4State((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : { ...prev, ...updater };
+      setChapter4SessionState(next);
       return next;
     });
   };
 
-  const handleChapter3PlanSubmit = () => {
-    if (chapter3State.planSubmitted) return;
-
-    const computed = computeChapter3Score(chapter3State, chapter2State?.scorecard);
-    setChapter3State((prev) => {
-      const next: Chapter3State = {
-        ...prev,
-        planSubmitted: true,
-        activeBeat: 'completed',
-        completed: true,
-        scorecard: {
-          ...computed,
-          shown: true,
-        },
-      };
-      setChapter3SessionState(next);
-      return next;
-    });
-
-    sound.playSystemClearance();
-    pushNotification({
-      id: 'ch3_plan_confirmed',
-      app: 'Teams',
-      title: 'Aarav Kapoor',
-      subtitle: 'Senior Consultant · Project Manager',
-      body: 'Validation plan confirmed. Affected records quarantined; Daniel assigned to verify source mappings while unaffected development continues.',
-      timestamp: 'Just now',
-      actionText: 'View Scorecard',
-      onActionAppId: 'data_integrity',
-    });
-
-    setTimeout(() => {
-      setIsChapter3ScorecardOpen(true);
-    }, 1200);
-  };
-
-  // ── Chapter 3 Kickoff Notification — auto-fires ~2s after desktop is ready ──
+  // ── Chapter 3 Kickoff Incoming Call Notification — auto-fires ~1.5s after desktop is ready ──
   useEffect(() => {
     if (bootStep !== 'ready' || activeChapter !== 3) return;
-    if (seenNotifIds.current.has('ch3_daniel_data_defect')) return;
+    if (seenNotifIds.current.has('ch3_daniel_call')) return;
 
     const timer = setTimeout(() => {
       sound.playMessagePing();
       pushNotification({
-        id: 'ch3_daniel_data_defect',
+        id: 'ch3_daniel_call',
         app: 'Teams',
-        title: 'Daniel Brooks',
-        subtitle: 'Lead Developer · Project Amigo',
-        body: "Hey, I found two inconsistencies during validation. A few appraisal records appear to be linked to the wrong employee IDs, and some leave balances don't match our source data. I've only seen this in the prototype test data so far. We should investigate before calling these modules ready.",
+        title: 'Daniel — Developer',
+        subtitle: 'Project Amigo | Integration Blocker',
+        body: 'Incoming emergency call from Daniel regarding critical Core Banking API integration failure.',
         timestamp: 'Now',
-        actionText: 'Open in Teams',
-        onActionAppId: 'teams',
+        actionText: 'Accept Call',
+        onActionAppId: 'chapter3_meeting',
+        isCall: true,
       });
-    }, 2000);
+    }, 1500);
     return () => clearTimeout(timer);
   }, [bootStep, activeChapter]);
+
+  // ── Chapter 3 Portal Access Granted Notification ──
+  useEffect(() => {
+    if (activeChapter !== 3 || !chapter3State.portalAccessGranted) return;
+    if (seenNotifIds.current.has('ch3_portal_granted_notif')) return;
+
+    const timer = setTimeout(() => {
+      sound.playSystemClearance();
+      pushNotification({
+        id: 'ch3_portal_granted_notif',
+        app: 'Teams',
+        title: 'Aarav Kapoor',
+        subtitle: 'Project Manager · Access Granted',
+        body: 'ACCESS GRANTED — PROJECT AMIGO INTEGRATION PORTAL: Review technical evidence and complete the Integration Triage assignment.',
+        timestamp: 'Now',
+        actionText: 'Open Portal',
+        onActionAppId: 'integration_portal',
+      });
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [chapter3State.portalAccessGranted, activeChapter]);
+
+  // ── Chapter 4 Sophia Incoming Call Notification (Urgent: Additional Appraisal Requirement) ──
+  useEffect(() => {
+    if (bootStep !== 'ready' || activeChapter !== 4) return;
+    if (seenNotifIds.current.has('ch4_sophia_call')) return;
+
+    const timer = setTimeout(() => {
+      sound.playMessagePing();
+      pushNotification({
+        id: 'ch4_sophia_call',
+        app: 'Teams',
+        title: 'Sophia — Head of HR',
+        subtitle: 'Urgent: Additional Appraisal Requirement',
+        body: "We've received a request from our regional HR heads. Can we discuss adding a Dynamic Bonus Calculator to Phase 1?",
+        timestamp: 'Now',
+        actionText: 'Join Call',
+        onActionAppId: 'chapter4_meeting',
+        isCall: true,
+      });
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [bootStep, activeChapter]);
+
+  // ── Chapter 4 Ideate & Impact Studio Unlocked Notification ──
+  useEffect(() => {
+    if (activeChapter !== 4 || !chapter4State.studioAccessGranted) return;
+    if (seenNotifIds.current.has('ch4_studio_unlocked_notif')) return;
+
+    const timer = setTimeout(() => {
+      sound.playSystemClearance();
+      pushNotification({
+        id: 'ch4_studio_unlocked_notif',
+        app: 'Teams',
+        title: 'IDEATE & IMPACT STUDIO UNLOCKED',
+        subtitle: 'CR-017 Available',
+        body: 'New change request available. Review its impact before committing to delivery.',
+        timestamp: 'Now',
+        actionText: 'Open Studio',
+        onActionAppId: 'ideate_studio',
+      });
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [chapter4State.studioAccessGranted, activeChapter]);
 
 
 
@@ -744,7 +779,11 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
     design_review: { title: 'Design Review — UI/UX Prototypes Baseline', icon: <span>🎨</span> },
     readiness: { title: 'Sprint 1 Readiness Dashboard — Greenlight Gate', icon: <span>🛡️</span> },
     workspace_amigo: { title: 'Project Amigo — Sprint 1 Workspace', icon: <span>💼</span> },
-    data_integrity: { title: 'Project Amigo — Data Integrity Triage', icon: <span>🛡️</span> },
+    data_integrity: { title: 'Project Amigo — Integration Portal & Triage', icon: <span>🔌</span> },
+    integration_portal: { title: 'Project Amigo — Integration Portal & Triage', icon: <span>🔌</span> },
+    chapter3_meeting: { title: 'Microsoft Teams — Emergency Engineering Call', icon: <span>📹</span> },
+    chapter4_meeting: { title: 'Microsoft Teams — Project Amigo Change Request Call', icon: <span>📹</span> },
+    ideate_studio: { title: 'Ideate & Impact Studio — Project Amigo', icon: <Sparkles className="w-4 h-4 text-purple-400" /> },
     brief: { title: 'Preview — Project_Amigo_Internal_Brief.pdf', icon: <span>📄</span> },
     assignment: { title: 'Project Amigo — Initial Planning · Assignment 01', icon: <span>📋</span> },
     review: { title: 'Microsoft Teams — Prototype Review · Day 7', icon: <span>📹</span> },
@@ -844,7 +883,20 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
 
       {/* CHAPTER 3 STATUS BANNER */}
       {activeChapter === 3 && (
-        <Chapter3Banner onOpenWorkspace={() => handleOpenApp('data_integrity')} />
+        <Chapter3Banner
+          onOpenMeeting={() => handleOpenApp('chapter3_meeting')}
+          onOpenWorkspace={() => handleOpenApp('integration_portal')}
+          portalUnlocked={chapter3State.portalAccessGranted}
+        />
+      )}
+
+      {/* CHAPTER 4 STATUS BANNER */}
+      {activeChapter === 4 && (
+        <Chapter4Banner
+          onOpenMeeting={() => handleOpenApp('chapter4_meeting')}
+          onOpenStudio={() => handleOpenApp('ideate_studio')}
+          studioUnlocked={chapter4State.studioAccessGranted}
+        />
       )}
 
       {/* DESKTOP CANVAS */}
@@ -988,10 +1040,9 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
                   onOpenCommunicationSetup={() => handleOpenApp('communication')}
                   onOpenDesignReview={() => handleOpenApp('design_review')}
                   onOpenSprintReadiness={() => handleOpenApp('readiness')}
-                  onOpenDataIntegrityTriage={() => handleOpenApp('data_integrity')}
-                  onSelectChapter3Decision={handleChapter3Decision}
-                  onToggleChapter3Action={handleChapter3ActionToggle}
-                  onSubmitChapter3Plan={handleChapter3PlanSubmit}
+                  onOpenDataIntegrityTriage={() => handleOpenApp('integration_portal')}
+                  onOpenChapter3Meeting={() => handleOpenApp('chapter3_meeting')}
+                  onOpenChapter3Portal={() => handleOpenApp('integration_portal')}
                   onOpenChapter3Scorecard={() => setIsChapter3ScorecardOpen(true)}
                 />
               )}
@@ -1045,13 +1096,37 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
                 />
               )}
               {/* CHAPTER 3 SIMULATION APPS */}
-              {activeAppId === 'data_integrity' && (
-                <DataIntegrityTriageApp
+              {activeAppId === 'chapter3_meeting' && (
+                <Chapter3MeetingApp
                   chapter3State={chapter3State}
-                  onSelectDecision={handleChapter3Decision}
-                  onToggleAction={handleChapter3ActionToggle}
-                  onSubmitPlan={handleChapter3PlanSubmit}
+                  onUpdateState={handleUpdateChapter3State}
+                  onOpenPortal={() => handleOpenApp('integration_portal')}
                   onOpenScorecard={() => setIsChapter3ScorecardOpen(true)}
+                />
+              )}
+              {(activeAppId === 'integration_portal' || activeAppId === 'data_integrity') && (
+                <IntegrationPortalApp
+                  chapter3State={chapter3State}
+                  onUpdateState={handleUpdateChapter3State}
+                  onReturnToMeeting={() => handleOpenApp('chapter3_meeting')}
+                  onSubmitCompleteTriage={() => handleOpenApp('chapter3_meeting')}
+                />
+              )}
+              {/* CHAPTER 4 SIMULATION APPS */}
+              {activeAppId === 'chapter4_meeting' && (
+                <Chapter4MeetingApp
+                  chapter4State={chapter4State}
+                  onUpdateState={handleUpdateChapter4State}
+                  onOpenStudio={() => handleOpenApp('ideate_studio')}
+                  onOpenScorecard={() => setIsChapter4ScorecardOpen(true)}
+                />
+              )}
+              {(activeAppId === 'ideate_studio' || (activeAppId === 'ideate' && activeChapter === 4)) && (
+                <IdeateImpactStudioApp
+                  chapter4State={chapter4State}
+                  onUpdateState={handleUpdateChapter4State}
+                  onReturnToMeeting={() => handleOpenApp('chapter4_meeting')}
+                  onSubmitCompleteAnalysis={() => handleOpenApp('chapter4_meeting')}
                 />
               )}
               {activeAppId === 'slack' && <SlackOSApp />}
@@ -1197,7 +1272,6 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
             handleCloseApp('teams');
             handleCloseApp('assignment');
             localStorage.setItem('brained_just_unlocked_chapter', '2');
-            localStorage.setItem('brained_auto_launch_chapter', '2');
             if (onReturnToChapterSelect) {
               onReturnToChapterSelect();
             } else if (onStartChapter) {
@@ -1233,14 +1307,18 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
           scorecardData={chapter2State.scorecard}
           onContinueToChapter3={() => {
             setIsChapter2ScorecardOpen(false);
-            if (onStartChapter) {
-              onStartChapter(3);
-            } else if (onReturnToChapterSelect) {
+            handleCloseApp('teams');
+            handleCloseApp('read_me_ai');
+            if (onReturnToChapterSelect) {
               onReturnToChapterSelect();
+            } else if (onStartChapter) {
+              onStartChapter(3);
             }
           }}
           onReturnToChapterSelect={() => {
             setIsChapter2ScorecardOpen(false);
+            handleCloseApp('teams');
+            handleCloseApp('read_me_ai');
             if (onReturnToChapterSelect) onReturnToChapterSelect();
           }}
         />
@@ -1256,6 +1334,21 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
           }}
           onReturnToChapterSelect={() => {
             setIsChapter3ScorecardOpen(false);
+            if (onReturnToChapterSelect) onReturnToChapterSelect();
+          }}
+        />
+      )}
+
+      {/* CHAPTER 4 SCORECARD MODAL */}
+      {isChapter4ScorecardOpen && (
+        <Chapter4ScorecardModal
+          scorecardData={chapter4State.scorecard}
+          onProceedToNextChapter={() => {
+            setIsChapter4ScorecardOpen(false);
+            if (onReturnToChapterSelect) onReturnToChapterSelect();
+          }}
+          onReturnToChapterSelect={() => {
+            setIsChapter4ScorecardOpen(false);
             if (onReturnToChapterSelect) onReturnToChapterSelect();
           }}
         />

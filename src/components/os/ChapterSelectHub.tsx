@@ -35,9 +35,9 @@ const CHAPTER_VISUALS: Record<number, { title: string; subtitle: string; descrip
     yOffset: 14,
   },
   3: {
-    title: 'THE DATA INTEGRITY CRISIS',
-    subtitle: 'Act I · Prototype Validation & Containment',
-    description: 'Investigate appraisal and leave-balance mismatches in prototype test data. Contain defects responsibly without freezing unaffected development.',
+    title: 'THE INTEGRATION TRAP',
+    subtitle: 'Act I · Core Banking APIs & SOAP/REST Gateway',
+    description: 'Resolve protocol mismatch between modern JSON/REST HRMS services and legacy SOAP/XML bank systems without compromising security.',
     thumb: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=300&auto=format&fit=crop&q=80',
     yOffset: 26,
   },
@@ -147,12 +147,6 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
           scrollContainerRef.current.scrollTo({ left: 100, behavior: 'smooth' });
         }
 
-        if (autoLaunch === '2') {
-          localStorage.removeItem('brained_auto_launch_chapter');
-          setAutoLaunchTarget(2);
-          setAutoLaunchCountdown(3);
-        }
-
         setTimeout(() => setUnlockedBanner(null), 3500);
       }, 700);
 
@@ -167,18 +161,12 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
         // Shift golden boundary and larger box to Chapter 3
         setSelectedChapterId(3);
         setChapterStatuses(getStoredChapterStatuses());
-        setUnlockedBanner('CHAPTER 03 UNLOCKED: THE DATA INTEGRITY CRISIS');
+        setUnlockedBanner('CHAPTER 03 UNLOCKED: THE INTEGRATION TRAP');
         sound.playSystemClearance();
 
         // Smooth scroll container to frame Chapter 3 comfortably
         if (scrollContainerRef.current) {
           scrollContainerRef.current.scrollTo({ left: 320, behavior: 'smooth' });
-        }
-
-        if (autoLaunch === '3') {
-          localStorage.removeItem('brained_auto_launch_chapter');
-          setAutoLaunchTarget(3);
-          setAutoLaunchCountdown(3);
         }
 
         setTimeout(() => setUnlockedBanner(null), 3500);

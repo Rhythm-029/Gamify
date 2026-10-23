@@ -1,19 +1,36 @@
 import type {
   Chapter3State,
-  Chapter3DecisionKey,
-  Chapter3ActionKey,
-  Chapter3OutcomeType,
-  DataMismatchRecord,
+  Chapter3EscalationChoice,
+  Chapter3BlockerChoice,
+  Chapter3ApproachChoice,
+  Chapter3ActionId,
   Chapter3Scorecard,
+  Chapter3OutcomeType,
 } from '../types/chapter3';
 
 export const INITIAL_CHAPTER3_STATE: Chapter3State = {
   entered: false,
-  activeBeat: 'warning',
-  decision: null,
-  decisionFeedback: null,
-  selectedActions: [],
-  planSubmitted: false,
+  meetingStatus: 'calling',
+  escalationChoice: null,
+  escalationWarningShown: false,
+  escalationRecovered: false,
+  portalAccessGranted: false,
+  currentTriageTask: 1,
+  task1Selected: null,
+  task1Submitted: false,
+  task1Feedback: null,
+  task2Selected: null,
+  task2Submitted: false,
+  task2WarningShown: false,
+  task2Recovered: false,
+  task3Order: [
+    'action_confirm_interface',
+    'action_verify_auth',
+    'action_prepare_mock_tests',
+    'action_validate_integrate',
+  ],
+  task3Submitted: false,
+  finalReviewComplete: false,
   scorecard: {
     shown: false,
     scheduleScore: 0,
@@ -23,6 +40,7 @@ export const INITIAL_CHAPTER3_STATE: Chapter3State = {
     totalScore: 0,
     outcomeType: 'partial',
     outcomeText: '',
+    personalizedTakeaway: '',
     explanations: {
       schedule: '',
       risk: '',
@@ -33,283 +51,436 @@ export const INITIAL_CHAPTER3_STATE: Chapter3State = {
   completed: false,
 };
 
-export interface DecisionOptionConfig {
-  key: Chapter3DecisionKey;
-  label: string;
+// ── LOG LINES DISPLAYED DURING DANIEL'S SCREEN SHARE ──
+export interface ScreenShareLogLine {
+  id: string;
+  time: string;
+  service: string;
+  details: { key: string; value: string }[];
+  status: string;
+  severity: 'error' | 'pending' | 'info';
+}
+
+export const SCREEN_SHARE_LOGS: ScreenShareLogLine[] = [
+  {
+    id: 'log_appraisal',
+    time: '09:41:02',
+    service: 'AppraisalService',
+    details: [
+      { key: 'Expected', value: 'application/json' },
+      { key: 'Received', value: 'text/xml' },
+    ],
+    status: '415 Unsupported Media Type',
+    severity: 'error',
+  },
+  {
+    id: 'log_attendance',
+    time: '09:41:04',
+    service: 'AttendanceService',
+    details: [
+      { key: 'Expected', value: 'REST/JSON' },
+      { key: 'Received', value: 'SOAP/XML' },
+    ],
+    status: 'Protocol mismatch',
+    severity: 'error',
+  },
+  {
+    id: 'log_employee_auth',
+    time: '09:41:08',
+    service: 'EmployeeAuthService',
+    details: [],
+    status: 'LDAP/SSO access not verified',
+    severity: 'pending',
+  },
+  {
+    id: 'log_gateway',
+    time: '09:41:11',
+    service: 'Integration Gateway',
+    details: [],
+    status: 'Awaiting approved endpoint and schema validation',
+    severity: 'pending',
+  },
+];
+
+// ── DECISION: INVOLVE AARAV ──
+export interface EscalationOptionConfig {
+  id: Chapter3EscalationChoice;
   badge: string;
-  description: string;
-  feedback: string;
-  quality: 'poor' | 'suboptimal' | 'optimal';
-}
-
-export const CHAPTER3_DECISION_OPTIONS: DecisionOptionConfig[] = [
-  {
-    key: 'continue_demo_as_ready',
-    badge: 'Option A',
-    label: 'Continue and demonstrate the prototype as ready',
-    description:
-      'Keep development moving and address the mismatches later, once the business team has reviewed the demo.',
-    feedback:
-      'We might save a few minutes now, but presenting unverified data could create much bigger problems later. Think about what we can safely validate before sign-off.',
-    quality: 'poor',
-  },
-  {
-    key: 'stop_all_development',
-    badge: 'Option B',
-    label: 'Stop all development until every record is manually checked',
-    description:
-      'Pause the entire team and validate every employee record before allowing any further development.',
-    feedback:
-      'Validation matters, but we don\'t need to freeze unrelated work. Can we isolate the affected records and keep the rest of the team productive?',
-    quality: 'suboptimal',
-  },
-  {
-    key: 'contain_and_validate_affected',
-    badge: 'Option C',
-    label: 'Contain the issue and validate affected records',
-    description:
-      'Isolate the affected test records, verify the employee-ID mapping and leave-balance source, assign Daniel to investigate, and continue unaffected development.',
-    feedback:
-      'Exactly. Contain the issue, establish what is wrong, and keep unaffected work moving. Let\'s make the validation plan explicit.',
-    quality: 'optimal',
-  },
-];
-
-export interface ValidationActionConfig {
-  key: Chapter3ActionKey;
   label: string;
+  quote: string;
   description: string;
-  role: 'Containment' | 'Validation' | 'Accountability';
+  isRecommended: boolean;
+  consequence: string;
 }
 
-export const CHAPTER3_VALIDATION_ACTIONS: ValidationActionConfig[] = [
+export const ESCALATION_OPTIONS: EscalationOptionConfig[] = [
   {
-    key: 'isolate_affected_records',
-    label: 'Isolate affected records',
+    id: 'investigate_independently',
+    badge: 'Option A',
+    label: 'Handle it without escalation',
+    quote: 'Ask Daniel to investigate independently and report back later.',
     description:
-      'Keep the suspect appraisal records and leave-balance entries out of the ready-for-sign-off set.',
-    role: 'Containment',
+      'Keep the issue internal to engineering for now. Ask Daniel to inspect the logs further without pulling in project management.',
+    isRecommended: false,
+    consequence:
+      'Daniel remains blocked on external bank dependencies. The team loses time without getting closer to the approved bank schema.',
   },
   {
-    key: 'verify_source_mappings',
-    label: 'Verify source mappings',
+    id: 'escalate_aarav',
+    badge: 'Option B',
+    label: 'Ask Aarav to join the call',
+    quote:
+      'Bring Aarav into the meeting so we can review the blocker, establish the approved approach, and access the integration documentation.',
     description:
-      'Compare employee IDs against the authoritative employee data and reconcile leave balances against their approved source.',
-    role: 'Validation',
+      'Involve project management immediately to clarify enterprise boundaries, engage Bank IT, and unlock the official Integration Portal.',
+    isRecommended: true,
+    consequence:
+      'Aarav joins the call, aligns with engineering constraints, and grants full access to the Project Amigo Integration Portal.',
   },
   {
-    key: 'assign_owner_continue_unaffected_work',
-    label: 'Assign Daniel and continue safe work',
+    id: 'bypass_gateway',
+    badge: 'Option C',
+    label: 'Tell Daniel to bypass the gateway',
+    quote: 'Ask Daniel to create a direct connection so development can continue immediately.',
     description:
-      'Make Daniel accountable for investigating the mismatches while other developers continue unaffected tasks.',
-    role: 'Accountability',
+      'Instruct engineering to circumvent the legacy ESB protocol mismatch by connecting directly to the database or an unapproved mock.',
+    isRecommended: false,
+    consequence:
+      'Marcus (CTO) intervenes with a security violation alert. Direct database access violates ICICI Bank audit policy.',
   },
 ];
 
-export const PROTOTYPE_DATA_MISMATCHES: DataMismatchRecord[] = [
+// ── INTEGRATION PORTAL EVIDENCE ──
+export interface IntegrationEvidenceItem {
+  service: string;
+  currentStatus: string;
+  protocol: string;
+  state: 'blocked' | 'pending' | 'verified';
+}
+
+export const INTEGRATION_STATUS_EVIDENCE: IntegrationEvidenceItem[] = [
   {
-    id: 'MISMATCH-01',
-    module: 'Appraisal Cycle',
-    employeeId: 'EMP-84021',
-    employeeName: 'Rohan Verma',
-    field: 'Appraisal Reviewer ID & Rating Map',
-    prototypeValue: 'Rating: Exceeds Expectations (Linked to EMP-84099)',
-    authoritativeSourceValue: 'Linked to MGR-1042 (Priya Sharma)',
-    severity: 'Critical',
-    status: 'Flagged',
+    service: 'Appraisal Service',
+    currentStatus: 'SOAP/XML and JSON/REST mismatch',
+    protocol: 'REST / JSON expected',
+    state: 'blocked',
   },
   {
-    id: 'MISMATCH-02',
-    module: 'Appraisal Cycle',
-    employeeId: 'EMP-61204',
-    employeeName: 'Aditi Rao',
-    field: 'Appraisal Band & Cycle Eligibility',
-    prototypeValue: 'Band C · Mid-Cycle Active (Mapped to EMP-61900)',
-    authoritativeSourceValue: 'Band B · Probationary Ineligible',
-    severity: 'High',
-    status: 'Flagged',
+    service: 'Attendance Service',
+    currentStatus: 'SOAP/XML and JSON/REST mismatch',
+    protocol: 'REST / JSON expected',
+    state: 'blocked',
   },
   {
-    id: 'MISMATCH-03',
-    module: 'Leave & Attendance',
-    employeeId: 'EMP-10492',
-    employeeName: 'Vikram Joshi',
-    field: 'Casual Leave Available Balance',
-    prototypeValue: '24.0 Days Displayed',
-    authoritativeSourceValue: '12.0 Days in ICICI Authoritative DB',
-    severity: 'Critical',
-    status: 'Flagged',
+    service: 'LDAP / SSO Access',
+    currentStatus: 'Access verification pending',
+    protocol: 'LDAP / Enterprise SSO',
+    state: 'pending',
   },
   {
-    id: 'MISMATCH-04',
-    module: 'Leave & Attendance',
-    employeeId: 'EMP-33918',
-    employeeName: 'Ananya Desai',
-    field: 'Privilege Leave Accrual Computation',
-    prototypeValue: '-3.0 Days (Underflow Display Error)',
-    authoritativeSourceValue: '15.0 Days in ICICI Authoritative DB',
-    severity: 'High',
-    status: 'Flagged',
+    service: 'Approved Endpoint',
+    currentStatus: 'Awaiting Bank IT confirmation',
+    protocol: 'Bank ESB Gateway',
+    state: 'pending',
+  },
+  {
+    service: 'Schema Validation',
+    currentStatus: 'Pending Bank IT WSDL/XSD formal confirmation',
+    protocol: 'XML Schema Definition',
+    state: 'pending',
   },
 ];
 
-export const CHAPTER3_CLOSING_INSIGHT =
-  'Delivery speed matters. Reliable delivery means knowing which work can continue safely and which data must be verified first.';
+export const MARCUS_ARCHITECTURE_REQUIREMENT = {
+  author: 'Marcus Reed',
+  role: 'Chief Technology Officer · Brained',
+  statement:
+    'All integrations must use the bank-approved Enterprise Service Bus or an approved API gateway.\n\nNo direct database connections, undocumented middleware, or unapproved credential sharing.\n\nAny protocol translation must follow the approved interface and schema.',
+};
 
-// ── EVALUATION & SCORING CALCULATOR ──
+export const PROJECT_CONSTRAINTS = [
+  { label: 'Project Deadline', value: '90 days (Fixed Bank Go-Live)' },
+  { label: 'Blocked Modules', value: '2 HRMS Services (Appraisal & Attendance)' },
+  { label: 'Identity Dependency', value: 'LDAP/SSO access pending verification' },
+  { label: 'Gateway Gate', value: 'Bank IT must confirm approved endpoint and schema' },
+  { label: 'Security Boundary', value: 'Strict compliance: No direct DB bypass' },
+];
 
+// ── TASK 1: IDENTIFY THE BLOCKER ──
+export interface BlockerOptionConfig {
+  id: Chapter3BlockerChoice;
+  badge: string;
+  title: string;
+  quote: string;
+  isCorrect: boolean;
+  explanation: string;
+}
+
+export const TASK1_BLOCKER_OPTIONS: BlockerOptionConfig[] = [
+  {
+    id: 'database_overload',
+    badge: 'A',
+    title: 'Database Overload',
+    quote: "The bank's database cannot handle the number of requests.",
+    isCorrect: false,
+    explanation:
+      "The logs indicate HTTP 415 and protocol mismatch during payload serialization, not high load or database timeouts.",
+  },
+  {
+    id: 'protocol_mismatch',
+    badge: 'B',
+    title: 'Protocol Mismatch',
+    quote: "The HRMS expects JSON over REST, while the bank's legacy integration uses SOAP/XML.",
+    isCorrect: true,
+    explanation:
+      'DIAGNOSIS CONFIRMED: The logs identify a protocol mismatch. LDAP/SSO access remains a separate dependency that still needs verification.',
+  },
+  {
+    id: 'expired_credentials',
+    badge: 'C',
+    title: 'Expired Employee Credentials',
+    quote: 'Employee passwords have expired, preventing integration.',
+    isCorrect: false,
+    explanation:
+      "Employee credentials have not expired. The log says 'LDAP/SSO access not verified', which is an unconfirmed network/entitlement dependency.",
+  },
+  {
+    id: 'incorrect_ui',
+    badge: 'D',
+    title: 'Incorrect UI Configuration',
+    quote: 'The HRMS screens are sending the wrong information.',
+    isCorrect: false,
+    explanation:
+      'The UI screens are correctly requesting JSON payloads. The failure originates at the transport and schema layer with the bank ESB.',
+  },
+];
+
+// ── TASK 2: CHOOSE THE INTEGRATION APPROACH ──
+export interface ApproachOptionConfig {
+  id: Chapter3ApproachChoice;
+  badge: string;
+  title: string;
+  description: string;
+  benefits: string[];
+  risks: string[];
+  isRecommended: boolean;
+  warningText?: string;
+}
+
+export const TASK2_APPROACH_OPTIONS: ApproachOptionConfig[] = [
+  {
+    id: 'direct_database',
+    badge: 'Option A',
+    title: 'Direct Database Connection',
+    description: "Connect directly to the bank's database to avoid the existing integration layer.",
+    benefits: ['Appears fast to implement in the short term.'],
+    risks: [
+      'Bypasses the approved enterprise architecture.',
+      'Introduces critical security, audit, and compliance risks.',
+      'Direct DB write/read access is strictly forbidden by Bank InfoSec.',
+    ],
+    isRecommended: false,
+    warningText:
+      'CRITICAL SECURITY WARNING: Bypassing enterprise service boundaries to connect directly to core banking databases will fail compliance audits and triggers an immediate escalation from Marcus.',
+  },
+  {
+    id: 'custom_converter',
+    badge: 'Option B',
+    title: 'Unapproved Custom Converter',
+    description:
+      'Build a standalone SOAP-to-JSON converter without first confirming the approved interface.',
+    benefits: ['May temporarily address the format mismatch on local machines.'],
+    risks: [
+      'Approval and compatibility remain unresolved with Bank IT.',
+      'High risk of heavy rework if Bank IT mandates a different schema.',
+      'Lacks official enterprise monitoring and gateway governance.',
+    ],
+    isRecommended: false,
+    warningText:
+      'REWORK WARNING: Building custom converters before Bank IT approves schemas creates high rework risk. If Bank IT changes the WSDL contract, engineering time is wasted.',
+  },
+  {
+    id: 'approved_gateway',
+    badge: 'Option C',
+    title: 'Approved Integration Gateway',
+    description:
+      'Use the bank-approved ESB or API gateway for protocol translation, with Bank IT validating the endpoint and schema.',
+    benefits: [
+      'Respects the approved enterprise architecture.',
+      'Provides a controlled, auditable path for integration testing.',
+      'Makes external dependencies explicit and trackable.',
+    ],
+    risks: ['Requires waiting for Bank IT validation and official schemas.'],
+    isRecommended: true,
+  },
+];
+
+// ── TASK 3: PRIORITIZE THE ACTIONS ──
+export interface ActionCardConfig {
+  id: Chapter3ActionId;
+  code: 'Action A' | 'Action B' | 'Action C' | 'Action D';
+  title: string;
+  description: string;
+  category: 'External Dependency' | 'Identity Dependency' | 'Parallel Engineering' | 'Final Validation';
+}
+
+export const TASK3_ACTION_CARDS: Record<Chapter3ActionId, ActionCardConfig> = {
+  action_confirm_interface: {
+    id: 'action_confirm_interface',
+    code: 'Action A',
+    title: 'Confirm the approved interface',
+    description:
+      'Request Bank IT to confirm the approved endpoint and validate the SOAP/XML schema required for the integration.',
+    category: 'External Dependency',
+  },
+  action_verify_auth: {
+    id: 'action_verify_auth',
+    code: 'Action B',
+    title: 'Verify authentication access',
+    description:
+      "Ask the bank's identity team to verify LDAP/SSO access separately.",
+    category: 'Identity Dependency',
+  },
+  action_prepare_mock_tests: {
+    id: 'action_prepare_mock_tests',
+    code: 'Action C',
+    title: 'Prepare controlled integration tests',
+    description:
+      'Have Daniel prepare the adapter and local test cases against the approved interface, using non-sensitive mock data while external validation is pending.',
+    category: 'Parallel Engineering',
+  },
+  action_validate_integrate: {
+    id: 'action_validate_integrate',
+    code: 'Action D',
+    title: 'Validate and integrate',
+    description:
+      'Once the endpoint, schema, and required access are confirmed, perform the controlled integration tests and review the results.',
+    category: 'Final Validation',
+  },
+};
+
+export const REFERENCE_ACTION_ORDER: Chapter3ActionId[] = [
+  'action_confirm_interface',
+  'action_verify_auth',
+  'action_prepare_mock_tests',
+  'action_validate_integrate',
+];
+
+// ── TAKEAWAYS & CONSTANTS ──
+export const CHAPTER3_TITLE = 'The Integration Trap';
+export const CHAPTER3_SUBTITLE =
+  'Core Banking APIs, SOAP/REST Integration & LDAP/SSO Dependencies';
+
+export const CHAPTER3_LEARNING_POINTS = [
+  {
+    title: 'Diagnose before acting',
+    body: 'Use evidence to distinguish protocol mismatches from authentication issues.',
+  },
+  {
+    title: 'Protect the integration boundary',
+    body: 'Use approved interfaces and validate external dependencies rather than taking dangerous shortcuts.',
+  },
+  {
+    title: 'Keep work moving safely',
+    body: 'Prepare controlled tests with mock data while waiting for external approvals to protect velocity.',
+  },
+];
+
+// ── SCORING ENGINE ──
 export function computeChapter3Score(
   state: Chapter3State,
-  ch2Scorecard?: any
+  ch2Baseline?: {
+    scheduleScore?: number;
+    riskScore?: number;
+    governanceScore?: number;
+    efficiencyScore?: number;
+  }
 ): Chapter3Scorecard {
-  // Use Chapter 2 scorecard as prior baseline if available, or fall back to 80
-  const baseSchedule = ch2Scorecard?.scheduleScore && ch2Scorecard.scheduleScore > 0 ? ch2Scorecard.scheduleScore : 80;
-  const baseRisk = ch2Scorecard?.riskScore && ch2Scorecard.riskScore > 0 ? ch2Scorecard.riskScore : 80;
-  const baseGov = ch2Scorecard?.governanceScore && ch2Scorecard.governanceScore > 0 ? ch2Scorecard.governanceScore : 80;
-  const baseEff = ch2Scorecard?.efficiencyScore && ch2Scorecard.efficiencyScore > 0 ? ch2Scorecard.efficiencyScore : 80;
+  const baseSchedule = ch2Baseline?.scheduleScore ?? 80;
+  const baseRisk = ch2Baseline?.riskScore ?? 80;
+  const baseGov = ch2Baseline?.governanceScore ?? 80;
+  const baseEff = ch2Baseline?.efficiencyScore ?? 80;
 
   let deltaSchedule = 0;
   let deltaRisk = 0;
   let deltaGov = 0;
   let deltaEff = 0;
 
-  // 1. Initial Decision Impact
-  let scheduleDecisionPart = '';
-  let riskDecisionPart = '';
-  let govDecisionPart = '';
-  let effDecisionPart = '';
-
-  if (state.decision === 'continue_demo_as_ready') {
-    deltaSchedule -= 15;
-    deltaRisk -= 35;
-    deltaGov -= 30;
-    deltaEff -= 15;
-    scheduleDecisionPart = 'Presenting unverified data created substantial risk of stakeholder rejection and subsequent rework.';
-    riskDecisionPart = 'You chose to demonstrate unvalidated prototype records, knowingly exposing executive sign-off to data errors.';
-    govDecisionPart = 'Demonstrating unverified records directly violated delivery gate criteria.';
-    effDecisionPart = 'Premature demo of corrupted data causes reactive fire-drills that destroy engineering momentum.';
-  } else if (state.decision === 'stop_all_development') {
-    deltaSchedule -= 25;
+  // 1. Escalation Decision Evaluation
+  if (state.escalationChoice === 'escalate_aarav') {
+    deltaSchedule += 15;
+    deltaGov += 20;
+    deltaEff += 15;
     deltaRisk += 10;
-    deltaGov += 10;
-    deltaEff -= 30;
-    scheduleDecisionPart = 'Freezing the entire team for an isolated prototype defect created unnecessary schedule delay.';
-    riskDecisionPart = 'Halting work demonstrated risk awareness, but stopping unrelated tracks showed disproportionate caution.';
-    govDecisionPart = 'Prioritizing data integrity recognized governance importance, though shutting down all development was overly broad.';
-    effDecisionPart = 'Pausing unaffected developers severely damaged team velocity without accelerating root-cause resolution.';
-  } else if (state.decision === 'contain_and_validate_affected') {
-    deltaSchedule += 15;
-    deltaRisk += 20;
-    deltaGov += 20;
-    deltaEff += 15;
-    scheduleDecisionPart = 'Controlled containment protected the appraisal timeline while preventing avoidable rework.';
-    riskDecisionPart = 'You immediately isolated suspect records, establishing proactive risk management without hiding defects.';
-    govDecisionPart = 'Exemplary delivery governance: defect boundaries were defined and unverified data kept out of release sets.';
-    effDecisionPart = 'You preserved engineering velocity by keeping unaffected developers active while Daniel investigated.';
-  } else {
-    // No decision chosen (edge case fallback)
-    deltaRisk -= 20;
-    deltaGov -= 20;
-    riskDecisionPart = 'No containment decision was recorded.';
-  }
-
-  // 2. Operational Validation Plan Impact
-  const hasIsolate = state.selectedActions.includes('isolate_affected_records');
-  const hasVerify = state.selectedActions.includes('verify_source_mappings');
-  const hasAssign = state.selectedActions.includes('assign_owner_continue_unaffected_work');
-
-  let outcomeType: Chapter3OutcomeType = 'partial';
-  let outcomeText = '';
-  let schedulePlanPart = '';
-  let riskPlanPart = '';
-  let govPlanPart = '';
-  let effPlanPart = '';
-
-  const totalActionsCount = (hasIsolate ? 1 : 0) + (hasVerify ? 1 : 0) + (hasAssign ? 1 : 0);
-
-  if (totalActionsCount === 3) {
-    // Full operational response
-    deltaSchedule += 15;
-    deltaRisk += 20;
-    deltaGov += 20;
-    deltaEff += 15;
-
-    outcomeType = state.decision === 'continue_demo_as_ready' ? 'partial' : 'strong';
-    outcomeText =
-      'Data issue contained. Daniel is investigating the affected records, source validation is underway, and unaffected development can continue.';
-
-    schedulePlanPart = 'The complete validation plan ensured targeted verification without slowing down clean delivery tracks.';
-    riskPlanPart = 'Suspect appraisal and leave records were quarantined while source reconciliation removed data ambiguity.';
-    govPlanPart = 'Clear technical ownership and explicit containment boundaries established high-standard delivery discipline.';
-    effPlanPart = 'Assigning Daniel to investigate while others continued safe tasks maintained optimal velocity.';
-  } else if (hasAssign && !hasIsolate && !hasVerify) {
-    // Critical pitfall: continuing work WITHOUT isolating or verifying
+  } else if (state.escalationChoice === 'investigate_independently') {
+    deltaSchedule -= state.escalationRecovered ? 5 : 20;
+    deltaEff -= state.escalationRecovered ? 10 : 25;
+    deltaGov -= state.escalationRecovered ? 5 : 15;
+  } else if (state.escalationChoice === 'bypass_gateway') {
+    deltaRisk -= state.escalationRecovered ? 15 : 35;
+    deltaGov -= state.escalationRecovered ? 10 : 30;
     deltaSchedule -= 15;
-    deltaRisk -= 30;
-    deltaGov -= 30;
-    deltaEff += 5;
-
-    outcomeType = 'poor';
-    outcomeText =
-      'The data inconsistencies remain insufficiently controlled. The team needs a clear containment and validation plan before affected modules can be considered ready.';
-
-    schedulePlanPart = 'Allowing unaffected work to proceed without quarantining bad records creates unavoidable future rework.';
-    riskPlanPart = 'Failing to isolate defective test data left unverified numbers in the sign-off pipeline.';
-    govPlanPart = 'Continuing development without containment or source verification compromised release readiness.';
-    effPlanPart = 'Developers continued coding, but without containment gates, the output rests on questionable data.';
-  } else if (totalActionsCount > 0) {
-    // Partial operational response
-    if (hasIsolate) {
-      deltaRisk += 10;
-      deltaGov += 10;
-    }
-    if (hasVerify) {
-      deltaGov += 10;
-      deltaSchedule += 5;
-    }
-    if (hasAssign) {
-      deltaEff += 10;
-      deltaSchedule += 5;
-    }
-
-    outcomeType = 'partial';
-    outcomeText =
-      'The team has recognized the data risk, but the validation plan still has gaps. Unverified records must remain outside sign-off.';
-
-    const missing: string[] = [];
-    if (!hasIsolate) missing.push('record isolation');
-    if (!hasVerify) missing.push('authoritative source verification');
-    if (!hasAssign) missing.push('ownership assignment with unaffected continuation');
-
-    schedulePlanPart = `Partial validation was planned, but omitting ${missing.join(' and ')} creates potential delivery drag.`;
-    riskPlanPart = hasIsolate
-      ? 'Suspect records were quarantined, though validation gaps still remain.'
-      : 'Records were not formally isolated, leaving unverified numbers at risk of accidental promotion.';
-    govPlanPart = hasVerify
-      ? 'Source mapping verification was captured, but delivery governance remains incomplete without all three controls.'
-      : 'Authoritative data reconciliation was omitted from the response plan.';
-    effPlanPart = hasAssign
-      ? 'Accountability was assigned, but the incomplete plan leaves team velocity subject to future disruptions.'
-      : 'Engineering ownership was unassigned, leaving resolution coordination diffuse.';
-  } else {
-    // Empty plan submitted — complete lack of operational follow-through
-    deltaSchedule -= 25;
-    deltaRisk -= 35;
-    deltaGov -= 35;
-    deltaEff -= 25;
-
-    outcomeType = 'poor';
-    outcomeText =
-      'The data inconsistencies remain insufficiently controlled. The team needs a clear containment and validation plan before affected modules can be considered ready.';
-
-    schedulePlanPart = 'With no validation plan confirmed, timeline integrity remains exposed to data failure.';
-    riskPlanPart = 'No operational risk mitigations were applied to the flagged test records.';
-    govPlanPart = 'Zero containment or validation controls were enacted.';
-    effPlanPart = 'Lack of operational clarity leaves engineering stalled and uncoordinated.';
   }
 
-  // Normalize and clamp to 10–100 scale
-  const clamp = (val: number, min = 10, max = 100) => Math.min(Math.max(Math.round(val), min), max);
+  // 2. Task 1: Blocker Identification
+  if (state.task1Selected === 'protocol_mismatch') {
+    deltaGov += 20;
+    deltaRisk += 15;
+  } else {
+    deltaGov -= 15;
+    deltaRisk -= 10;
+  }
+
+  // 3. Task 2: Integration Approach
+  if (state.task2Selected === 'approved_gateway') {
+    deltaRisk += 25;
+    deltaGov += 25;
+    deltaSchedule += 10;
+  } else if (state.task2Selected === 'direct_database') {
+    deltaRisk -= state.task2Recovered ? 15 : 40;
+    deltaGov -= state.task2Recovered ? 15 : 35;
+    deltaSchedule -= 20;
+  } else if (state.task2Selected === 'custom_converter') {
+    deltaSchedule -= state.task2Recovered ? 10 : 25;
+    deltaEff -= state.task2Recovered ? 10 : 25;
+    deltaRisk -= 15;
+  }
+
+  // 4. Task 3: Sequencing & Nuance Evaluation
+  const order = state.task3Order;
+  const lastAction = order[order.length - 1];
+  const isValidateLast = lastAction === 'action_validate_integrate';
+
+  // Check parallel work recognition: Action C (mocks) before Action D (validation)
+  const indexOfC = order.indexOf('action_prepare_mock_tests');
+  const indexOfD = order.indexOf('action_validate_integrate');
+  const isSafeParallelWorkEarly = indexOfC < indexOfD;
+
+  // Check interface (A) and identity (B) checks placed before final validation
+  const indexOfA = order.indexOf('action_confirm_interface');
+  const indexOfB = order.indexOf('action_verify_auth');
+  const areDependenciesBeforeValidation = indexOfA < indexOfD && indexOfB < indexOfD;
+
+  if (isValidateLast && areDependenciesBeforeValidation) {
+    deltaGov += 25;
+    deltaRisk += 25;
+  } else {
+    deltaGov -= 35;
+    deltaRisk -= 35;
+  }
+
+  if (isSafeParallelWorkEarly) {
+    // Reward safe parallel work: keeping developers unblocked with mock tests
+    deltaEff += 35;
+    deltaSchedule += 15;
+  } else {
+    // Penalize developers sitting idle waiting for external validation
+    deltaEff -= 35;
+    deltaSchedule -= 20;
+  }
+
+  // Clamping to [10, 100]
+  const clamp = (val: number) => Math.min(Math.max(Math.round(val), 10), 100);
 
   const finalSchedule = clamp(baseSchedule + deltaSchedule);
   const finalRisk = clamp(baseRisk + deltaRisk);
@@ -317,6 +488,60 @@ export function computeChapter3Score(
   const finalEff = clamp(baseEff + deltaEff);
 
   const totalScore = Math.round((finalSchedule + finalRisk + finalGov + finalEff) / 4);
+
+  // Outcome determination
+  let outcomeType: Chapter3OutcomeType = 'poor';
+  if (totalScore >= 85 && (state.task2Selected === 'approved_gateway' || state.task2Recovered) && isValidateLast) {
+    outcomeType = 'strong';
+  } else if (totalScore >= 65) {
+    outcomeType = 'partial';
+  } else {
+    outcomeType = 'poor';
+  }
+
+  // Explanations
+  const scheduleExplanation =
+    finalSchedule >= 80
+      ? 'You protected delivery velocity by running safe local mock tests in parallel with Bank IT approval cycles.'
+      : 'Unnecessary delays occurred from either pausing developers completely or chasing unapproved workarounds.';
+
+  const riskExplanation =
+    finalRisk >= 80
+      ? 'You adhered strictly to enterprise security boundaries, avoiding direct database hacks and unapproved converters.'
+      : 'The project carried audit and compliance risk due to attempts to bypass enterprise gateway governance.';
+
+  const governanceExplanation =
+    finalGov >= 80
+      ? 'You ensured the bank interface schema and LDAP/SSO access dependencies were formally validated before live testing.'
+      : 'Governance was compromised by treating unverified dependencies as ready for integration testing.';
+
+  const efficiencyExplanation =
+    finalEff >= 80
+      ? 'Daniel remained highly productive writing adapters and test suites against mock data while external teams reviewed schemas.'
+      : 'Engineering velocity suffered because external dependencies were not separated from mock development.';
+
+  const outcomeText =
+    outcomeType === 'strong'
+      ? 'The team successfully contained the integration blocker, selected the approved enterprise gateway, and scheduled parallel mock testing without violating bank security.'
+      : outcomeType === 'partial'
+      ? 'You identified the core integration problem, but experienced friction in dependency sequencing or initial escalation alignment.'
+      : 'The integration approach risked enterprise compliance or stalled engineering velocity. Realigning on approved gateway standards is required.';
+
+  // Personalized takeaway line based on player's choices
+  let personalizedTakeaway = '';
+  if (state.task1Selected === 'protocol_mismatch' && state.task2Selected === 'approved_gateway' && isSafeParallelWorkEarly) {
+    personalizedTakeaway =
+      'You identified the protocol mismatch and preserved engineering progress while keeping security requirements intact.';
+  } else if (state.escalationChoice === 'bypass_gateway' || state.task2Selected === 'direct_database') {
+    personalizedTakeaway =
+      'You recognized the danger of bypassing enterprise controls and corrected your course before violating bank security policies.';
+  } else if (state.escalationChoice === 'investigate_independently') {
+    personalizedTakeaway =
+      'You learned that technical blockers tied to enterprise architecture require prompt project management escalation rather than isolated developer investigation.';
+  } else {
+    personalizedTakeaway =
+      'You navigated enterprise integration trade-offs, establishing that safe mocks can proceed while external gateway schemas are validated.';
+  }
 
   return {
     shown: true,
@@ -327,43 +552,31 @@ export function computeChapter3Score(
     totalScore,
     outcomeType,
     outcomeText,
+    personalizedTakeaway,
     explanations: {
-      schedule: `${scheduleDecisionPart} ${schedulePlanPart}`.trim(),
-      risk: `${riskDecisionPart} ${riskPlanPart}`.trim(),
-      governance: `${govDecisionPart} ${govPlanPart}`.trim(),
-      efficiency: `${effDecisionPart} ${effPlanPart}`.trim(),
+      schedule: scheduleExplanation,
+      risk: riskExplanation,
+      governance: governanceExplanation,
+      efficiency: efficiencyExplanation,
     },
   };
 }
 
 // ── SESSION STORAGE HELPERS ──
-
-let sessionChapter3State: Chapter3State = loadInitialChapter3State();
-
-function loadInitialChapter3State(): Chapter3State {
-  try {
-    const raw = localStorage.getItem('brained_chapter3_state');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed && typeof parsed === 'object') {
-        return {
-          ...INITIAL_CHAPTER3_STATE,
-          ...parsed,
-          scorecard: {
-            ...INITIAL_CHAPTER3_STATE.scorecard,
-            ...(parsed.scorecard || {}),
-          },
-        };
-      }
-    }
-  } catch {}
-  return {
-    ...INITIAL_CHAPTER3_STATE,
-    scorecard: { ...INITIAL_CHAPTER3_STATE.scorecard },
-  };
-}
+let sessionChapter3State: Chapter3State = { ...INITIAL_CHAPTER3_STATE };
 
 export function getChapter3SessionState(): Chapter3State {
+  if (typeof window !== 'undefined') {
+    const raw = localStorage.getItem('brained_chapter3_state');
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        sessionChapter3State = { ...INITIAL_CHAPTER3_STATE, ...parsed };
+      } catch {
+        // ignore parse errors
+      }
+    }
+  }
   return { ...sessionChapter3State };
 }
 
@@ -375,17 +588,22 @@ export function setChapter3SessionState(
   } else {
     sessionChapter3State = { ...sessionChapter3State, ...updater };
   }
-  try {
-    localStorage.setItem('brained_chapter3_state', JSON.stringify(sessionChapter3State));
-  } catch {}
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('brained_chapter3_state', JSON.stringify(sessionChapter3State));
+    } catch {
+      // ignore localStorage quota errors
+    }
+  }
 }
 
 export function resetChapter3SessionState() {
   sessionChapter3State = {
     ...INITIAL_CHAPTER3_STATE,
+    task3Order: [...INITIAL_CHAPTER3_STATE.task3Order],
     scorecard: { ...INITIAL_CHAPTER3_STATE.scorecard },
   };
-  try {
+  if (typeof window !== 'undefined') {
     localStorage.removeItem('brained_chapter3_state');
-  } catch {}
+  }
 }

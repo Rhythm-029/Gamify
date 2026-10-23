@@ -1,58 +1,50 @@
 {
   "id": 3,
   "slug": "chapter-3",
-  "title": "The Data Integrity Crisis",
-  "subtitle": "The prototype works. But can the team trust its data?",
+  "title": "The Integration Trap",
+  "subtitle": "Core Banking APIs, SOAP/REST Integration & LDAP/SSO Dependencies",
   "act": "I",
   "actLabel": "Act I — Foundation",
   "day": "Day 3–4",
   "duration": "1m 45s",
   "difficulty": "Moderate",
   "xpReward": 350,
-  "description": "During early validation of the Project Amigo prototype, Daniel discovers inconsistencies in employee appraisal records and leave balances. Make a practical delivery decision: contain the defect, validate the mappings, and protect unaffected velocity.",
+  "description": "The player is managing Project Amigo, an HRMS implementation for ICICI Bank involving 80,000 employees and a 90-day deadline. The team is now attempting to integrate the HRMS with the bank's existing systems. Services expect JSON over REST, while the legacy ESB uses SOAP/XML. Triage the blocker, choose the safe integration gateway, and sequence dependencies.",
   "stakeholders": [
     {
       "id": "daniel",
       "name": "Daniel Brooks",
-      "role": "Lead Backend Developer · Brained",
+      "role": "Developer · Brained",
       "avatar": "/character/Daniel_Brooks/DanielDP.png",
-      "agenda": "Reporting prototype data mismatches in appraisal records and leave balances for investigation."
+      "agenda": "Discovers the integration problem, shares his screen, and explains the logs."
     },
     {
       "id": "aarav",
       "name": "Aarav Kapoor",
-      "role": "Senior Consultant · Project Manager · Brained",
+      "role": "Project Manager · Brained",
       "avatar": "/character/AaravDP.png",
-      "agenda": "Protecting delivery deadlines while ensuring unverified data is never signed off."
+      "agenda": "Helps the player understand the project implications and provides access to the integration portal."
     },
     {
       "id": "marcus",
       "name": "Marcus Reed",
       "role": "Chief Technology Officer · Brained",
       "avatar": "/character/marcus_reed/MarcusDP.png",
-      "agenda": "Authoritative enterprise data reconciliation and adherence to release gates."
-    },
-    {
-      "id": "sophia",
-      "name": "Sophia Bennett",
-      "role": "Head of HR Operations · ICICI Bank",
-      "avatar": "/character/Sophia_bennett/SophiaDP.png",
-      "agenda": "Ensuring appraisal cycle readiness across 80,000 employees without data corruption."
+      "agenda": "Establishes the security and architecture constraints and reacts to the player's integration decision."
     }
   ],
   "objectives": [
-    { "label": "Triage reported data inconsistencies in prototype test records", "type": "analysis" },
-    { "label": "Decide containment approach without halting safe development", "type": "decision" },
-    { "label": "Create and confirm the structured Data Validation Plan", "type": "delivery" },
-    { "label": "Protect critical appraisal milestone without exposing unverified data", "type": "communication" }
+    { "label": "Triage protocol mismatch & analyze engineering logs", "type": "analysis" },
+    { "label": "Decide integration architecture without bypassing bank controls", "type": "decision" },
+    { "label": "Prioritize & sequence dependency resolution and safe parallel testing", "type": "delivery" }
   ],
   "deliverables": [
-    "Data Containment & Isolation Protocol",
-    "Source Mapping Reconciliation Register",
-    "Sprint 1 Prototype Data Validation Plan"
+    "Core Banking API Blocker Diagnosis",
+    "Approved Gateway Architecture Specification",
+    "Controlled Parallel Integration Test Suite"
   ],
   "primaryColor": "#0284c7",
   "secondaryColor": "#4f46e5",
   "accentColor": "#38bdf8",
-  "backgroundIcon": "🛡️"
+  "backgroundIcon": "🔌"
 }

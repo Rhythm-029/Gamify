@@ -2,6 +2,7 @@
  * chaptersData.ts
  * Master data for all 12 chapters of Brained: The Transformation Room
  */
+import { resetChapter3SessionState } from './chapter3Data';
 
 export type ChapterStatus = 'locked' | 'unlocked' | 'in_progress' | 'completed';
 
@@ -84,8 +85,8 @@ export const CHAPTERS: Chapter[] = [
   {
     id: 3,
     slug: 'chapter-3',
-    title: 'The Data Integrity Crisis',
-    subtitle: 'The prototype works. But can the team trust its data?',
+    title: 'The Integration Trap',
+    subtitle: 'Core Banking APIs, SOAP/REST Integration & LDAP/SSO Dependencies',
     act: 'I',
     actLabel: 'Act I — Foundation',
     day: 'Day 3–4',
@@ -93,40 +94,40 @@ export const CHAPTERS: Chapter[] = [
     difficulty: 'Moderate',
     xpReward: 350,
     description:
-      'During early validation of the Project Amigo prototype, inconsistencies appear in employee appraisal records and leave balances. Make a practical delivery decision: contain the defect, validate the mappings, and protect unaffected velocity.',
+      'The player is managing Project Amigo, an HRMS implementation for ICICI Bank involving 80,000 employees and a 90-day deadline. The team is now attempting to integrate the HRMS with the bank\'s existing systems. Services expect JSON over REST, while the legacy ESB uses SOAP/XML. Triage the blocker, choose the safe integration gateway, and sequence dependencies.',
     objectives: [
-      { label: 'Triage reported data inconsistencies in prototype test records', type: 'analysis' },
-      { label: 'Decide containment approach without halting safe development', type: 'decision' },
-      { label: 'Create and confirm the structured Data Validation Plan', type: 'delivery' },
+      { label: 'Triage protocol mismatch & analyze engineering logs', type: 'analysis' },
+      { label: 'Decide integration architecture without bypassing bank controls', type: 'decision' },
+      { label: 'Prioritize & sequence dependency resolution and safe parallel testing', type: 'delivery' },
     ],
     primaryColor: '#0284c7',
     secondaryColor: '#4f46e5',
     accentColor: '#38bdf8',
-    backgroundIcon: '🛡️',
+    backgroundIcon: '🔌',
     status: 'locked',
   },
   {
     id: 4,
     slug: 'chapter-4',
-    title: 'The Architecture',
-    subtitle: 'Designing the Future State',
+    title: 'Change Request & Impact Analysis',
+    subtitle: 'Scope Gating, Release Planning & Technical Impact Assessment',
     act: 'II',
     actLabel: 'Act II — Design',
     day: 'Day 6–7',
-    duration: '~30 mins',
-    difficulty: 'Hard',
+    duration: '~25 mins',
+    difficulty: 'Moderate',
     xpReward: 400,
     description:
-      'Blueprint the solution. Prioritize use cases. Define the technology stack. Every choice has trade-offs. The board meets in 7 days. Your architecture needs to hold.',
+      'Sophia requests CR-017 (Dynamic Bonus Calculator) for Phase 1. Evaluate business value, dependencies, security, and release feasibility against the 90-day deadline.',
     objectives: [
-      { label: 'Define To-Be solution architecture', type: 'delivery' },
-      { label: 'Select and defend your tech choices', type: 'decision' },
-      { label: 'Align architecture with business constraints', type: 'analysis' },
+      { label: 'Evaluate Change Request CR-017 and isolate technical risks', type: 'analysis' },
+      { label: 'Organize release phases without compromising baseline commitments', type: 'delivery' },
+      { label: 'Defend release recommendation with governance and access controls', type: 'decision' },
     ],
     primaryColor: '#8b5cf6',
-    secondaryColor: '#ec4899',
+    secondaryColor: '#6366f1',
     accentColor: '#a78bfa',
-    backgroundIcon: '🏗️',
+    backgroundIcon: '⚖️',
     status: 'locked',
   },
   {
@@ -357,8 +358,6 @@ export function getSessionAssignmentResult(): any {
 export function setSessionAssignmentResult(result: any) {
   sessionChapter1Assignment = result;
 }
-
-import { resetChapter3SessionState } from './chapter3Data';
 
 export function resetChapterStatuses() {
   sessionChapterStatuses = { 1: 'unlocked' };

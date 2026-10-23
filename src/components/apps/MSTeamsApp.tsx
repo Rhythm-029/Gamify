@@ -9,8 +9,7 @@ import type { ScopeAssignmentResult } from './ProjectAmigoScopeAssignment';
 import { getSessionAssignmentResult } from '../../data/chaptersData';
 
 import type { Chapter2State } from '../../types/chapter2';
-import type { Chapter3State, Chapter3DecisionKey, Chapter3ActionKey } from '../../types/chapter3';
-import { CHAPTER3_DECISION_OPTIONS, CHAPTER3_VALIDATION_ACTIONS } from '../../data/chapter3Data';
+import type { Chapter3State } from '../../types/chapter3';
 
 interface MSTeamsAppProps {
   onPenalty?: (trustDelta: number, xpDelta: number) => void;
@@ -27,8 +26,10 @@ interface MSTeamsAppProps {
   onOpenSprintReadiness?: () => void;
   chapter3State?: Chapter3State;
   onOpenDataIntegrityTriage?: () => void;
-  onSelectChapter3Decision?: (key: Chapter3DecisionKey) => void;
-  onToggleChapter3Action?: (key: Chapter3ActionKey) => void;
+  onOpenChapter3Meeting?: () => void;
+  onOpenChapter3Portal?: () => void;
+  onSelectChapter3Decision?: (key: any) => void;
+  onToggleChapter3Action?: (key: any) => void;
   onSubmitChapter3Plan?: () => void;
   onOpenChapter3Scorecard?: () => void;
 }
@@ -86,17 +87,20 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
   onOpenSprintReadiness,
   chapter3State,
   onOpenDataIntegrityTriage,
+  onOpenChapter3Meeting,
+  onOpenChapter3Portal,
   onSelectChapter3Decision,
   onToggleChapter3Action,
   onSubmitChapter3Plan,
   onOpenChapter3Scorecard,
 }) => {
+  const isCh4 = activeChapter === 4;
   const isCh3 = activeChapter === 3;
   const isCh2 = activeChapter === 2;
   const isPastCh1 = (activeChapter ?? 1) >= 2;
   const [activeTab, setActiveTab] = useState<'chat' | 'calls' | 'teams'>('chat');
   const [activeChatId, setActiveChatId] = useState<'aarav' | 'marcus' | 'sophia' | 'daniel' | 'amigo-dev-ops'>(
-    initialChatId || (isPastCh1 ? 'daniel' : 'aarav')
+    initialChatId || (isCh4 ? 'sophia' : isPastCh1 ? 'daniel' : 'aarav')
   );
   const [messageInput, setMessageInput] = useState('');
   const [customMessages, setCustomMessages] = useState<Record<string, CustomMessage[]>>({});
@@ -128,18 +132,39 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
   const effectiveAssignmentResult = assignmentResult || (isPastCh1 ? CANONICAL_CHAPTER1_RESULT : null);
 
   // Dynamic Contacts List depending on Active Chapter
-  const contactsList: ChatContact[] = isCh3
+  const contactsList: ChatContact[] = isCh4
     ? [
+        {
+          id: 'sophia',
+          name: 'Sophia Bennett',
+          role: 'Head of HR Operations · ICICI Bank',
+          avatar: '/character/Sophia_bennett/SophiaDP.png',
+          lastMessage:
+            "We've received a request from our regional HR heads. Can we discuss adding a Dynamic Bonus Calculator to Phase 1?",
+          time: '10:15 AM',
+          unread: true,
+          online: true,
+        },
+        {
+          id: 'aarav',
+          name: 'Aarav Kapoor',
+          role: 'Senior Consultant · Project Manager',
+          avatar: '/character/AaravDP.png',
+          lastMessage:
+            'Open Ideate & Impact Studio. Review the request, check its impact, and prepare a release recommendation.',
+          time: '10:16 AM',
+          unread: false,
+          online: true,
+        },
         {
           id: 'daniel',
           name: 'Daniel Brooks',
-          role: 'Lead Backend Developer · Brained',
+          role: 'Lead Developer · Brained',
           avatar: '/character/Daniel_Brooks/DanielDP.png',
-          lastMessage: chapter3State?.planSubmitted
-            ? 'Validation plan confirmed. Investigating affected test data.'
-            : "Hey, I found two inconsistencies during validation. A few appraisal records...",
-          time: '10:15 AM',
-          unread: !chapter3State?.planSubmitted,
+          lastMessage:
+            "I can't give a reliable estimate until we understand regional bonus rules and payroll integration.",
+          time: '10:17 AM',
+          unread: false,
           online: true,
         },
         {
@@ -147,10 +172,36 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
           name: '# amigo-dev-ops',
           role: 'Engineering Operations Channel',
           avatar: '',
-          lastMessage: chapter3State?.planSubmitted
-            ? 'Validation plan active · Safe tracks continuing'
-            : 'Prototype validation in progress',
-          time: '10:17 AM',
+          lastMessage: 'Sprint 1 in progress · CR-017 pending impact analysis',
+          time: '10:18 AM',
+          unread: false,
+          online: true,
+          isChannel: true,
+        },
+      ]
+    : isCh3
+    ? [
+        {
+          id: 'daniel',
+          name: 'Daniel Brooks',
+          role: 'Lead Developer · Brained',
+          avatar: '/character/Daniel_Brooks/DanielDP.png',
+          lastMessage: chapter3State?.task3Submitted
+            ? 'Integration triage plan submitted. Local mocks proceeding.'
+            : 'Hey, we have a blocker. The Appraisal and Attendance integrations are failing...',
+          time: '09:41 AM',
+          unread: !chapter3State?.task3Submitted,
+          online: true,
+        },
+        {
+          id: 'amigo-dev-ops' as const,
+          name: '# amigo-dev-ops',
+          role: 'Engineering Operations Channel',
+          avatar: '',
+          lastMessage: chapter3State?.task3Submitted
+            ? 'Integration triage confirmed · Approved gateway track'
+            : 'Integration blocker active · Protocol mismatch',
+          time: '09:42 AM',
           unread: false,
           online: true,
           isChannel: true,
@@ -160,10 +211,10 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
           name: 'Aarav Kapoor',
           role: 'Senior Consultant · Project Manager',
           avatar: '/character/AaravDP.png',
-          lastMessage: chapter3State?.decision
-            ? 'Contain the issue, establish what is wrong, and keep unaffected work moving.'
-            : "Good catch. We have a delivery deadline to protect, but we can't sign off on unvalidated data.",
-          time: '10:16 AM',
+          lastMessage: chapter3State?.escalationChoice
+            ? "Before we build anything, let's establish what the bank supports."
+            : 'Integration Portal ready for review.',
+          time: '09:43 AM',
           unread: false,
           online: true,
         },
@@ -515,7 +566,76 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
 
         {/* Chat Messages Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {activeChatId === 'aarav' ? (
+          {isCh4 && activeChatId === 'sophia' ? (
+            /* ── SOPHIA BENNETT — CHAPTER 4 CHANGE REQUEST THREAD ── */
+            <div className="space-y-4">
+              <div className="flex justify-center">
+                <span className="text-[10px] font-mono text-purple-400/90 bg-purple-500/10 px-3.5 py-1 rounded-full border border-purple-500/25">
+                  Today · 10:15 AM · Change Request CR-017
+                </span>
+              </div>
+
+              {/* Message 1: Sophia */}
+              <div className="flex items-start space-x-3 max-w-2xl">
+                <img
+                  src="/character/Sophia_bennett/SophiaDP.png"
+                  alt="Sophia"
+                  className="w-8 h-8 rounded-full object-cover border border-purple-400/40 shrink-0 mt-1"
+                />
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-bold text-xs text-purple-300">Sophia Bennett</span>
+                    <span className="text-[10px] font-mono text-slate-400">Head of HR Operations · 10:15 AM</span>
+                  </div>
+                  <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#1e233d] border border-white/10 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                    <p className="font-bold text-white">Subject: Urgent: Additional Appraisal Requirement</p>
+                    <p>
+                      "We've received a request from our regional HR heads. Can we discuss adding a Dynamic Bonus Calculator to Phase 1?"
+                    </p>
+                    <p className="text-slate-300 text-xs">
+                      They want managers to estimate proposed bonuses using appraisal ratings and regional bonus rules alongside other Phase 1 features.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Message 2: Aarav */}
+              <div className="flex items-start space-x-3 max-w-2xl">
+                <img
+                  src="/character/AaravDP.png"
+                  alt="Aarav"
+                  className="w-8 h-8 rounded-full object-cover border border-sky-400/40 shrink-0 mt-1"
+                />
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-bold text-xs text-sky-300">Aarav Kapoor</span>
+                    <span className="text-[10px] font-mono text-slate-400">Project Manager · 10:16 AM</span>
+                  </div>
+                  <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#1e233d] border border-white/10 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed">
+                    "Open Ideate & Impact Studio. Review the request, check its impact, and prepare a release recommendation. We need to explain what we can commit to, what needs investigation, and what requires approval."
+                  </div>
+                </div>
+              </div>
+
+              {/* Message 3: Daniel */}
+              <div className="flex items-start space-x-3 max-w-2xl">
+                <img
+                  src="/character/Daniel_Brooks/DanielDP.png"
+                  alt="Daniel"
+                  className="w-8 h-8 rounded-full object-cover border border-emerald-400/40 shrink-0 mt-1"
+                />
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-bold text-xs text-emerald-300">Daniel Brooks</span>
+                    <span className="text-[10px] font-mono text-slate-400">Lead Developer · 10:17 AM</span>
+                  </div>
+                  <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#1e233d] border border-white/10 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed">
+                    "The calculator depends on regional bonus rules, and we haven't confirmed how those rules will be provided or validated. We also need to check whether the feature requires a new payroll integration. Calling it a two-day feature right now would be a guess."
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : activeChatId === 'aarav' ? (
             <>
               {/* If in Chapter 2, show yesterday's Chapter 1 history badge */}
               <div className="flex justify-center">
@@ -808,15 +928,16 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
               )}
             </>
           ) : activeChatId === 'daniel' && isCh3 ? (
-            /* ── DANIEL BROOKS & AARAV KAPOOR — CHAPTER 3 DATA INTEGRITY CONVERSATION ── */
+            /* ── DANIEL BROOKS — CHAPTER 3 THE INTEGRATION TRAP CONVERSATION ── */
             <div className="space-y-4">
               <div className="flex justify-center">
-                <span className="text-[10px] font-mono text-sky-400 bg-sky-500/10 px-3.5 py-1 rounded-full border border-sky-500/25">
-                  Today · 10:15 AM · Project Amigo Prototype Data Validation
+                <span className="text-[10px] font-mono text-rose-400 bg-rose-500/10 px-3.5 py-1 rounded-full border border-rose-500/25 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse" />
+                  <span>Today · 09:41 AM · Project Amigo Integration Blocker</span>
                 </span>
               </div>
 
-              {/* Message 1: Daniel */}
+              {/* Message 1: Daniel Blocker Alert */}
               <div className="flex items-start space-x-3 max-w-2xl">
                 <img
                   src="/character/Daniel_Brooks/DanielDP.png"
@@ -826,219 +947,101 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
                 <div className="space-y-1">
                   <div className="flex items-center space-x-2">
                     <span className="font-bold text-xs text-white">Daniel Brooks</span>
-                    <span className="text-[10px] font-mono text-slate-400">Lead Backend Developer · 10:15 AM</span>
+                    <span className="text-[10px] font-mono text-orange-400">Developer · 09:41 AM</span>
                   </div>
                   <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#1e233d] border border-white/10 text-xs text-slate-100 shadow-md leading-relaxed">
-                    Hey, I found two inconsistencies during validation. A few appraisal records appear to be linked to the wrong employee IDs, and some leave balances don't match our source data. I've only seen this in the prototype test data so far. We should investigate before calling these modules ready.
+                    Hey, we have a blocker. The Appraisal and Attendance integrations are failing. I'm sharing my screen—take a look at these logs.
                   </div>
                 </div>
               </div>
 
-              {/* Message 2: Aarav */}
-              <div className="flex items-start space-x-3 max-w-2xl">
-                <img
-                  src="/character/AaravDP.png"
-                  alt="Aarav"
-                  className="w-8 h-8 rounded-full object-cover border border-white/20 shrink-0 mt-1"
-                />
-                <div className="space-y-1">
+              {/* Emergency Meeting Call Card */}
+              <div className="p-4.5 rounded-2xl bg-gradient-to-r from-[#171b30] to-[#121629] border border-rose-500/40 space-y-3.5 max-w-xl shadow-xl">
+                <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
                   <div className="flex items-center space-x-2">
-                    <span className="font-bold text-xs text-amber-300">Aarav Kapoor</span>
-                    <span className="text-[10px] font-mono text-slate-400">Project Manager · 10:16 AM</span>
-                  </div>
-                  <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#1a233b] border border-amber-500/20 text-xs text-slate-100 shadow-md leading-relaxed">
-                    Good catch. We have a delivery deadline to protect, but we can't sign off on data we haven't validated. How would you handle this?
-                  </div>
-                </div>
-              </div>
-
-              {/* Technical Data Inconsistency Inspector Pill */}
-              <div className="p-4 rounded-2xl bg-[#171b30] border border-sky-500/30 space-y-3 max-w-xl">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Database className="w-4 h-4 text-sky-400" />
-                    <span className="font-mono text-[10px] font-bold text-sky-400 uppercase tracking-wider">
-                      PROTOTYPE TEST DATA DEFECT CHECK
+                    <Video className="w-4 h-4 text-rose-400 animate-pulse" />
+                    <span className="font-mono text-xs font-bold text-rose-300 uppercase tracking-wider">
+                      EMERGENCY ENGINEERING CALL IN PROGRESS
                     </span>
                   </div>
-                  <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
-                    chapter3State?.planSubmitted
-                      ? 'bg-emerald-500/20 text-emerald-300'
-                      : 'bg-amber-500/20 text-amber-300'
-                  }`}>
-                    {chapter3State?.planSubmitted ? 'CONTAINMENT ACTIVE' : 'VALIDATION REQUIRED'}
+                  <span className="text-xs font-mono px-2.5 py-0.5 rounded font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                    Active Blocker
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 text-[11px]">
-                  <div className="p-2 rounded-xl bg-slate-900/80 border border-white/5 flex justify-between">
-                    <span className="text-slate-400">Appraisal Mappings</span>
-                    <span className="text-amber-400 font-bold">2 Mismatches</span>
+                <div className="text-xs sm:text-sm text-slate-300 space-y-1">
+                  <div className="font-bold text-white text-sm sm:text-base">Core Banking APIs · Protocol Mismatch (SOAP/XML vs JSON/REST)</div>
+                  <p className="text-xs sm:text-[13px] text-slate-300 leading-relaxed">
+                    Daniel is sharing live service logs on screen showing HTTP 415 and unverified LDAP access.
+                  </p>
+                </div>
+
+                {/* Call Button */}
+                <div className="pt-1 flex flex-wrap items-center gap-2.5">
+                  {onOpenChapter3Meeting && (
+                    <button
+                      onClick={onOpenChapter3Meeting}
+                      className="px-4.5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm flex items-center space-x-2 shadow-lg shadow-rose-600/30 cursor-pointer transition-all"
+                    >
+                      <Video className="w-4 h-4" />
+                      <span>Join Emergency Teams Call</span>
+                    </button>
+                  )}
+
+                  {chapter3State?.portalAccessGranted && onOpenChapter3Portal && (
+                    <button
+                      onClick={onOpenChapter3Portal}
+                      className="px-4.5 py-2.5 rounded-xl bg-sky-600/30 hover:bg-sky-600/50 border border-sky-500/40 text-sky-200 hover:text-white font-bold text-xs sm:text-sm flex items-center space-x-2 cursor-pointer transition-all"
+                    >
+                      <span>Open Integration Portal</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Integration Status Preview Table */}
+              <div className="p-4 rounded-2xl bg-[#13192f] border border-sky-500/30 space-y-3 max-w-xl">
+                <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                  <span className="font-mono text-xs font-bold text-sky-400 uppercase tracking-wider">
+                    INTEGRATION SERVICE LOG SUMMARY
+                  </span>
+                  <span className="text-xs font-mono text-slate-400">ICICI ESB Gateway</span>
+                </div>
+
+                <div className="space-y-2 text-xs sm:text-[12.5px] font-mono">
+                  <div className="p-2.5 rounded-lg bg-black/40 border border-white/5 flex items-center justify-between">
+                    <span className="text-slate-200 font-semibold">AppraisalService</span>
+                    <span className="text-rose-400 font-bold">415 Unsupported Media Type</span>
                   </div>
-                  <div className="p-2 rounded-xl bg-slate-900/80 border border-white/5 flex justify-between">
-                    <span className="text-slate-400">Leave Balances</span>
-                    <span className="text-amber-400 font-bold">2 Discrepancies</span>
+                  <div className="p-2.5 rounded-lg bg-black/40 border border-white/5 flex items-center justify-between">
+                    <span className="text-slate-200 font-semibold">AttendanceService</span>
+                    <span className="text-rose-400 font-bold">Protocol Mismatch (REST/SOAP)</span>
                   </div>
-                  <div className="p-2 rounded-xl bg-slate-900/80 border border-white/5 flex justify-between">
-                    <span className="text-slate-400">Environment</span>
-                    <span className="text-slate-300 font-bold">Prototype Sandbox</span>
+                  <div className="p-2.5 rounded-lg bg-black/40 border border-white/5 flex items-center justify-between">
+                    <span className="text-slate-200 font-semibold">EmployeeAuthService</span>
+                    <span className="text-amber-400 font-bold">LDAP/SSO Unverified</span>
                   </div>
-                  <div className="p-2 rounded-xl bg-slate-900/80 border border-white/5 flex justify-between">
-                    <span className="text-slate-400">Production Impact</span>
-                    <span className="text-emerald-400 font-bold">Zero (Clean)</span>
+                  <div className="p-2.5 rounded-lg bg-black/40 border border-white/5 flex items-center justify-between">
+                    <span className="text-slate-200 font-semibold">Gateway Status</span>
+                    <span className="text-amber-400 font-bold">Awaiting Approved Endpoint</span>
                   </div>
                 </div>
 
-                {onOpenDataIntegrityTriage && (
-                  <div className="pt-1 flex justify-end">
+                {chapter3State?.task3Submitted && onOpenChapter3Scorecard && (
+                  <div className="pt-2 flex justify-end">
                     <button
-                      onClick={onOpenDataIntegrityTriage}
-                      className="px-3 py-1.5 rounded-xl bg-sky-600/30 hover:bg-sky-600/50 border border-sky-500/40 text-sky-200 hover:text-white font-bold text-xs flex items-center space-x-1.5 cursor-pointer transition-all"
+                      onClick={onOpenChapter3Scorecard}
+                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs flex items-center space-x-1.5 shadow-lg shadow-sky-600/30 cursor-pointer"
                     >
-                      <span>Open Data Integrity Workspace</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>View Chapter 3 Scorecard</span>
                     </button>
                   </div>
                 )}
               </div>
-
-              {/* Scene 3.2 Decision Card */}
-              <div className="p-4 rounded-2xl bg-[#13192f] border border-sky-500/40 space-y-3 max-w-xl">
-                <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                  <span className="font-mono text-[10px] font-bold text-sky-400 uppercase tracking-wider">
-                    CRITICAL DECISION: WHAT SHOULD THE TEAM DO FIRST?
-                  </span>
-                </div>
-
-                <div className="space-y-2">
-                  {CHAPTER3_DECISION_OPTIONS.map((opt) => {
-                    const isSelected = chapter3State?.decision === opt.key;
-                    return (
-                      <button
-                        key={opt.key}
-                        onClick={() => onSelectChapter3Decision && onSelectChapter3Decision(opt.key)}
-                        className={`w-full text-left p-3 rounded-xl border text-xs transition-all cursor-pointer ${
-                          isSelected
-                            ? 'bg-sky-950/80 border-sky-400 text-white font-bold shadow-md shadow-sky-900/30'
-                            : 'bg-slate-900/80 border-white/5 text-slate-300 hover:border-slate-600 hover:bg-slate-900'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <span className="text-[10px] font-mono text-sky-400 block font-bold uppercase">
-                              {opt.badge} — {opt.label}
-                            </span>
-                            <span className="text-[11px] font-normal text-slate-300 mt-0.5 block leading-relaxed">
-                              “{opt.description}”
-                            </span>
-                          </div>
-                          <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ml-2 mt-0.5 ${
-                            isSelected ? 'border-sky-400 bg-sky-500 text-slate-950' : 'border-slate-700'
-                          }`}>
-                            {isSelected && <CheckCircle2 className="w-3 h-3 stroke-[3]" />}
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Aarav Feedback if chosen */}
-                {chapter3State?.decision && (
-                  <div className="p-3 rounded-xl bg-amber-950/30 border border-amber-500/30 text-xs text-amber-100 flex items-start space-x-2.5">
-                    <img
-                      src="/character/AaravDP.png"
-                      alt="Aarav"
-                      className="w-6 h-6 rounded-full object-cover border border-amber-400/50 shrink-0 mt-0.5"
-                    />
-                    <div>
-                      <span className="font-bold text-amber-300 text-[10px] block">Aarav Kapoor:</span>
-                      <p className="text-[11px] leading-relaxed italic mt-0.5">
-                        “{CHAPTER3_DECISION_OPTIONS.find((o) => o.key === chapter3State.decision)?.feedback}”
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Scene 3.3 Create the Data Validation Plan */}
-              {chapter3State?.decision && (
-                <div className="p-4 rounded-2xl bg-[#13192f] border border-sky-500/40 space-y-3 max-w-xl">
-                  <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                    <span className="font-mono text-[10px] font-bold text-sky-400 uppercase tracking-wider">
-                      CREATE THE DATA VALIDATION PLAN
-                    </span>
-                    <span className="text-[10px] font-mono text-slate-400">
-                      {chapter3State?.selectedActions.length || 0} / 3 selected
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-slate-300">
-                    Choose the immediate actions needed to investigate the issue without blocking unaffected work.
-                  </p>
-
-                  <div className="space-y-2">
-                    {CHAPTER3_VALIDATION_ACTIONS.map((action) => {
-                      const isChecked = chapter3State?.selectedActions.includes(action.key);
-                      const isLocked = chapter3State?.planSubmitted;
-                      return (
-                        <div
-                          key={action.key}
-                          onClick={() => !isLocked && onToggleChapter3Action && onToggleChapter3Action(action.key)}
-                          className={`p-3 rounded-xl border flex items-start space-x-2.5 transition-all ${
-                            isChecked
-                              ? 'bg-sky-950/60 border-sky-400/70 text-white'
-                              : 'bg-slate-900/60 border-white/5 text-slate-300 hover:border-slate-700'
-                          } ${isLocked ? 'cursor-default opacity-85' : 'cursor-pointer'}`}
-                        >
-                          <div className="mt-0.5 text-sky-400">
-                            {isChecked ? (
-                              <CheckSquare className="w-4 h-4 text-sky-400" />
-                            ) : (
-                              <Square className="w-4 h-4 text-slate-500" />
-                            )}
-                          </div>
-                          <div>
-                            <div className="font-bold text-xs">{action.label}</div>
-                            <div className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">
-                              {action.description}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="pt-2 flex items-center justify-between">
-                    {!chapter3State?.planSubmitted ? (
-                      <button
-                        onClick={() => onSubmitChapter3Plan && onSubmitChapter3Plan()}
-                        className="ml-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs uppercase tracking-wider flex items-center space-x-1.5 shadow-lg shadow-sky-600/30 cursor-pointer transition-all"
-                      >
-                        <ShieldCheck className="w-4 h-4" />
-                        <span>Confirm Plan</span>
-                      </button>
-                    ) : (
-                      <div className="w-full flex items-center justify-between">
-                        <span className="text-xs font-mono font-bold text-emerald-400 flex items-center gap-1.5">
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>Validation Plan Confirmed</span>
-                        </span>
-                        {onOpenChapter3Scorecard && (
-                          <button
-                            onClick={onOpenChapter3Scorecard}
-                            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center space-x-1.5 shadow-lg cursor-pointer"
-                          >
-                            <span>View Chapter 3 Scorecard</span>
-                            <ArrowRight className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
+
           ) : activeChatId === 'daniel' && isCh2 ? (
             /* ── DANIEL BROOKS & MARTHA VANCE — CHAPTER 2 ENGINEERING CONVERSATION ── */
             <div className="space-y-4">

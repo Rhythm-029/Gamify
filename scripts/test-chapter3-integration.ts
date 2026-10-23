@@ -1,25 +1,28 @@
+import process from 'node:process';
 import {
   CHAPTERS,
   getStoredChapterStatuses,
   updateChapterStatus,
   resetChapterStatuses,
-} from '../src/data/chaptersData';
+} from '../src/data/chaptersData.ts';
 import {
   computeChapter3Score,
   INITIAL_CHAPTER3_STATE,
-  CHAPTER3_DECISION_OPTIONS,
-  CHAPTER3_VALIDATION_ACTIONS,
-  PROTOTYPE_DATA_MISMATCHES,
-  CHAPTER3_CLOSING_INSIGHT,
+  ESCALATION_OPTIONS,
+  TASK1_BLOCKER_OPTIONS,
+  TASK2_APPROACH_OPTIONS,
+  TASK3_ACTION_CARDS,
+  CHAPTER3_TITLE,
+  CHAPTER3_SUBTITLE,
   getChapter3SessionState,
   setChapter3SessionState,
   resetChapter3SessionState,
-} from '../src/data/chapter3Data';
+} from '../src/data/chapter3Data.ts';
 import {
   computeChapter2Score,
   INITIAL_CHAPTER2_STATE,
-} from '../src/data/chapter2Data';
-import { ALL_CHAPTER_DOSSIERS } from '../src/data/chapters/index';
+} from '../src/data/chapter2Data.ts';
+import { ALL_CHAPTER_DOSSIERS } from '../src/data/chapters/index.ts';
 
 function assert(condition: boolean, msg: string) {
   if (!condition) {
@@ -29,7 +32,7 @@ function assert(condition: boolean, msg: string) {
   console.log(`✅ PASS: ${msg}`);
 }
 
-console.log('\n=== RUNNING CHAPTER 3 END-TO-END INTEGRATION & REGRESSION SUITE ===\n');
+console.log('\n=== RUNNING CHAPTER 3: THE INTEGRATION TRAP INTEGRATION & REGRESSION SUITE ===\n');
 
 // ── TEST GROUP 1: CHAPTER REGISTRATION & PROGRESSION ──
 console.log('--- Test Group 1: Chapter Registration & Progression ---');
@@ -67,73 +70,72 @@ assert(statuses[5] === undefined || statuses[5] === 'locked', 'Chapter 5 still l
 // Verify Chapter 3 in Master CHAPTERS registry
 const ch3Meta = CHAPTERS.find((c) => c.id === 3);
 assert(Boolean(ch3Meta), 'Chapter 3 exists in CHAPTERS array');
-assert(ch3Meta?.title === 'The Data Integrity Crisis', 'Chapter 3 title is correct');
-assert(ch3Meta?.subtitle === 'The prototype works. But can the team trust its data?', 'Chapter 3 subtitle is correct');
-assert(ch3Meta?.duration === '~1m 45s', 'Chapter 3 duration is within target');
+assert(ch3Meta?.title === 'The Integration Trap', 'Chapter 3 title is "The Integration Trap"');
+assert(ch3Meta?.subtitle === 'Core Banking APIs, SOAP/REST Integration & LDAP/SSO Dependencies', 'Chapter 3 subtitle is correct');
+assert(ch3Meta?.duration === '~1m 45s', 'Chapter 3 duration is within target (~1m 45s)');
 assert(ch3Meta?.objectives.length === 3, 'Chapter 3 has 3 explicit objectives');
 
-// ── TEST GROUP 2: CHAPTER 3 DATA DOSSIER & CONTEXT ──
-console.log('\n--- Test Group 2: Chapter 3 Dossier & Prototype Mismatches ---');
+// ── TEST GROUP 2: CHAPTER 3 DOSSIER & STAKEHOLDERS ──
+console.log('\n--- Test Group 2: Chapter 3 Dossier & Stakeholders ---');
 
 const ch3Dossier = ALL_CHAPTER_DOSSIERS[3];
-assert(ch3Dossier.title === 'The Data Integrity Crisis', 'Dossier title matches');
-assert(ch3Dossier.stakeholders !== undefined && ch3Dossier.stakeholders.length >= 4, 'Dossier contains Daniel, Aarav, Marcus, Sophia');
-assert(ch3Dossier.stakeholders?.some((s) => s.name === 'Daniel Brooks'), 'Daniel Brooks is stakeholder');
-assert(ch3Dossier.stakeholders?.some((s) => s.name === 'Aarav Kapoor'), 'Aarav Kapoor is stakeholder');
+assert(ch3Dossier.title === 'The Integration Trap', 'Dossier title matches "The Integration Trap"');
+assert(ch3Dossier.stakeholders !== undefined && ch3Dossier.stakeholders.length >= 3, 'Dossier contains Daniel, Aarav, Marcus');
+assert(Boolean(ch3Dossier.stakeholders?.some((s) => s.name === 'Daniel Brooks')), 'Daniel Brooks is stakeholder');
+assert(Boolean(ch3Dossier.stakeholders?.some((s) => s.name === 'Aarav Kapoor')), 'Aarav Kapoor is stakeholder');
+assert(Boolean(ch3Dossier.stakeholders?.some((s) => s.name === 'Marcus Reed')), 'Marcus Reed is stakeholder');
 
-assert(PROTOTYPE_DATA_MISMATCHES.length === 4, 'Includes 4 realistic prototype test mismatch records');
-assert(PROTOTYPE_DATA_MISMATCHES.some((m) => m.module === 'Appraisal Cycle'), 'Appraisal cycle mismatch present');
-assert(PROTOTYPE_DATA_MISMATCHES.some((m) => m.module === 'Leave & Attendance'), 'Leave balance mismatch present');
+// ── TEST GROUP 3: ESCALATION & TRIAGE CONTENT INTEGRITY ──
+console.log('\n--- Test Group 3: Escalation & Triage Integrity ---');
 
-// ── TEST GROUP 3: DECISION OPTIONS & ACTION KEYS ──
-console.log('\n--- Test Group 3: Semantic Keys & Option Integrity ---');
+assert(ESCALATION_OPTIONS.length === 3, 'Exactly 3 escalation options');
+const escalationIds = ESCALATION_OPTIONS.map((e) => e.id);
+assert(escalationIds.includes('investigate_independently'), 'Option A: investigate_independently');
+assert(escalationIds.includes('escalate_aarav'), 'Option B: escalate_aarav (Recommended)');
+assert(escalationIds.includes('bypass_gateway'), 'Option C: bypass_gateway (Risky)');
 
-assert(CHAPTER3_DECISION_OPTIONS.length === 3, 'Exactly 3 decision options');
-const decisionKeys = CHAPTER3_DECISION_OPTIONS.map((d) => d.key);
-assert(decisionKeys.includes('continue_demo_as_ready'), 'Option A key: continue_demo_as_ready');
-assert(decisionKeys.includes('stop_all_development'), 'Option B key: stop_all_development');
-assert(decisionKeys.includes('contain_and_validate_affected'), 'Option C key: contain_and_validate_affected');
+assert(TASK1_BLOCKER_OPTIONS.length === 4, 'Task 1 has 4 blocker diagnosis cards');
+const correctBlocker = TASK1_BLOCKER_OPTIONS.find((b) => b.isCorrect);
+assert(correctBlocker?.id === 'protocol_mismatch', 'Correct blocker is protocol_mismatch');
 
-// Verify Aarav's exact responses
-const optA = CHAPTER3_DECISION_OPTIONS.find((o) => o.key === 'continue_demo_as_ready')!;
-const optB = CHAPTER3_DECISION_OPTIONS.find((o) => o.key === 'stop_all_development')!;
-const optC = CHAPTER3_DECISION_OPTIONS.find((o) => o.key === 'contain_and_validate_affected')!;
+assert(TASK2_APPROACH_OPTIONS.length === 3, 'Task 2 has 3 approach cards');
+const correctApproach = TASK2_APPROACH_OPTIONS.find((a) => a.isRecommended);
+assert(correctApproach?.id === 'approved_gateway', 'Recommended approach is approved_gateway');
 
-assert(optA.feedback.includes('presenting unverified data could create much bigger problems later'), 'Aarav feedback A matches prompt');
-assert(optB.feedback.includes("we don't need to freeze unrelated work"), 'Aarav feedback B matches prompt');
-assert(optC.feedback.includes("Contain the issue, establish what is wrong, and keep unaffected work moving"), 'Aarav feedback C matches prompt');
-
-// Verify 3 validation actions
-assert(CHAPTER3_VALIDATION_ACTIONS.length === 3, 'Exactly 3 validation actions');
-const actionKeys = CHAPTER3_VALIDATION_ACTIONS.map((a) => a.key);
-assert(actionKeys.includes('isolate_affected_records'), 'Action 1 key: isolate_affected_records');
-assert(actionKeys.includes('verify_source_mappings'), 'Action 2 key: verify_source_mappings');
-assert(actionKeys.includes('assign_owner_continue_unaffected_work'), 'Action 3 key: assign_owner_continue_unaffected_work');
-
-assert(CHAPTER3_CLOSING_INSIGHT === 'Delivery speed matters. Reliable delivery means knowing which work can continue safely and which data must be verified first.', 'Closing insight text matches prompt verbatim');
+const actionIds = Object.keys(TASK3_ACTION_CARDS);
+assert(actionIds.length === 4, 'Task 3 has 4 actions to prioritize');
+assert(actionIds.includes('action_confirm_interface'), 'Action A present');
+assert(actionIds.includes('action_verify_auth'), 'Action B present');
+assert(actionIds.includes('action_prepare_mock_tests'), 'Action C present');
+assert(actionIds.includes('action_validate_integrate'), 'Action D present');
 
 // ── TEST GROUP 4: SESSION STATE PERSISTENCE ──
 console.log('\n--- Test Group 4: Session State Persistence ---');
 
 resetChapter3SessionState();
 let s = getChapter3SessionState();
-assert(s.decision === null, 'Initial decision is null');
-assert(s.selectedActions.length === 0, 'Initial actions array is empty');
-assert(!s.planSubmitted, 'Initial planSubmitted is false');
+assert(s.escalationChoice === null, 'Initial escalationChoice is null');
+assert(!s.task1Submitted, 'Initial task1Submitted is false');
+assert(!s.task2Submitted, 'Initial task2Submitted is false');
+assert(!s.task3Submitted, 'Initial task3Submitted is false');
 assert(!s.completed, 'Initial completed is false');
 
 // Mutate state
 setChapter3SessionState({
-  decision: 'contain_and_validate_affected',
-  selectedActions: ['isolate_affected_records', 'verify_source_mappings'],
+  escalationChoice: 'escalate_aarav',
+  portalAccessGranted: true,
+  task1Selected: 'protocol_mismatch',
+  task1Submitted: true,
 });
 s = getChapter3SessionState();
-assert(s.decision === 'contain_and_validate_affected', 'Decision persisted');
-assert(s.selectedActions.length === 2, 'Actions persisted');
+assert(s.escalationChoice === 'escalate_aarav', 'Escalation choice persisted');
+assert(s.portalAccessGranted === true, 'Portal access flag persisted');
+assert(s.task1Selected === 'protocol_mismatch', 'Task 1 selection persisted');
 
 resetChapter3SessionState();
 s = getChapter3SessionState();
-assert(s.decision === null, 'Reset cleared decision');
+assert(s.escalationChoice === null, 'Reset cleared escalationChoice');
+assert(!s.portalAccessGranted, 'Reset cleared portalAccessGranted');
 
 // ── TEST GROUP 5: REGRESSION OF CHAPTERS 1 AND 2 ──
 console.log('\n--- Test Group 5: Chapters 1 & 2 Regression Protection ---');
