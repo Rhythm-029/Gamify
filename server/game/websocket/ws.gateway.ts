@@ -45,14 +45,18 @@ export function initWebSocket(httpServer: HTTPServer): SocketIOServer {
   });
 
   // Subscribe to Redis pub/sub for World State changes
-  const subscriber = getRedis().duplicate();
-  subscriber.subscribe('state:changed', (err) => {
-    if (err) {
-      console.error('[WS] Redis sub error:', err);
-      return;
-    }
-    console.log('[WS] Subscribed to state:changed');
-  });
+  try {
+    const subscriber = getRedis().duplicate();
+    subscriber.on('error', () => {
+      // In-memory fallback active when Redis is offline
+    });
+    subscriber.subscribe('state:changed', (err) => {
+      if (err) {
+        console.warn('[WS] Redis sub warning (in-memory fallback active):', err.message);
+        return;
+      }
+      console.log('[WS] Subscribed to state:changed');
+    });
 
   subscriber.on('message', (_channel: string, message: string) => {
     try {
@@ -73,9 +77,12 @@ export function initWebSocket(httpServer: HTTPServer): SocketIOServer {
       console.error('[WS] Message handling error:', err);
     }
   });
+} catch (err: any) {
+  console.warn('[WS] Redis pub/sub unavailable, using in-memory state:', err.message);
+}
 
-  console.log('[WS] Gateway initialised');
-  return io;
+console.log('[WS] Gateway initialised');
+return io;
 }
 
 /** Emit an event directly to a session room (for server-initiated events) */
