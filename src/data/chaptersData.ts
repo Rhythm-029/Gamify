@@ -2,9 +2,12 @@
  * chaptersData.ts
  * Master data for all 12 chapters of Brained: The Transformation Room
  */
+import { resetChapter2SessionState } from './chapter2Data';
 import { resetChapter3SessionState } from './chapter3Data';
 import { resetChapter4SessionState } from './chapter4Data';
 import { resetChapter5SessionState } from './chapter5Data';
+import { resetChapter6SessionState } from './chapter6Data';
+import { resetChapter7SessionState } from './chapter7Data';
 
 export type ChapterStatus = 'locked' | 'unlocked' | 'in_progress' | 'completed';
 
@@ -87,25 +90,25 @@ export const CHAPTERS: Chapter[] = [
   {
     id: 3,
     slug: 'chapter-3',
-    title: 'The Integration Trap',
-    subtitle: 'Core Banking APIs, SOAP/REST Integration & LDAP/SSO Dependencies',
+    title: 'UAT Infrastructure & Environment Coordination',
+    subtitle: 'Client Coordination, Technical Prerequisites & Network Gate Verification',
     act: 'I',
     actLabel: 'Act I — Foundation',
     day: 'Day 3–4',
-    duration: '~1m 45s',
+    duration: '~2 mins',
     difficulty: 'Moderate',
     xpReward: 350,
     description:
-      'The player is managing Project Amigo, an HRMS implementation for ICICI Bank involving 80,000 employees and a 90-day deadline. The team is now attempting to integrate the HRMS with the bank\'s existing systems. Services expect JSON over REST, while the legacy ESB uses SOAP/XML. Triage the blocker, choose the safe integration gateway, and sequence dependencies.',
+      'Coordinate with the client to secure UAT environment prerequisites for Project Amigo. Identify incomplete configuration items, confirm network access requirements, and ensure the engineering team has verified prerequisites before configuring integrations.',
     objectives: [
-      { label: 'Triage protocol mismatch & analyze engineering logs', type: 'analysis' },
-      { label: 'Decide integration architecture without bypassing bank controls', type: 'decision' },
-      { label: 'Prioritize & sequence dependency resolution and safe parallel testing', type: 'delivery' },
+      { label: 'Audit client UAT deliverables against developer prerequisites', type: 'analysis' },
+      { label: 'Coordinate stakeholder communication & identify network access gaps', type: 'communication' },
+      { label: 'Ensure verified environment handoff & technical readiness', type: 'delivery' },
     ],
     primaryColor: '#0284c7',
     secondaryColor: '#4f46e5',
     accentColor: '#38bdf8',
-    backgroundIcon: '🔌',
+    backgroundIcon: '🌐',
     status: 'locked',
   },
   {
@@ -159,49 +162,49 @@ export const CHAPTERS: Chapter[] = [
   {
     id: 6,
     slug: 'chapter-6',
-    title: 'The Prototype Review',
-    subtitle: 'Defending Your Build',
+    title: 'The 30,000-User Stress Test',
+    subtitle: 'Production Readiness · Performance Command Centre',
     act: 'II',
     actLabel: 'Act II — Design',
     day: 'Day 11',
-    duration: '~25 mins',
+    duration: '~1 min 45 sec',
     difficulty: 'Hard',
-    xpReward: 400,
+    xpReward: 450,
     description:
-      'Your prototype goes live with the review committee. The CTO finds a gap. The CHRO says adoption will fail. The business sponsor loves it. Defend, adapt, persuade.',
+      'A successful functional test does not mean a system is ready for production. Under a 30,000-user stress test, appraisal latency spikes to 4.2 seconds and the DB connection pool saturates. Diagnose the root cause, sequence technical remediation, verify the retest, and secure dual engineering approvals.',
     objectives: [
-      { label: 'Present prototype to review committee', type: 'stakeholder' },
-      { label: 'Handle critical technical challenge', type: 'decision' },
-      { label: 'Document revised scope in MoM', type: 'communication' },
+      { label: 'Diagnose database connection pool saturation and cache miss root causes', type: 'analysis' },
+      { label: 'Sequence technical remediation across caching, pooling, and retest execution', type: 'decision' },
+      { label: 'Verify retest telemetry and secure dual engineering approvals before release', type: 'delivery' },
     ],
     primaryColor: '#06b6d4',
-    secondaryColor: '#3b82f6',
+    secondaryColor: '#2563eb',
     accentColor: '#22d3ee',
-    backgroundIcon: '🎬',
+    backgroundIcon: '⚡',
     status: 'locked',
   },
   {
     id: 7,
     slug: 'chapter-7',
-    title: 'The Resistance',
-    subtitle: 'Change Management Crisis',
+    title: 'Production Incident: Attendance Sync',
+    subtitle: 'Incident Response & Root Cause Analysis (RCA) Studio',
     act: 'III',
     actLabel: 'Act III — Delivery',
     day: 'Day 12–13',
-    duration: '~30 mins',
-    difficulty: 'Expert',
+    duration: '~2 mins',
+    difficulty: 'Hard',
     xpReward: 500,
     description:
-      'The workforce is pushing back. A union rep files a concern. Middle management sabotages the training sessions. This is where most transformations die. How do you lead through resistance?',
+      'A production issue occurs in the Attendance Sync microservice. 12 branch officers experience intermittent 504 Gateway Timeouts. Deploy the hotfix, verify affected branch officers, document the formal Root Cause Analysis (RCA), and configure preventive monitoring.',
     objectives: [
-      { label: 'De-escalate the union concern', type: 'stakeholder' },
-      { label: 'Design a targeted change program', type: 'delivery' },
-      { label: 'Turn a resistant manager into an advocate', type: 'stakeholder' },
+      { label: 'Execute immediate production response & verify affected branch officers', type: 'decision' },
+      { label: 'Build formal Root Cause Analysis identifying socket memory leaks', type: 'analysis' },
+      { label: 'Establish preventive monitoring alerts and secure incident closure', type: 'delivery' },
     ],
     primaryColor: '#ef4444',
     secondaryColor: '#f97316',
     accentColor: '#f87171',
-    backgroundIcon: '🔥',
+    backgroundIcon: '🚨',
     status: 'locked',
   },
   {
@@ -361,19 +364,47 @@ export function setSessionAssignmentResult(result: any) {
   sessionChapter1Assignment = result;
 }
 
+export function resetChapterSession(chapterId: number) {
+  if (chapterId === 1) {
+    sessionChapter1Assignment = null;
+    try {
+      localStorage.removeItem('brained_chapter1_assignment');
+      localStorage.removeItem('brained_session_assignment');
+    } catch {}
+  } else if (chapterId === 2) {
+    resetChapter2SessionState();
+  } else if (chapterId === 3) {
+    resetChapter3SessionState();
+  } else if (chapterId === 4) {
+    resetChapter4SessionState();
+  } else if (chapterId === 5) {
+    resetChapter5SessionState();
+  } else if (chapterId === 6) {
+    resetChapter6SessionState();
+  } else if (chapterId === 7) {
+    resetChapter7SessionState();
+  }
+}
+
 export function resetChapterStatuses() {
   sessionChapterStatuses = { 1: 'unlocked' };
   sessionChapter1Assignment = null;
+  resetChapter2SessionState();
   resetChapter3SessionState();
   resetChapter4SessionState();
   resetChapter5SessionState();
+  resetChapter6SessionState();
+  resetChapter7SessionState();
   try {
     localStorage.removeItem('brained_chapter_statuses');
     localStorage.removeItem('brained_just_unlocked_chapter');
     localStorage.removeItem('brained_chapter1_assignment');
+    localStorage.removeItem('brained_chapter2_state');
     localStorage.removeItem('brained_chapter3_state');
     localStorage.removeItem('brained_chapter4_state');
     localStorage.removeItem('brained_chapter5_state');
+    localStorage.removeItem('brained_chapter6_state');
+    localStorage.removeItem('brained_chapter7_state');
   } catch {}
 }
 

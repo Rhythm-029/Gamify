@@ -4,7 +4,7 @@ import {
   Lock, Unlock, ChevronDown, ChevronLeft, ChevronRight,
   Sparkles, CheckCircle2, Play, ArrowRight, RotateCcw
 } from 'lucide-react';
-import { CHAPTERS, type Chapter, getStoredChapterStatuses, updateChapterStatus, resetChapterStatuses } from '../../data/chaptersData';
+import { CHAPTERS, type Chapter, getStoredChapterStatuses, updateChapterStatus, resetChapterStatuses, resetChapterSession } from '../../data/chaptersData';
 import { sound } from '../onboarding/SoundEngine';
 /* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */
 import { TemporaryHubChapterSkip, TEMPORARY_CHAPTER_SKIP_ACTIVE } from '../dev/TemporaryChapterSkip';
@@ -37,9 +37,9 @@ const CHAPTER_VISUALS: Record<number, { title: string; subtitle: string; descrip
     yOffset: 14,
   },
   3: {
-    title: 'THE INTEGRATION TRAP',
-    subtitle: 'Act I · Core Banking APIs & SOAP/REST Gateway',
-    description: 'Resolve protocol mismatch between modern JSON/REST HRMS services and legacy SOAP/XML bank systems without compromising security.',
+    title: 'UAT INFRASTRUCTURE COORDINATION',
+    subtitle: 'Act I · Client Alignment & Environment Verification',
+    description: 'Coordinate with client IT to gather UAT environment prerequisites, identify incomplete requirements, and confirm connectivity dependencies before developer setup.',
     thumb: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=300&auto=format&fit=crop&q=80',
     yOffset: 26,
   },
@@ -58,16 +58,16 @@ const CHAPTER_VISUALS: Record<number, { title: string; subtitle: string; descrip
     yOffset: 56,
   },
   6: {
-    title: 'The Change Request',
-    subtitle: 'Act II · Scope Creep Crisis',
-    description: 'A surprise client change order threatens project timeline and budget. Negotiate phased releases without sacrificing quality.',
-    thumb: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=300&auto=format&fit=crop&q=80',
+    title: 'THE 30,000-USER STRESS TEST',
+    subtitle: 'Act II · Performance Command Centre',
+    description: 'A successful functional test does not mean a system is ready for production. Diagnose database pool saturation, sequence technical fixes, rerun the 30,000-user stress test, and secure dual engineering approvals.',
+    thumb: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=300&auto=format&fit=crop&q=80',
     yOffset: 72,
   },
   7: {
-    title: 'Technical Due Diligence',
-    subtitle: 'Act III · Architecture Review',
-    description: 'InfoSec and Enterprise Architecture subject the solution to intense stress testing and penetration compliance gates.',
+    title: 'ATTENDANCE SYNC PRODUCTION INCIDENT',
+    subtitle: 'Act III · Incident Response & RCA Studio',
+    description: 'A production incident occurs in Attendance Sync. 12 branch officers experience intermittent 504 Gateway Timeouts. Deploy the hotfix, verify branch recovery, document the RCA, and configure preventive monitoring.',
     thumb: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=300&auto=format&fit=crop&q=80',
     yOffset: 90,
   },
@@ -111,9 +111,22 @@ const CHAPTER_VISUALS: Record<number, { title: string; subtitle: string; descrip
 export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig, onStartChapter }) => {
   const [chapterStatuses, setChapterStatuses] = useState<Record<number, string>>(() => getStoredChapterStatuses());
   const [selectedChapterId, setSelectedChapterId] = useState<number>(() => {
+    // If returning after unlocking a chapter, start by highlighting the chapter that was just finished,
+    // so the golden boundary can smoothly slide to the newly unlocked chapter!
+    const justUnlocked = typeof window !== 'undefined' ? localStorage.getItem('brained_just_unlocked_chapter') : null;
+    if (justUnlocked) {
+      const target = parseInt(justUnlocked, 10);
+      if (target >= 2 && target <= 12) {
+        return target - 1;
+      }
+    }
     const statuses = getStoredChapterStatuses();
-    if (statuses[3] === 'unlocked' || statuses[3] === 'in_progress') return 3;
-    if (statuses[2] === 'unlocked' || statuses[2] === 'in_progress') return 2;
+    for (let i = 12; i >= 1; i--) {
+      if (statuses[i] === 'unlocked' || statuses[i] === 'in_progress') return i;
+    }
+    for (let i = 12; i >= 1; i--) {
+      if (statuses[i] === 'completed') return Math.min(12, i + 1);
+    }
     return 1;
   });
   const [hoveredChapter, setHoveredChapter] = useState<number | null>(null);
@@ -126,94 +139,51 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
   const playerName = playerConfig?.name || localStorage.getItem('brained_player_name') || 'Riya Mehta';
   const playerRole = playerConfig?.role || 'Digital Transformer';
 
-  // Check if Chapter 2, 3, or 4 was just unlocked from previous completion
+  // Check if a chapter was just unlocked from previous completion
   useEffect(() => {
     const justUnlocked = localStorage.getItem('brained_just_unlocked_chapter');
-    const autoLaunch = localStorage.getItem('brained_auto_launch_chapter');
-
-    if (justUnlocked === '2') {
-      localStorage.removeItem('brained_just_unlocked_chapter');
-
-      // Start on Chapter 1, then smoothly slide the golden boundary to Chapter 2!
-      setSelectedChapterId(1);
-      
-      const timer = setTimeout(() => {
-        // Shift golden boundary and larger box from Chapter 1 to Chapter 2
-        setSelectedChapterId(2);
-        setChapterStatuses(getStoredChapterStatuses());
-        setUnlockedBanner('CHAPTER 02 UNLOCKED: PREREQUISITES & UI/UX SIGNOFF');
-        sound.playSystemClearance();
-
-        // Smooth scroll container to frame Chapter 2 comfortably
-        if (scrollContainerRef.current) {
-          scrollContainerRef.current.scrollTo({ left: 100, behavior: 'smooth' });
-        }
-
-        setTimeout(() => setUnlockedBanner(null), 3500);
-      }, 700);
-
-      return () => clearTimeout(timer);
-    } else if (justUnlocked === '3') {
-      localStorage.removeItem('brained_just_unlocked_chapter');
-
-      // Start on Chapter 2, then smoothly slide the golden boundary to Chapter 3!
-      setSelectedChapterId(2);
-      
-      const timer = setTimeout(() => {
-        // Shift golden boundary and larger box to Chapter 3
-        setSelectedChapterId(3);
-        setChapterStatuses(getStoredChapterStatuses());
-        setUnlockedBanner('CHAPTER 03 UNLOCKED: THE INTEGRATION TRAP');
-        sound.playSystemClearance();
-
-        // Smooth scroll container to frame Chapter 3 comfortably
-        if (scrollContainerRef.current) {
-          scrollContainerRef.current.scrollTo({ left: 320, behavior: 'smooth' });
-        }
-
-        setTimeout(() => setUnlockedBanner(null), 3500);
-      }, 700);
-
-      return () => clearTimeout(timer);
-    } else if (justUnlocked === '4') {
-      localStorage.removeItem('brained_just_unlocked_chapter');
-
-      setSelectedChapterId(3);
-      
-      const timer = setTimeout(() => {
-        setSelectedChapterId(4);
-        setChapterStatuses(getStoredChapterStatuses());
-        setUnlockedBanner('CHAPTER 04 UNLOCKED');
-        sound.playSystemClearance();
-
-        if (scrollContainerRef.current) {
-          scrollContainerRef.current.scrollTo({ left: 540, behavior: 'smooth' });
-        }
-
-        setTimeout(() => setUnlockedBanner(null), 3500);
-      }, 700);
-
-      return () => clearTimeout(timer);
-    } else if (justUnlocked === '5') {
-      localStorage.removeItem('brained_just_unlocked_chapter');
-
-      setSelectedChapterId(4);
-      
-      const timer = setTimeout(() => {
-        setSelectedChapterId(5);
-        setChapterStatuses(getStoredChapterStatuses());
-        setUnlockedBanner('CHAPTER 05 UNLOCKED: THE LAUNCH DECISION');
-        sound.playSystemClearance();
-
-        if (scrollContainerRef.current) {
-          scrollContainerRef.current.scrollTo({ left: 780, behavior: 'smooth' });
-        }
-
-        setTimeout(() => setUnlockedBanner(null), 3500);
-      }, 700);
-
-      return () => clearTimeout(timer);
+    if (!justUnlocked) {
+      // Smoothly center the initially selected card in view
+      const targetScroll = Math.max(0, (selectedChapterId - 1) * 220 - 100);
+      scrollContainerRef.current?.scrollTo({ left: targetScroll, behavior: 'smooth' });
+      return;
     }
+
+    const nextChId = parseInt(justUnlocked, 10);
+    if (isNaN(nextChId) || nextChId < 2 || nextChId > 12) {
+      localStorage.removeItem('brained_just_unlocked_chapter');
+      return;
+    }
+
+    const prevChId = nextChId - 1;
+    // Ensure we start on the completed chapter
+    setSelectedChapterId(prevChId);
+    if (scrollContainerRef.current) {
+      const initialScroll = Math.max(0, (prevChId - 1) * 220 - 100);
+      scrollContainerRef.current.scrollTo({ left: initialScroll, behavior: 'instant' as ScrollBehavior });
+    }
+
+    // After a brief dramatic pause, slide golden highlighting and scroll to the new chapter
+    const timer = setTimeout(() => {
+      localStorage.removeItem('brained_just_unlocked_chapter');
+      setSelectedChapterId(nextChId);
+      setChapterStatuses(getStoredChapterStatuses());
+
+      const visual = CHAPTER_VISUALS[nextChId];
+      const title = visual ? visual.title.toUpperCase() : `CHAPTER ${nextChId}`;
+      setUnlockedBanner(`CHAPTER ${String(nextChId).padStart(2, '0')} UNLOCKED: ${title}`);
+      sound.playSystemClearance();
+
+      // Smooth scroll container to frame the new chapter comfortably
+      if (scrollContainerRef.current) {
+        const targetScroll = Math.max(0, (nextChId - 1) * 220 - 100);
+        scrollContainerRef.current.scrollTo({ left: targetScroll, behavior: 'smooth' });
+      }
+
+      setTimeout(() => setUnlockedBanner(null), 3500);
+    }, 700);
+
+    return () => clearTimeout(timer);
   }, []);
 
   // Auto-launch countdown effect
@@ -229,6 +199,13 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
     }, 1000);
     return () => clearTimeout(timer);
   }, [autoLaunchCountdown, autoLaunchTarget, onStartChapter]);
+
+  const handleLaunchChapter = (chId: number, isReplay: boolean) => {
+    if (isReplay) {
+      resetChapterSession(chId);
+    }
+    onStartChapter(chId);
+  };
 
   const handleCardClick = (chId: number) => {
     /* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */
@@ -510,6 +487,7 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
               return (
                 <motion.div
                   key={ch.id}
+                  id={`chapter-card-${ch.id}`}
                   layout
                   transition={{ type: 'spring', damping: 25, stiffness: 280 }}
                   onMouseEnter={() => setHoveredChapter(ch.id)}
@@ -610,7 +588,7 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
                         whileTap={{ scale: 0.98 }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          onStartChapter(ch.id);
+                          handleLaunchChapter(ch.id, isCompleted);
                         }}
                         className="w-full py-2.5 rounded-lg bg-[#f59e0b] hover:bg-[#fbbf24] text-slate-950 font-bold text-xs tracking-wider flex items-center justify-center space-x-1.5 transition-all shadow-[0_0_15px_rgba(245,158,11,0.4)] cursor-pointer"
                       >

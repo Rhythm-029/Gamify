@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useSyncExternalStore } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Folder, Code2, Bell, Sparkles, FileCheck2 } from 'lucide-react';
+import { Folder, Code2, Bell, Sparkles, FileCheck2, Activity } from 'lucide-react';
 import { BrainedMenuBar } from './BrainedMenuBar';
 import { BrainedDock } from './BrainedDock';
 import { BrainedWindow } from './BrainedWindow';
@@ -24,7 +24,7 @@ import { TitanKickoffMeeting } from '../apps/TitanKickoffMeeting';
 import { ReadMeAIApp } from '../apps/ReadMeAIApp';
 import { ProjectAmigoScopeAssignment, type ScopeAssignmentResult } from '../apps/ProjectAmigoScopeAssignment';
 import { ProjectAmigoInternalBriefViewer } from '../apps/ProjectAmigoInternalBriefViewer';
-import { getSessionAssignmentResult, setSessionAssignmentResult } from '../../data/chaptersData';
+import { getSessionAssignmentResult, setSessionAssignmentResult, resetChapterSession } from '../../data/chaptersData';
 import { Chapter1CompletionModal } from '../apps/Chapter1CompletionModal';
 import { CeraIDEApp } from '../apps/CeraIDEApp';
 import { IdeateImpactApp } from '../apps/IdeateImpactApp';
@@ -102,6 +102,29 @@ import { Chapter5Banner } from '../chapter5/Chapter5Banner';
 import { Chapter5MeetingApp } from '../chapter5/Chapter5MeetingApp';
 import { ReleaseReadinessBoardApp } from '../chapter5/ReleaseReadinessBoardApp';
 import { Chapter5ScorecardModal } from '../chapter5/Chapter5ScorecardModal';
+
+// Chapter 6 Components & Data
+import type { Chapter6State } from '../../types/chapter6';
+import {
+  getChapter6SessionState,
+  setChapter6SessionState,
+} from '../../data/chapter6Data';
+import { Chapter6Banner } from '../chapter6/Chapter6Banner';
+import { Chapter6MeetingApp } from '../chapter6/Chapter6MeetingApp';
+import { PerformanceCommandCentreApp } from '../chapter6/PerformanceCommandCentreApp';
+import { Chapter6ScorecardModal } from '../chapter6/Chapter6ScorecardModal';
+
+// Chapter 7 Components & Data
+import type { Chapter7State } from '../../types/chapter7';
+import {
+  getChapter7SessionState,
+  setChapter7SessionState,
+} from '../../data/chapter7Data';
+import { Chapter7Banner } from '../chapter7/Chapter7Banner';
+import { Chapter7MeetingApp } from '../chapter7/Chapter7MeetingApp';
+import { IncidentResponseStudioApp } from '../chapter7/IncidentResponseStudioApp';
+import { Chapter7ScorecardModal } from '../chapter7/Chapter7ScorecardModal';
+import { Wrench } from 'lucide-react';
 
 interface BrainedOSDesktopProps {
   onOpenEventModal?: () => void;
@@ -554,48 +577,84 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
     });
   };
 
-  // ── Chapter 3 Kickoff Incoming Call Notification — auto-fires ~1.5s after desktop is ready ──
+  // ── Chapter 6 Interactive Simulation State ──
+  const [chapter6State, setChapter6State] = useState<Chapter6State>(() => getChapter6SessionState());
+  const [isChapter6ScorecardOpen, setIsChapter6ScorecardOpen] = useState(false);
+
+  const handleUpdateChapter6State = (
+    updater: Partial<Chapter6State> | ((prev: Chapter6State) => Chapter6State)
+  ) => {
+    setChapter6State((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : { ...prev, ...updater };
+      setChapter6SessionState(next);
+      return next;
+    });
+  };
+
+  // ── Chapter 7 Interactive Simulation State ──
+  const [chapter7State, setChapter7State] = useState<Chapter7State>(() => getChapter7SessionState());
+  const [isChapter7ScorecardOpen, setIsChapter7ScorecardOpen] = useState(false);
+
+  const handleUpdateChapter7State = (
+    updater: Partial<Chapter7State> | ((prev: Chapter7State) => Chapter7State)
+  ) => {
+    setChapter7State((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : { ...prev, ...updater };
+      setChapter7SessionState(next);
+      return next;
+    });
+  };
+
+  // ── Chapter 3 Kickoff Notification from Daniel (UAT Prerequisites) ──
   useEffect(() => {
     if (bootStep !== 'ready' || activeChapter !== 3) return;
-    if (seenNotifIds.current.has('ch3_daniel_call')) return;
+    if (seenNotifIds.current.has('ch3_daniel_uat_request')) return;
 
     const timer = setTimeout(() => {
       sound.playMessagePing();
       pushNotification({
-        id: 'ch3_daniel_call',
+        id: 'ch3_daniel_uat_request',
         app: 'Teams',
-        title: 'Daniel — Developer',
-        subtitle: 'Project Amigo | Integration Blocker',
-        body: 'Incoming emergency call from Daniel regarding critical Core Banking API integration failure.',
+        title: 'Daniel Brooks',
+        subtitle: 'Lead Developer · UAT Environment',
+        body: "Hey, we're getting ready to set up the UAT environment for Project Amigo. Could you get 5 configuration details confirmed with the bank?",
         timestamp: 'Now',
-        actionText: 'Accept Call',
-        onActionAppId: 'chapter3_meeting',
-        isCall: true,
+        actionText: 'Open in Chat',
+        onActionAppId: 'teams',
       });
-    }, 1500);
+    }, 1200);
     return () => clearTimeout(timer);
   }, [bootStep, activeChapter]);
 
-  // ── Chapter 3 Portal Access Granted Notification ──
+  // ── Chapter 3 Sophia Response Sequence after Email Sent ──
   useEffect(() => {
-    if (activeChapter !== 3 || !chapter3State.portalAccessGranted) return;
-    if (seenNotifIds.current.has('ch3_portal_granted_notif')) return;
+    if (activeChapter !== 3 || !chapter3State.emailSentAt || chapter3State.v1Delivered) return;
+    if (seenNotifIds.current.has('ch3_sophia_uat_response')) return;
 
+    // After email is sent, wait 1.8s, then Sophia sends her message and delivers v1
     const timer = setTimeout(() => {
-      sound.playSystemClearance();
+      sound.playMessagePing();
       pushNotification({
-        id: 'ch3_portal_granted_notif',
+        id: 'ch3_sophia_uat_response',
         app: 'Teams',
-        title: 'Aarav Kapoor',
-        subtitle: 'Project Manager · Access Granted',
-        body: 'ACCESS GRANTED — PROJECT AMIGO INTEGRATION PORTAL: Review technical evidence and complete the Integration Triage assignment.',
+        title: 'Sophia Bennett',
+        subtitle: 'Head of HR · Client Deliverable',
+        body: "Hey! Yes, sure. I've got the details our IT team shared. Let me send them over.",
         timestamp: 'Now',
-        actionText: 'Open Portal',
-        onActionAppId: 'integration_portal',
+        actionText: 'Open in Chat',
+        onActionAppId: 'teams',
       });
-    }, 600);
+
+      handleUpdateChapter3State({
+        sophiaTyping: false,
+        v1Delivered: true,
+        activeChatRecipient: 'sophia',
+        step: 'sophia_v1_delivered',
+      });
+    }, 1800);
+
     return () => clearTimeout(timer);
-  }, [chapter3State.portalAccessGranted, activeChapter]);
+  }, [chapter3State.emailSentAt, chapter3State.v1Delivered, activeChapter]);
 
   // ── Chapter 4 Sophia Incoming Call Notification (Urgent: Additional Appraisal Requirement) ──
   useEffect(() => {
@@ -682,6 +741,92 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
     }, 600);
     return () => clearTimeout(timer);
   }, [chapter5State.meetingCompleted, activeChapter]);
+
+  // ── Chapter 6 Kickoff Incoming Call Notification (30,000-User Stress Test Review) ──
+  useEffect(() => {
+    if (bootStep !== 'ready' || activeChapter !== 6) return;
+    if (seenNotifIds.current.has('ch6_stress_test_call')) return;
+
+    const timer = setTimeout(() => {
+      sound.playMessagePing();
+      pushNotification({
+        id: 'ch6_stress_test_call',
+        app: 'Teams',
+        title: 'Incoming call',
+        subtitle: 'Durgaprasad Karri | SRE · Daniel | Lead Developer',
+        body: 'Can you join the performance review? We\'ve got an issue with the latest test.',
+        timestamp: 'Now',
+        actionText: 'Join meeting',
+        onActionAppId: 'chapter6_meeting',
+        isCall: true,
+      });
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [bootStep, activeChapter]);
+
+  // ── Chapter 6 Command Centre Active Notification ──
+  useEffect(() => {
+    if (activeChapter !== 6 || !chapter6State.meetingCompleted) return;
+    if (seenNotifIds.current.has('ch6_command_centre_unlocked_notif')) return;
+
+    const timer = setTimeout(() => {
+      sound.playSystemClearance();
+      pushNotification({
+        id: 'ch6_command_centre_unlocked_notif',
+        app: 'Teams',
+        title: 'PERFORMANCE COMMAND CENTRE ACTIVE',
+        subtitle: 'Diagnose Bottleneck & Sequence Recovery',
+        body: 'Investigate the 4.2s latency spike, optimize Redis caching and connection pool, and secure dual approvals.',
+        timestamp: 'Now',
+        actionText: 'Open Command Centre',
+        onActionAppId: 'performance_command_centre',
+      });
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [chapter6State.meetingCompleted, activeChapter]);
+
+  // ── Chapter 7 Kickoff Incoming Call Notification (Attendance Sync Incident) ──
+  useEffect(() => {
+    if (bootStep !== 'ready' || activeChapter !== 7) return;
+    if (seenNotifIds.current.has('ch7_attendance_incident_call')) return;
+
+    const timer = setTimeout(() => {
+      sound.playMessagePing();
+      pushNotification({
+        id: 'ch7_attendance_incident_call',
+        app: 'Teams',
+        title: 'Incoming call',
+        subtitle: 'Martha | Branch Ops · Daniel | Lead Developer',
+        body: 'Jane! We\'ve got a production issue. The Attendance Sync service is returning intermittent 504 errors. 12 branch officers reported login issues.',
+        timestamp: 'Now',
+        actionText: 'Join meeting',
+        onActionAppId: 'chapter7_meeting',
+        isCall: true,
+      });
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [bootStep, activeChapter]);
+
+  // ── Chapter 7 Incident Response Studio Active Notification ──
+  useEffect(() => {
+    if (activeChapter !== 7 || !chapter7State.meetingCompleted) return;
+    if (seenNotifIds.current.has('ch7_studio_unlocked_notif')) return;
+
+    const timer = setTimeout(() => {
+      sound.playSystemClearance();
+      pushNotification({
+        id: 'ch7_studio_unlocked_notif',
+        app: 'Teams',
+        title: 'INCIDENT RESPONSE STUDIO ACTIVE',
+        subtitle: 'Attendance Sync Microservice 504 Errors',
+        body: 'Deploy hotfix PR #142, document the Root Cause Analysis, and configure preventive memory thresholds.',
+        timestamp: 'Now',
+        actionText: 'Open Studio',
+        onActionAppId: 'incident_studio',
+      });
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [chapter7State.meetingCompleted, activeChapter]);
 
 
 
@@ -854,6 +999,10 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
     ideate_studio: { title: 'Ideate & Impact Studio — Project Amigo', icon: <Sparkles className="w-4 h-4 text-purple-400" /> },
     chapter5_meeting: { title: 'Microsoft Teams — Project Amigo Sprint 1 Release Check', icon: <span>📹</span> },
     release_readiness: { title: 'Release Readiness Board — Project Amigo', icon: <FileCheck2 className="w-4 h-4 text-emerald-400" /> },
+    chapter6_meeting: { title: 'Microsoft Teams — 30,000-User Stress Test Performance Review', icon: <span>📹</span> },
+    performance_command_centre: { title: 'Performance Command Centre — Project Amigo Cluster APM', icon: <Activity className="w-4 h-4 text-cyan-400" /> },
+    chapter7_meeting: { title: 'Microsoft Teams — Attendance Sync Incident Response', icon: <span>📹</span> },
+    incident_studio: { title: 'Incident Response & RCA Studio — Attendance Sync', icon: <Wrench className="w-4 h-4 text-rose-400" /> },
     brief: { title: 'Preview — Project_Amigo_Internal_Brief.pdf', icon: <span>📄</span> },
     assignment: { title: 'Project Amigo — Initial Planning · Assignment 01', icon: <span>📋</span> },
     review: { title: 'Microsoft Teams — Prototype Review · Day 7', icon: <span>📹</span> },
@@ -963,9 +1112,16 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
       {/* CHAPTER 3 STATUS BANNER */}
       {activeChapter === 3 && (
         <Chapter3Banner
-          onOpenMeeting={() => handleOpenApp('chapter3_meeting')}
-          onOpenWorkspace={() => handleOpenApp('integration_portal')}
-          portalUnlocked={chapter3State.portalAccessGranted}
+          chapter3State={chapter3State}
+          onOpenDanielChat={() => {
+            handleUpdateChapter3State({ activeChatRecipient: 'daniel' });
+            handleOpenApp('teams');
+          }}
+          onOpenSophiaChat={() => {
+            handleUpdateChapter3State({ activeChatRecipient: 'sophia' });
+            handleOpenApp('teams');
+          }}
+          onOpenScorecard={() => setIsChapter3ScorecardOpen(true)}
         />
       )}
 
@@ -984,6 +1140,24 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
           onOpenMeeting={() => handleOpenApp('chapter5_meeting')}
           onOpenBoard={() => handleOpenApp('release_readiness')}
           boardUnlocked={chapter5State.meetingCompleted || chapter5State.boardOpened}
+        />
+      )}
+
+      {/* CHAPTER 6 STATUS BANNER */}
+      {activeChapter === 6 && (
+        <Chapter6Banner
+          onOpenMeeting={() => handleOpenApp('chapter6_meeting')}
+          onOpenCommandCentre={() => handleOpenApp('performance_command_centre')}
+          commandCentreUnlocked={chapter6State.meetingCompleted || chapter6State.commandCentreOpened}
+        />
+      )}
+
+      {/* CHAPTER 7 STATUS BANNER */}
+      {activeChapter === 7 && (
+        <Chapter7Banner
+          onOpenMeeting={() => handleOpenApp('chapter7_meeting')}
+          onOpenStudio={() => handleOpenApp('incident_studio')}
+          studioUnlocked={chapter7State.meetingCompleted || chapter7State.studioOpened}
         />
       )}
 
@@ -1120,17 +1294,33 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
                   }}
                   hasReadBrief={hasReadBrief}
                   onOpenChapterCompletion={() => setIsChapter1CompletionOpen(true)}
-                  initialChatId={activeChapter >= 2 ? 'daniel' : 'aarav'}
+                  initialChatId={activeChapter === 3 ? (chapter3State.activeChatRecipient || 'daniel') : activeChapter >= 2 ? 'daniel' : 'aarav'}
                   activeChapter={activeChapter}
                   chapter2State={chapter2State}
                   chapter3State={chapter3State}
+                  onUpdateChapter3State={handleUpdateChapter3State}
+                  onOpenMailComposer={(to, email, subject, body) => {
+                    setEmailComposer({
+                      isOpen: true,
+                      to: `${to} <${email}>`,
+                      subject,
+                      body,
+                      buttonText: 'Send',
+                      onSend: () => {
+                        setEmailComposer(null);
+                        sound.playSystemClearance();
+                        handleUpdateChapter3State({
+                          step: 'email_sent_to_sophia',
+                          emailSentAt: new Date().toISOString(),
+                          sophiaTyping: true,
+                        });
+                      },
+                    });
+                  }}
                   onOpenIncidentPanel={() => handleOpenApp('incident')}
                   onOpenCommunicationSetup={() => handleOpenApp('communication')}
                   onOpenDesignReview={() => handleOpenApp('design_review')}
                   onOpenSprintReadiness={() => handleOpenApp('readiness')}
-                  onOpenDataIntegrityTriage={() => handleOpenApp('integration_portal')}
-                  onOpenChapter3Meeting={() => handleOpenApp('chapter3_meeting')}
-                  onOpenChapter3Portal={() => handleOpenApp('integration_portal')}
                   onOpenChapter3Scorecard={() => setIsChapter3ScorecardOpen(true)}
                 />
               )}
@@ -1232,6 +1422,58 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
                   onUpdateState={handleUpdateChapter5State}
                   onReturnToMeeting={() => handleOpenApp('chapter5_meeting')}
                   onSubmitCompletePlan={() => handleOpenApp('chapter5_meeting')}
+                />
+              )}
+              {/* CHAPTER 6 SIMULATION APPS */}
+              {activeAppId === 'chapter6_meeting' && (
+                <Chapter6MeetingApp
+                  chapter6State={chapter6State}
+                  onUpdateState={handleUpdateChapter6State}
+                  onOpenCommandCentre={() => handleOpenApp('performance_command_centre')}
+                  onOpenScorecard={() => setIsChapter6ScorecardOpen(true)}
+                />
+              )}
+              {activeAppId === 'performance_command_centre' && (
+                <PerformanceCommandCentreApp
+                  chapter6State={chapter6State}
+                  onUpdateState={handleUpdateChapter6State}
+                  onReturnToMeeting={() => handleOpenApp('chapter6_meeting')}
+                  onOpenScorecard={() => setIsChapter6ScorecardOpen(true)}
+                  onNotifyDesktop={(title, body) => {
+                    pushNotification({
+                      id: `ch6_desktop_notif_${Date.now()}`,
+                      app: 'Teams',
+                      title,
+                      body,
+                      timestamp: 'Now',
+                    });
+                  }}
+                />
+              )}
+              {/* CHAPTER 7 SIMULATION APPS */}
+              {activeAppId === 'chapter7_meeting' && (
+                <Chapter7MeetingApp
+                  chapter7State={chapter7State}
+                  onUpdateState={handleUpdateChapter7State}
+                  onOpenStudio={() => handleOpenApp('incident_studio')}
+                  onOpenScorecard={() => setIsChapter7ScorecardOpen(true)}
+                />
+              )}
+              {activeAppId === 'incident_studio' && (
+                <IncidentResponseStudioApp
+                  chapter7State={chapter7State}
+                  onUpdateState={handleUpdateChapter7State}
+                  onReturnToMeeting={() => handleOpenApp('chapter7_meeting')}
+                  onOpenScorecard={() => setIsChapter7ScorecardOpen(true)}
+                  onNotifyDesktop={(title, body) => {
+                    pushNotification({
+                      id: `ch7_desktop_notif_${Date.now()}`,
+                      app: 'Teams',
+                      title,
+                      body,
+                      timestamp: 'Now',
+                    });
+                  }}
                 />
               )}
               {activeAppId === 'slack' && <SlackOSApp />}
@@ -1368,6 +1610,12 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
       {/* PAUSE / EXIT GATE */}
       <PauseExitGate onConfirmExit={() => setBootStep('booting')} />
 
+      {/* CHAPTER REPLAY HANDLER */}
+      {(() => {
+        // Defined inline or above
+        return null;
+      })()}
+
       {/* CHAPTER 1 COMPLETION MODAL */}
       {isChapter1CompletionOpen && (
         <Chapter1CompletionModal
@@ -1387,7 +1635,15 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
             setIsChapter1CompletionOpen(false);
             handleCloseApp('teams');
             handleCloseApp('assignment');
+            localStorage.setItem('brained_just_unlocked_chapter', '2');
             if (onReturnToChapterSelect) onReturnToChapterSelect();
+          }}
+          onReplayChapter={() => {
+            setIsChapter1CompletionOpen(false);
+            handleCloseApp('teams');
+            handleCloseApp('assignment');
+            resetChapterSession(1);
+            if (onStartChapter) onStartChapter(1);
           }}
         />
       )}
@@ -1414,6 +1670,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
             setIsChapter2ScorecardOpen(false);
             handleCloseApp('teams');
             handleCloseApp('read_me_ai');
+            localStorage.setItem('brained_just_unlocked_chapter', '3');
             if (onReturnToChapterSelect) {
               onReturnToChapterSelect();
             } else if (onStartChapter) {
@@ -1424,7 +1681,15 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
             setIsChapter2ScorecardOpen(false);
             handleCloseApp('teams');
             handleCloseApp('read_me_ai');
+            localStorage.setItem('brained_just_unlocked_chapter', '3');
             if (onReturnToChapterSelect) onReturnToChapterSelect();
+          }}
+          onReplayChapter={() => {
+            setIsChapter2ScorecardOpen(false);
+            handleCloseApp('teams');
+            handleCloseApp('read_me_ai');
+            resetChapterSession(2);
+            if (onStartChapter) onStartChapter(2);
           }}
         />
       )}
@@ -1435,11 +1700,18 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
           scorecardData={chapter3State.scorecard}
           onProceedToNextChapter={() => {
             setIsChapter3ScorecardOpen(false);
+            localStorage.setItem('brained_just_unlocked_chapter', '4');
             if (onReturnToChapterSelect) onReturnToChapterSelect();
           }}
           onReturnToChapterSelect={() => {
             setIsChapter3ScorecardOpen(false);
+            localStorage.setItem('brained_just_unlocked_chapter', '4');
             if (onReturnToChapterSelect) onReturnToChapterSelect();
+          }}
+          onReplayChapter={() => {
+            setIsChapter3ScorecardOpen(false);
+            resetChapterSession(3);
+            if (onStartChapter) onStartChapter(3);
           }}
         />
       )}
@@ -1450,11 +1722,18 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
           scorecardData={chapter4State.scorecard}
           onProceedToNextChapter={() => {
             setIsChapter4ScorecardOpen(false);
+            localStorage.setItem('brained_just_unlocked_chapter', '5');
             if (onReturnToChapterSelect) onReturnToChapterSelect();
           }}
           onReturnToChapterSelect={() => {
             setIsChapter4ScorecardOpen(false);
+            localStorage.setItem('brained_just_unlocked_chapter', '5');
             if (onReturnToChapterSelect) onReturnToChapterSelect();
+          }}
+          onReplayChapter={() => {
+            setIsChapter4ScorecardOpen(false);
+            resetChapterSession(4);
+            if (onStartChapter) onStartChapter(4);
           }}
         />
       )}
@@ -1465,11 +1744,62 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
           scorecardData={chapter5State.scorecard}
           onProceedToNextChapter={() => {
             setIsChapter5ScorecardOpen(false);
+            localStorage.setItem('brained_just_unlocked_chapter', '6');
             if (onReturnToChapterSelect) onReturnToChapterSelect();
           }}
           onReturnToChapterSelect={() => {
             setIsChapter5ScorecardOpen(false);
+            localStorage.setItem('brained_just_unlocked_chapter', '6');
             if (onReturnToChapterSelect) onReturnToChapterSelect();
+          }}
+          onReplayChapter={() => {
+            setIsChapter5ScorecardOpen(false);
+            resetChapterSession(5);
+            if (onStartChapter) onStartChapter(5);
+          }}
+        />
+      )}
+
+      {/* CHAPTER 6 SCORECARD MODAL */}
+      {isChapter6ScorecardOpen && (
+        <Chapter6ScorecardModal
+          scorecardData={chapter6State.scorecard}
+          onProceedToNextChapter={() => {
+            setIsChapter6ScorecardOpen(false);
+            localStorage.setItem('brained_just_unlocked_chapter', '7');
+            if (onReturnToChapterSelect) onReturnToChapterSelect();
+          }}
+          onReturnToChapterSelect={() => {
+            setIsChapter6ScorecardOpen(false);
+            localStorage.setItem('brained_just_unlocked_chapter', '7');
+            if (onReturnToChapterSelect) onReturnToChapterSelect();
+          }}
+          onReplayChapter={() => {
+            setIsChapter6ScorecardOpen(false);
+            resetChapterSession(6);
+            if (onStartChapter) onStartChapter(6);
+          }}
+        />
+      )}
+
+      {/* CHAPTER 7 SCORECARD MODAL */}
+      {isChapter7ScorecardOpen && (
+        <Chapter7ScorecardModal
+          scorecardData={chapter7State.scorecard}
+          onProceedToNextChapter={() => {
+            setIsChapter7ScorecardOpen(false);
+            localStorage.setItem('brained_just_unlocked_chapter', '8');
+            if (onReturnToChapterSelect) onReturnToChapterSelect();
+          }}
+          onReturnToChapterSelect={() => {
+            setIsChapter7ScorecardOpen(false);
+            localStorage.setItem('brained_just_unlocked_chapter', '8');
+            if (onReturnToChapterSelect) onReturnToChapterSelect();
+          }}
+          onReplayChapter={() => {
+            setIsChapter7ScorecardOpen(false);
+            resetChapterSession(7);
+            if (onStartChapter) onStartChapter(7);
           }}
         />
       )}

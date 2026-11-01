@@ -7,11 +7,7 @@
  * =========================================================================
  */
 
-import { resetChapter2SessionState } from '../data/chapter2Data';
-import { resetChapter3SessionState } from '../data/chapter3Data';
-import { resetChapter4SessionState } from '../data/chapter4Data';
-import { resetChapter5SessionState } from '../data/chapter5Data';
-import { updateChapterStatus } from '../data/chaptersData';
+import { updateChapterStatus, resetChapterSession } from '../data/chaptersData';
 
 /** Global toggle flag for temporary chapter skipping */
 export const TEMPORARY_CHAPTER_SKIP_ACTIVE = true;
@@ -48,9 +44,9 @@ export const DEV_CHAPTERS: DevChapterOption[] = [
   {
     id: 3,
     label: 'Chapter 03',
-    badge: 'INTEGRATION',
-    title: 'The Integration Trap',
-    subtitle: 'Core Banking APIs (SOAP/REST Gateway)',
+    badge: 'UAT COORDINATION',
+    title: 'UAT Infrastructure Coordination',
+    subtitle: 'Client Alignment & Environment Verification',
     icon: '🔌',
     color: '#6366f1',
   },
@@ -72,6 +68,24 @@ export const DEV_CHAPTERS: DevChapterOption[] = [
     icon: '🚢',
     color: '#10b981',
   },
+  {
+    id: 6,
+    label: 'Chapter 06',
+    badge: 'STRESS TEST',
+    title: 'The 30,000-User Stress Test',
+    subtitle: 'Performance Command Centre & Retest',
+    icon: '⚡',
+    color: '#06b6d4',
+  },
+  {
+    id: 7,
+    label: 'Chapter 07',
+    badge: 'INCIDENT & RCA',
+    title: 'Production Incident: Attendance Sync',
+    subtitle: 'Incident Response & RCA Studio',
+    icon: '🚨',
+    color: '#ef4444',
+  },
 ];
 
 /** Resets target chapter state and initiates transition */
@@ -86,10 +100,7 @@ export function executeChapterJump(
 
   // Cleanly reset the session state of the target chapter for a fresh test
   try {
-    if (targetChapterId === 2) resetChapter2SessionState();
-    else if (targetChapterId === 3) resetChapter3SessionState();
-    else if (targetChapterId === 4) resetChapter4SessionState();
-    else if (targetChapterId === 5) resetChapter5SessionState();
+    resetChapterSession(targetChapterId);
   } catch {}
 
   onStartChapter(targetChapterId);
