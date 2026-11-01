@@ -1,33 +1,33 @@
 {
   "id": 8,
   "slug": "chapter-8",
-  "title": "Production Stabilisation & Project Handover",
-  "subtitle": "Final Handover & Enterprise Acceptance",
+  "title": "Security Attacks, Policies & Compliance Acts",
+  "subtitle": "PM Leadership Lens — Surya & Senior PM Perspective",
   "act": "III",
   "actLabel": "Act III — Delivery",
   "day": "Day 14",
-  "duration": "~25 mins",
+  "duration": "~20 mins",
   "difficulty": "Expert",
   "xpReward": 500,
-  "description": "Substantiate Phase 1 delivery claims with verified project evidence, classify deliverables and deferred scope, organize operational handover runbooks, and secure formal technical and client acceptance.",
+  "description": "Respond to an active credential-stuffing attack on the employee login gateway. Implement mandatory WAF bot mitigation and strict MFA rate-limiting under institutional cybersecurity policies and IT acts.",
   "stakeholders": [
-    { "name": "Marcus Reed", "role": "Chief Technology Officer · Technical Leadership", "agenda": "Verifying production stability, testing evidence, and operational handover readiness." },
-    { "name": "Sophia Bennett", "role": "Head of HR Operations · ICICI Bank", "agenda": "Validating delivered Phase 1 scope baseline and confirming deferred module boundaries." },
-    { "name": "Aarav Kapoor", "role": "Senior Consultant · Brained", "agenda": "Guiding the final handover package and formally closing Project Amigo Phase 1." }
+    { "name": "Bank CISO", "role": "Security Authority · Chief Information Security Officer", "agenda": "Mandating immediate WAF bot mitigation and MFA rate-limiting under bank cybersecurity policies." },
+    { "name": "Alex", "role": "Developer · Engineering Lead", "agenda": "Evaluating technical trade-offs between login friction and enterprise perimeter defenses." },
+    { "name": "Jane", "role": "Project Manager · Delivery Lead", "agenda": "Enforcing institutional security compliance, protecting enterprise trust, and preventing portal suspension." }
   ],
   "objectives": [
-    { "label": "Substantiate Phase 1 claims against verified project audit evidence", "type": "analysis" },
-    { "label": "Accurately classify deliverables, deferred scope, and pending approvals", "type": "governance" },
-    { "label": "Organize operational handover runbooks and secure dual stakeholder signoffs", "type": "decision" }
+    { "label": "Investigate anomalous bot traffic and classify the credential-stuffing threat", "type": "analysis" },
+    { "label": "Implement mandatory WAF bot mitigation and strict MFA rate-limiting", "type": "decision" },
+    { "label": "Validate security readiness and document institutional compliance for the CISO", "type": "governance" }
   ],
   "deliverables": [
-    "Evidence Verification & Audit Matrix",
-    "Delivery Status & Scope Classification Record",
-    "Operational Handover & Incident Continuity Runbooks",
-    "Executive Delivery Package & Formal Acceptance Signoffs"
+    "Security Incident & Threat Classification Report",
+    "WAF Bot Mitigation & Strict MFA Rate-Limiting Configuration",
+    "Security Readiness Verification Checklist",
+    "Bank CISO Compliance Audit Confirmation"
   ],
-  "primaryColor": "#06b6d4",
-  "secondaryColor": "#3b82f6",
-  "accentColor": "#22d3ee",
-  "backgroundIcon": "🏁"
+  "primaryColor": "#059669",
+  "secondaryColor": "#0284c7",
+  "accentColor": "#10b981",
+  "backgroundIcon": "🛡️"
 }
