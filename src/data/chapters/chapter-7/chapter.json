@@ -1,7 +1,7 @@
 {
   "id": 7,
   "slug": "chapter-7",
-  "title": "Production Incident: Attendance Sync",
+  "title": "Production Issues & Root Cause Analysis",
   "subtitle": "Incident Response & Root Cause Analysis (RCA) Studio",
   "act": "III",
   "actLabel": "Act III — Delivery",
@@ -9,22 +9,22 @@
   "duration": "~2 mins",
   "difficulty": "Hard",
   "xpReward": 500,
-  "description": "A production issue occurs in the Attendance Sync microservice. 12 branch officers experience intermittent 504 Gateway Timeouts. Deploy the hotfix, verify affected branch officers, document the formal Root Cause Analysis (RCA), and configure preventive monitoring.",
+  "description": "A production issue occurs in the Attendance Sync microservice. Twelve branch officers experience intermittent 504 Gateway Timeouts. Restore the service, verify affected branch officers, document the Root Cause Analysis (RCA), and prioritise preventive controls.",
   "stakeholders": [
     { "name": "Martha", "role": "Regional Branch Operations Manager", "agenda": "Urgent restoration of branch check-in capabilities for 12 locked-out branch officers." },
-    { "name": "Daniel Kapoor", "role": "Lead Developer", "agenda": "Diagnosing memory leak in container connection pool and deploying hotfix PR #142." },
-    { "name": "Aarav", "role": "Lead Delivery Partner", "agenda": "Enforcing rigorous post-mortem governance: RCA, socket leak prevention, and alert thresholds." }
+    { "name": "Daniel Brooks", "role": "Lead Developer", "agenda": "Diagnosing memory leak in container connection pool and deploying hotfix." },
+    { "name": "Aarav", "role": "Project Manager", "agenda": "Enforcing post-mortem governance: RCA, verification before closure, and preventive monitoring." }
   ],
   "objectives": [
-    { "label": "Execute immediate production response & verify affected branch officers", "type": "decision" },
-    { "label": "Build formal Root Cause Analysis identifying socket memory leaks", "type": "analysis" },
-    { "label": "Establish preventive monitoring alerts and secure incident closure", "type": "delivery" }
+    { "label": "Arrange immediate service restoration sequence & verify branch officers", "type": "decision" },
+    { "label": "Build formal 4-part Root Cause Analysis connecting failure to root cause", "type": "analysis" },
+    { "label": "Select and prioritise preventive measures to eliminate recurrence", "type": "delivery" }
   ],
   "deliverables": [
-    "Immediate Production Remediation & User Verification",
+    "Validated Service Recovery Sequence",
     "Formal 4-Part Root Cause Analysis (RCA)",
-    "Preventive Memory Alerting Thresholds Configuration",
-    "Executive Incident Resolution & Closure Report"
+    "Prioritised Recurrence Prevention Plan",
+    "Incident Resolution & Post-Mortem Scorecard"
   ],
   "primaryColor": "#ef4444",
   "secondaryColor": "#f97316",
