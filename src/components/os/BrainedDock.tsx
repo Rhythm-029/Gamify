@@ -19,6 +19,7 @@ export const BrainedDock: React.FC<BrainedDockProps> = ({
   badges,
 }) => {
   const dockApps = [
+    { id: 'release_handover_desk', name: 'Release & Handover Desk', icon: FileCheck2, color: 'bg-gradient-to-tr from-cyan-600 via-blue-600 to-indigo-600' },
     { id: 'incident_studio', name: 'Incident Response & RCA Studio', icon: Wrench, color: 'bg-gradient-to-tr from-rose-600 via-orange-600 to-amber-600' },
     { id: 'performance_command_centre', name: 'Performance Command Centre', icon: Activity, color: 'bg-gradient-to-tr from-cyan-600 via-blue-600 to-indigo-600' },
     { id: 'release_readiness', name: 'Release Readiness Board', icon: FileCheck2, color: 'bg-gradient-to-tr from-emerald-600 via-teal-600 to-cyan-600' },

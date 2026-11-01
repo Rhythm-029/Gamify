@@ -81,10 +81,19 @@ export const DEV_CHAPTERS: DevChapterOption[] = [
     id: 7,
     label: 'Chapter 07',
     badge: 'INCIDENT & RCA',
-    title: 'Production Incident: Attendance Sync',
+    title: 'Production Issues & Root Cause Analysis',
     subtitle: 'Incident Response & RCA Studio',
     icon: '🚨',
     color: '#ef4444',
+  },
+  {
+    id: 8,
+    label: 'Chapter 08',
+    badge: 'HANDOVER & CLOSURE',
+    title: 'Production Stabilisation & Project Handover',
+    subtitle: 'Release & Handover Desk · Enterprise Acceptance',
+    icon: '🏁',
+    color: '#06b6d4',
   },
 ];
 
