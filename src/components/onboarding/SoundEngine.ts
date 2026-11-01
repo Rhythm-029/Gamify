@@ -122,6 +122,18 @@ class SoundEngine {
     this.playSystemClearance();
   }
 
+  playButtonSelect() {
+    this.playClick();
+  }
+
+  playPenaltyPing() {
+    this.playClick();
+  }
+
+  playActionLaunch() {
+    this.playSystemClearance();
+  }
+
   // Simulates corporate office atmospheric hum (A/C rumble & distant server fans)
   startOfficeHum() {
     this.init();
