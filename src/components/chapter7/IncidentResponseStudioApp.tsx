@@ -77,7 +77,7 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
       return chapter7State.activity1Order;
     }
     // Initial shuffled state
-    return ['verify_access', 'close_prematurely', 'confirm_scope', 'deploy_hotfix'];
+    return ['verify_sync', 'confirm_recovery', 'confirm_scope', 'deploy_hotfix'];
   });
   const [act1Feedback, setAct1Feedback] = useState<string | null>(chapter7State.activity1Feedback);
   const [act1DraggedIdx, setAct1DraggedIdx] = useState<number | null>(null);
@@ -121,13 +121,20 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
     const attempts = (chapter7State.activity1Attempts || 0) + 1;
     const scopeIdx = act1Order.indexOf('confirm_scope');
     const hotfixIdx = act1Order.indexOf('deploy_hotfix');
-    const verifyIdx = act1Order.indexOf('verify_access');
-    const closeIdx = act1Order.indexOf('close_prematurely');
+    const verifyIdx =
+      act1Order.indexOf('verify_sync') !== -1
+        ? act1Order.indexOf('verify_sync')
+        : act1Order.indexOf('verify_access');
+    const confirmIdx =
+      act1Order.indexOf('confirm_recovery') !== -1
+        ? act1Order.indexOf('confirm_recovery')
+        : act1Order.indexOf('close_prematurely');
 
     // Rule 1: Confirm scope must precede hotfix deployment
     if (scopeIdx > hotfixIdx) {
-      sound.playClick();
-      const fb = 'Always confirm the affected service, error symptoms, and user blast radius before deploying changes into production.';
+      sound.playPenaltyPing();
+      const fb =
+        'Always confirm the affected service, error symptoms, and user blast radius before deploying changes into production.';
       setAct1Feedback(fb);
       onUpdateState({
         activity1Attempts: attempts,
@@ -138,10 +145,11 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
       return;
     }
 
-    // Rule 2: Premature closure trap (Card D before Card C)
-    if (closeIdx < verifyIdx) {
-      sound.playClick();
-      const fb = 'Deploying a patch does not automatically confirm recovery. The affected service and user access must be verified before the incident can be closed.';
+    // Rule 2: Premature closure trap (Confirm recovery before verification)
+    if (confirmIdx < verifyIdx) {
+      sound.playPenaltyPing();
+      const fb =
+        'Deploying a patch does not automatically confirm recovery. The affected service and user access must be verified before the incident can be closed.';
       setAct1Feedback(fb);
       onUpdateState({
         activity1Attempts: attempts,
@@ -154,8 +162,9 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
 
     // Rule 3: Hotfix must precede verification
     if (hotfixIdx > verifyIdx) {
-      sound.playClick();
-      const fb = 'You cannot verify service recovery before the hotfix addressing the memory leak has been deployed.';
+      sound.playPenaltyPing();
+      const fb =
+        'You cannot verify service recovery before the hotfix addressing the memory leak has been deployed.';
       setAct1Feedback(fb);
       onUpdateState({
         activity1Attempts: attempts,
@@ -166,23 +175,30 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
       return;
     }
 
-    // Correct sequence validated: [confirm_scope, deploy_hotfix, verify_access, close_prematurely]
+    // Correct sequence validated: [confirm_scope, deploy_hotfix, verify_sync, confirm_recovery]
     sound.playSystemClearance();
-    const fb = 'Service recovery sequence validated. The incident is not closed until recovery has been verified.';
+    const fb =
+      'Service recovery sequence validated. You confirmed scope, deployed the hotfix, verified attendance sync, and confirmed recovery before closing the incident.';
     setAct1Feedback(fb);
 
-    onUpdateState((prev) => ({
-      ...prev,
-      activity1Attempts: attempts,
-      activity1Order: act1Order,
-      activity1Submitted: true,
-      activity1Completed: true,
-      activity1Feedback: fb,
-      activity1FirstOrder: prev.activity1FirstOrder || act1Order,
-      incidentStatus: 'restoring',
-    }));
+    onUpdateState((prev) => {
+      const updated: Chapter7State = {
+        ...prev,
+        activity1Attempts: attempts,
+        activity1Order: act1Order,
+        activity1Submitted: true,
+        activity1Completed: true,
+        activity1Feedback: fb,
+        activity1FirstOrder: prev.activity1FirstOrder || act1Order,
+        incidentStatus: 'restoring',
+      };
+      return {
+        ...updated,
+        scorecard: computeChapter7Score(updated),
+      };
+    });
 
-    // Unlock and advance to Activity 2 after a brief celebration pause
+    // Advance to Activity 2 after brief celebration pause
     setTimeout(() => {
       setActiveTab('rca');
     }, 1200);
@@ -205,6 +221,8 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
     prevention?: { isCorrect: boolean; message: string };
     summary?: string;
   } | null>(chapter7State.activity2Feedback);
+
+  const [rcaPublished, setRcaPublished] = useState<boolean>(chapter7State.rcaPublished || false);
 
   const handleSelectRcaOption = (fieldId: RcaFieldId, optionId: string) => {
     sound.playClick();
@@ -242,13 +260,13 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
       rootCause: {
         isCorrect: isRcCorrect,
         message: isRcCorrect
-          ? 'Accurate: Unchecked memory growth causing container saturation identified as root cause.'
-          : 'Incorrect root cause: APM telemetry clearly showed container heap memory increasing over time to saturation.',
+          ? 'Accurate: Memory leak in Attendance Sync microservice identified. Deeper code profiling underway.'
+          : 'Incorrect root cause: Telemetry showed container memory monotonically increasing to saturation.',
       },
       impact: {
         isCorrect: isImpCorrect,
         message: isImpCorrect
-          ? 'Accurate: Scope confirmed at 12 branch officers experiencing login / sync issues.'
+          ? 'Accurate: Scope confirmed at 12 branch officers experiencing morning login issues.'
           : 'The incident was limited to 12 branch officers. Do not describe it as a complete HRMS outage or internal bug.',
       },
       prevention: {
@@ -264,36 +282,52 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
 
     if (allCorrect) {
       sound.playSystemClearance();
-      feedbackObj.summary = 'RCA validated. The failure, root cause, business impact, and corrective response are clearly connected.';
+      feedbackObj.summary =
+        'RCA validated. The failure, technical root cause, business blast radius, and corrective controls are formally connected. Ready to publish to engineering leads.';
       setRcaFeedback(feedbackObj);
+      setRcaPublished(true);
 
-      onUpdateState((prev) => ({
-        ...prev,
-        activity2Answers: rcaAnswers,
-        activity2Attempts: attempts,
-        activity2Submitted: true,
-        activity2Completed: true,
-        activity2Feedback: feedbackObj,
-        activity2FirstAnswers: prev.activity2FirstAnswers || rcaAnswers,
-        incidentStatus: 'rca_in_progress',
-      }));
+      onUpdateState((prev) => {
+        const updated: Chapter7State = {
+          ...prev,
+          activity2Answers: rcaAnswers,
+          activity2Attempts: attempts,
+          activity2Submitted: true,
+          activity2Completed: true,
+          rcaPublished: true,
+          activity2Feedback: feedbackObj,
+          activity2FirstAnswers: prev.activity2FirstAnswers || rcaAnswers,
+          incidentStatus: 'rca_in_progress',
+        };
+        return {
+          ...updated,
+          scorecard: computeChapter7Score(updated),
+        };
+      });
 
       // Unlock and advance to Activity 3
       setTimeout(() => {
         setActiveTab('prevention');
-      }, 1200);
+      }, 1500);
     } else {
-      sound.playClick();
-      feedbackObj.summary = 'Some elements of your RCA need revision. Review the highlighted mismatches and update your findings.';
+      sound.playPenaltyPing();
+      feedbackObj.summary =
+        'Some elements of your RCA need revision. Review the highlighted mismatches and update your findings.';
       setRcaFeedback(feedbackObj);
 
-      onUpdateState((prev) => ({
-        ...prev,
-        activity2Answers: rcaAnswers,
-        activity2Attempts: attempts,
-        activity2Feedback: feedbackObj,
-        activity2FirstAnswers: prev.activity2FirstAnswers || rcaAnswers,
-      }));
+      onUpdateState((prev) => {
+        const updated: Chapter7State = {
+          ...prev,
+          activity2Answers: rcaAnswers,
+          activity2Attempts: attempts,
+          activity2Feedback: feedbackObj,
+          activity2FirstAnswers: prev.activity2FirstAnswers || rcaAnswers,
+        };
+        return {
+          ...updated,
+          scorecard: computeChapter7Score(updated),
+        };
+      });
     }
   };
 
@@ -318,8 +352,8 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
       setPriorityOrder((prev) => prev.filter((item) => item !== id));
     } else {
       if (selectedPrevention.length >= 4) {
-        sound.playClick();
-        setAct3Feedback('You can select a maximum of 4 preventive controls for this plan.');
+        sound.playPenaltyPing();
+        setAct3Feedback('Please select exactly 4 appropriate preventive controls to build the plan.');
         return;
       }
       const nextSelected = [...selectedPrevention, id];
@@ -365,15 +399,16 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
     const attempts = (chapter7State.activity3Attempts || 0) + 1;
 
     if (selectedPrevention.length !== 4) {
-      sound.playClick();
+      sound.playPenaltyPing();
       setAct3Feedback('Please select exactly 4 appropriate preventive measures to include in the plan.');
       return;
     }
 
-    // Check for inappropriate actions
+    // Check for inappropriate actions (scaling up servers or ignoring monitoring)
     if (selectedPrevention.includes('increase_number_of_servers')) {
-      sound.playClick();
-      const fb = 'Adding servers may temporarily increase capacity, but it does not fix the underlying memory leak.';
+      sound.playPenaltyPing();
+      const fb =
+        'Adding servers may temporarily increase capacity, but it does not fix the underlying memory leak.';
       setAct3Feedback(fb);
       onUpdateState({
         activity3Attempts: attempts,
@@ -385,8 +420,9 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
     }
 
     if (selectedPrevention.includes('ignore_monitoring_hotfix')) {
-      sound.playClick();
-      const fb = 'Assuming the issue is permanently resolved without ongoing monitoring leaves the service vulnerable to regressions.';
+      sound.playPenaltyPing();
+      const fb =
+        'Assuming the issue is permanently resolved without ongoing monitoring leaves the service vulnerable to regressions.';
       setAct3Feedback(fb);
       onUpdateState({
         activity3Attempts: attempts,
@@ -399,7 +435,8 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
 
     // All 4 appropriate controls are selected!
     sound.playSystemClearance();
-    const fb = 'Prevention plan validated. The proposed controls improve early detection, testing, and ongoing service health.';
+    const fb =
+      'Prevention plan validated. Proactive continuous memory monitoring, automated alert thresholds, regression testing, and health checks permanently resolve recurring risks.';
     setAct3Feedback(fb);
 
     // Compute updated state and full scorecard
@@ -431,7 +468,7 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
   };
 
   // ─────────────────────────────────────────────────────────────
-  // RESOLUTION SEQUENCE (Daniel -> Martha -> Aarav)
+  // RESOLUTION SEQUENCE (Alex -> Martha -> Jane)
   // ─────────────────────────────────────────────────────────────
   const [resolutionStep, setResolutionStep] = useState<number>(() => {
     if (chapter7State.completed || chapter7State.incidentStatus === 'resolved') return 3;
@@ -442,21 +479,21 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
     setResolutionStep(1);
     sound.playMessagePing();
     if (onNotifyDesktop) {
-      onNotifyDesktop('Daniel Brooks', 'The hotfix is deployed. Memory utilisation is stable, and branch access is verified.');
+      onNotifyDesktop('Alex (Developer)', 'The hotfix has been deployed, and attendance sync has recovered.');
     }
 
     setTimeout(() => {
       setResolutionStep(2);
       sound.playMessagePing();
       if (onNotifyDesktop) {
-        onNotifyDesktop('Martha Vance', 'Monitoring thresholds updated. Incident report ready for engineering review.');
+        onNotifyDesktop('Martha (Monitoring / Ops)', 'Monitoring thresholds updated on dashboard. Incident report ready.');
       }
 
       setTimeout(() => {
         setResolutionStep(3);
         sound.playSystemClearance();
         if (onNotifyDesktop) {
-          onNotifyDesktop('Aarav Kapoor', 'Incident INC-0241 resolved. Ready for final post-mortem scorecard.');
+          onNotifyDesktop('Jane (Project Manager)', 'Incident INC-0241 resolved with formal RCA and monitoring.');
         }
 
         onUpdateState((prev) => {
@@ -468,15 +505,17 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
           return {
             ...prev,
             incidentStatus: 'resolved',
+            alexHotfixConfirmed: true,
             danielHotfixConfirmed: true,
             marthaMonitoringConfirmed: true,
+            janeClosureConfirmed: true,
             aaravClosingConfirmed: true,
             completed: true,
             scorecard: finalScorecard,
           };
         });
-      }, 3500);
-    }, 3500);
+      }, 3000);
+    }, 3000);
   };
 
   const isResolved = chapter7State.incidentStatus === 'resolved' || resolutionStep === 3;
@@ -499,7 +538,7 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
               </span>
             </div>
             <div className="text-[11px] text-slate-300 font-mono font-semibold">
-              {INCIDENT_ID} — Attendance Sync Failure
+              {INCIDENT_ID} — Attendance Sync Memory Leak
             </div>
           </div>
         </div>
@@ -512,7 +551,7 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
               className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer"
             >
               <Clock className="w-3.5 h-3.5 text-rose-400" />
-              <span>Back to Bridge</span>
+              <span>War Room Bridge</span>
             </button>
           )}
 
@@ -716,7 +755,9 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
               {/* Action Cards List (Ordered) */}
               <div className="space-y-3">
                 {act1Order.map((cardId, index) => {
-                  const card = ACTIVITY_1_CARDS.find((c) => c.id === cardId)!;
+                  const card =
+                    ACTIVITY_1_CARDS.find((c) => c.id === cardId) ||
+                    ACTIVITY_1_CARDS[0];
                   return (
                     <motion.div
                       key={card.id}
@@ -860,13 +901,13 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
                   </div>
                   <div>
                     <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
-                      Activity 2 — Build the RCA
+                      Activity 2 — Prepare the Root Cause Analysis (RCA)
                     </h2>
                     <p className="text-xs sm:text-sm text-slate-300 mt-1 leading-relaxed">
-                      A service recovery is only one part of incident management. Document what happened, why it happened, who was affected, and what must change.
+                      A service recovery is only half the battle. Prepare the formal Root Cause Analysis (RCA) report documenting what happened, the technical cause, business impact, and corrective actions.
                     </p>
                     <div className="text-[11px] text-slate-400 font-mono mt-2">
-                      Complete all four structured post-mortem fields. Select the correct finding for each field.
+                      Complete all four structured post-mortem fields. Once verified, publish the report to engineering leads.
                     </div>
                   </div>
                 </div>
@@ -887,7 +928,7 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
                         <div>
                           <div className="flex items-center space-x-2">
                             <span className="text-[10px] font-mono uppercase font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                              Field {fieldIdx + 1} · {field.id.toUpperCase()}
+                              Section {fieldIdx + 1}
                             </span>
                             {selectedOptId && (
                               <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1 font-bold">
@@ -973,7 +1014,7 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
                 </div>
               )}
 
-              {/* Submit RCA Button */}
+              {/* Submit / Publish RCA Button */}
               <div className="flex items-center justify-between pt-2">
                 <div className="text-[11px] text-slate-400 font-mono">
                   Completed:{' '}
@@ -1002,7 +1043,8 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
                         : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed'
                     }`}
                   >
-                    <span>Submit RCA</span>
+                    <FileCheck2 className="w-3.5 h-3.5" />
+                    <span>Publish RCA to Engineering Leads</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -1031,16 +1073,16 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
                       Activity 3 — Prevent Recurrence
                     </h2>
                     <p className="text-xs sm:text-sm text-slate-300 mt-1 leading-relaxed">
-                      The immediate issue is being addressed. Now decide which controls the team should prioritise to prevent another memory-related outage.
+                      Fixing a production bug is only half the battle. Now identify and prioritise the preventive monitoring and engineering actions to ensure the underlying flaw is permanently resolved.
                     </p>
                     <div className="text-[11px] text-slate-400 font-mono mt-2">
-                      Select the 4 useful preventive measures (exclude capacity-based workarounds). Then organise them into your preferred priority order.
+                      Select the 4 useful preventive measures (avoid presenting server scaling as a solution). Then organise them into priority order.
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Selection Bank (All 6 Cards) */}
+              {/* Selection Bank */}
               <div className="space-y-2.5">
                 <div className="text-xs font-mono uppercase text-slate-400 font-bold flex items-center justify-between">
                   <span>Available Preventive Measures (Select 4)</span>
@@ -1053,67 +1095,69 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
                   {PREVENTION_ACTION_CARDS.map((card) => {
                     const isSelected = selectedPrevention.includes(card.id);
                     return (
-                      <button
+                      <div
                         key={card.id}
-                        type="button"
                         onClick={() => handleTogglePreventionSelection(card.id)}
-                        className={`p-3.5 rounded-xl border text-left transition-all flex items-start space-x-3 cursor-pointer ${
+                        className={`p-4 rounded-2xl border transition-all cursor-pointer ${
                           isSelected
-                            ? 'bg-emerald-950/30 border-emerald-500 text-white shadow-sm ring-1 ring-emerald-500/30'
-                            : 'bg-[#140e21] hover:bg-[#1b122c] border-slate-800 text-slate-300'
+                            ? 'bg-emerald-950/40 border-emerald-500 text-white shadow-md ring-1 ring-emerald-500/50'
+                            : 'bg-[#140e21] hover:bg-[#1a122a] border-slate-800 text-slate-300'
                         }`}
                       >
-                        <div
-                          className={`w-5 h-5 rounded-md flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 transition-colors ${
-                            isSelected
-                              ? 'bg-emerald-500 text-slate-950'
-                              : 'border border-slate-700 bg-slate-900 text-transparent'
-                          }`}
-                        >
-                          ✓
+                        <div className="flex items-start justify-between">
+                          <h4 className="text-xs font-bold text-white tracking-tight flex items-center gap-2">
+                            <span>{card.title}</span>
+                          </h4>
+                          <span
+                            className={`w-5 h-5 rounded-md flex items-center justify-center text-xs shrink-0 font-bold ${
+                              isSelected
+                                ? 'bg-emerald-500 text-white'
+                                : 'bg-slate-800 text-slate-400 border border-slate-700'
+                            }`}
+                          >
+                            {isSelected ? '✓' : '+'}
+                          </span>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-xs font-bold text-white tracking-tight">
-                            {card.title}
-                          </div>
-                          <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
-                            {card.description}
-                          </p>
-                        </div>
-                      </button>
+                        <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+                          {card.description}
+                        </p>
+                      </div>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Priority Ordering Section (Shown once cards are selected) */}
+              {/* Priority Ordering Section */}
               {selectedPrevention.length > 0 && (
-                <div className="bg-[#140e21] border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3.5 shadow-md">
+                <div className="space-y-3 pt-2">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-xs font-mono uppercase text-emerald-400 font-bold">
-                        Priority Order of Selected Controls (1 = Highest Priority)
-                      </h3>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
-                        Drag to reorder or use the arrow buttons to position higher-priority controls at the top.
-                      </p>
-                    </div>
+                    <span className="text-xs font-mono uppercase text-amber-400 font-bold">
+                      Prioritise Execution Order (Top = Highest Priority)
+                    </span>
+                    <span className="text-[11px] text-slate-400 font-mono">
+                      Use up/down arrows or drag to order
+                    </span>
                   </div>
 
                   <div className="space-y-2">
-                    {priorityOrder.map((cardId, index) => {
-                      const card = PREVENTION_ACTION_CARDS.find((c) => c.id === cardId)!;
+                    {priorityOrder.map((id, index) => {
+                      const card = PREVENTION_ACTION_CARDS.find((c) => c.id === id)!;
                       return (
-                        <div
-                          key={card.id}
+                        <motion.div
+                          key={id}
+                          layout
                           draggable
                           onDragStart={(e) => handlePriorityDragStart(e as unknown as React.DragEvent, index)}
                           onDragOver={(e) => e.preventDefault()}
                           onDrop={(e) => handlePriorityDrop(e as unknown as React.DragEvent, index)}
-                          className="p-3 rounded-xl bg-[#0f0a1a] border border-slate-800 hover:border-emerald-500/40 flex items-center justify-between space-x-3 transition-all"
+                          className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
+                            act3DraggedIdx === index
+                              ? 'opacity-40 border-dashed border-amber-400 bg-amber-950/20'
+                              : 'bg-[#150d22] border-slate-800 hover:border-amber-500/40'
+                          }`}
                         >
                           <div className="flex items-center space-x-3">
-                            <div className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center justify-center font-mono font-bold text-xs">
+                            <div className="w-6 h-6 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mono font-bold text-xs flex items-center justify-center">
                               #{index + 1}
                             </div>
                             <GripVertical className="w-4 h-4 text-slate-600 cursor-grab active:cursor-grabbing hover:text-slate-400" />
@@ -1125,10 +1169,9 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
                               type="button"
                               onClick={() => handleMovePriorityItem(index, 'up')}
                               disabled={index === 0}
-                              aria-label={`Move ${card.title} up`}
                               className={`w-6 h-6 rounded border flex items-center justify-center ${
                                 index === 0
-                                  ? 'opacity-20 border-slate-800 text-slate-600 cursor-not-allowed'
+                                  ? 'opacity-25 border-slate-800 text-slate-600 cursor-not-allowed'
                                   : 'bg-slate-900 border-slate-700 text-slate-300 hover:text-white cursor-pointer'
                               }`}
                             >
@@ -1138,30 +1181,29 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
                               type="button"
                               onClick={() => handleMovePriorityItem(index, 'down')}
                               disabled={index === priorityOrder.length - 1}
-                              aria-label={`Move ${card.title} down`}
                               className={`w-6 h-6 rounded border flex items-center justify-center ${
                                 index === priorityOrder.length - 1
-                                  ? 'opacity-20 border-slate-800 text-slate-600 cursor-not-allowed'
+                                  ? 'opacity-25 border-slate-800 text-slate-600 cursor-not-allowed'
                                   : 'bg-slate-900 border-slate-700 text-slate-300 hover:text-white cursor-pointer'
                               }`}
                             >
                               <ArrowDown className="w-3 h-3" />
                             </button>
                           </div>
-                        </div>
+                        </motion.div>
                       );
                     })}
                   </div>
                 </div>
               )}
 
-              {/* Feedback Alert */}
+              {/* Feedback if any */}
               {act3Feedback && (
                 <div
                   className={`p-4 rounded-xl border text-xs leading-relaxed flex items-start space-x-3 ${
                     chapter7State.activity3Completed
                       ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-200'
-                      : 'bg-rose-950/40 border-rose-500/50 text-rose-200'
+                      : 'bg-rose-950/40 border-rose-500/40 text-rose-200'
                   }`}
                 >
                   {chapter7State.activity3Completed ? (
@@ -1170,9 +1212,7 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
                     <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
                   )}
                   <div>
-                    <span className="font-bold text-white block mb-0.5">
-                      {chapter7State.activity3Completed ? 'Prevention Plan Validated' : 'Prevention Plan Feedback'}
-                    </span>
+                    <span className="font-bold text-white block mb-0.5">Prevention Plan Analysis</span>
                     {act3Feedback}
                   </div>
                 </div>
@@ -1181,19 +1221,14 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
               {/* Submit Prevention Plan Button */}
               <div className="flex items-center justify-between pt-2">
                 <div className="text-[11px] text-slate-400 font-mono">
-                  Selected Measures:{' '}
-                  <span className="font-bold text-slate-200">{selectedPrevention.length} / 4</span>
+                  Selected: <span className="font-bold text-slate-200">{selectedPrevention.length} / 4</span>
                 </div>
 
                 <button
                   onClick={handleSubmitActivity3}
-                  disabled={selectedPrevention.length !== 4}
-                  className={`px-6 py-2.5 rounded-xl font-extrabold text-xs transition-all flex items-center space-x-2 border ${
-                    selectedPrevention.length === 4
-                      ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:opacity-95 text-white shadow-[0_0_20px_rgba(16,185,129,0.35)] cursor-pointer border-emerald-400/40'
-                      : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed'
-                  }`}
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:opacity-95 text-white font-extrabold text-xs transition-all shadow-[0_0_20px_rgba(16,185,129,0.35)] flex items-center space-x-2 cursor-pointer border border-emerald-400/40"
                 >
+                  <ShieldCheck className="w-4 h-4 text-emerald-200" />
                   <span>Submit Prevention Plan</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
@@ -1224,14 +1259,14 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
                           INCIDENT RESOLVED
                         </span>
                         <span className="text-xs font-mono text-slate-300">
-                          INC-0241 — Attendance Sync Failure
+                          INC-0241 — Attendance Sync Memory Leak
                         </span>
                       </div>
                       <h2 className="text-lg font-black text-white mt-1">
-                        Service Recovery & RCA Finalised
+                        Service Recovery & Formal RCA Published
                       </h2>
                       <p className="text-xs text-emerald-200/90 mt-1">
-                        Daniel's hotfix has restored container memory stability. Frontline user logins have been verified by Martha, and Aarav has signed off on the formal RCA and preventive alert plan.
+                        Alex's hotfix has been verified by Martha. The formal RCA report has been shared with engineering leads, and automated monitoring thresholds are active.
                       </p>
                     </div>
                   </div>
@@ -1240,31 +1275,31 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
                 {/* Dashboard Summary Badges */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4 pt-3 border-t border-emerald-900/40 text-xs font-mono">
                   <div className="bg-[#0b1411] p-2.5 rounded-xl border border-emerald-900/60">
-                    <span className="text-[10px] text-slate-400 block font-sans">Recovery</span>
-                    <span className="text-emerald-400 font-bold">Verified</span>
+                    <span className="text-[10px] text-slate-400 block font-sans">Hotfix Patch</span>
+                    <span className="text-emerald-400 font-bold">Deployed & Verified</span>
                   </div>
                   <div className="bg-[#0b1411] p-2.5 rounded-xl border border-emerald-900/60">
-                    <span className="text-[10px] text-slate-400 block font-sans">RCA</span>
-                    <span className="text-emerald-400 font-bold">Completed</span>
+                    <span className="text-[10px] text-slate-400 block font-sans">Formal RCA</span>
+                    <span className="text-emerald-400 font-bold">Published</span>
                   </div>
                   <div className="bg-[#0b1411] p-2.5 rounded-xl border border-emerald-900/60">
-                    <span className="text-[10px] text-slate-400 block font-sans">Prevention Plan</span>
-                    <span className="text-emerald-400 font-bold">Submitted</span>
+                    <span className="text-[10px] text-slate-400 block font-sans">Alert Thresholds</span>
+                    <span className="text-emerald-400 font-bold">Active</span>
                   </div>
                   <div className="bg-[#0b1411] p-2.5 rounded-xl border border-emerald-900/60">
-                    <span className="text-[10px] text-slate-400 block font-sans">Status</span>
-                    <span className="text-emerald-300 font-bold">Resolved</span>
+                    <span className="text-[10px] text-slate-400 block font-sans">12 Officers</span>
+                    <span className="text-emerald-300 font-bold">Logged In</span>
                   </div>
                 </div>
               </div>
 
-              {/* Three Stakeholder Live Confirmations */}
+              {/* Three Live Confirmations (Alex -> Martha -> Jane) */}
               <div className="space-y-3">
                 <div className="text-xs font-mono uppercase text-slate-400 font-bold">
                   Live Resolution Confirmations
                 </div>
 
-                {/* Daniel */}
+                {/* Alex */}
                 <motion.div
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -1273,16 +1308,16 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
                 >
                   <img
                     src="/character/Daniel_Brooks/DanielDP.png"
-                    alt="Daniel"
+                    alt="Alex"
                     className="w-9 h-9 rounded-full border border-sky-400/40 object-cover shrink-0"
                   />
                   <div>
                     <div className="flex items-center space-x-2">
-                      <span className="text-xs font-bold text-white">Daniel Brooks</span>
-                      <span className="text-[10px] font-mono text-sky-400">Lead Developer</span>
+                      <span className="text-xs font-bold text-white">Alex</span>
+                      <span className="text-[10px] font-mono text-sky-400">Developer</span>
                     </div>
                     <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                      “The hotfix is deployed. Memory utilisation is stable, and the affected branches have successfully resumed attendance synchronisation.”
+                      “The hotfix has been deployed, and attendance sync has recovered. Memory utilization is stable and all 12 branch officers can log in without errors.”
                     </p>
                   </div>
                 </motion.div>
@@ -1301,34 +1336,32 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
                   />
                   <div>
                     <div className="flex items-center space-x-2">
-                      <span className="text-xs font-bold text-white">Martha Vance</span>
-                      <span className="text-[10px] font-mono text-rose-400">Regional Branch Operations</span>
+                      <span className="text-xs font-bold text-white">Martha</span>
+                      <span className="text-[10px] font-mono text-rose-400">Monitoring / Operations</span>
                     </div>
                     <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                      “I've updated the monitoring thresholds, and the incident report is ready for engineering review.”
+                      “Monitoring thresholds have been updated on our dashboard, and the incident post-mortem report is ready for engineering review.”
                     </p>
                   </div>
                 </motion.div>
 
-                {/* Aarav */}
+                {/* Jane */}
                 <motion.div
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: 0.2 }}
-                  className="bg-[#140e21] border border-slate-800 rounded-xl p-3.5 flex items-start space-x-3"
+                  className="bg-[#190f2b] border border-purple-500/40 rounded-xl p-3.5 flex items-start space-x-3"
                 >
-                  <img
-                    src="/character/AaravDP.png"
-                    alt="Aarav"
-                    className="w-9 h-9 rounded-full border border-amber-400/40 object-cover shrink-0"
-                  />
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 border border-purple-400/50 flex items-center justify-center font-black text-white text-xs shrink-0">
+                    J
+                  </div>
                   <div>
                     <div className="flex items-center space-x-2">
-                      <span className="text-xs font-bold text-white">Aarav Kapoor</span>
-                      <span className="text-[10px] font-mono text-amber-400">Project Manager</span>
+                      <span className="text-xs font-bold text-white">Jane (You)</span>
+                      <span className="text-[10px] font-mono text-purple-400">Project Manager / Player</span>
                     </div>
-                    <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                      “Good work. The immediate issue is resolved, and we now have a documented corrective action. Let's make sure the same issue doesn't come back.”
+                    <p className="text-xs text-purple-200 mt-1 leading-relaxed font-medium">
+                      “Incident INC-0241 resolved. We didn't just patch the bug—we established root cause and put automated monitoring in place so it never happens again.”
                     </p>
                   </div>
                 </motion.div>
