@@ -1,90 +1,42 @@
 /**
  * chapter8.ts
- * Type definitions for Chapter 8: Production Stabilisation & Project Handover
- * Project Amigo Final Handover & Enterprise Acceptance
+ * Type definitions for Chapter 8: Security Attacks, Policies & Compliance Acts
+ * Scene 8.1: Defending Against Credential Stuffing
  */
 
+export type Chapter8DecisionChoice = 'choice_a' | 'choice_b';
+
 export type Chapter8Stage =
-  | 'opening_messages'
-  | 'aarav_review_call'
-  | 'handover_desk'
-  | 'stakeholder_review'
-  | 'project_closure';
+  | 'soc_threat_alert'
+  | 'tech_tradeoff_discussion'
+  | 'decision_screen'
+  | 'console_investigation'
+  | 'console_configuration'
+  | 'console_validation'
+  | 'closing_sequence'
+  | 'chapter_complete';
 
-export type DeliverableClaimId =
-  | 'claim_scope_documented'
-  | 'claim_ui_approved'
-  | 'claim_infra_uat_ready'
-  | 'claim_cr_assessed'
-  | 'claim_pilot_completed'
-  | 'claim_performance_tested'
-  | 'claim_tech_approvals_recorded'
-  | 'claim_incident_rca_documented'
-  | 'claim_recovery_verified'
-  | 'claim_monitoring_updated';
+export type ThreatTypeId =
+  | 'credential_stuffing'
+  | 'ordinary_login_failures'
+  | 'normal_traffic_spike';
 
-export type EvidenceItemId =
-  | 'phase1_scope_baseline'
-  | 'ui_ux_signoff'
-  | 'infra_uat_readiness'
-  | 'cr_impact_assessment'
-  | 'cug_pilot_report'
-  | 'concurrency_stress_report'
-  | 'tech_cto_approval'
-  | 'incident_rca_inc0241'
-  | 'recovery_confirmation'
-  | 'monitoring_controls_update';
+export type TargetSystemId =
+  | 'employee_login_gateway'
+  | 'attendance_database'
+  | 'reporting_dashboard';
 
-export interface EvidenceItem {
-  id: EvidenceItemId;
-  title: string;
-  category: 'Scope & Design' | 'Testing & Pilot' | 'Performance & Approval' | 'Production & Reliability';
-  description: string;
-  chapterOrigin: string;
-  matchingClaimId: DeliverableClaimId;
-  documentType: 'PDF Record' | 'Formal Signoff' | 'APM Audit' | 'Incident RCA' | 'Telemetry Log';
-}
+export type TrafficSourceId =
+  | 'anomalous_bot_traffic'
+  | 'internal_branch_users'
+  | 'scheduled_batch_job';
 
-export interface DeliverableClaim {
-  id: DeliverableClaimId;
-  label: string;
-  description: string;
-  expectedEvidenceId: EvidenceItemId;
-}
+export type SecurityAuthorityId =
+  | 'bank_ciso'
+  | 'hr_operations'
+  | 'external_vendor';
 
-export type Chapter8TabId = 'evidence' | 'status' | 'handover' | 'package' | 'closure';
-export type DeliveryStatusItemId = string;
-export type HandoverItemId = string;
-
-export type DeliveryClassificationColumn =
-  | 'completed_verified'
-  | 'completed_awaiting_approval'
-  | 'deferred_phase_2'
-  | 'unresolved_requires_action';
-
-export interface DeliveryStatusItem {
-  id: DeliveryStatusItemId;
-  title: string;
-  description: string;
-  expectedColumn: DeliveryClassificationColumn;
-  explanation: string;
-  chapterOrigin?: string;
-}
-
-export type HandoverSectionId =
-  | 'monitoring_health'
-  | 'escalation_process'
-  | 'known_issues_boundaries'
-  | 'recovery_continuity';
-
-export interface HandoverItem {
-  id: HandoverItemId;
-  section: HandoverSectionId;
-  title: string;
-  description: string;
-  ownerRole: 'Engineering Operations' | 'Application Support' | 'Project Delivery';
-  isMandatory: boolean;
-}
+export type Chapter8ConsoleTabId = 'investigate' | 'configure' | 'validate';
 
 export type Chapter8OutcomeType = 'strong' | 'mixed' | 'incomplete';
 
@@ -96,10 +48,9 @@ export interface Chapter8Scorecard {
   efficiencyScore: number;
   totalScore: number;
   breakdown: {
-    evidenceScore: number;   // max 25
-    statusScore: number;     // max 25
-    handoverScore: number;   // max 25
-    packageScore: number;    // max 25
+    investigationScore: number; // max 25
+    controlsScore: number;      // max 50 (25 WAF + 25 MFA)
+    validationScore: number;    // max 25
   };
   outcomeType: Chapter8OutcomeType;
   outcomeText: string;
@@ -114,54 +65,93 @@ export interface Chapter8Scorecard {
   };
 }
 
+export interface ThreatOption {
+  id: ThreatTypeId;
+  label: string;
+  description: string;
+  isCorrect: boolean;
+  explanation: string;
+}
+
+export interface TargetSystemOption {
+  id: TargetSystemId;
+  label: string;
+  description: string;
+  isCorrect: boolean;
+  explanation: string;
+}
+
+export interface TrafficSourceOption {
+  id: TrafficSourceId;
+  label: string;
+  description: string;
+  isCorrect: boolean;
+  explanation: string;
+}
+
+export interface SecurityAuthorityOption {
+  id: SecurityAuthorityId;
+  label: string;
+  description: string;
+  isCorrect: boolean;
+  explanation: string;
+}
+
+export interface SecurityReadinessChecklist {
+  wafMitigationConfirmed: boolean;
+  mfaRateLimitingConfirmed: boolean;
+  legitimateAccessPreserved: boolean;
+  responseDocumentedForCiso: boolean;
+}
+
 export interface Chapter8State {
-  // Story milestones
-  marcusMessageRead: boolean;
-  sophiaMessageRead: boolean;
-  reviewCallCompleted: boolean;
-  deskUnlocked: boolean;
-  activeTab: 'evidence' | 'status' | 'handover' | 'package' | 'closure';
+  // Story Milestones & Meeting
+  alertNotificationShown: boolean;
+  socChannelOpened: boolean;
+  threatDelivered: boolean;
+  tradeoffDiscussed: boolean;
+  meetingCompleted: boolean;
+  callCompleted: boolean;
+  deskUnlocked: boolean; // Controls whether Security Response Console is accessible
 
-  // Activity 1: Evidence Verification
-  evidenceMatches: Record<string, EvidenceItemId | null>;
-  evidenceAttempts: number;
-  evidenceValidated: boolean;
-  evidenceFeedback: string | null;
+  // Decision (Scene 8.1 22:30–23:00)
+  selectedDecision: Chapter8DecisionChoice | null;
+  decisionScoreApplied: boolean;
+  decisionFeedback: string | null;
 
-  // Activity 2: Delivery Status Classification
-  itemClassifications: Record<string, DeliveryClassificationColumn>;
-  classificationAttempts: number;
-  classificationValidated: boolean;
-  classificationFeedback: string | null;
+  // Security Response Console Navigation
+  activeTab: Chapter8ConsoleTabId;
 
-  // Activity 3: Operational Handover
-  selectedHandoverItems: string[];
-  handoverAttempts: number;
-  handoverValidated: boolean;
-  handoverFeedback: string | null;
+  // Activity 1: Investigate Threat
+  selectedThreatType: ThreatTypeId | null;
+  selectedTargetSystem: TargetSystemId | null;
+  selectedTrafficSource: TrafficSourceId | null;
+  selectedSecurityAuthority: SecurityAuthorityId | null;
+  investigationAttempts: number;
+  investigationValidated: boolean;
+  investigationFeedback: string | null;
 
-  // Activity 4: Final Delivery Package
-  deliveryExecutiveSummary: string;
-  packageSubmitted: boolean;
-  packageValidationResults: {
-    isReady: boolean;
-    missingItems: string[];
-  } | null;
+  // Activity 2: Configure Security Response
+  wafBotMitigationEnabled: boolean;
+  mfaRateLimitingEnforced: boolean;
+  controlsAttempts: number;
+  controlsValidated: boolean;
+  controlsFeedback: string | null;
 
-  // Story & Notification Flags
-  alertNotificationShown?: boolean;
-  callInitiated?: boolean;
-  callCompleted?: boolean;
-  meetingCompleted?: boolean;
-  aaravAssignmentViewed?: boolean;
+  // Activity 3: Validate Security Readiness
+  readinessChecklist: SecurityReadinessChecklist;
+  validationAttempts: number;
+  validationCompleted: boolean;
+  validationFeedback: string | null;
 
-  // Stakeholder approvals & final closure
-  marcusTechnicalApproved: boolean;
-  sophiaClientAccepted: boolean;
-  aaravClosureConfirmed: boolean;
-  finalProjectDashboardShown: boolean;
-
-  // Final evaluation
+  // Closing Sequence & Completion
+  closingConfirmed: boolean;
   completed: boolean;
   scorecard: Chapter8Scorecard;
+
+  // Legacy compatibility fields if referenced by UI
+  reviewCallCompleted?: boolean;
+  marcusMessageRead?: boolean;
+  sophiaMessageRead?: boolean;
+  aaravAssignmentViewed?: boolean;
 }
