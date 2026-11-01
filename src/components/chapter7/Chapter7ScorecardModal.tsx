@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { updateChapterStatus } from '../../data/chaptersData';
 import type { Chapter7Scorecard } from '../../types/chapter7';
+import { CHAPTER7_LEARNING_TAKEAWAY } from '../../data/chapter7Data';
 
 interface Chapter7ScorecardModalProps {
   scorecardData: Chapter7Scorecard;
@@ -52,6 +53,10 @@ export const Chapter7ScorecardModal: React.FC<Chapter7ScorecardModalProps> = ({
   };
 
   const statusBadge = getStatusBadge();
+  const preventionPts =
+    scorecardData.breakdown.preventionScore ??
+    (scorecardData.breakdown as any).closureScore ??
+    0;
 
   return (
     <div className="fixed inset-0 z-[600] bg-slate-950/95 backdrop-blur-2xl flex items-center justify-center p-4 sm:p-6 overflow-y-auto font-sans select-none">
@@ -74,7 +79,7 @@ export const Chapter7ScorecardModal: React.FC<Chapter7ScorecardModalProps> = ({
               ATTENDANCE SYNC PRODUCTION RECOVERY
             </h2>
             <div className="text-xs font-semibold text-slate-300 mt-0.5">
-              Incident Response & Root Cause Analysis (RCA) Studio
+              Production Issues & Root Cause Analysis (INC-0241)
             </div>
           </div>
 
@@ -173,9 +178,9 @@ export const Chapter7ScorecardModal: React.FC<Chapter7ScorecardModalProps> = ({
               </span>
             </div>
             <div className="bg-[#1b1028] p-2 rounded-xl border border-slate-800">
-              <span className="text-[10px] text-slate-400 block font-sans">Incident Closure</span>
+              <span className="text-[10px] text-slate-400 block font-sans">Prevention Plan</span>
               <span className="text-sm font-bold text-emerald-300">
-                {scorecardData.breakdown.closureScore} / 30
+                {preventionPts} / 30
               </span>
             </div>
           </div>
@@ -199,7 +204,7 @@ export const Chapter7ScorecardModal: React.FC<Chapter7ScorecardModalProps> = ({
           <Sparkles className="w-4 h-4 text-rose-400 mt-0.5 shrink-0" />
           <div className="text-xs text-rose-200 leading-relaxed">
             <span className="font-bold text-white block">Core Learning Principle:</span>
-            {scorecardData.keyTakeaway}
+            {CHAPTER7_LEARNING_TAKEAWAY}
           </div>
         </div>
 
