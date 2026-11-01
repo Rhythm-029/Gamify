@@ -89,11 +89,11 @@ export const DEV_CHAPTERS: DevChapterOption[] = [
   {
     id: 8,
     label: 'Chapter 08',
-    badge: 'HANDOVER & CLOSURE',
-    title: 'Production Stabilisation & Project Handover',
-    subtitle: 'Release & Handover Desk · Enterprise Acceptance',
-    icon: '🏁',
-    color: '#06b6d4',
+    badge: 'SECURITY & POLICIES',
+    title: 'Security Attacks, Policies & Compliance Acts',
+    subtitle: 'Security Response Console · CISO SOC Liaison',
+    icon: '🛡️',
+    color: '#059669',
   },
 ];
 
