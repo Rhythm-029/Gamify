@@ -1,28 +1,30 @@
 {
   "id": 7,
   "slug": "chapter-7",
-  "title": "Production Issues & Root Cause Analysis",
-  "subtitle": "Incident Response & Root Cause Analysis (RCA) Studio",
+  "title": "Production Issues & Root Cause Analysis (RCA)",
+  "subtitle": "Emergency Incident War Room & Root Cause Analysis",
   "act": "III",
   "actLabel": "Act III — Delivery",
   "day": "Day 12–13",
   "duration": "~2 mins",
   "difficulty": "Hard",
   "xpReward": 500,
-  "description": "A production issue occurs in the Attendance Sync microservice. Twelve branch officers experience intermittent 504 Gateway Timeouts. Restore the service, verify affected branch officers, document the Root Cause Analysis (RCA), and prioritise preventive controls.",
+  "description": "An automated alert flashes red on Martha's monitoring dashboard: A minor memory leak in the Attendance Sync microservice caused intermittent 504 gateway timeouts for 12 branch officers. Decide the remediation strategy, restore the service, prepare the formal RCA, and prioritise preventive controls.",
   "stakeholders": [
-    { "name": "Martha", "role": "Regional Branch Operations Manager", "agenda": "Urgent restoration of branch check-in capabilities for 12 locked-out branch officers." },
-    { "name": "Daniel Brooks", "role": "Lead Developer", "agenda": "Diagnosing memory leak in container connection pool and deploying hotfix." },
-    { "name": "Aarav", "role": "Project Manager", "agenda": "Enforcing post-mortem governance: RCA, verification before closure, and preventive monitoring." }
+    { "name": "Jane", "role": "Project Manager", "agenda": "Leading response: Mandating formal RCA, verifying recovery before closing, and updating monitoring." },
+    { "name": "Martha", "role": "Monitoring / Operations", "agenda": "Automated incident detection, user impact tracking, and updating monitoring alert thresholds." },
+    { "name": "Alex", "role": "Developer", "agenda": "Drafting hotfix patch for the memory leak in Attendance Sync and deploying under Jane's engineering governance." }
   ],
   "objectives": [
-    { "label": "Arrange immediate service restoration sequence & verify branch officers", "type": "decision" },
-    { "label": "Build formal 4-part Root Cause Analysis connecting failure to root cause", "type": "analysis" },
-    { "label": "Select and prioritise preventive measures to eliminate recurrence", "type": "delivery" }
+    { "label": "Decide remediation strategy: Mandate formal RCA alongside hotfix deployment", "type": "decision" },
+    { "label": "Arrange immediate service restoration sequence & verify branch officers", "type": "delivery" },
+    { "label": "Build and publish formal 4-part Root Cause Analysis (RCA)", "type": "analysis" },
+    { "label": "Select and prioritise recurrence prevention controls and alert thresholds", "type": "delivery" }
   ],
   "deliverables": [
+    "Governance Decision Record (Hotfix + Formal RCA)",
     "Validated Service Recovery Sequence",
-    "Formal 4-Part Root Cause Analysis (RCA)",
+    "Formal Published 4-Part Root Cause Analysis (RCA)",
     "Prioritised Recurrence Prevention Plan",
     "Incident Resolution & Post-Mortem Scorecard"
   ],

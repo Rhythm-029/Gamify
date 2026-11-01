@@ -11,9 +11,13 @@ export type Chapter7IncidentStatus =
   | 'prevention_planned'
   | 'resolved';
 
+export type Chapter7DecisionChoice = 'choice_a' | 'choice_b';
+
 export type Activity1CardId =
   | 'confirm_scope'
   | 'deploy_hotfix'
+  | 'verify_sync'
+  | 'confirm_recovery'
   | 'verify_access'
   | 'close_prematurely';
 
@@ -72,6 +76,9 @@ export interface Chapter7Scorecard {
     immediateResponseScore: number; // max 30
     rcaScore: number;               // max 40
     preventionScore: number;        // max 30
+    decisionGovernanceDelta?: number;
+    decisionRiskDelta?: number;
+    decisionEfficiencyDelta?: number;
   };
   outcomeType: Chapter7OutcomeType;
   outcomeText: string;
@@ -99,6 +106,11 @@ export interface Chapter7State {
   studioOpened?: boolean; // legacy alias compatibility
   activeTab: 'immediate' | 'rca' | 'prevention' | 'resolved';
 
+  // Decision Screen (Choice A vs Choice B)
+  decisionChoice: Chapter7DecisionChoice | null;
+  decisionSubmitted: boolean;
+  decisionFeedback: string | null;
+
   // Activity 1: Restore Service (Sequence Ordering)
   activity1Order: Activity1CardId[];
   activity1Attempts: number;
@@ -117,6 +129,7 @@ export interface Chapter7State {
   activity2Attempts: number;
   activity2Submitted: boolean;
   activity2Completed: boolean;
+  rcaPublished: boolean;
   activity2Feedback: {
     incident?: { isCorrect: boolean; message: string };
     rootCause?: { isCorrect: boolean; message: string };
@@ -143,9 +156,11 @@ export interface Chapter7State {
 
   // Resolution sequence
   incidentStatus: Chapter7IncidentStatus;
-  danielHotfixConfirmed: boolean;
+  alexHotfixConfirmed?: boolean;
+  danielHotfixConfirmed: boolean; // legacy alias compatibility
   marthaMonitoringConfirmed: boolean;
-  aaravClosingConfirmed: boolean;
+  janeClosureConfirmed?: boolean;
+  aaravClosingConfirmed: boolean; // legacy alias compatibility
 
   // Completion
   completed: boolean;
