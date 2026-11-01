@@ -45,6 +45,14 @@ ensureDbConnected().catch((err) => {
 startClockWorker();
 initOrchestrator();
 
+httpServer.on('error', (err: any) => {
+  if (err.code === 'EADDRINUSE') {
+    console.warn(`[BRAINED BACKEND] Port ${ENV.PORT} already in use. Local fallback active.`);
+  } else {
+    console.error('[BRAINED BACKEND] Server error:', err);
+  }
+});
+
 httpServer.listen(ENV.PORT, () => {
   console.log(`\n🚀 [BRAINED BACKEND] Running on http://localhost:${ENV.PORT}`);
   console.log(`📌 Auth Endpoints:`);
