@@ -1,52 +1,62 @@
 /**
  * chapter7.ts
- * Type definitions for Chapter 7: Attendance Sync Production Incident
- * Incident Response & Root Cause Analysis (RCA) Studio
+ * Type definitions for Chapter 7: Production Issues & Root Cause Analysis
+ * SEV-2 Production Incident INC-0241 (Attendance Sync Failure)
  */
 
-export type Chapter7Stage =
-  | 'alert_meeting'
-  | 'immediate_response'
-  | 'build_rca'
-  | 'incident_closure'
+export type Chapter7IncidentStatus =
+  | 'investigating'
+  | 'restoring'
+  | 'rca_in_progress'
+  | 'prevention_planned'
   | 'resolved';
 
-export type ImmediateActionId =
+export type Activity1CardId =
+  | 'confirm_scope'
   | 'deploy_hotfix'
-  | 'monitor_recovery'
-  | 'verify_branch_users'
-  | 'close_immediately_trap';
+  | 'verify_access'
+  | 'close_prematurely';
 
-export interface ImmediateAction {
-  id: ImmediateActionId;
-  label: string;
+export interface Activity1Card {
+  id: Activity1CardId;
+  letter: 'A' | 'B' | 'C' | 'D';
+  title: string;
   description: string;
-  isCorrect: boolean;
-  explanation: string;
+  isTrap?: boolean;
 }
 
-export type RcaSlotType = 'incident' | 'root_cause' | 'impact' | 'preventive_action';
+export type RcaFieldId = 'incident' | 'rootCause' | 'impact' | 'prevention';
 
-export interface RcaCardItem {
-  id: string;
+export interface RcaOption {
+  id: string; // e.g. 'inc_a', 'inc_b', etc.
+  letter: 'A' | 'B' | 'C' | 'D';
   text: string;
-  category: RcaSlotType;
   isCorrect: boolean;
-  details: string;
+  feedback: string;
 }
 
-export type ClosureConditionId =
-  | 'cond_hotfix_verified'
-  | 'cond_rca_documented'
-  | 'cond_monitoring_updated'
-  | 'cond_shared_with_leads'
-  | 'cond_skip_documentation_trap';
+export interface RcaFieldDefinition {
+  id: RcaFieldId;
+  question: string;
+  subtitle: string;
+  options: RcaOption[];
+}
 
-export interface ClosureCondition {
-  id: ClosureConditionId;
-  label: string;
+export type PreventionActionId =
+  | 'continuous_memory_monitoring'
+  | 'alert_thresholds'
+  | 'memory_regression_testing'
+  | 'service_health_checks'
+  | 'increase_number_of_servers'
+  | 'ignore_monitoring_hotfix';
+
+export interface PreventionActionCard {
+  id: PreventionActionId;
+  title: string;
   description: string;
-  isMandatory: boolean;
+  isAppropriate: boolean;
+  inappropriateExplanation?: string;
+  preferredPriorityRank: number; // 1 = highest
 }
 
 export type Chapter7OutcomeType = 'strong' | 'mixed' | 'incomplete';
@@ -61,7 +71,7 @@ export interface Chapter7Scorecard {
   breakdown: {
     immediateResponseScore: number; // max 30
     rcaScore: number;               // max 40
-    closureScore: number;           // max 30
+    preventionScore: number;        // max 30
   };
   outcomeType: Chapter7OutcomeType;
   outcomeText: string;
@@ -77,32 +87,67 @@ export interface Chapter7Scorecard {
 }
 
 export interface Chapter7State {
-  currentStage: Chapter7Stage;
-  activeTab: 'immediate' | 'rca' | 'closure';
-  meetingCompleted: boolean;
-  studioOpened: boolean;
+  // Story & workflow checkpoints
+  alertNotificationShown: boolean;
+  marthaChatViewed: boolean;
+  callInitiated: boolean;
+  callCompleted: boolean;
+  meetingCompleted?: boolean; // legacy alias compatibility
+  screenShareViewed: boolean;
+  aaravAssignmentViewed: boolean;
+  studioUnlocked: boolean;
+  studioOpened?: boolean; // legacy alias compatibility
+  activeTab: 'immediate' | 'rca' | 'prevention' | 'resolved';
 
-  // Activity 1: Immediate Response
-  selectedImmediateActions: ImmediateActionId[];
-  immediateSubmitted: boolean;
-  immediateValidationFeedback: string | null;
+  // Activity 1: Restore Service (Sequence Ordering)
+  activity1Order: Activity1CardId[];
+  activity1Attempts: number;
+  activity1Submitted: boolean;
+  activity1Completed: boolean;
+  activity1Feedback: string | null;
+  activity1FirstOrder?: Activity1CardId[];
 
-  // Activity 2: Build RCA
-  rcaSlots: {
+  // Activity 2: Build the RCA (4 compact fields)
+  activity2Answers: {
     incident: string | null;
-    root_cause: string | null;
+    rootCause: string | null;
     impact: string | null;
-    preventive_action: string | null;
+    prevention: string | null;
   };
-  rcaSubmitted: boolean;
-  rcaValidationFeedback: string | null;
+  activity2Attempts: number;
+  activity2Submitted: boolean;
+  activity2Completed: boolean;
+  activity2Feedback: {
+    incident?: { isCorrect: boolean; message: string };
+    rootCause?: { isCorrect: boolean; message: string };
+    impact?: { isCorrect: boolean; message: string };
+    prevention?: { isCorrect: boolean; message: string };
+    summary?: string;
+  } | null;
+  activity2FirstAnswers?: {
+    incident: string | null;
+    rootCause: string | null;
+    impact: string | null;
+    prevention: string | null;
+  };
 
-  // Activity 3: Final Incident Closure
-  selectedClosureConditions: ClosureConditionId[];
-  closureSubmitted: boolean;
-  closureValidationFeedback: string | null;
+  // Activity 3: Prevent Recurrence (Selection & Prioritisation)
+  activity3Selected: PreventionActionId[];
+  activity3PriorityOrder: PreventionActionId[];
+  activity3Attempts: number;
+  activity3Submitted: boolean;
+  activity3Completed: boolean;
+  activity3Feedback: string | null;
+  activity3FirstSelected?: PreventionActionId[];
+  activity3FirstPriorityOrder?: PreventionActionId[];
 
-  // Final State
+  // Resolution sequence
+  incidentStatus: Chapter7IncidentStatus;
+  danielHotfixConfirmed: boolean;
+  marthaMonitoringConfirmed: boolean;
+  aaravClosingConfirmed: boolean;
+
+  // Completion
   completed: boolean;
   closingChatShown: boolean;
   scorecard: Chapter7Scorecard;
