@@ -3,13 +3,15 @@ import { motion } from 'framer-motion';
 import {
   Video, Users, MonitorUp, MessageSquare, Calendar,
   Phone, Search, Paperclip, Send, FileText, Sparkles, ArrowRight, Volume2,
-  CheckSquare, Square, Database, CheckCircle2, ShieldCheck
+  CheckSquare, Square, Database, CheckCircle2, ShieldCheck, AlertCircle, Wrench, FileCheck2
 } from 'lucide-react';
 import type { ScopeAssignmentResult } from './ProjectAmigoScopeAssignment';
 import { getSessionAssignmentResult } from '../../data/chaptersData';
 
 import type { Chapter2State } from '../../types/chapter2';
 import type { Chapter3State } from '../../types/chapter3';
+import type { Chapter7State } from '../../types/chapter7';
+import type { Chapter8State } from '../../types/chapter8';
 import { Chapter3ChatWorkspace } from '../chapter3/Chapter3ChatWorkspace';
 
 interface MSTeamsAppProps {
@@ -18,7 +20,7 @@ interface MSTeamsAppProps {
   onOpenBrief?: () => void;
   onOpenChapterCompletion?: () => void;
   hasReadBrief?: boolean;
-  initialChatId?: 'aarav' | 'marcus' | 'sophia' | 'daniel' | 'amigo-dev-ops';
+  initialChatId?: 'aarav' | 'marcus' | 'sophia' | 'daniel' | 'amigo-dev-ops' | 'martha';
   activeChapter?: number;
   chapter2State?: Chapter2State;
   onOpenIncidentPanel?: () => void;
@@ -35,10 +37,18 @@ interface MSTeamsAppProps {
   onToggleChapter3Action?: (key: any) => void;
   onSubmitChapter3Plan?: () => void;
   onOpenChapter3Scorecard?: () => void;
+  chapter7State?: Chapter7State;
+  onUpdateChapter7State?: (updater: Partial<Chapter7State> | ((prev: Chapter7State) => Chapter7State)) => void;
+  onOpenChapter7Meeting?: () => void;
+  onOpenIncidentStudio?: () => void;
+  chapter8State?: Chapter8State;
+  onUpdateChapter8State?: (updater: Partial<Chapter8State> | ((prev: Chapter8State) => Chapter8State)) => void;
+  onOpenReleaseHandoverDesk?: () => void;
+  onOpenChapter8Meeting?: () => void;
 }
 
 interface ChatContact {
-  id: 'aarav' | 'marcus' | 'sophia' | 'daniel' | 'amigo-dev-ops';
+  id: 'aarav' | 'marcus' | 'sophia' | 'daniel' | 'amigo-dev-ops' | 'martha';
   name: string;
   role: string;
   avatar: string;
@@ -98,14 +108,24 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
   onToggleChapter3Action,
   onSubmitChapter3Plan,
   onOpenChapter3Scorecard,
+  chapter7State,
+  onUpdateChapter7State,
+  onOpenChapter7Meeting,
+  onOpenIncidentStudio,
+  chapter8State,
+  onUpdateChapter8State,
+  onOpenReleaseHandoverDesk,
+  onOpenChapter8Meeting,
 }) => {
+  const isCh8 = activeChapter === 8;
+  const isCh7 = activeChapter === 7;
   const isCh4 = activeChapter === 4;
   const isCh3 = activeChapter === 3;
   const isCh2 = activeChapter === 2;
   const isPastCh1 = (activeChapter ?? 1) >= 2;
   const [activeTab, setActiveTab] = useState<'chat' | 'calls' | 'teams'>('chat');
-  const [activeChatId, setActiveChatId] = useState<'aarav' | 'marcus' | 'sophia' | 'daniel' | 'amigo-dev-ops'>(
-    initialChatId || (isCh4 ? 'sophia' : isCh3 ? (chapter3State?.activeChatRecipient || 'daniel') : isPastCh1 ? 'daniel' : 'aarav')
+  const [activeChatId, setActiveChatId] = useState<'aarav' | 'marcus' | 'sophia' | 'daniel' | 'amigo-dev-ops' | 'martha'>(
+    initialChatId || (isCh8 ? 'marcus' : isCh7 ? 'martha' : isCh4 ? 'sophia' : isCh3 ? (chapter3State?.activeChatRecipient || 'daniel') : isPastCh1 ? 'daniel' : 'aarav')
   );
   const [messageInput, setMessageInput] = useState('');
   const [customMessages, setCustomMessages] = useState<Record<string, CustomMessage[]>>({});
@@ -114,6 +134,26 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
   useEffect(() => {
     setActiveChatId(initialChatId);
   }, [initialChatId]);
+
+  // Track Martha chat view in Chapter 7
+  useEffect(() => {
+    if (isCh7 && activeChatId === 'martha' && !chapter7State?.marthaChatViewed) {
+      onUpdateChapter7State?.({ marthaChatViewed: true });
+    }
+  }, [isCh7, activeChatId, chapter7State?.marthaChatViewed, onUpdateChapter7State]);
+
+  // Track Marcus and Sophia chat views in Chapter 8
+  useEffect(() => {
+    if (isCh8 && activeChatId === 'marcus' && !chapter8State?.marcusMessageRead) {
+      onUpdateChapter8State?.({ marcusMessageRead: true });
+    }
+  }, [isCh8, activeChatId, chapter8State?.marcusMessageRead, onUpdateChapter8State]);
+
+  useEffect(() => {
+    if (isCh8 && activeChatId === 'sophia' && !chapter8State?.sophiaMessageRead) {
+      onUpdateChapter8State?.({ sophiaMessageRead: true });
+    }
+  }, [isCh8, activeChatId, chapter8State?.sophiaMessageRead, onUpdateChapter8State]);
 
   // Chapter 1 Assignment State stored in session
   const [assignmentResult, setAssignmentResult] = useState<ScopeAssignmentResult | null>(() => {
@@ -137,7 +177,93 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
   const effectiveAssignmentResult = assignmentResult || (isPastCh1 ? CANONICAL_CHAPTER1_RESULT : null);
 
   // Dynamic Contacts List depending on Active Chapter
-  const contactsList: ChatContact[] = isCh4
+  const contactsList: ChatContact[] = isCh8
+    ? [
+        {
+          id: 'marcus',
+          name: 'Marcus Reed',
+          role: 'Chief Technology Officer · Technical Leadership',
+          avatar: '/character/marcus_reed/MarcusDP.png',
+          lastMessage:
+            chapter8State?.marcusTechnicalApproved
+              ? "I've reviewed the technical evidence, testing records, and operational handover. The technical handover is approved."
+              : 'Good work getting the Attendance Sync issue under control. Before we close out the release, I need the final technical evidence and operational handover package. We need to make sure the receiving team has everything required to support the platform.',
+          time: '11:02 AM',
+          unread: !chapter8State?.marcusMessageRead,
+          online: true,
+        },
+        {
+          id: 'sophia',
+          name: 'Sophia Bennett',
+          role: 'Head of HR Operations · ICICI Bank',
+          avatar: '/character/Sophia_bennett/SophiaDP.png',
+          lastMessage:
+            chapter8State?.sophiaClientAccepted
+              ? 'On behalf of the HR team, we accept the Phase 1 delivery, subject to the documented deferred scope and agreed follow-up items.'
+              : 'From the HR side, I need confirmation that the agreed Phase 1 requirements have been delivered. Please include anything deferred or still awaiting approval so we have a clear picture before acceptance.',
+          time: '11:04 AM',
+          unread: !chapter8State?.sophiaMessageRead,
+          online: true,
+        },
+        {
+          id: 'aarav',
+          name: 'Aarav Kapoor',
+          role: 'Senior Consultant · Project Manager',
+          avatar: '/character/AaravDP.png',
+          lastMessage:
+            chapter8State?.aaravClosureConfirmed
+              ? "That's it, Jane. Project Amigo has reached formal Phase 1 handover. We've delivered the agreed scope, validated the system, and managed the handover responsibly. Well done."
+              : chapter8State?.deskUnlocked
+              ? "I've added Release & Handover Desk to your desktop. Use it to put together the final delivery package."
+              : "We're almost there, Jane. The production issue has been resolved, and the project has reached its final delivery stage.",
+          time: '11:06 AM',
+          unread: false,
+          online: true,
+        },
+      ]
+    : isCh7
+    ? [
+        {
+          id: 'martha',
+          name: 'Martha Vance',
+          role: 'Regional Branch Operations Manager',
+          avatar: '/character/Emma_Carter/EmmaDP.png',
+          lastMessage:
+            "Jane, we've got an issue. The Attendance Sync service has started returning intermittent 504 errors. Twelve branch officers have reported login or attendance synchronisation problems.",
+          time: '09:12 AM',
+          unread: !chapter7State?.marthaChatViewed,
+          online: true,
+        },
+        {
+          id: 'daniel',
+          name: 'Daniel Brooks',
+          role: 'Lead Developer · Brained',
+          avatar: '/character/Daniel_Brooks/DanielDP.png',
+          lastMessage:
+            chapter7State?.incidentStatus === 'resolved'
+              ? 'The hotfix is deployed. Memory utilisation is stable, and the affected branches have successfully resumed attendance synchronisation.'
+              : "I've checked the service metrics. Memory consumption is gradually increasing, and the service is eventually timing out. It looks like a memory leak.",
+          time: '09:14 AM',
+          unread: false,
+          online: true,
+        },
+        {
+          id: 'aarav',
+          name: 'Aarav Kapoor',
+          role: 'Senior Consultant · Project Manager',
+          avatar: '/character/AaravDP.png',
+          lastMessage:
+            chapter7State?.incidentStatus === 'resolved'
+              ? "Good work. The immediate issue is resolved, and we now have a documented corrective action. Let's make sure the same issue doesn't come back."
+              : chapter7State?.studioUnlocked
+              ? 'Jane, take ownership of INC-0241. Coordinate the recovery, document the root cause, and put together the preventive actions.'
+              : 'Get the service stable first. But we also need a proper incident record and a Root Cause Analysis.',
+          time: '09:16 AM',
+          unread: false,
+          online: true,
+        },
+      ]
+    : isCh4
     ? [
         {
           id: 'sophia',
@@ -556,7 +682,468 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
 
         {/* Chat Messages Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {isCh4 && activeChatId === 'sophia' ? (
+          {isCh8 && activeChatId === 'marcus' ? (
+            /* ── MARCUS REED — CHAPTER 8 TECHNICAL LEADERSHIP CONVERSATION ── */
+            <div className="space-y-4">
+              <div className="flex justify-center">
+                <span className="text-[10px] font-mono text-cyan-400 bg-cyan-500/15 px-3.5 py-1 rounded-full border border-cyan-500/30 flex items-center gap-1.5 font-bold shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                  Today · 11:02 AM · Channel: Project Amigo — Leadership
+                </span>
+              </div>
+
+              {/* Message 1: Marcus Request */}
+              <div className="flex items-start space-x-3 max-w-2xl">
+                <img
+                  src="/character/marcus_reed/MarcusDP.png"
+                  alt="Marcus"
+                  className="w-8 h-8 rounded-full object-cover border border-cyan-400/50 shrink-0 mt-1"
+                />
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-bold text-xs text-cyan-300">Marcus Reed</span>
+                    <span className="text-[10px] font-mono text-slate-400">Chief Technology Officer · 11:02 AM</span>
+                  </div>
+                  <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#131d33] border border-cyan-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                    <p className="font-bold text-cyan-200">
+                      "Good work getting the Attendance Sync issue under control. Before we close out the release, I need the final technical evidence and operational handover package. We need to make sure the receiving team has everything required to support the platform."
+                    </p>
+                    <p className="text-slate-300 text-xs">
+                      Make sure all 10 project claims are substantiated with audit records, and that Engineering Operations has verified continuity runbooks and APM alert thresholds.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Message 2: Marcus Technical Approval if complete */}
+              {chapter8State?.marcusTechnicalApproved && (
+                <div className="flex items-start space-x-3 max-w-2xl">
+                  <img
+                    src="/character/marcus_reed/MarcusDP.png"
+                    alt="Marcus"
+                    className="w-8 h-8 rounded-full object-cover border border-emerald-400/50 shrink-0 mt-1"
+                  />
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-bold text-xs text-emerald-300">Marcus Reed</span>
+                      <span className="text-[10px] font-mono text-emerald-400 font-bold px-2 py-0.2 rounded bg-emerald-500/20">
+                        Formal Technical Signoff
+                      </span>
+                    </div>
+                    <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#0a1a1f] border border-emerald-500/40 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                      <p className="font-bold text-emerald-200">
+                        "I've reviewed the technical evidence, testing records, and operational handover. The production recovery is documented, and the support information is in place. The technical handover is approved."
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {chapter8State?.deskUnlocked && onOpenReleaseHandoverDesk && (
+                <div className="pt-2">
+                  <button
+                    onClick={onOpenReleaseHandoverDesk}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs shadow-md transition-all"
+                  >
+                    <FileCheck2 className="w-4 h-4" />
+                    <span>Open Release & Handover Desk</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : isCh8 && activeChatId === 'sophia' ? (
+            /* ── SOPHIA BENNETT — CHAPTER 8 CLIENT SCOPE CONVERSATION ── */
+            <div className="space-y-4">
+              <div className="flex justify-center">
+                <span className="text-[10px] font-mono text-pink-400 bg-pink-500/15 px-3.5 py-1 rounded-full border border-pink-500/30 flex items-center gap-1.5 font-bold shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-pink-400" />
+                  Today · 11:04 AM · Direct Message: Sophia Bennett (ICICI Bank HR)
+                </span>
+              </div>
+
+              {/* Message 1: Sophia Request */}
+              <div className="flex items-start space-x-3 max-w-2xl">
+                <img
+                  src="/character/Sophia_bennett/SophiaDP.png"
+                  alt="Sophia"
+                  className="w-8 h-8 rounded-full object-cover border border-pink-400/50 shrink-0 mt-1"
+                />
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-bold text-xs text-pink-300">Sophia Bennett</span>
+                    <span className="text-[10px] font-mono text-slate-400">Head of HR Operations · 11:04 AM</span>
+                  </div>
+                  <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#1c1326] border border-pink-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                    <p className="font-bold text-pink-200">
+                      "From the HR side, I need confirmation that the agreed Phase 1 requirements have been delivered. Please include anything deferred or still awaiting approval so we have a clear picture before acceptance."
+                    </p>
+                    <p className="text-slate-300 text-xs">
+                      We want complete transparency regarding the Dynamic Bonus Calculator and any operational limitations before the bank formally signs off.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Message 2: Sophia Client Acceptance if complete */}
+              {chapter8State?.sophiaClientAccepted && (
+                <div className="flex items-start space-x-3 max-w-2xl">
+                  <img
+                    src="/character/Sophia_bennett/SophiaDP.png"
+                    alt="Sophia"
+                    className="w-8 h-8 rounded-full object-cover border border-emerald-400/50 shrink-0 mt-1"
+                  />
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-bold text-xs text-emerald-300">Sophia Bennett</span>
+                      <span className="text-[10px] font-mono text-emerald-400 font-bold px-2 py-0.2 rounded bg-emerald-500/20">
+                        Formal Client Acceptance
+                      </span>
+                    </div>
+                    <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#0a1a1f] border border-emerald-500/40 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                      <p className="font-bold text-emerald-200">
+                        "The Phase 1 delivery is clearly documented. I can see what has been completed, what has been validated, and what has been deferred. This gives us a clear basis for acceptance."
+                      </p>
+                      <p className="text-slate-300 text-xs">
+                        "On behalf of the HR team, we accept the Phase 1 delivery, subject to the documented deferred scope and agreed follow-up items."
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {chapter8State?.deskUnlocked && onOpenReleaseHandoverDesk && (
+                <div className="pt-2">
+                  <button
+                    onClick={onOpenReleaseHandoverDesk}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white font-bold text-xs shadow-md transition-all"
+                  >
+                    <FileCheck2 className="w-4 h-4" />
+                    <span>Open Release & Handover Desk</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : isCh8 && activeChatId === 'aarav' ? (
+            /* ── AARAV KAPOOR — CHAPTER 8 PROJECT MANAGER CONVERSATION ── */
+            <div className="space-y-4">
+              <div className="flex justify-center">
+                <span className="text-[10px] font-mono text-cyan-400 bg-cyan-500/15 px-3.5 py-1 rounded-full border border-cyan-500/30 flex items-center gap-1.5 font-bold shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                  Today · 11:06 AM · Direct Message: Aarav Kapoor (Senior Consultant)
+                </span>
+              </div>
+
+              {/* Message 1: Aarav Guidance */}
+              <div className="flex items-start space-x-3 max-w-2xl">
+                <img
+                  src="/character/AaravDP.png"
+                  alt="Aarav"
+                  className="w-8 h-8 rounded-full object-cover border border-cyan-400/50 shrink-0 mt-1"
+                />
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-bold text-xs text-cyan-300">Aarav Kapoor</span>
+                    <span className="text-[10px] font-mono text-slate-400">Senior Consultant · Project Manager · 11:06 AM</span>
+                  </div>
+                  <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#131d33] border border-cyan-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                    {chapter8State?.aaravClosureConfirmed ? (
+                      <>
+                        <p className="font-bold text-emerald-300">
+                          "That's it, Jane. Project Amigo has reached formal Phase 1 handover. We've delivered the agreed scope, validated the system, managed the production issue, and made sure the receiving team has what it needs."
+                        </p>
+                        <p className="text-slate-300 text-xs">
+                          "This wasn't just about getting software live. It was about managing the project responsibly from requirements through production and handover. Well done."
+                        </p>
+                      </>
+                    ) : chapter8State?.deskUnlocked ? (
+                      <>
+                        <p className="font-bold text-cyan-200">
+                          "I've added Release & Handover Desk to your desktop. Use it to put together the final delivery package."
+                        </p>
+                        <p className="text-slate-300 text-xs">
+                          Marcus will review the technical handover, and Sophia will review the Phase 1 delivery. Verify all evidence, classify the scope, and organise the operational handover runbooks.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="font-bold text-cyan-200">
+                          "We're almost there, Jane. The production issue has been resolved, and the project has reached its final delivery stage."
+                        </p>
+                        <p className="text-slate-300 text-xs">
+                          Join the quick final project review call so we can align before you assemble the handover desk package.
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2 flex items-center gap-3">
+                {!chapter8State?.deskUnlocked && onOpenChapter8Meeting && (
+                  <button
+                    onClick={onOpenChapter8Meeting}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs shadow-md transition-all"
+                  >
+                    <Video className="w-4 h-4" />
+                    <span>Join Final Review Call</span>
+                  </button>
+                )}
+                {chapter8State?.deskUnlocked && onOpenReleaseHandoverDesk && (
+                  <button
+                    onClick={onOpenReleaseHandoverDesk}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs shadow-md transition-all"
+                  >
+                    <FileCheck2 className="w-4 h-4" />
+                    <span>Open Release & Handover Desk</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : isCh7 && activeChatId === 'martha' ? (
+            /* ── MARTHA VANCE — CHAPTER 7 PRODUCTION OPERATIONS CONVERSATION ── */
+            <div className="space-y-4">
+              <div className="flex justify-center">
+                <span className="text-[10px] font-mono text-rose-400 bg-rose-500/15 px-3.5 py-1 rounded-full border border-rose-500/30 flex items-center gap-1.5 font-bold shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                  Today · 09:12 AM · Channel: Project Amigo — Production Operations · SEV-2 Active
+                </span>
+              </div>
+
+              {/* Message 1: Martha */}
+              <div className="flex items-start space-x-3 max-w-2xl">
+                <img
+                  src="/character/Emma_Carter/EmmaDP.png"
+                  alt="Martha"
+                  className="w-8 h-8 rounded-full object-cover border border-rose-400/50 shrink-0 mt-1"
+                />
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-bold text-xs text-rose-300">Martha Vance</span>
+                    <span className="text-[10px] font-mono text-slate-400">Regional Branch Operations Manager · 09:12 AM</span>
+                  </div>
+                  <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#1e233d] border border-rose-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                    <p className="font-bold text-rose-200">
+                      "Jane, we've got an issue. The Attendance Sync service has started returning intermittent 504 errors. Twelve branch officers have reported login or attendance synchronisation problems."
+                    </p>
+                    <p className="text-slate-300 text-xs">
+                      Branch officers in regional locations are blocked from clocking in during the morning shift start. We need engineering to triage and restore service immediately.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* SEV-2 Active Incident Panel */}
+              <div className="p-4 rounded-2xl bg-[#170e24] border border-rose-500/40 space-y-3 max-w-xl shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <AlertCircle className="w-4 h-4 text-rose-400" />
+                    <span className="font-mono text-[10px] font-bold text-rose-300 uppercase tracking-wider">
+                      PRODUCTION INCIDENT: INC-0241
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                    SEV-2
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
+                  <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 flex justify-between">
+                    <span className="text-slate-400 font-sans">Service</span>
+                    <span className="text-sky-300 font-bold">Attendance Sync</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 flex justify-between">
+                    <span className="text-slate-400 font-sans">Symptoms</span>
+                    <span className="text-rose-400 font-bold">504 Gateway Timeout</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 flex justify-between">
+                    <span className="text-slate-400 font-sans">Impact</span>
+                    <span className="text-amber-300 font-bold">12 Branch Officers</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 flex justify-between">
+                    <span className="text-slate-400 font-sans">Status</span>
+                    <span className={chapter7State?.incidentStatus === 'resolved' ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold animate-pulse'}>
+                      {chapter7State?.incidentStatus === 'resolved' ? 'RESOLVED' : 'INVESTIGATING'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Action buttons */}
+                <div className="pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-slate-800/80">
+                  {onOpenChapter7Meeting && (
+                    <button
+                      onClick={onOpenChapter7Meeting}
+                      className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold text-xs flex items-center space-x-1.5 transition-all cursor-pointer border border-slate-700 shadow"
+                    >
+                      <Video className="w-3.5 h-3.5 text-rose-400" />
+                      <span>Join Technical Call with Daniel</span>
+                    </button>
+                  )}
+
+                  {(chapter7State?.studioUnlocked || chapter7State?.meetingCompleted) && onOpenIncidentStudio && (
+                    <button
+                      onClick={onOpenIncidentStudio}
+                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 via-orange-600 to-amber-600 hover:opacity-95 text-white font-extrabold text-xs flex items-center space-x-1.5 shadow-[0_0_15px_rgba(244,63,94,0.35)] transition-all cursor-pointer border border-rose-400/40"
+                    >
+                      <Wrench className="w-3.5 h-3.5 text-rose-200" />
+                      <span>Incident Response Studio</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Martha's resolved confirmation message */}
+              {chapter7State?.incidentStatus === 'resolved' && (
+                <div className="flex items-start space-x-3 max-w-2xl">
+                  <img
+                    src="/character/Emma_Carter/EmmaDP.png"
+                    alt="Martha"
+                    className="w-8 h-8 rounded-full object-cover border border-emerald-400/50 shrink-0 mt-1"
+                  />
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-bold text-xs text-emerald-300">Martha Vance</span>
+                      <span className="text-[10px] font-mono text-slate-400">Regional Branch Operations Manager · Just now</span>
+                    </div>
+                    <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#13231d] border border-emerald-500/40 text-xs sm:text-[13px] text-emerald-100 shadow-md leading-relaxed">
+                      “I've updated the monitoring thresholds, and the incident report is ready for engineering review. All 12 branch officers have successfully resumed attendance synchronisation.”
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : isCh7 && activeChatId === 'daniel' ? (
+            /* ── DANIEL BROOKS — CHAPTER 7 TECHNICAL TRIAGE ── */
+            <div className="space-y-4">
+              <div className="flex justify-center">
+                <span className="text-[10px] font-mono text-sky-400 bg-sky-500/15 px-3.5 py-1 rounded-full border border-sky-500/30 font-bold">
+                  Today · 09:14 AM · Microservice Engineering Direct
+                </span>
+              </div>
+
+              <div className="flex items-start space-x-3 max-w-2xl">
+                <img
+                  src="/character/Daniel_Brooks/DanielDP.png"
+                  alt="Daniel"
+                  className="w-8 h-8 rounded-full object-cover border border-sky-400/40 shrink-0 mt-1"
+                />
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-bold text-xs text-sky-300">Daniel Brooks</span>
+                    <span className="text-[10px] font-mono text-slate-400">Lead Developer · 09:14 AM</span>
+                  </div>
+                  <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#1e233d] border border-sky-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                    <p>
+                      "I've checked the service metrics. Memory consumption is gradually increasing, and the service is eventually timing out. It looks like a memory leak. I've started preparing a hotfix."
+                    </p>
+                    <p className="text-slate-300 text-xs">
+                      "We can deploy the patch, but I don't want us to close this incident without understanding why it happened."
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {onOpenChapter7Meeting && (
+                <div className="p-3.5 rounded-xl bg-[#141b2f] border border-sky-500/30 flex items-center justify-between max-w-xl">
+                  <div className="text-xs text-slate-200">
+                    <span className="font-bold text-sky-300 block">Incident Bridge Call</span>
+                    Daniel is sharing the live memory utilisation and 504 error telemetry dashboard.
+                  </div>
+                  <button
+                    onClick={onOpenChapter7Meeting}
+                    className="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs flex items-center space-x-1.5 cursor-pointer shadow transition-all"
+                  >
+                    <Video className="w-3.5 h-3.5" />
+                    <span>Join Bridge</span>
+                  </button>
+                </div>
+              )}
+
+              {chapter7State?.incidentStatus === 'resolved' && (
+                <div className="flex items-start space-x-3 max-w-2xl">
+                  <img
+                    src="/character/Daniel_Brooks/DanielDP.png"
+                    alt="Daniel"
+                    className="w-8 h-8 rounded-full object-cover border border-emerald-400/40 shrink-0 mt-1"
+                  />
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-bold text-xs text-emerald-300">Daniel Brooks</span>
+                      <span className="text-[10px] font-mono text-slate-400">Lead Developer · Just now</span>
+                    </div>
+                    <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#13231d] border border-emerald-500/40 text-xs sm:text-[13px] text-emerald-100 shadow-md leading-relaxed">
+                      “The hotfix is deployed. Memory utilisation is stable, and the affected branches have successfully resumed attendance synchronisation.”
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : isCh7 && activeChatId === 'aarav' ? (
+            /* ── AARAV KAPOOR — CHAPTER 7 INCIDENT GOVERNANCE ── */
+            <div className="space-y-4">
+              <div className="flex justify-center">
+                <span className="text-[10px] font-mono text-amber-400 bg-amber-500/15 px-3.5 py-1 rounded-full border border-amber-500/30 font-bold">
+                  Today · 09:16 AM · Project Governance & Escalations
+                </span>
+              </div>
+
+              <div className="flex items-start space-x-3 max-w-2xl">
+                <img
+                  src="/character/AaravDP.png"
+                  alt="Aarav"
+                  className="w-8 h-8 rounded-full object-cover border border-amber-400/40 shrink-0 mt-1"
+                />
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-bold text-xs text-amber-300">Aarav Kapoor</span>
+                    <span className="text-[10px] font-mono text-slate-400">Project Manager · 09:16 AM</span>
+                  </div>
+                  <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#1e233d] border border-amber-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                    <p>
+                      {chapter7State?.studioUnlocked
+                        ? "Jane, take ownership of INC-0241. Coordinate the recovery, document the root cause, and put together the preventive actions. I've added Incident Response Studio to your desktop. Complete the incident response there."
+                        : "Get the service stable first. But we also need a proper incident record and a Root Cause Analysis. I want to know what failed, who was affected, and what we're changing to prevent this from happening again."}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {chapter7State?.studioUnlocked && onOpenIncidentStudio && (
+                <div className="p-3.5 rounded-xl bg-[#1d1728] border border-amber-500/30 flex items-center justify-between max-w-xl">
+                  <div className="text-xs text-slate-200">
+                    <span className="font-bold text-amber-300 block">Incident Response Studio Active</span>
+                    Assemble the recovery sequence, complete the 4-part RCA, and submit the prevention plan.
+                  </div>
+                  <button
+                    onClick={onOpenIncidentStudio}
+                    className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-rose-600 via-orange-600 to-amber-600 text-white font-extrabold text-xs flex items-center space-x-1.5 cursor-pointer shadow transition-all"
+                  >
+                    <Wrench className="w-3.5 h-3.5 text-rose-200" />
+                    <span>Open Studio</span>
+                  </button>
+                </div>
+              )}
+
+              {chapter7State?.incidentStatus === 'resolved' && (
+                <div className="flex items-start space-x-3 max-w-2xl">
+                  <img
+                    src="/character/AaravDP.png"
+                    alt="Aarav"
+                    className="w-8 h-8 rounded-full object-cover border border-emerald-400/40 shrink-0 mt-1"
+                  />
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-bold text-xs text-emerald-300">Aarav Kapoor</span>
+                      <span className="text-[10px] font-mono text-slate-400">Project Manager · Just now</span>
+                    </div>
+                    <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#13231d] border border-emerald-500/40 text-xs sm:text-[13px] text-emerald-100 shadow-md leading-relaxed">
+                      “Good work. The immediate issue is resolved, and we now have a documented corrective action. Let's make sure the same issue doesn't come back.”
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : isCh4 && activeChatId === 'sophia' ? (
             /* ── SOPHIA BENNETT — CHAPTER 4 CHANGE REQUEST THREAD ── */
             <div className="space-y-4">
               <div className="flex justify-center">
