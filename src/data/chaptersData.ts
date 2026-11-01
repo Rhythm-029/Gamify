@@ -8,6 +8,7 @@ import { resetChapter4SessionState } from './chapter4Data';
 import { resetChapter5SessionState } from './chapter5Data';
 import { resetChapter6SessionState } from './chapter6Data';
 import { resetChapter7SessionState } from './chapter7Data';
+import { resetChapter8SessionState } from './chapter8Data';
 
 export type ChapterStatus = 'locked' | 'unlocked' | 'in_progress' | 'completed';
 
@@ -186,7 +187,7 @@ export const CHAPTERS: Chapter[] = [
   {
     id: 7,
     slug: 'chapter-7',
-    title: 'Production Incident: Attendance Sync',
+    title: 'Production Issues & Root Cause Analysis',
     subtitle: 'Incident Response & Root Cause Analysis (RCA) Studio',
     act: 'III',
     actLabel: 'Act III — Delivery',
@@ -195,11 +196,11 @@ export const CHAPTERS: Chapter[] = [
     difficulty: 'Hard',
     xpReward: 500,
     description:
-      'A production issue occurs in the Attendance Sync microservice. 12 branch officers experience intermittent 504 Gateway Timeouts. Deploy the hotfix, verify affected branch officers, document the formal Root Cause Analysis (RCA), and configure preventive monitoring.',
+      'A production issue occurs in the Attendance Sync microservice. Twelve branch officers experience intermittent 504 Gateway Timeouts. Restore the service, verify affected branch officers, document the Root Cause Analysis (RCA), and prioritise preventive controls.',
     objectives: [
-      { label: 'Execute immediate production response & verify affected branch officers', type: 'decision' },
-      { label: 'Build formal Root Cause Analysis identifying socket memory leaks', type: 'analysis' },
-      { label: 'Establish preventive monitoring alerts and secure incident closure', type: 'delivery' },
+      { label: 'Arrange immediate service restoration sequence & verify branch officers', type: 'decision' },
+      { label: 'Build formal 4-part Root Cause Analysis connecting failure to root cause', type: 'analysis' },
+      { label: 'Select and prioritise preventive measures to eliminate recurrence', type: 'delivery' },
     ],
     primaryColor: '#ef4444',
     secondaryColor: '#f97316',
@@ -210,8 +211,8 @@ export const CHAPTERS: Chapter[] = [
   {
     id: 8,
     slug: 'chapter-8',
-    title: 'The Pivot',
-    subtitle: 'When the Plan Breaks',
+    title: 'Production Stabilisation & Project Handover',
+    subtitle: 'Final Handover & Enterprise Acceptance',
     act: 'III',
     actLabel: 'Act III — Delivery',
     day: 'Day 14',
@@ -219,16 +220,16 @@ export const CHAPTERS: Chapter[] = [
     difficulty: 'Expert',
     xpReward: 500,
     description:
-      'Midway through rollout, a regulatory compliance issue surfaces. The entire deployment plan must be re-evaluated in 48 hours. Your credibility is on the line.',
+      'Substantiate Phase 1 delivery claims with verified project evidence, classify deliverables and deferred scope, organize operational handover runbooks, and secure formal technical and client acceptance.',
     objectives: [
-      { label: 'Assess compliance risk impact', type: 'analysis' },
-      { label: 'Propose and defend the pivot strategy', type: 'decision' },
-      { label: 'Maintain stakeholder confidence', type: 'stakeholder' },
+      { label: 'Substantiate Phase 1 claims against verified project evidence', type: 'analysis' },
+      { label: 'Accurately classify deliverables, deferred scope, and pending signoffs', type: 'delivery' },
+      { label: 'Organize operational handover runbooks and secure dual approvals', type: 'decision' },
     ],
-    primaryColor: '#dc2626',
-    secondaryColor: '#7c3aed',
-    accentColor: '#f43f5e',
-    backgroundIcon: '⚠️',
+    primaryColor: '#06b6d4',
+    secondaryColor: '#3b82f6',
+    accentColor: '#22d3ee',
+    backgroundIcon: '🏁',
     status: 'locked',
   },
   {
@@ -383,6 +384,8 @@ export function resetChapterSession(chapterId: number) {
     resetChapter6SessionState();
   } else if (chapterId === 7) {
     resetChapter7SessionState();
+  } else if (chapterId === 8) {
+    resetChapter8SessionState();
   }
 }
 
@@ -395,6 +398,7 @@ export function resetChapterStatuses() {
   resetChapter5SessionState();
   resetChapter6SessionState();
   resetChapter7SessionState();
+  resetChapter8SessionState();
   try {
     localStorage.removeItem('brained_chapter_statuses');
     localStorage.removeItem('brained_just_unlocked_chapter');
@@ -405,6 +409,7 @@ export function resetChapterStatuses() {
     localStorage.removeItem('brained_chapter5_state');
     localStorage.removeItem('brained_chapter6_state');
     localStorage.removeItem('brained_chapter7_state');
+    localStorage.removeItem('brained_chapter8_state');
   } catch {}
 }
 
