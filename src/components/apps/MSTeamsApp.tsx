@@ -48,7 +48,7 @@ interface MSTeamsAppProps {
 }
 
 interface ChatContact {
-  id: 'aarav' | 'marcus' | 'sophia' | 'daniel' | 'amigo-dev-ops' | 'martha';
+  id: 'aarav' | 'marcus' | 'sophia' | 'daniel' | 'amigo-dev-ops' | 'martha' | 'ciso' | 'alex';
   name: string;
   role: string;
   avatar: string;
@@ -124,15 +124,20 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
   const isCh2 = activeChapter === 2;
   const isPastCh1 = (activeChapter ?? 1) >= 2;
   const [activeTab, setActiveTab] = useState<'chat' | 'calls' | 'teams'>('chat');
-  const [activeChatId, setActiveChatId] = useState<'aarav' | 'marcus' | 'sophia' | 'daniel' | 'amigo-dev-ops' | 'martha'>(
-    initialChatId || (isCh8 ? 'marcus' : isCh7 ? 'martha' : isCh4 ? 'sophia' : isCh3 ? (chapter3State?.activeChatRecipient || 'daniel') : isPastCh1 ? 'daniel' : 'aarav')
+  const [activeChatId, setActiveChatId] = useState<
+    'aarav' | 'marcus' | 'sophia' | 'daniel' | 'amigo-dev-ops' | 'martha' | 'ciso' | 'alex'
+  >(
+    (initialChatId as any) ||
+      (isCh8 ? 'ciso' : isCh7 ? 'martha' : isCh4 ? 'sophia' : isCh3 ? (chapter3State?.activeChatRecipient || 'daniel') : isPastCh1 ? 'daniel' : 'aarav')
   );
   const [messageInput, setMessageInput] = useState('');
   const [customMessages, setCustomMessages] = useState<Record<string, CustomMessage[]>>({});
 
   // Keep activeChatId in sync if initialChatId changes
   useEffect(() => {
-    setActiveChatId(initialChatId);
+    if (initialChatId) {
+      setActiveChatId(initialChatId as any);
+    }
   }, [initialChatId]);
 
   // Track Martha chat view in Chapter 7
@@ -142,18 +147,12 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
     }
   }, [isCh7, activeChatId, chapter7State?.marthaChatViewed, onUpdateChapter7State]);
 
-  // Track Marcus and Sophia chat views in Chapter 8
+  // Track CISO chat view in Chapter 8
   useEffect(() => {
-    if (isCh8 && activeChatId === 'marcus' && !chapter8State?.marcusMessageRead) {
-      onUpdateChapter8State?.({ marcusMessageRead: true });
+    if (isCh8 && activeChatId === 'ciso' && !chapter8State?.socChannelOpened) {
+      onUpdateChapter8State?.({ socChannelOpened: true });
     }
-  }, [isCh8, activeChatId, chapter8State?.marcusMessageRead, onUpdateChapter8State]);
-
-  useEffect(() => {
-    if (isCh8 && activeChatId === 'sophia' && !chapter8State?.sophiaMessageRead) {
-      onUpdateChapter8State?.({ sophiaMessageRead: true });
-    }
-  }, [isCh8, activeChatId, chapter8State?.sophiaMessageRead, onUpdateChapter8State]);
+  }, [isCh8, activeChatId, chapter8State?.socChannelOpened, onUpdateChapter8State]);
 
   // Chapter 1 Assignment State stored in session
   const [assignmentResult, setAssignmentResult] = useState<ScopeAssignmentResult | null>(() => {
@@ -180,43 +179,26 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
   const contactsList: ChatContact[] = isCh8
     ? [
         {
-          id: 'marcus',
-          name: 'Marcus Reed',
-          role: 'Chief Technology Officer · Technical Leadership',
-          avatar: '/character/marcus_reed/MarcusDP.png',
-          lastMessage:
-            chapter8State?.marcusTechnicalApproved
-              ? "I've reviewed the technical evidence, testing records, and operational handover. The technical handover is approved."
-              : 'Good work getting the Attendance Sync issue under control. Before we close out the release, I need the final technical evidence and operational handover package. We need to make sure the receiving team has everything required to support the platform.',
-          time: '11:02 AM',
-          unread: !chapter8State?.marcusMessageRead,
+          id: 'ciso',
+          name: 'Bank CISO',
+          role: 'Security Authority · Chief Information Security Officer',
+          avatar: '/character/Olivia_hayes/OliviaDP.png',
+          lastMessage: chapter8State?.completed
+            ? 'Implementation confirmed. Anomalous bot traffic has dropped to zero at the application perimeter, and MFA rate-limiting satisfies our institutional policies and IT compliance acts. Portal suspension is averted.'
+            : 'Jane, we are seeing anomalous bot traffic slamming your new login portal. Under bank cybersecurity policies and IT acts, you must immediately enforce multi-factor authentication (MFA) rate-limiting or face portal suspension.',
+          time: '21:00',
+          unread: !chapter8State?.socChannelOpened && !chapter8State?.threatDelivered,
           online: true,
         },
         {
-          id: 'sophia',
-          name: 'Sophia Bennett',
-          role: 'Head of HR Operations · ICICI Bank',
-          avatar: '/character/Sophia_bennett/SophiaDP.png',
-          lastMessage:
-            chapter8State?.sophiaClientAccepted
-              ? 'On behalf of the HR team, we accept the Phase 1 delivery, subject to the documented deferred scope and agreed follow-up items.'
-              : 'From the HR side, I need confirmation that the agreed Phase 1 requirements have been delivered. Please include anything deferred or still awaiting approval so we have a clear picture before acceptance.',
-          time: '11:04 AM',
-          unread: !chapter8State?.sophiaMessageRead,
-          online: true,
-        },
-        {
-          id: 'aarav',
-          name: 'Aarav Kapoor',
-          role: 'Senior Consultant · Project Manager',
-          avatar: '/character/AaravDP.png',
-          lastMessage:
-            chapter8State?.aaravClosureConfirmed
-              ? "That's it, Jane. Project Amigo has reached formal Phase 1 handover. We've delivered the agreed scope, validated the system, and managed the handover responsibly. Well done."
-              : chapter8State?.deskUnlocked
-              ? "I've added Release & Handover Desk to your desktop. Use it to put together the final delivery package."
-              : "We're almost there, Jane. The production issue has been resolved, and the project has reached its final delivery stage.",
-          time: '11:06 AM',
+          id: 'alex',
+          name: 'Alex',
+          role: 'Developer · Engineering Lead',
+          avatar: '/character/Daniel_Brooks/DanielDP.png',
+          lastMessage: chapter8State?.controlsValidated
+            ? 'WAF bot mitigation rules are deployed and filtering perimeter traffic. MFA rate-limiting is fully enforced across all login endpoints.'
+            : 'Evaluating technical impact of WAF bot mitigation and MFA rate-limiting on employee login speeds.',
+          time: '21:45',
           unread: false,
           online: true,
         },
@@ -225,40 +207,25 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
     ? [
         {
           id: 'martha',
-          name: 'Martha Vance',
-          role: 'Regional Branch Operations Manager',
+          name: 'Martha',
+          role: 'Monitoring / Operations',
           avatar: '/character/Emma_Carter/EmmaDP.png',
           lastMessage:
-            "Jane, we've got an issue. The Attendance Sync service has started returning intermittent 504 errors. Twelve branch officers have reported login or attendance synchronisation problems.",
-          time: '09:12 AM',
+            "Jane! A minor memory leak in the attendance sync microservice caused intermittent 504 gateway timeouts for 12 branch officers during morning login.",
+          time: '19:00',
           unread: !chapter7State?.marthaChatViewed,
           online: true,
         },
         {
           id: 'daniel',
-          name: 'Daniel Brooks',
-          role: 'Lead Developer · Brained',
+          name: 'Alex',
+          role: 'Developer',
           avatar: '/character/Daniel_Brooks/DanielDP.png',
           lastMessage:
             chapter7State?.incidentStatus === 'resolved'
-              ? 'The hotfix is deployed. Memory utilisation is stable, and the affected branches have successfully resumed attendance synchronisation.'
-              : "I've checked the service metrics. Memory consumption is gradually increasing, and the service is eventually timing out. It looks like a memory leak.",
-          time: '09:14 AM',
-          unread: false,
-          online: true,
-        },
-        {
-          id: 'aarav',
-          name: 'Aarav Kapoor',
-          role: 'Senior Consultant · Project Manager',
-          avatar: '/character/AaravDP.png',
-          lastMessage:
-            chapter7State?.incidentStatus === 'resolved'
-              ? "Good work. The immediate issue is resolved, and we now have a documented corrective action. Let's make sure the same issue doesn't come back."
-              : chapter7State?.studioUnlocked
-              ? 'Jane, take ownership of INC-0241. Coordinate the recovery, document the root cause, and put together the preventive actions.'
-              : 'Get the service stable first. But we also need a proper incident record and a Root Cause Analysis.',
-          time: '09:16 AM',
+              ? 'The hotfix has been deployed, and attendance sync has recovered.'
+              : "I'm drafting a quick hotfix patch for the memory leak in the Attendance Sync microservice. I can push it straight to production quietly to stop the timeouts.",
+          time: '19:40',
           unread: false,
           online: true,
         },
@@ -682,222 +649,152 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
 
         {/* Chat Messages Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {isCh8 && activeChatId === 'marcus' ? (
-            /* ── MARCUS REED — CHAPTER 8 TECHNICAL LEADERSHIP CONVERSATION ── */
+          {isCh8 && (activeChatId === 'ciso' || activeChatId === 'marcus' || activeChatId === 'aarav' || activeChatId === 'sophia') ? (
+            /* ── BANK CISO — CHAPTER 8 SOC THREAT LIAISON CONVERSATION ── */
             <div className="space-y-4">
               <div className="flex justify-center">
-                <span className="text-[10px] font-mono text-cyan-400 bg-cyan-500/15 px-3.5 py-1 rounded-full border border-cyan-500/30 flex items-center gap-1.5 font-bold shadow-sm">
-                  <span className="w-2 h-2 rounded-full bg-cyan-400" />
-                  Today · 11:02 AM · Channel: Project Amigo — Leadership
+                <span className="text-[10px] font-mono text-rose-400 bg-rose-500/15 px-3.5 py-1 rounded-full border border-rose-500/30 flex items-center gap-1.5 font-bold shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                  Today · 21:00 · Channel: Bank SOC Liaison · Threat Alert Active
                 </span>
               </div>
 
-              {/* Message 1: Marcus Request */}
+              {/* Message 1: CISO Threat Alert */}
               <div className="flex items-start space-x-3 max-w-2xl">
                 <img
-                  src="/character/marcus_reed/MarcusDP.png"
-                  alt="Marcus"
-                  className="w-8 h-8 rounded-full object-cover border border-cyan-400/50 shrink-0 mt-1"
+                  src="/character/Olivia_hayes/OliviaDP.png"
+                  alt="Bank CISO"
+                  className="w-8 h-8 rounded-full object-cover border border-rose-400/50 shrink-0 mt-1"
                 />
                 <div className="space-y-1">
                   <div className="flex items-center space-x-2">
-                    <span className="font-bold text-xs text-cyan-300">Marcus Reed</span>
-                    <span className="text-[10px] font-mono text-slate-400">Chief Technology Officer · 11:02 AM</span>
+                    <span className="font-bold text-xs text-rose-300">Bank CISO</span>
+                    <span className="text-[10px] font-mono text-slate-400">Security Authority · 21:00</span>
                   </div>
-                  <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#131d33] border border-cyan-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
-                    <p className="font-bold text-cyan-200">
-                      "Good work getting the Attendance Sync issue under control. Before we close out the release, I need the final technical evidence and operational handover package. We need to make sure the receiving team has everything required to support the platform."
+                  <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#1c1220] border border-rose-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                    <p className="font-bold text-rose-200">
+                      "Jane, we are seeing anomalous bot traffic slamming your new login portal. Under bank cybersecurity policies and IT acts, you must immediately enforce multi-factor authentication (MFA) rate-limiting or face portal suspension."
                     </p>
                     <p className="text-slate-300 text-xs">
-                      Make sure all 10 project claims are substantiated with audit records, and that Engineering Operations has verified continuity runbooks and APM alert thresholds.
+                      The automated threat feed flagged credential stuffing targeting the employee login gateway. Immediate WAF bot mitigation and strict MFA rate-limiting must be deployed without delay.
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Message 2: Marcus Technical Approval if complete */}
-              {chapter8State?.marcusTechnicalApproved && (
+              {/* Message 2: CISO Confirmation if completed */}
+              {chapter8State?.completed && (
                 <div className="flex items-start space-x-3 max-w-2xl">
                   <img
-                    src="/character/marcus_reed/MarcusDP.png"
-                    alt="Marcus"
+                    src="/character/Olivia_hayes/OliviaDP.png"
+                    alt="Bank CISO"
                     className="w-8 h-8 rounded-full object-cover border border-emerald-400/50 shrink-0 mt-1"
                   />
                   <div className="space-y-1">
                     <div className="flex items-center space-x-2">
-                      <span className="font-bold text-xs text-emerald-300">Marcus Reed</span>
+                      <span className="font-bold text-xs text-emerald-300">Bank CISO</span>
                       <span className="text-[10px] font-mono text-emerald-400 font-bold px-2 py-0.2 rounded bg-emerald-500/20">
-                        Formal Technical Signoff
+                        Institutional Compliance Confirmed
                       </span>
                     </div>
                     <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#0a1a1f] border border-emerald-500/40 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
                       <p className="font-bold text-emerald-200">
-                        "I've reviewed the technical evidence, testing records, and operational handover. The production recovery is documented, and the support information is in place. The technical handover is approved."
+                        "Implementation confirmed. Anomalous bot traffic has dropped to zero at the application perimeter, and MFA rate-limiting satisfies our institutional policies and IT compliance acts. Portal suspension is averted. Excellent response, Jane."
                       </p>
                     </div>
                   </div>
                 </div>
               )}
-
-              {chapter8State?.deskUnlocked && onOpenReleaseHandoverDesk && (
-                <div className="pt-2">
-                  <button
-                    onClick={onOpenReleaseHandoverDesk}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs shadow-md transition-all"
-                  >
-                    <FileCheck2 className="w-4 h-4" />
-                    <span>Open Release & Handover Desk</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : isCh8 && activeChatId === 'sophia' ? (
-            /* ── SOPHIA BENNETT — CHAPTER 8 CLIENT SCOPE CONVERSATION ── */
-            <div className="space-y-4">
-              <div className="flex justify-center">
-                <span className="text-[10px] font-mono text-pink-400 bg-pink-500/15 px-3.5 py-1 rounded-full border border-pink-500/30 flex items-center gap-1.5 font-bold shadow-sm">
-                  <span className="w-2 h-2 rounded-full bg-pink-400" />
-                  Today · 11:04 AM · Direct Message: Sophia Bennett (ICICI Bank HR)
-                </span>
-              </div>
-
-              {/* Message 1: Sophia Request */}
-              <div className="flex items-start space-x-3 max-w-2xl">
-                <img
-                  src="/character/Sophia_bennett/SophiaDP.png"
-                  alt="Sophia"
-                  className="w-8 h-8 rounded-full object-cover border border-pink-400/50 shrink-0 mt-1"
-                />
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-bold text-xs text-pink-300">Sophia Bennett</span>
-                    <span className="text-[10px] font-mono text-slate-400">Head of HR Operations · 11:04 AM</span>
-                  </div>
-                  <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#1c1326] border border-pink-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
-                    <p className="font-bold text-pink-200">
-                      "From the HR side, I need confirmation that the agreed Phase 1 requirements have been delivered. Please include anything deferred or still awaiting approval so we have a clear picture before acceptance."
-                    </p>
-                    <p className="text-slate-300 text-xs">
-                      We want complete transparency regarding the Dynamic Bonus Calculator and any operational limitations before the bank formally signs off.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Message 2: Sophia Client Acceptance if complete */}
-              {chapter8State?.sophiaClientAccepted && (
-                <div className="flex items-start space-x-3 max-w-2xl">
-                  <img
-                    src="/character/Sophia_bennett/SophiaDP.png"
-                    alt="Sophia"
-                    className="w-8 h-8 rounded-full object-cover border border-emerald-400/50 shrink-0 mt-1"
-                  />
-                  <div className="space-y-1">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-bold text-xs text-emerald-300">Sophia Bennett</span>
-                      <span className="text-[10px] font-mono text-emerald-400 font-bold px-2 py-0.2 rounded bg-emerald-500/20">
-                        Formal Client Acceptance
-                      </span>
-                    </div>
-                    <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#0a1a1f] border border-emerald-500/40 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
-                      <p className="font-bold text-emerald-200">
-                        "The Phase 1 delivery is clearly documented. I can see what has been completed, what has been validated, and what has been deferred. This gives us a clear basis for acceptance."
-                      </p>
-                      <p className="text-slate-300 text-xs">
-                        "On behalf of the HR team, we accept the Phase 1 delivery, subject to the documented deferred scope and agreed follow-up items."
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {chapter8State?.deskUnlocked && onOpenReleaseHandoverDesk && (
-                <div className="pt-2">
-                  <button
-                    onClick={onOpenReleaseHandoverDesk}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white font-bold text-xs shadow-md transition-all"
-                  >
-                    <FileCheck2 className="w-4 h-4" />
-                    <span>Open Release & Handover Desk</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : isCh8 && activeChatId === 'aarav' ? (
-            /* ── AARAV KAPOOR — CHAPTER 8 PROJECT MANAGER CONVERSATION ── */
-            <div className="space-y-4">
-              <div className="flex justify-center">
-                <span className="text-[10px] font-mono text-cyan-400 bg-cyan-500/15 px-3.5 py-1 rounded-full border border-cyan-500/30 flex items-center gap-1.5 font-bold shadow-sm">
-                  <span className="w-2 h-2 rounded-full bg-cyan-400" />
-                  Today · 11:06 AM · Direct Message: Aarav Kapoor (Senior Consultant)
-                </span>
-              </div>
-
-              {/* Message 1: Aarav Guidance */}
-              <div className="flex items-start space-x-3 max-w-2xl">
-                <img
-                  src="/character/AaravDP.png"
-                  alt="Aarav"
-                  className="w-8 h-8 rounded-full object-cover border border-cyan-400/50 shrink-0 mt-1"
-                />
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-bold text-xs text-cyan-300">Aarav Kapoor</span>
-                    <span className="text-[10px] font-mono text-slate-400">Senior Consultant · Project Manager · 11:06 AM</span>
-                  </div>
-                  <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#131d33] border border-cyan-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
-                    {chapter8State?.aaravClosureConfirmed ? (
-                      <>
-                        <p className="font-bold text-emerald-300">
-                          "That's it, Jane. Project Amigo has reached formal Phase 1 handover. We've delivered the agreed scope, validated the system, managed the production issue, and made sure the receiving team has what it needs."
-                        </p>
-                        <p className="text-slate-300 text-xs">
-                          "This wasn't just about getting software live. It was about managing the project responsibly from requirements through production and handover. Well done."
-                        </p>
-                      </>
-                    ) : chapter8State?.deskUnlocked ? (
-                      <>
-                        <p className="font-bold text-cyan-200">
-                          "I've added Release & Handover Desk to your desktop. Use it to put together the final delivery package."
-                        </p>
-                        <p className="text-slate-300 text-xs">
-                          Marcus will review the technical handover, and Sophia will review the Phase 1 delivery. Verify all evidence, classify the scope, and organise the operational handover runbooks.
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <p className="font-bold text-cyan-200">
-                          "We're almost there, Jane. The production issue has been resolved, and the project has reached its final delivery stage."
-                        </p>
-                        <p className="text-slate-300 text-xs">
-                          Join the quick final project review call so we can align before you assemble the handover desk package.
-                        </p>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
 
               <div className="pt-2 flex items-center gap-3">
-                {!chapter8State?.deskUnlocked && onOpenChapter8Meeting && (
+                {onOpenChapter8Meeting && (
                   <button
                     onClick={onOpenChapter8Meeting}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs shadow-md transition-all"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
                   >
                     <Video className="w-4 h-4" />
-                    <span>Join Final Review Call</span>
+                    <span>Join SOC Liaison Channel</span>
                   </button>
                 )}
                 {chapter8State?.deskUnlocked && onOpenReleaseHandoverDesk && (
                   <button
                     onClick={onOpenReleaseHandoverDesk}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs shadow-md transition-all"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs shadow-md transition-all cursor-pointer"
                   >
                     <FileCheck2 className="w-4 h-4" />
-                    <span>Open Release & Handover Desk</span>
+                    <span>Open Security Response Console</span>
                   </button>
                 )}
               </div>
+            </div>
+          ) : isCh8 && (activeChatId === 'alex' || activeChatId === 'daniel') ? (
+            /* ── ALEX — CHAPTER 8 TECHNICAL IMPLEMENTATION CONVERSATION ── */
+            <div className="space-y-4">
+              <div className="flex justify-center">
+                <span className="text-[10px] font-mono text-cyan-400 bg-cyan-500/15 px-3.5 py-1 rounded-full border border-cyan-500/30 flex items-center gap-1.5 font-bold shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                  Today · 21:45 · Direct Message: Alex (Developer)
+                </span>
+              </div>
+
+              {/* Message 1: Alex Trade-off Dialogue */}
+              <div className="flex items-start space-x-3 max-w-2xl">
+                <img
+                  src="/character/Daniel_Brooks/DanielDP.png"
+                  alt="Alex"
+                  className="w-8 h-8 rounded-full object-cover border border-cyan-400/50 shrink-0 mt-1"
+                />
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-bold text-xs text-cyan-300">Alex</span>
+                    <span className="text-[10px] font-mono text-slate-400">Developer · 21:45</span>
+                  </div>
+                  <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#121c2e] border border-cyan-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                    <p className="text-slate-200">
+                      "Jane, turning on strict MFA rate-limiting and perimeter bot filtering right now will introduce extra friction during morning rush logins. If legitimate branch employees trigger verification challenges or delays, support queues might spike."
+                    </p>
+                    <p className="text-slate-400 text-xs">
+                      However, if the Bank CISO requires this under bank cybersecurity policies, we cannot risk portal suspension. We must implement both WAF bot mitigation rules and MFA rate-limiting.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Message 2: Alex Technical Completion */}
+              {chapter8State?.controlsValidated && (
+                <div className="flex items-start space-x-3 max-w-2xl">
+                  <img
+                    src="/character/Daniel_Brooks/DanielDP.png"
+                    alt="Alex"
+                    className="w-8 h-8 rounded-full object-cover border border-emerald-400/50 shrink-0 mt-1"
+                  />
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-bold text-xs text-emerald-300">Alex</span>
+                      <span className="text-[10px] font-mono text-emerald-400 font-bold px-2 py-0.2 rounded bg-emerald-500/20">
+                        Controls Deployed
+                      </span>
+                    </div>
+                    <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#0a1a1f] border border-emerald-500/40 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                      <p className="text-emerald-200">
+                        "WAF bot mitigation rules are deployed and filtering perimeter traffic. MFA rate-limiting is fully enforced across all login endpoints. Legitimate staff logins are proceeding normally."
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {chapter8State?.deskUnlocked && onOpenReleaseHandoverDesk && (
+                <div className="pt-2">
+                  <button
+                    onClick={onOpenReleaseHandoverDesk}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs shadow-md transition-all cursor-pointer"
+                  >
+                    <FileCheck2 className="w-4 h-4" />
+                    <span>Open Security Response Console</span>
+                  </button>
+                </div>
+              )}
             </div>
           ) : isCh7 && activeChatId === 'martha' ? (
             /* ── MARTHA VANCE — CHAPTER 7 PRODUCTION OPERATIONS CONVERSATION ── */
@@ -975,7 +872,7 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
                       className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold text-xs flex items-center space-x-1.5 transition-all cursor-pointer border border-slate-700 shadow"
                     >
                       <Video className="w-3.5 h-3.5 text-rose-400" />
-                      <span>Join Technical Call with Daniel</span>
+                      <span>Join Emergency War Room</span>
                     </button>
                   )}
 
@@ -1002,43 +899,56 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
                   />
                   <div className="space-y-1">
                     <div className="flex items-center space-x-2">
-                      <span className="font-bold text-xs text-emerald-300">Martha Vance</span>
-                      <span className="text-[10px] font-mono text-slate-400">Regional Branch Operations Manager · Just now</span>
+                      <span className="font-bold text-xs text-emerald-300">Martha</span>
+                      <span className="text-[10px] font-mono text-slate-400">Monitoring / Operations · Just now</span>
                     </div>
                     <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#13231d] border border-emerald-500/40 text-xs sm:text-[13px] text-emerald-100 shadow-md leading-relaxed">
-                      “I've updated the monitoring thresholds, and the incident report is ready for engineering review. All 12 branch officers have successfully resumed attendance synchronisation.”
+                      “Monitoring thresholds have been updated on our dashboard, and the incident post-mortem report is ready for engineering review.”
                     </div>
                   </div>
                 </div>
               )}
             </div>
           ) : isCh7 && activeChatId === 'daniel' ? (
-            /* ── DANIEL BROOKS — CHAPTER 7 TECHNICAL TRIAGE ── */
+            /* ── ALEX — CHAPTER 7 DEVELOPER ── */
             <div className="space-y-4">
               <div className="flex justify-center">
                 <span className="text-[10px] font-mono text-sky-400 bg-sky-500/15 px-3.5 py-1 rounded-full border border-sky-500/30 font-bold">
-                  Today · 09:14 AM · Microservice Engineering Direct
+                  Today · 19:40 · Emergency War Room Direct
                 </span>
               </div>
 
               <div className="flex items-start space-x-3 max-w-2xl">
                 <img
                   src="/character/Daniel_Brooks/DanielDP.png"
-                  alt="Daniel"
+                  alt="Alex"
                   className="w-8 h-8 rounded-full object-cover border border-sky-400/40 shrink-0 mt-1"
                 />
                 <div className="space-y-1">
                   <div className="flex items-center space-x-2">
-                    <span className="font-bold text-xs text-sky-300">Daniel Brooks</span>
-                    <span className="text-[10px] font-mono text-slate-400">Lead Developer · 09:14 AM</span>
+                    <span className="font-bold text-xs text-sky-300">Alex</span>
+                    <span className="text-[10px] font-mono text-slate-400">Developer · 19:40</span>
                   </div>
                   <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#1e233d] border border-sky-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
                     <p>
-                      "I've checked the service metrics. Memory consumption is gradually increasing, and the service is eventually timing out. It looks like a memory leak. I've started preparing a hotfix."
+                      "I'm drafting a quick hotfix patch for the memory leak in the Attendance Sync microservice. I can push it straight to production quietly to stop the timeouts."
                     </p>
-                    <p className="text-slate-300 text-xs">
-                      "We can deploy the patch, but I don't want us to close this incident without understanding why it happened."
-                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Jane's PM response */}
+              <div className="flex items-start space-x-3 max-w-2xl pl-6">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 border border-purple-400/50 flex items-center justify-center font-bold text-white text-xs shrink-0 mt-1">
+                  J
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-bold text-xs text-purple-300">Jane (You)</span>
+                    <span className="text-[10px] font-mono text-slate-400">Project Manager · 19:41</span>
+                  </div>
+                  <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#221338] border border-purple-500/40 text-xs sm:text-[13px] text-purple-100 shadow-md leading-relaxed font-medium">
+                    “Don't just push the patch quietly. We need a formal Root Cause Analysis (RCA) document to show why the memory leak occurred and how we prevent it from repeating.”
                   </div>
                 </div>
               </div>
@@ -1046,15 +956,15 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
               {onOpenChapter7Meeting && (
                 <div className="p-3.5 rounded-xl bg-[#141b2f] border border-sky-500/30 flex items-center justify-between max-w-xl">
                   <div className="text-xs text-slate-200">
-                    <span className="font-bold text-sky-300 block">Incident Bridge Call</span>
-                    Daniel is sharing the live memory utilisation and 504 error telemetry dashboard.
+                    <span className="font-bold text-sky-300 block">Emergency Incident War Room</span>
+                    Make the remediation governance decision and coordinate service restoration.
                   </div>
                   <button
                     onClick={onOpenChapter7Meeting}
                     className="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs flex items-center space-x-1.5 cursor-pointer shadow transition-all"
                   >
                     <Video className="w-3.5 h-3.5" />
-                    <span>Join Bridge</span>
+                    <span>Join War Room</span>
                   </button>
                 </div>
               )}
@@ -1063,16 +973,16 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
                 <div className="flex items-start space-x-3 max-w-2xl">
                   <img
                     src="/character/Daniel_Brooks/DanielDP.png"
-                    alt="Daniel"
+                    alt="Alex"
                     className="w-8 h-8 rounded-full object-cover border border-emerald-400/40 shrink-0 mt-1"
                   />
                   <div className="space-y-1">
                     <div className="flex items-center space-x-2">
-                      <span className="font-bold text-xs text-emerald-300">Daniel Brooks</span>
-                      <span className="text-[10px] font-mono text-slate-400">Lead Developer · Just now</span>
+                      <span className="font-bold text-xs text-emerald-300">Alex</span>
+                      <span className="text-[10px] font-mono text-slate-400">Developer · Just now</span>
                     </div>
                     <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#13231d] border border-emerald-500/40 text-xs sm:text-[13px] text-emerald-100 shadow-md leading-relaxed">
-                      “The hotfix is deployed. Memory utilisation is stable, and the affected branches have successfully resumed attendance synchronisation.”
+                      “The hotfix has been deployed, and attendance sync has recovered. Memory utilization is stable and all 12 branch officers can log in without errors.”
                     </div>
                   </div>
                 </div>
