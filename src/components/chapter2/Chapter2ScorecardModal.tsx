@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import {
   Trophy, ShieldCheck, ArrowRight, Lightbulb, MessageSquare,
-  Clock, Shield, BarChart3, Zap, CheckCircle2
+  Clock, Shield, BarChart3, Zap, CheckCircle2, RotateCcw
 } from 'lucide-react';
 import { updateChapterStatus } from '../../data/chaptersData';
 import type { Chapter2State } from '../../types/chapter2';
@@ -11,18 +11,28 @@ interface Chapter2ScorecardModalProps {
   scorecardData: Chapter2State['scorecard'];
   onContinueToChapter3: () => void;
   onReturnToChapterSelect?: () => void;
+  onReplayChapter?: () => void;
 }
 
 export const Chapter2ScorecardModal: React.FC<Chapter2ScorecardModalProps> = ({
   scorecardData,
   onContinueToChapter3,
   onReturnToChapterSelect,
+  onReplayChapter,
 }) => {
   const handleProceed = () => {
     updateChapterStatus(2, 'completed');
     updateChapterStatus(3, 'unlocked');
     localStorage.setItem('brained_just_unlocked_chapter', '3');
     onContinueToChapter3();
+  };
+
+  const handleReturnToChapters = () => {
+    updateChapterStatus(2, 'completed');
+    updateChapterStatus(3, 'unlocked');
+    localStorage.setItem('brained_just_unlocked_chapter', '3');
+    if (onReturnToChapterSelect) onReturnToChapterSelect();
+    else onContinueToChapter3();
   };
 
   return (
@@ -151,14 +161,26 @@ export const Chapter2ScorecardModal: React.FC<Chapter2ScorecardModalProps> = ({
 
         {/* Footer Actions */}
         <div className="pt-2 flex items-center justify-between border-t border-slate-800">
-          {onReturnToChapterSelect && (
-            <button
-              onClick={onReturnToChapterSelect}
-              className="px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-xs font-bold transition-all cursor-pointer"
-            >
-              Back to Chapters
-            </button>
-          )}
+          <div className="flex items-center space-x-2">
+            {onReturnToChapterSelect && (
+              <button
+                onClick={handleReturnToChapters}
+                className="px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-xs font-bold transition-all cursor-pointer"
+              >
+                Back to Chapters
+              </button>
+            )}
+
+            {onReplayChapter && (
+              <button
+                onClick={onReplayChapter}
+                className="px-4 py-2.5 rounded-xl border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Replay Chapter 2</span>
+              </button>
+            )}
+          </div>
 
           <motion.button
             whileHover={{ scale: 1.03, boxShadow: '0 0 25px rgba(59,130,246,0.6)' }}

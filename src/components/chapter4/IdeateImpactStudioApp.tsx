@@ -144,22 +144,36 @@ export const IdeateImpactStudioApp: React.FC<IdeateImpactStudioAppProps> = ({
   // Check if all 5 assessments are completed
   const isAssessmentComplete =
     chapter4State.assessmentSchedule !== null &&
-    chapter4State.assessmentDependencies.length > 0 &&
+    (chapter4State.assessmentDependencies || []).length > 0 &&
     chapter4State.assessmentSecurity !== null &&
     chapter4State.assessmentBusinessValue !== null &&
     chapter4State.assessmentApproval !== null;
 
-  // Open submission modal
+  // Open submission modal (guaranteeing baseline values so player is never blocked)
   const handleOpenSubmissionModal = () => {
     sound.playClick();
+    const updates: Partial<Chapter4State> = {};
+    if (!chapter4State.assessmentSchedule) updates.assessmentSchedule = 'needs_validation';
+    if (!chapter4State.assessmentDependencies || chapter4State.assessmentDependencies.length === 0) {
+      updates.assessmentDependencies = ['dep_regional_rules', 'dep_payroll_integration', 'dep_effort_estimate'];
+    }
+    if (!chapter4State.assessmentSecurity) updates.assessmentSecurity = 'review_access_controls';
+    if (!chapter4State.assessmentBusinessValue) updates.assessmentBusinessValue = 'balance_and_evaluate';
+    if (!chapter4State.assessmentApproval) updates.assessmentApproval = 'record_cr_and_validate';
+    if (!chapter4State.finalRecommendation) updates.finalRecommendation = 'evaluate_without_compromise';
+
+    if (Object.keys(updates).length > 0) {
+      onUpdateState(updates);
+    }
+    setSubmissionError(null);
     setShowSubmitModal(true);
   };
 
   // Submit Final Recommendation
   const handleConfirmSubmit = async () => {
+    const finalRec = chapter4State.finalRecommendation || 'evaluate_without_compromise';
     if (!chapter4State.finalRecommendation) {
-      setSubmissionError('Please select a final recommendation before submitting.');
-      return;
+      onUpdateState({ finalRecommendation: finalRec });
     }
 
     setIsSubmitting(true);
@@ -613,9 +627,17 @@ export const IdeateImpactStudioApp: React.FC<IdeateImpactStudioAppProps> = ({
               Drag and drop features into the release phases
             </p>
 
-            {/* Unscheduled Banner (if CR-017 is not yet placed) */}
+            {/* Unscheduled Banner (if CR-017 or any feature is not yet placed) */}
             {unscheduledFeatures.length > 0 && (
-              <div className="mb-3 p-3 rounded-xl bg-purple-50/70 border border-purple-200/80 shrink-0">
+              <div
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const targetId = draggedFeatureId || e.dataTransfer.getData('text/plain');
+                  if (targetId) moveFeature(targetId, 'unscheduled');
+                }}
+                className="mb-3 p-3 rounded-xl bg-purple-50/70 border border-purple-200/80 shrink-0"
+              >
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-[11px] font-bold text-purple-900 uppercase tracking-wide flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-purple-600" />
@@ -625,39 +647,59 @@ export const IdeateImpactStudioApp: React.FC<IdeateImpactStudioAppProps> = ({
                     Action Required
                   </span>
                 </div>
-                {unscheduledFeatures.map((feat) => (
-                  <div
-                    key={feat.id}
-                    className="p-2.5 rounded-lg bg-white border border-purple-200 shadow-sm flex items-center justify-between"
-                  >
-                    <div className="flex items-center space-x-2.5 min-w-0">
-                      <Calculator className="w-4 h-4 text-purple-600 shrink-0" />
-                      <div>
-                        <div className="text-xs font-bold text-slate-900">{feat.title}</div>
-                        <div className="text-[11px] text-slate-500 truncate max-w-[170px]">
-                          {feat.description}
+                <div className="space-y-1.5">
+                  {unscheduledFeatures.map((feat) => (
+                    <div
+                      key={feat.id}
+                      draggable={true}
+                      onDragStart={(e) => {
+                        setDraggedFeatureId(feat.id);
+                        e.dataTransfer.setData('text/plain', feat.id);
+                      }}
+                      onDragEnd={() => setDraggedFeatureId(null)}
+                      className="p-2.5 rounded-lg bg-white border border-purple-200 shadow-sm flex items-center justify-between cursor-grab active:cursor-grabbing hover:border-indigo-400 hover:shadow transition-all"
+                    >
+                      <div className="flex items-center space-x-2.5 min-w-0">
+                        <div className="w-6 h-6 rounded-md bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
+                          {feat.icon === 'appraisals' && <Users className="w-3.5 h-3.5" />}
+                          {feat.icon === 'attendance' && <Calendar className="w-3.5 h-3.5" />}
+                          {feat.icon === 'form16' && <FileText className="w-3.5 h-3.5 text-rose-600" />}
+                          {feat.icon === 'calculator' && <Calculator className="w-3.5 h-3.5 text-purple-600" />}
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                            <span>{feat.title}</span>
+                            {feat.id === 'CR-017' && (
+                              <span className="px-1 py-0.2 rounded text-[8px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                                CR-017
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[11px] text-slate-500 truncate max-w-[150px]">
+                            {feat.description}
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-center space-x-1 shrink-0">
-                      <button
-                        onClick={() => moveFeature(feat.id, 'phase_1')}
-                        className="px-2 py-1 rounded bg-indigo-600 text-white text-[10px] font-bold hover:bg-indigo-700 transition-colors cursor-pointer"
-                        title="Add to Phase 1"
-                      >
-                        + Phase 1
-                      </button>
-                      <button
-                        onClick={() => moveFeature(feat.id, 'phase_2')}
-                        className="px-2 py-1 rounded bg-slate-200 text-slate-700 text-[10px] font-bold hover:bg-slate-300 transition-colors cursor-pointer"
-                        title="Add to Phase 2"
-                      >
-                        + Phase 2
-                      </button>
+                      <div className="flex items-center space-x-1 shrink-0">
+                        <button
+                          onClick={() => moveFeature(feat.id, 'phase_1')}
+                          className="px-2 py-1 rounded bg-indigo-600 text-white text-[10px] font-bold hover:bg-indigo-700 transition-colors cursor-pointer"
+                          title="Add to Phase 1"
+                        >
+                          + Phase 1
+                        </button>
+                        <button
+                          onClick={() => moveFeature(feat.id, 'phase_2')}
+                          className="px-2 py-1 rounded bg-slate-200 text-slate-700 text-[10px] font-bold hover:bg-slate-300 transition-colors cursor-pointer"
+                          title="Add to Phase 2"
+                        >
+                          + Phase 2
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
 
@@ -666,8 +708,10 @@ export const IdeateImpactStudioApp: React.FC<IdeateImpactStudioAppProps> = ({
               {/* PHASE 1: 90 Day Release */}
               <div
                 onDragOver={(e) => e.preventDefault()}
-                onDrop={() => {
-                  if (draggedFeatureId) moveFeature(draggedFeatureId, 'phase_1');
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const targetId = draggedFeatureId || e.dataTransfer.getData('text/plain');
+                  if (targetId) moveFeature(targetId, 'phase_1');
                 }}
                 className="flex flex-col rounded-xl bg-slate-50/70 border border-slate-200 p-2.5 h-full overflow-hidden"
               >
@@ -690,11 +734,15 @@ export const IdeateImpactStudioApp: React.FC<IdeateImpactStudioAppProps> = ({
                   {phase1Features.map((feat) => (
                     <div
                       key={feat.id}
-                      draggable={feat.id === 'CR-017'}
-                      onDragStart={() => setDraggedFeatureId(feat.id)}
-                      className={`p-2.5 rounded-lg bg-white border border-slate-200 shadow-sm transition-all ${
+                      draggable={true}
+                      onDragStart={(e) => {
+                        setDraggedFeatureId(feat.id);
+                        e.dataTransfer.setData('text/plain', feat.id);
+                      }}
+                      onDragEnd={() => setDraggedFeatureId(null)}
+                      className={`p-2.5 rounded-lg bg-white border border-slate-200 shadow-sm transition-all cursor-grab active:cursor-grabbing hover:border-indigo-400 hover:shadow ${
                         feat.id === 'CR-017'
-                          ? 'border-indigo-400 ring-1 ring-indigo-300 cursor-grab active:cursor-grabbing bg-indigo-50/30'
+                          ? 'border-indigo-400 ring-1 ring-indigo-300 bg-indigo-50/30'
                           : ''
                       }`}
                     >
@@ -702,19 +750,19 @@ export const IdeateImpactStudioApp: React.FC<IdeateImpactStudioAppProps> = ({
                         <div className="w-6 h-6 rounded-md bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 mt-0.5">
                           {feat.icon === 'appraisals' && <Users className="w-3.5 h-3.5" />}
                           {feat.icon === 'attendance' && <Calendar className="w-3.5 h-3.5" />}
+                          {feat.icon === 'form16' && <FileText className="w-3.5 h-3.5 text-rose-600" />}
                           {feat.icon === 'calculator' && <Calculator className="w-3.5 h-3.5 text-indigo-600" />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-slate-800">{feat.title}</span>
-                            {feat.id === 'CR-017' && (
-                              <button
-                                onClick={() => moveFeature(feat.id, 'phase_2')}
-                                className="text-[9px] font-bold text-indigo-600 hover:text-indigo-800 underline cursor-pointer"
-                              >
-                                Move to P2
-                              </button>
-                            )}
+                            <span className="text-xs font-bold text-slate-800 truncate mr-1">{feat.title}</span>
+                            <button
+                              onClick={() => moveFeature(feat.id, 'phase_2')}
+                              className="text-[9px] font-bold text-indigo-600 hover:text-indigo-800 underline cursor-pointer shrink-0"
+                              title="Move to Phase 2"
+                            >
+                              Move to P2
+                            </button>
                           </div>
                           <p className="text-[10px] text-slate-500 leading-tight mt-0.5">
                             {feat.description}
@@ -726,12 +774,24 @@ export const IdeateImpactStudioApp: React.FC<IdeateImpactStudioAppProps> = ({
 
                   {/* Drop zone placeholder */}
                   <div
-                    onClick={() => moveFeature('CR-017', 'phase_1')}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const targetId = draggedFeatureId || e.dataTransfer.getData('text/plain');
+                      if (targetId) moveFeature(targetId, 'phase_1');
+                    }}
+                    onClick={() => {
+                      if (draggedFeatureId) {
+                        moveFeature(draggedFeatureId, 'phase_1');
+                      } else if (unscheduledFeatures.length > 0) {
+                        moveFeature(unscheduledFeatures[0].id, 'phase_1');
+                      }
+                    }}
                     className="p-3 rounded-lg border-2 border-dashed border-indigo-300 bg-indigo-50/20 text-center flex flex-col items-center justify-center hover:bg-indigo-50/50 transition-colors cursor-pointer"
                   >
                     <Plus className="w-4 h-4 text-indigo-500 mb-0.5" />
                     <span className="text-[11px] font-bold text-indigo-700 leading-tight">
-                      Drag feature here
+                      Drop feature here
                     </span>
                     <span className="text-[10px] text-indigo-500">Add to Phase 1</span>
                   </div>
@@ -741,8 +801,10 @@ export const IdeateImpactStudioApp: React.FC<IdeateImpactStudioAppProps> = ({
               {/* PHASE 2: Future Release */}
               <div
                 onDragOver={(e) => e.preventDefault()}
-                onDrop={() => {
-                  if (draggedFeatureId) moveFeature(draggedFeatureId, 'phase_2');
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const targetId = draggedFeatureId || e.dataTransfer.getData('text/plain');
+                  if (targetId) moveFeature(targetId, 'phase_2');
                 }}
                 className="flex flex-col rounded-xl bg-slate-50/70 border border-slate-200 p-2.5 h-full overflow-hidden"
               >
@@ -762,30 +824,35 @@ export const IdeateImpactStudioApp: React.FC<IdeateImpactStudioAppProps> = ({
                   {phase2Features.map((feat) => (
                     <div
                       key={feat.id}
-                      draggable={feat.id === 'CR-017'}
-                      onDragStart={() => setDraggedFeatureId(feat.id)}
-                      className={`p-2.5 rounded-lg bg-white border border-slate-200 shadow-sm transition-all ${
+                      draggable={true}
+                      onDragStart={(e) => {
+                        setDraggedFeatureId(feat.id);
+                        e.dataTransfer.setData('text/plain', feat.id);
+                      }}
+                      onDragEnd={() => setDraggedFeatureId(null)}
+                      className={`p-2.5 rounded-lg bg-white border border-slate-200 shadow-sm transition-all cursor-grab active:cursor-grabbing hover:border-indigo-400 hover:shadow ${
                         feat.id === 'CR-017'
-                          ? 'border-indigo-400 ring-1 ring-indigo-300 cursor-grab active:cursor-grabbing bg-indigo-50/30'
+                          ? 'border-indigo-400 ring-1 ring-indigo-300 bg-indigo-50/30'
                           : ''
                       }`}
                     >
                       <div className="flex items-start space-x-2">
                         <div className="w-6 h-6 rounded-md bg-rose-100 text-rose-700 flex items-center justify-center shrink-0 mt-0.5">
+                          {feat.icon === 'appraisals' && <Users className="w-3.5 h-3.5" />}
+                          {feat.icon === 'attendance' && <Calendar className="w-3.5 h-3.5" />}
                           {feat.icon === 'form16' && <FileText className="w-3.5 h-3.5" />}
                           {feat.icon === 'calculator' && <Calculator className="w-3.5 h-3.5 text-indigo-600" />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-slate-800">{feat.title}</span>
-                            {feat.id === 'CR-017' && (
-                              <button
-                                onClick={() => moveFeature(feat.id, 'phase_1')}
-                                className="text-[9px] font-bold text-indigo-600 hover:text-indigo-800 underline cursor-pointer"
-                              >
-                                Move to P1
-                              </button>
-                            )}
+                            <span className="text-xs font-bold text-slate-800 truncate mr-1">{feat.title}</span>
+                            <button
+                              onClick={() => moveFeature(feat.id, 'phase_1')}
+                              className="text-[9px] font-bold text-indigo-600 hover:text-indigo-800 underline cursor-pointer shrink-0"
+                              title="Move to Phase 1"
+                            >
+                              Move to P1
+                            </button>
                           </div>
                           <p className="text-[10px] text-slate-500 leading-tight mt-0.5">
                             {feat.description}
@@ -797,12 +864,24 @@ export const IdeateImpactStudioApp: React.FC<IdeateImpactStudioAppProps> = ({
 
                   {/* Drop zone placeholder */}
                   <div
-                    onClick={() => moveFeature('CR-017', 'phase_2')}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const targetId = draggedFeatureId || e.dataTransfer.getData('text/plain');
+                      if (targetId) moveFeature(targetId, 'phase_2');
+                    }}
+                    onClick={() => {
+                      if (draggedFeatureId) {
+                        moveFeature(draggedFeatureId, 'phase_2');
+                      } else if (unscheduledFeatures.length > 0) {
+                        moveFeature(unscheduledFeatures[0].id, 'phase_2');
+                      }
+                    }}
                     className="p-3 rounded-lg border-2 border-dashed border-indigo-300 bg-indigo-50/20 text-center flex flex-col items-center justify-center hover:bg-indigo-50/50 transition-colors cursor-pointer"
                   >
                     <Plus className="w-4 h-4 text-indigo-500 mb-0.5" />
                     <span className="text-[11px] font-bold text-indigo-700 leading-tight">
-                      Drag feature here
+                      Drop feature here
                     </span>
                     <span className="text-[10px] text-indigo-500">Add to Phase 2</span>
                   </div>
@@ -1141,14 +1220,9 @@ export const IdeateImpactStudioApp: React.FC<IdeateImpactStudioAppProps> = ({
 
               <button
                 onClick={handleOpenSubmissionModal}
-                disabled={!isAssessmentComplete}
-                className={`flex-1 py-2 px-4 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all shadow-sm ${
-                  isAssessmentComplete
-                    ? 'bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer shadow-indigo-200'
-                    : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                }`}
+                className="flex-1 py-2 px-4 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all shadow-md bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer hover:shadow-indigo-300/40 active:scale-[0.99]"
               >
-                <Sparkles className="w-3.5 h-3.5" />
+                <Sparkles className="w-3.5 h-3.5 text-indigo-200" />
                 <span>Run Impact Analysis</span>
               </button>
             </div>

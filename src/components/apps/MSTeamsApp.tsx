@@ -10,6 +10,7 @@ import { getSessionAssignmentResult } from '../../data/chaptersData';
 
 import type { Chapter2State } from '../../types/chapter2';
 import type { Chapter3State } from '../../types/chapter3';
+import { Chapter3ChatWorkspace } from '../chapter3/Chapter3ChatWorkspace';
 
 interface MSTeamsAppProps {
   onPenalty?: (trustDelta: number, xpDelta: number) => void;
@@ -25,6 +26,8 @@ interface MSTeamsAppProps {
   onOpenDesignReview?: () => void;
   onOpenSprintReadiness?: () => void;
   chapter3State?: Chapter3State;
+  onUpdateChapter3State?: (updater: Partial<Chapter3State> | ((prev: Chapter3State) => Chapter3State)) => void;
+  onOpenMailComposer?: (to: string, email: string, subject: string, body: string) => void;
   onOpenDataIntegrityTriage?: () => void;
   onOpenChapter3Meeting?: () => void;
   onOpenChapter3Portal?: () => void;
@@ -86,6 +89,8 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
   onOpenDesignReview,
   onOpenSprintReadiness,
   chapter3State,
+  onUpdateChapter3State,
+  onOpenMailComposer,
   onOpenDataIntegrityTriage,
   onOpenChapter3Meeting,
   onOpenChapter3Portal,
@@ -100,7 +105,7 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
   const isPastCh1 = (activeChapter ?? 1) >= 2;
   const [activeTab, setActiveTab] = useState<'chat' | 'calls' | 'teams'>('chat');
   const [activeChatId, setActiveChatId] = useState<'aarav' | 'marcus' | 'sophia' | 'daniel' | 'amigo-dev-ops'>(
-    initialChatId || (isCh4 ? 'sophia' : isPastCh1 ? 'daniel' : 'aarav')
+    initialChatId || (isCh4 ? 'sophia' : isCh3 ? (chapter3State?.activeChatRecipient || 'daniel') : isPastCh1 ? 'daniel' : 'aarav')
   );
   const [messageInput, setMessageInput] = useState('');
   const [customMessages, setCustomMessages] = useState<Record<string, CustomMessage[]>>({});
@@ -186,46 +191,13 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
           name: 'Daniel Brooks',
           role: 'Lead Developer · Brained',
           avatar: '/character/Daniel_Brooks/DanielDP.png',
-          lastMessage: chapter3State?.task3Submitted
-            ? 'Integration triage plan submitted. Local mocks proceeding.'
-            : 'Hey, we have a blocker. The Appraisal and Attendance integrations are failing...',
-          time: '09:41 AM',
-          unread: !chapter3State?.task3Submitted,
-          online: true,
-        },
-        {
-          id: 'amigo-dev-ops' as const,
-          name: '# amigo-dev-ops',
-          role: 'Engineering Operations Channel',
-          avatar: '',
-          lastMessage: chapter3State?.task3Submitted
-            ? 'Integration triage confirmed · Approved gateway track'
-            : 'Integration blocker active · Protocol mismatch',
-          time: '09:42 AM',
-          unread: false,
-          online: true,
-          isChannel: true,
-        },
-        {
-          id: 'aarav',
-          name: 'Aarav Kapoor',
-          role: 'Senior Consultant · Project Manager',
-          avatar: '/character/AaravDP.png',
-          lastMessage: chapter3State?.escalationChoice
-            ? "Before we build anything, let's establish what the bank supports."
-            : 'Integration Portal ready for review.',
-          time: '09:43 AM',
-          unread: false,
-          online: true,
-        },
-        {
-          id: 'marcus',
-          name: 'Marcus Reed',
-          role: 'Chief Technology Officer · Brained',
-          avatar: '/character/marcus_reed/MarcusDP.png',
-          lastMessage: customMessages['marcus']?.length ? customMessages['marcus'][customMessages['marcus'].length - 1].text : 'No messages yet',
-          time: customMessages['marcus']?.length ? 'Just now' : '',
-          unread: false,
+          lastMessage: chapter3State?.v2SentToDaniel
+            ? 'Perfect, thanks for following up. I have all five prerequisites now.'
+            : chapter3State?.sentV1ToDaniel
+            ? 'Thanks, I received the details. Still need confirmation of network access.'
+            : 'Hey, we are getting ready to set up the UAT environment...',
+          time: '09:30 AM',
+          unread: !chapter3State?.v2SentToDaniel && (!chapter3State?.emailSentAt || chapter3State?.sentV1ToDaniel),
           online: true,
         },
         {
@@ -233,10 +205,28 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
           name: 'Sophia Bennett',
           role: 'Head of HR Operations · ICICI Bank',
           avatar: '/character/Sophia_bennett/SophiaDP.png',
-          lastMessage: customMessages['sophia']?.length ? customMessages['sophia'][customMessages['sophia'].length - 1].text : 'No messages yet',
-          time: customMessages['sophia']?.length ? 'Just now' : '',
+          lastMessage: chapter3State?.v2Delivered
+            ? "That's the complete set of setup details currently available."
+            : chapter3State?.v1Delivered
+            ? 'Have a look and see if this covers what your developer needs.'
+            : chapter3State?.emailSentAt
+            ? "Hey! Yes, sure. I've got the details our IT team shared."
+            : 'Client HR/IT Coordination Team',
+          time: chapter3State?.emailSentAt ? '09:35 AM' : '',
+          unread: Boolean(chapter3State?.emailSentAt && !chapter3State?.v2SentToDaniel && !chapter3State?.sentV1ToDaniel),
+          online: true,
+        },
+        {
+          id: 'aarav',
+          name: 'Aarav Kapoor',
+          role: 'Senior Consultant · Project Manager',
+          avatar: '/character/AaravDP.png',
+          lastMessage: chapter3State?.completed
+            ? 'Good work coordinating the UAT setup.'
+            : 'Coordinate with client IT to confirm UAT prerequisites.',
+          time: '09:40 AM',
           unread: false,
-          online: false,
+          online: true,
         },
       ]
     : isCh2
@@ -635,7 +625,7 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
                 </div>
               </div>
             </div>
-          ) : activeChatId === 'aarav' ? (
+          ) : activeChatId === 'aarav' && !isCh3 ? (
             <>
               {/* If in Chapter 2, show yesterday's Chapter 1 history badge */}
               <div className="flex justify-center">
@@ -927,118 +917,67 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
                 </div>
               )}
             </>
-          ) : activeChatId === 'daniel' && isCh3 ? (
-            /* ── DANIEL BROOKS — CHAPTER 3 THE INTEGRATION TRAP CONVERSATION ── */
-            <div className="space-y-4">
+          ) : isCh3 && (activeChatId === 'daniel' || activeChatId === 'sophia') ? (
+            /* ── CHAPTER 3: UAT INFRASTRUCTURE COORDINATION (DANIEL & SOPHIA) ── */
+            <Chapter3ChatWorkspace
+              activeContact={activeChatId as 'daniel' | 'sophia'}
+              onSwitchContact={(contact) => setActiveChatId(contact)}
+              chapter3State={chapter3State!}
+              onUpdateState={onUpdateChapter3State || (() => {})}
+              onOpenEmailClient={() => {
+                if (onOpenMailComposer) {
+                  onOpenMailComposer(
+                    'Sophia Bennett (Client Sponsor · ICICI Bank)',
+                    'sophia.bennett@icici.example.in',
+                    'Project Amigo — UAT Setup Details',
+                    `Hi Sophia,\n\nOur development team is preparing the UAT environment for Project Amigo. Could you please help us confirm the server details, API endpoints, login integration, test-user access, and network requirements?\n\nWe need these details to configure the environment and prepare for integration testing.\n\nThanks!`
+                  );
+                }
+              }}
+              onOpenScorecard={onOpenChapter3Scorecard || (() => {})}
+            />
+          ) : isCh3 && activeChatId === 'aarav' ? (
+            /* ── AARAV KAPOOR — CHAPTER 3 ADVICE & WRAP-UP ── */
+            <div className="space-y-4 max-w-2xl mx-auto">
               <div className="flex justify-center">
-                <span className="text-[10px] font-mono text-rose-400 bg-rose-500/10 px-3.5 py-1 rounded-full border border-rose-500/25 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse" />
-                  <span>Today · 09:41 AM · Project Amigo Integration Blocker</span>
+                <span className="text-[10px] font-mono text-sky-400 bg-sky-500/10 px-3.5 py-1 rounded-full border border-sky-500/25">
+                  Today · 09:30 AM · Project Amigo UAT Alignment
                 </span>
               </div>
-
-              {/* Message 1: Daniel Blocker Alert */}
-              <div className="flex items-start space-x-3 max-w-2xl">
+              <div className="flex items-start space-x-3">
                 <img
-                  src="/character/Daniel_Brooks/DanielDP.png"
-                  alt="Daniel"
-                  className="w-8 h-8 rounded-full object-cover border border-white/20 shrink-0 mt-1"
+                  src="/character/AaravDP.png"
+                  alt="Aarav"
+                  className="w-9 h-9 rounded-full object-cover border border-sky-400/50 shrink-0 mt-1 shadow-md"
                 />
-                <div className="space-y-1">
+                <div className="space-y-1.5 flex-1">
                   <div className="flex items-center space-x-2">
-                    <span className="font-bold text-xs text-white">Daniel Brooks</span>
-                    <span className="text-[10px] font-mono text-orange-400">Developer · 09:41 AM</span>
+                    <span className="font-bold text-xs text-sky-300">Aarav Kapoor</span>
+                    <span className="text-[10px] font-mono text-slate-400">Senior Consultant · Project Manager</span>
                   </div>
-                  <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#1e233d] border border-white/10 text-xs text-slate-100 shadow-md leading-relaxed">
-                    Hey, we have a blocker. The Appraisal and Attendance integrations are failing. I'm sharing my screen—take a look at these logs.
+                  <div className="p-4 rounded-2xl rounded-tl-sm bg-[#181d33] border border-white/10 text-xs sm:text-[13px] text-slate-100 shadow-xl leading-relaxed space-y-2">
+                    {chapter3State?.completed ? (
+                      <p>
+                        "Good work coordinating the UAT setup. We've gathered the required configuration details and identified the dependency that needs IT clearance. Daniel can prepare the confirmed settings while we wait for network access approval."
+                      </p>
+                    ) : (
+                      <p>
+                        "Daniel is preparing to configure the UAT environment. Please coordinate with Sophia to get all five technical parameters confirmed with the bank's IT team before engineering begins."
+                      </p>
+                    )}
                   </div>
-                </div>
-              </div>
-
-              {/* Emergency Meeting Call Card */}
-              <div className="p-4.5 rounded-2xl bg-gradient-to-r from-[#171b30] to-[#121629] border border-rose-500/40 space-y-3.5 max-w-xl shadow-xl">
-                <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
-                  <div className="flex items-center space-x-2">
-                    <Video className="w-4 h-4 text-rose-400 animate-pulse" />
-                    <span className="font-mono text-xs font-bold text-rose-300 uppercase tracking-wider">
-                      EMERGENCY ENGINEERING CALL IN PROGRESS
-                    </span>
-                  </div>
-                  <span className="text-xs font-mono px-2.5 py-0.5 rounded font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                    Active Blocker
-                  </span>
-                </div>
-
-                <div className="text-xs sm:text-sm text-slate-300 space-y-1">
-                  <div className="font-bold text-white text-sm sm:text-base">Core Banking APIs · Protocol Mismatch (SOAP/XML vs JSON/REST)</div>
-                  <p className="text-xs sm:text-[13px] text-slate-300 leading-relaxed">
-                    Daniel is sharing live service logs on screen showing HTTP 415 and unverified LDAP access.
-                  </p>
-                </div>
-
-                {/* Call Button */}
-                <div className="pt-1 flex flex-wrap items-center gap-2.5">
-                  {onOpenChapter3Meeting && (
-                    <button
-                      onClick={onOpenChapter3Meeting}
-                      className="px-4.5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm flex items-center space-x-2 shadow-lg shadow-rose-600/30 cursor-pointer transition-all"
-                    >
-                      <Video className="w-4 h-4" />
-                      <span>Join Emergency Teams Call</span>
-                    </button>
-                  )}
-
-                  {chapter3State?.portalAccessGranted && onOpenChapter3Portal && (
-                    <button
-                      onClick={onOpenChapter3Portal}
-                      className="px-4.5 py-2.5 rounded-xl bg-sky-600/30 hover:bg-sky-600/50 border border-sky-500/40 text-sky-200 hover:text-white font-bold text-xs sm:text-sm flex items-center space-x-2 cursor-pointer transition-all"
-                    >
-                      <span>Open Integration Portal</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
+                  {chapter3State?.completed && onOpenChapter3Scorecard && (
+                    <div className="pt-2">
+                      <button
+                        onClick={onOpenChapter3Scorecard}
+                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs flex items-center space-x-1.5 shadow-md cursor-pointer"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        <span>View Chapter 3 Scorecard</span>
+                      </button>
+                    </div>
                   )}
                 </div>
-              </div>
-
-              {/* Integration Status Preview Table */}
-              <div className="p-4 rounded-2xl bg-[#13192f] border border-sky-500/30 space-y-3 max-w-xl">
-                <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                  <span className="font-mono text-xs font-bold text-sky-400 uppercase tracking-wider">
-                    INTEGRATION SERVICE LOG SUMMARY
-                  </span>
-                  <span className="text-xs font-mono text-slate-400">ICICI ESB Gateway</span>
-                </div>
-
-                <div className="space-y-2 text-xs sm:text-[12.5px] font-mono">
-                  <div className="p-2.5 rounded-lg bg-black/40 border border-white/5 flex items-center justify-between">
-                    <span className="text-slate-200 font-semibold">AppraisalService</span>
-                    <span className="text-rose-400 font-bold">415 Unsupported Media Type</span>
-                  </div>
-                  <div className="p-2.5 rounded-lg bg-black/40 border border-white/5 flex items-center justify-between">
-                    <span className="text-slate-200 font-semibold">AttendanceService</span>
-                    <span className="text-rose-400 font-bold">Protocol Mismatch (REST/SOAP)</span>
-                  </div>
-                  <div className="p-2.5 rounded-lg bg-black/40 border border-white/5 flex items-center justify-between">
-                    <span className="text-slate-200 font-semibold">EmployeeAuthService</span>
-                    <span className="text-amber-400 font-bold">LDAP/SSO Unverified</span>
-                  </div>
-                  <div className="p-2.5 rounded-lg bg-black/40 border border-white/5 flex items-center justify-between">
-                    <span className="text-slate-200 font-semibold">Gateway Status</span>
-                    <span className="text-amber-400 font-bold">Awaiting Approved Endpoint</span>
-                  </div>
-                </div>
-
-                {chapter3State?.task3Submitted && onOpenChapter3Scorecard && (
-                  <div className="pt-2 flex justify-end">
-                    <button
-                      onClick={onOpenChapter3Scorecard}
-                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs flex items-center space-x-1.5 shadow-lg shadow-sky-600/30 cursor-pointer"
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>View Chapter 3 Scorecard</span>
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
 

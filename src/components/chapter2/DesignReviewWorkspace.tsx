@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileText, CheckCircle2, Eye, ShieldCheck, Mail,
-  Send, ArrowRight, Award, Calendar, DollarSign, X
+  Send, ArrowRight, Award, Calendar, DollarSign, X, Sparkles
 } from 'lucide-react';
 import type { UiUxOption, PrototypePreviewItem } from '../../types/chapter2';
 import { CHAPTER2_PROTOTYPES } from '../../data/chapter2Data';
@@ -26,8 +26,15 @@ export const DesignReviewWorkspace: React.FC<DesignReviewWorkspaceProps> = ({
   onRequestSignoffEmail,
   onProceedToSprintReadiness,
 }) => {
+  const [selectedDesignChoice, setSelectedDesignChoice] = useState<'design_1' | 'design_2' | 'design_3'>('design_3');
+  const [modalImageSrc, setModalImageSrc] = useState<string | null>(null);
+  const [modalImageTitle, setModalImageTitle] = useState<string | null>(null);
   const [activeModalPrototype, setActiveModalPrototype] = useState<PrototypePreviewItem | null>(null);
   const [selectedDecision, setSelectedDecision] = useState<UiUxOption | null>(initialDecision);
+
+  const handleSelectDesign = (id: 'design_1' | 'design_2' | 'design_3') => {
+    setSelectedDesignChoice(id);
+  };
 
   const handleApplyDecision = () => {
     if (!selectedDecision) return;
@@ -37,94 +44,195 @@ export const DesignReviewWorkspace: React.FC<DesignReviewWorkspaceProps> = ({
     }
   };
 
+  const handleSendForApproval = () => {
+    // When the user clicks "Send for Approval" from the UI options screen,
+    // lock written-signoff decision and trigger the formal signoff email flow
+    onSelectOption('written-signoff');
+    onRequestSignoffEmail();
+  };
+
   return (
     <div className="flex-1 flex flex-col overflow-y-auto bg-[#0a0f1d] text-slate-100 font-sans p-4 sm:p-6 text-xs select-none">
       <div className="max-w-4xl w-full mx-auto space-y-6">
-        {/* Header */}
-        <div className="border-b border-slate-800 pb-4">
-          <div className="flex items-center space-x-2">
-            <span className="font-mono text-[10px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-              <FileText className="w-3.5 h-3.5 text-amber-400" />
-              PROJECT AMIGO — DESIGN REVIEW
-            </span>
-            <span className={`px-2 py-0.5 rounded-full text-[9px] font-mono border ${
-              approvalReceived
-                ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
-                : 'bg-amber-500/10 text-amber-300 border-amber-500/30'
-            }`}>
-              {approvalReceived ? 'APPROVED · BASELINE v1' : 'Prototype review · Approval pending'}
-            </span>
+        {/* Header matching user attachment */}
+        <div className="flex items-start space-x-3.5 pb-2 border-b border-slate-800">
+          <div className="p-2.5 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 shrink-0 mt-0.5">
+            <Sparkles className="w-5 h-5 text-indigo-400" />
           </div>
-          <h2 className="text-xl sm:text-2xl font-serif font-black text-white mt-1">
-            Review High-Fidelity UI/UX Prototypes
-          </h2>
-          <p className="text-slate-400 text-xs mt-1 leading-relaxed">
-            Martha: “There's good news on the design side. The designer has finished the high-fidelity prototypes for the Appraisal Dashboard, Leave Request Screen, and Form 16 Downloader.”
-          </p>
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                Review the UI Options
+              </h2>
+              <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-mono border ${
+                approvalReceived
+                  ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+                  : 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+              }`}>
+                {approvalReceived ? 'APPROVED · BASELINE v1' : 'Prototype review · Approval pending'}
+              </span>
+            </div>
+            <p className="text-xs sm:text-[13px] text-slate-300 mt-1 leading-relaxed">
+              You're reviewing three different design approaches for the Project Amigo HRMS application. Choose the one you think is best for the end users and send it for approval.
+            </p>
+          </div>
         </div>
 
-        {/* 3 Prototype Tiles */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {CHAPTER2_PROTOTYPES.map((proto) => {
-            const isApproved = approvalReceived;
+        {/* 3 UI Design Options from user attachment */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {[
+            {
+              id: 'design_1',
+              number: 1,
+              title: 'Modern & Frontend Focused',
+              description:
+                'A sleek, modern design with a clean interface and visually appealing layout. Looks amazing, but has limited access to key features and may be harder to navigate for complex tasks.',
+              imageSrc: '/chapter3/design_option_1.png',
+              isRecommended: false,
+              marksNote: 'High aesthetics · Nested workflows (Lower efficiency score)',
+            },
+            {
+              id: 'design_2',
+              number: 2,
+              title: 'Application Focused',
+              description:
+                "A traditional, feature-rich layout that includes everything you need. It's functional and easy to use, but looks outdated and lacks visual appeal.",
+              imageSrc: '/chapter3/design_option_2.png',
+              isRecommended: false,
+              marksNote: 'High data density · Visual clutter (Moderate score)',
+            },
+            {
+              id: 'design_3',
+              number: 3,
+              title: 'Balanced & Modern',
+              description:
+                'A clean, modern interface with a friendly design and all essential features easily accessible. Combines great looks with functionality, making it simple and efficient to use.',
+              imageSrc: '/chapter3/design_option_3.png',
+              isRecommended: true,
+              marksNote: '★ Full Marks (+25 Score) · Optimal blend of aesthetics & usability',
+            },
+          ].map((design) => {
+            const isSelected = selectedDesignChoice === design.id;
             return (
               <div
-                key={proto.id}
-                className="rounded-2xl bg-gradient-to-b from-slate-900/90 to-slate-950/90 border border-slate-800/90 hover:border-slate-700/80 p-4 flex flex-col justify-between transition-all duration-200 shadow-lg shadow-black/20 hover:shadow-xl group relative overflow-hidden"
+                key={design.id}
+                onClick={() => handleSelectDesign(design.id as 'design_1' | 'design_2' | 'design_3')}
+                className={`rounded-2xl border transition-all flex flex-col justify-between overflow-hidden cursor-pointer group bg-[#111624] relative ${
+                  isSelected
+                    ? 'border-indigo-500 ring-2 ring-indigo-500/50 shadow-[0_0_30px_rgba(99,102,241,0.35)]'
+                    : 'border-slate-800 hover:border-slate-600 hover:bg-[#13192b]'
+                }`}
               >
-                {/* Subtle top accent highlight */}
-                <div className={`absolute top-0 left-0 right-0 h-1 ${isApproved ? 'bg-emerald-500' : 'bg-sky-500/70'}`} />
-
-                <div>
-                  <div className="flex items-center justify-between mb-3 pt-1">
-                    <span className="font-mono text-[9px] px-2.5 py-0.5 rounded-full bg-slate-800/90 text-slate-300 border border-slate-700/60 font-semibold tracking-wide">
-                      {proto.version}
-                    </span>
-                    <span className={`text-[10px] font-mono font-bold flex items-center gap-1.5 px-2 py-0.5 rounded-full ${
-                      isApproved 
-                        ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30' 
-                        : 'bg-sky-500/10 text-sky-300 border border-sky-500/30'
-                    }`}>
-                      {isApproved ? <CheckCircle2 className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                      {isApproved ? 'Locked Baseline' : 'Ready to Review'}
-                    </span>
-                  </div>
-
-                  <h3 className="font-bold text-white text-sm group-hover:text-sky-300 transition-colors tracking-tight">
-                    {proto.title}
-                  </h3>
-                  <div className="text-[10px] text-slate-400 mb-2.5 font-medium">
-                    {proto.subtitle}
-                  </div>
-
-                  <p className="text-[11px] text-slate-300 leading-relaxed mb-3.5 line-clamp-2">
-                    {proto.summary}
-                  </p>
-
-                  <div className="space-y-1.5 mb-4 p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
-                    <div className="text-[9px] font-mono uppercase tracking-wider text-slate-400 font-bold mb-1">
-                      Key Capabilities:
+                {/* Interactive Prototype Browser Frame with Vertical Scroll */}
+                <div className="flex flex-col border-b border-white/10 bg-[#080c16] overflow-hidden">
+                  {/* Browser Mockup Top Chrome Bar */}
+                  <div className="px-3 py-2 bg-[#0c101d] border-b border-white/5 flex items-center justify-between select-none">
+                    <div className="flex items-center space-x-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
                     </div>
-                    {proto.features.slice(0, 2).map((feat, fidx) => (
-                      <div key={fidx} className="flex items-center text-[10px] text-slate-300">
-                        <span className="w-1.5 h-1.5 rounded-full bg-sky-400 mr-2 shrink-0" />
-                        <span className="truncate">{feat}</span>
-                      </div>
-                    ))}
+                    <div className="px-2.5 py-0.5 rounded-md bg-white/5 border border-white/5 text-[9px] font-mono text-slate-400 truncate max-w-[140px]">
+                      amigo-hrms.internal/{design.id}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setModalImageSrc(design.imageSrc);
+                        setModalImageTitle(design.title);
+                      }}
+                      className="p-1 rounded-md bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white transition-all cursor-pointer"
+                      title="Enlarge Prototype"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Scrollable Viewport with fit width */}
+                  <div 
+                    className="relative h-64 sm:h-72 w-full overflow-y-auto overflow-x-hidden bg-[#090d18] scroll-smooth group/viewport"
+                    style={{
+                      scrollbarWidth: 'thin',
+                      scrollbarColor: 'rgba(99, 102, 241, 0.45) rgba(15, 23, 42, 0.5)',
+                    }}
+                  >
+                    <img
+                      src={design.imageSrc}
+                      alt={design.title}
+                      className="w-full h-auto block select-none"
+                      style={{
+                        imageRendering: '-webkit-optimize-contrast',
+                        display: 'block',
+                      }}
+                      loading="eager"
+                    />
+
+                    {/* Floating Scroll Cue at bottom */}
+                    <div className="sticky bottom-2 left-0 right-0 flex justify-center pointer-events-none opacity-80 group-hover/viewport:opacity-100 transition-opacity">
+                      <span className="px-2.5 py-1 rounded-full bg-black/80 border border-white/20 text-[9px] font-mono font-medium text-slate-200 backdrop-blur-md shadow-lg flex items-center space-x-1">
+                        <span>↕ Scroll to inspect</span>
+                      </span>
+                    </div>
+
+                    {/* Marks badge for Option 3 */}
+                    {design.isRecommended && (
+                      <span className="absolute top-2 right-2 text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 backdrop-blur-md flex items-center gap-1 shadow-lg pointer-events-none">
+                        <Award className="w-3 h-3 text-emerald-400" />
+                        <span>Best Choice</span>
+                      </span>
+                    )}
                   </div>
                 </div>
 
-                <button
-                  onClick={() => setActiveModalPrototype(proto)}
-                  className="w-full py-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 text-slate-200 hover:text-white font-bold text-[11px] flex items-center justify-center space-x-2 transition-all cursor-pointer border border-slate-700/60 hover:border-slate-600 shadow-sm"
-                >
-                  <Eye className="w-3.5 h-3.5 text-sky-400" />
-                  <span>Inspect High-Fi Prototype</span>
-                </button>
+                {/* Card Description Footer */}
+                <div className="p-4 sm:p-5 flex items-start space-x-3.5 border-t border-white/5 bg-[#0e1320] flex-1">
+                  <div
+                    className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 font-bold text-xs transition-colors ${
+                      isSelected
+                        ? 'bg-indigo-600 text-white ring-2 ring-indigo-400/50 shadow-md'
+                        : 'bg-indigo-900/60 text-indigo-300 border border-indigo-700/50'
+                    }`}
+                  >
+                    {design.number}
+                  </div>
+
+                  <div className="space-y-1.5 flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-bold text-white tracking-tight">
+                        {design.title}
+                      </h3>
+                      {isSelected && (
+                        <span className="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-950/80 px-2 py-0.5 rounded-full border border-indigo-500/40">
+                          Selected
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11.5px] text-slate-300 leading-relaxed">
+                      {design.description}
+                    </p>
+                  </div>
+                </div>
               </div>
             );
           })}
         </div>
+
+        {/* Centered Send for Approval Action Bar matching screenshot */}
+        {!approvalReceived && !signoffSent && (
+          <div className="pt-2 flex flex-col items-center justify-center space-y-3">
+            <button
+              onClick={handleSendForApproval}
+              className="px-8 py-3 rounded-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold text-sm tracking-wide shadow-xl shadow-indigo-600/30 flex items-center space-x-2.5 cursor-pointer transition-all hover:scale-105 active:scale-95"
+            >
+              <Send className="w-4 h-4" />
+              <span>Send for Approval</span>
+            </button>
+            <span className="text-[11px] text-slate-400">
+              Selected: <strong className="text-white">{selectedDesignChoice === 'design_1' ? 'Option 1 (Modern & Frontend Focused)' : selectedDesignChoice === 'design_2' ? 'Option 2 (Application Focused)' : 'Option 3 (Balanced & Modern — Optimal Choice)'}</strong>
+            </span>
+          </div>
+        )}
 
         {/* Meeting Quote Beat */}
         <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
@@ -133,10 +241,10 @@ export const DesignReviewWorkspace: React.FC<DesignReviewWorkspaceProps> = ({
             Live Walkthrough Feedback
           </div>
           <div className="text-slate-200 text-xs italic leading-relaxed">
-            <strong className="text-white not-italic">Marcus (Teams meeting):</strong> “The design looks great. The one-click appraisal submission should save managers a lot of time.”
+            <strong className="text-white not-italic">Marcus (Teams meeting):</strong> “The design looks great. The one-click appraisal submission in Option 3 strikes the right balance for our 80,000 employees.”
           </div>
           <div className="text-slate-300 text-xs leading-relaxed">
-            <strong className="text-white">Martha:</strong> “Great. The team is ready to move forward once the designs are approved. Should we tell the developers to start building, or do we need something more formal?”
+            <strong className="text-white">Martha:</strong> “Great. Choose the design above and send it for approval so we can freeze Baseline v1.0 specifications before coding begins.”
           </div>
         </div>
 
@@ -445,6 +553,84 @@ export const DesignReviewWorkspace: React.FC<DesignReviewWorkspaceProps> = ({
                   className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs"
                 >
                   Close Inspection
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* High-Resolution Design Option Preview Modal */}
+        {modalImageSrc && (
+          <div
+            className="fixed inset-0 z-[700] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-8"
+            onClick={(e) => {
+              e.stopPropagation();
+              setModalImageSrc(null);
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-4xl bg-[#111625] border border-white/20 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 max-h-[88vh] flex flex-col relative"
+            >
+              {/* Modal Top Header */}
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-indigo-400" />
+                  <span className="text-xs font-mono font-bold uppercase text-indigo-400 tracking-wide">
+                    Prototype Inspection
+                  </span>
+                  <span className="text-white font-bold text-sm tracking-tight">· {modalImageTitle}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setModalImageSrc(null);
+                  }}
+                  className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center"
+                  title="Close Preview (ESC or Click)"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Main Image Container with full-page scroll and ultra HD clarity */}
+              <div 
+                className="flex-1 min-h-0 bg-[#080b14] border border-white/10 rounded-2xl overflow-y-auto overflow-x-hidden p-4 flex justify-center"
+                style={{
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: 'rgba(99, 102, 241, 0.5) rgba(15, 23, 42, 0.5)',
+                }}
+              >
+                <div className="w-full max-w-xl mx-auto shadow-2xl rounded-xl overflow-hidden border border-white/10 bg-[#0c101d]">
+                  <img
+                    src={modalImageSrc}
+                    alt={modalImageTitle || 'Prototype Preview'}
+                    className="w-full h-auto block select-none"
+                    style={{
+                      imageRendering: '-webkit-optimize-contrast',
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Modal Bottom Controls */}
+              <div className="flex items-center justify-between pt-1 border-t border-white/10 shrink-0">
+                <span className="text-[11px] text-slate-400">
+                  Click 'Close Preview' or press anywhere outside the card to return to the options review.
+                </span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setModalImageSrc(null);
+                  }}
+                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+                >
+                  Close Preview
                 </button>
               </div>
             </motion.div>

@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   FileCheck2,
+  RotateCcw,
 } from 'lucide-react';
 import { updateChapterStatus } from '../../data/chaptersData';
 import type { Chapter5Scorecard } from '../../types/chapter5';
@@ -16,12 +17,14 @@ interface Chapter5ScorecardModalProps {
   scorecardData: Chapter5Scorecard;
   onProceedToNextChapter: () => void;
   onReturnToChapterSelect?: () => void;
+  onReplayChapter?: () => void;
 }
 
 export const Chapter5ScorecardModal: React.FC<Chapter5ScorecardModalProps> = ({
   scorecardData,
   onProceedToNextChapter,
   onReturnToChapterSelect,
+  onReplayChapter,
 }) => {
   const handleProceed = () => {
     updateChapterStatus(5, 'completed');
@@ -226,25 +229,37 @@ export const Chapter5ScorecardModal: React.FC<Chapter5ScorecardModalProps> = ({
 
         {/* Actions */}
         <div className="flex items-center justify-between pt-2">
-          {onReturnToChapterSelect && (
-            <button
-              onClick={() => {
-                updateChapterStatus(5, 'completed');
-                updateChapterStatus(6, 'unlocked');
-                localStorage.setItem('brained_just_unlocked_chapter', '6');
-                onReturnToChapterSelect();
-              }}
-              className="text-xs font-semibold text-slate-400 hover:text-white transition-colors cursor-pointer"
-            >
-              Return to Chapter Hub
-            </button>
-          )}
+          <div className="flex items-center space-x-2">
+            {onReturnToChapterSelect && (
+              <button
+                onClick={() => {
+                  updateChapterStatus(5, 'completed');
+                  updateChapterStatus(6, 'unlocked');
+                  localStorage.setItem('brained_just_unlocked_chapter', '6');
+                  onReturnToChapterSelect();
+                }}
+                className="px-4 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-xs font-bold transition-all cursor-pointer"
+              >
+                Back to Chapters
+              </button>
+            )}
+
+            {onReplayChapter && (
+              <button
+                onClick={onReplayChapter}
+                className="px-4 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Replay Chapter 5</span>
+              </button>
+            )}
+          </div>
 
           <button
             onClick={handleProceed}
             className="ml-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs sm:text-sm tracking-wide shadow-[0_0_25px_rgba(16,185,129,0.4)] flex items-center space-x-2 transition-all cursor-pointer"
           >
-            <span>Complete Chapter & Continue</span>
+            <span>Proceed to Chapter Select</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>

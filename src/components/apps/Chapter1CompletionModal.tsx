@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Lightbulb, Compass } from 'lucide-react';
+import { ArrowRight, Lightbulb, Compass, RotateCcw } from 'lucide-react';
 import { updateChapterStatus } from '../../data/chaptersData';
 import type { ScopeAssignmentResult } from './ProjectAmigoScopeAssignment';
 
@@ -8,18 +8,28 @@ interface Chapter1CompletionModalProps {
   assignmentResult?: ScopeAssignmentResult | null;
   onContinueToChapter2: () => void;
   onReturnToJourney?: () => void;
+  onReplayChapter?: () => void;
 }
 
 export const Chapter1CompletionModal: React.FC<Chapter1CompletionModalProps> = ({
   assignmentResult,
   onContinueToChapter2,
   onReturnToJourney,
+  onReplayChapter,
 }) => {
   const handleProceed = () => {
     updateChapterStatus(1, 'completed');
     updateChapterStatus(2, 'unlocked');
     localStorage.setItem('brained_just_unlocked_chapter', '2');
     onContinueToChapter2();
+  };
+
+  const handleReturnToChapters = () => {
+    updateChapterStatus(1, 'completed');
+    updateChapterStatus(2, 'unlocked');
+    localStorage.setItem('brained_just_unlocked_chapter', '2');
+    if (onReturnToJourney) onReturnToJourney();
+    else onContinueToChapter2();
   };
 
   const evalData = assignmentResult?.evaluation;
@@ -124,14 +134,26 @@ export const Chapter1CompletionModal: React.FC<Chapter1CompletionModalProps> = (
 
         {/* ── FOOTER ACTIONS ── */}
         <div className="pt-2 flex items-center justify-between border-t border-white/10">
-          {onReturnToJourney && (
-            <button
-              onClick={onReturnToJourney}
-              className="px-4 py-2.5 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-xs font-bold transition-all cursor-pointer"
-            >
-              Back to Chapters
-            </button>
-          )}
+          <div className="flex items-center space-x-2">
+            {onReturnToJourney && (
+              <button
+                onClick={handleReturnToChapters}
+                className="px-4 py-2.5 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-xs font-bold transition-all cursor-pointer"
+              >
+                Back to Chapters
+              </button>
+            )}
+
+            {onReplayChapter && (
+              <button
+                onClick={onReplayChapter}
+                className="px-4 py-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Replay Chapter 1</span>
+              </button>
+            )}
+          </div>
 
           <motion.button
             whileHover={{ scale: 1.03, boxShadow: '0 0 25px rgba(245,158,11,0.6)' }}
@@ -139,7 +161,7 @@ export const Chapter1CompletionModal: React.FC<Chapter1CompletionModalProps> = (
             onClick={handleProceed}
             className="ml-auto px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center space-x-2 shadow-[0_0_20px_rgba(245,158,11,0.45)] cursor-pointer transition-all"
           >
-            <span>Continue to Chapter 2</span>
+            <span>Proceed to Chapter Select</span>
             <ArrowRight className="w-4 h-4" />
           </motion.button>
         </div>

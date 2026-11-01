@@ -85,6 +85,10 @@ export const ReleaseReadinessBoardApp: React.FC<ReleaseReadinessBoardAppProps> =
     });
   };
 
+  const [showEvidenceTaskModal, setShowEvidenceTaskModal] = useState(false);
+  const [selectedEvidenceForMarcus, setSelectedEvidenceForMarcus] = useState<string[]>([]);
+  const [evidenceError, setEvidenceError] = useState<string | null>(null);
+
   const handleValidateBlockersAndProceed = () => {
     sound.playClick();
     const hasLoad = chapter5State.selectedBlockers.includes('blocker_performance_load');
@@ -96,11 +100,35 @@ export const ReleaseReadinessBoardApp: React.FC<ReleaseReadinessBoardAppProps> =
       setMarcusWarning(
         "Before we authorize a pilot, show me the evidence that supports the decision. I need clear acceptance criteria, an approved access path and a recovery plan. We shouldn't confuse progress with readiness."
       );
+      // Open interactive evidence task modal so player can present the proof to Marcus
+      setShowEvidenceTaskModal(true);
       return;
     }
 
     setMarcusWarning(null);
     onUpdateState({ currentStage: 'build_rollout_plan' });
+  };
+
+  const handleConfirmEvidenceToMarcus = () => {
+    sound.playClick();
+    const requiredEvidence = ['card_load_test', 'card_security_signoff', 'card_rollback_plan'];
+    const hasAll = requiredEvidence.every((id) => selectedEvidenceForMarcus.includes(id));
+
+    if (!hasAll) {
+      setEvidenceError('Select the Load Test Results, Security Signoff, and Rollback Procedure to satisfy Marcus.');
+      return;
+    }
+
+    // Auto-align blockers properly and proceed to rollout plan
+    setEvidenceError(null);
+    setShowEvidenceTaskModal(false);
+    setMarcusWarning(null);
+    sound.playSystemClearance();
+    onUpdateState((prev) => ({
+      ...prev,
+      selectedBlockers: ['blocker_performance_load', 'blocker_security_approval', 'blocker_rollback_procedure'],
+      currentStage: 'build_rollout_plan',
+    }));
   };
 
   const handleToggleActivityStage = (actId: PrePilotActivityId) => {
@@ -958,6 +986,100 @@ export const ReleaseReadinessBoardApp: React.FC<ReleaseReadinessBoardAppProps> =
                       <span>Confirm & Route for Authorization</span>
                     </>
                   )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* ── MODAL: PRESENT EVIDENCE TO MARCUS TASK ── */}
+        {showEvidenceTaskModal && (
+          <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-xl w-full p-6 space-y-4 text-slate-900 font-sans"
+            >
+              <div className="flex items-start space-x-3.5 border-b border-slate-100 pb-3">
+                <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-amber-500/50 shrink-0">
+                  <img src="/character/Marcus_Vance/marcusDP.png" alt="Marcus Reed" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1">
+                  <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-600">
+                    EXECUTIVE INTERACTION · CTO READINESS CHECK
+                  </div>
+                  <h3 className="text-base font-bold text-slate-900 mt-0.5">
+                    Present Readiness Evidence to Marcus
+                  </h3>
+                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                    “Show me the hard evidence that proves we can safely pilot. Which three artifacts establish our acceptance criteria, security clearance, and rollback protocol?”
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="text-xs font-bold text-slate-700">Select supporting artifacts (Select 3):</div>
+                <div className="grid grid-cols-1 gap-2 max-h-56 overflow-y-auto pr-1">
+                  {[
+                    { id: 'card_functional_test', title: 'Functional Test Suite (Core Banking)', subtitle: 'All HRMS modules functional verification', isKey: false },
+                    { id: 'card_load_test', title: 'Performance Load Test Results', subtitle: 'Target 30K concurrent users & p95 latency under peak demand', isKey: true },
+                    { id: 'card_security_signoff', title: 'Information Security & Data Protection Signoff', subtitle: 'Compliance approval for handling employee compensation records', isKey: true },
+                    { id: 'card_rollback_plan', title: 'Rollback & Recovery Procedure', subtitle: 'Version restoration and data reconciliation procedures', isKey: true },
+                    { id: 'card_pilot_criteria', title: 'Controlled Pilot Acceptance Criteria', subtitle: 'Target group definition and latency thresholds', isKey: false },
+                  ].map((item) => {
+                    const isSelected = selectedEvidenceForMarcus.includes(item.id);
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => {
+                          sound.playClick();
+                          setSelectedEvidenceForMarcus((prev) =>
+                            prev.includes(item.id) ? prev.filter((id) => id !== item.id) : [...prev, item.id]
+                          );
+                        }}
+                        className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+                          isSelected
+                            ? 'bg-amber-50/70 border-amber-300 ring-1 ring-amber-400/50'
+                            : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <div className="flex-1 min-w-0 pr-2">
+                          <div className="text-xs font-bold text-slate-900">{item.title}</div>
+                          <div className="text-[11px] text-slate-500 truncate">{item.subtitle}</div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => {}}
+                          className="w-4 h-4 rounded text-amber-600 pointer-events-none"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {evidenceError && (
+                <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center space-x-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  <span>{evidenceError}</span>
+                </div>
+              )}
+
+              <div className="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100">
+                <button
+                  onClick={() => setShowEvidenceTaskModal(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                >
+                  Review Board Again
+                </button>
+                <button
+                  onClick={handleConfirmEvidenceToMarcus}
+                  className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-md transition-all flex items-center space-x-1.5 cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Submit Evidence to Marcus</span>
                 </button>
               </div>
             </motion.div>
