@@ -1,47 +1,47 @@
 {
   "id": 3,
   "slug": "chapter-3",
-  "title": "The Integration Trap",
-  "subtitle": "Core Banking APIs, SOAP/REST Integration & LDAP/SSO Dependencies",
+  "title": "UAT Infrastructure & Environment Coordination",
+  "subtitle": "Client Alignment, Requirement Completeness & Network Prerequisites",
   "act": "I",
   "actLabel": "Act I — Foundation",
   "day": "Day 3–4",
   "duration": "1m 45s",
   "difficulty": "Moderate",
   "xpReward": 350,
-  "description": "The player is managing Project Amigo, an HRMS implementation for ICICI Bank involving 80,000 employees and a 90-day deadline. The team is now attempting to integrate the HRMS with the bank's existing systems. Services expect JSON over REST, while the legacy ESB uses SOAP/XML. Triage the blocker, choose the safe integration gateway, and sequence dependencies.",
+  "description": "The player coordinates with client HR/IT and developer Daniel to establish the Project Amigo UAT environment. Identify missing prerequisites, engage client stakeholders professionally, and ensure confirmed environment parameters before initiating connectivity.",
   "stakeholders": [
     {
       "id": "daniel",
       "name": "Daniel Brooks",
       "role": "Developer · Brained",
       "avatar": "/character/Daniel_Brooks/DanielDP.png",
-      "agenda": "Discovers the integration problem, shares his screen, and explains the logs."
+      "agenda": "Requests 5 UAT prerequisites before configuring connectivity."
+    },
+    {
+      "id": "sophia",
+      "name": "Sophia Martinez",
+      "role": "Client HR / IT Lead · ICICI Bank",
+      "avatar": "/character/Sophia_Martinez/SophiaDP.png",
+      "agenda": "Provides UAT environment details and coordinates with the bank IT team."
     },
     {
       "id": "aarav",
       "name": "Aarav Kapoor",
       "role": "Project Manager · Brained",
       "avatar": "/character/AaravDP.png",
-      "agenda": "Helps the player understand the project implications and provides access to the integration portal."
-    },
-    {
-      "id": "marcus",
-      "name": "Marcus Reed",
-      "role": "Chief Technology Officer · Brained",
-      "avatar": "/character/marcus_reed/MarcusDP.png",
-      "agenda": "Establishes the security and architecture constraints and reacts to the player's integration decision."
+      "agenda": "Monitors coordination quality, requirement completeness, and alignment."
     }
   ],
   "objectives": [
-    { "label": "Triage protocol mismatch & analyze engineering logs", "type": "analysis" },
-    { "label": "Decide integration architecture without bypassing bank controls", "type": "decision" },
-    { "label": "Prioritize & sequence dependency resolution and safe parallel testing", "type": "delivery" }
+    { "label": "Coordinate UAT environment prerequisites with client IT", "type": "communication" },
+    { "label": "Identify incomplete requirements before developer handoff", "type": "analysis" },
+    { "label": "Ensure verified network clearance before connectivity testing", "type": "delivery" }
   ],
   "deliverables": [
-    "Core Banking API Blocker Diagnosis",
-    "Approved Gateway Architecture Specification",
-    "Controlled Parallel Integration Test Suite"
+    "Confirmed UAT Environment Prerequisites",
+    "Client IT Network Access Clearance",
+    "Verified Developer Handoff Package"
   ],
   "primaryColor": "#0284c7",
   "secondaryColor": "#4f46e5",

@@ -6,12 +6,17 @@
 import { readWorldState, mutateWorldState, logSignal } from '../engine/worldState.engine';
 
 export interface Chapter3BackendState {
-  escalationChoice: 'investigate_independently' | 'escalate_aarav' | 'bypass_gateway' | null;
+  pathTaken?: 'full_credit' | 'recovery' | 'incomplete';
+  playerIdentifiedNetworkGap?: boolean;
+  v2SentToDaniel?: boolean;
+  escalationChoice?: 'investigate_independently' | 'escalate_aarav' | 'bypass_gateway' | null;
   escalationRecovered?: boolean;
-  task1Selected: 'database_overload' | 'protocol_mismatch' | 'expired_credentials' | 'incorrect_ui' | null;
-  task2Selected: 'direct_database' | 'custom_converter' | 'approved_gateway' | null;
+  task1Selected?: 'database_overload' | 'protocol_mismatch' | 'expired_credentials' | 'incorrect_ui' | null;
+  task2Selected?: 'direct_database' | 'custom_converter' | 'approved_gateway' | null;
   task2Recovered?: boolean;
-  task3Order: string[];
+  task3Order?: string[];
+  uiDesignSelected?: 'design_1' | 'design_2' | 'design_3' | null;
+  uiDesignJustification?: string;
 }
 
 export interface Chapter3EvaluationResult {
@@ -41,6 +46,92 @@ export async function evaluateChapter3Submission(
     efficiencyScore?: number;
   }
 ): Promise<Chapter3EvaluationResult> {
+  // UAT Infrastructure Coordination Evaluation
+  if (state.pathTaken) {
+    let scorecard: Chapter3EvaluationResult;
+    if (state.pathTaken === 'full_credit') {
+      scorecard = {
+        scheduleScore: 96,
+        riskScore: 95,
+        governanceScore: 100,
+        efficiencyScore: 95,
+        totalScore: 96,
+        outcomeType: 'strong',
+        outcomeText: 'You cross-referenced developer prerequisites against client deliverables, caught the missing network configuration item before forwarding, and ensured the engineering team had full clarity on pending bank approvals.',
+        personalizedTakeaway: 'By auditing Sophia\'s v1 delivery against Daniel\'s checklist, you prevented a premature integration attempt and saved the sprint from blocked connectivity cycles.',
+        explanations: {
+          schedule: 'Proactive requirement verification eliminated developer idle time and prevented false-start configuration cycles.',
+          risk: 'Clarified firewall and proxy ownership upfront, preventing unapproved gateway circumvention.',
+          governance: 'Maintained strict audit trail of client configuration items and distinguished confirmed specs from pending IT approvals.',
+          efficiency: 'Achieved first-time-right handoff to engineering with all 5 environment prerequisites verified.',
+        },
+      };
+      await logSignal(sessionId, {
+        dimension: 'delivery_governance',
+        signal_type: 'uat_prerequisites_fully_verified',
+        value: 20,
+        description: 'Audited Daniel\'s 5 requirements against Sophia\'s 4 confirmed items and identified missing network requirement.',
+      });
+    } else if (state.pathTaken === 'recovery') {
+      scorecard = {
+        scheduleScore: 82,
+        riskScore: 78,
+        governanceScore: 85,
+        efficiencyScore: 78,
+        totalScore: 81,
+        outcomeType: 'partial',
+        outcomeText: 'You forwarded the incomplete v1 document to Daniel first, but quickly recovered when prompted, contacted Sophia for the missing firewall details, and completed the delivery pack.',
+        personalizedTakeaway: 'Good recovery upon developer feedback. In future sprints, conduct the prerequisite check before passing information to engineering to avoid unnecessary communication hops.',
+        explanations: {
+          schedule: 'A minor delay was introduced by forwarding v1 before verifying all 5 checklist items with Sophia.',
+          risk: 'Risk was mitigated before implementation began, though developer intervention was needed to catch the omission.',
+          governance: 'Document versioning and audit trail maintained, though recovery required additional communication round-trips.',
+          efficiency: 'Additional communication cycles between Daniel, Sophia, and PM reduced team velocity.',
+        },
+      };
+      await logSignal(sessionId, {
+        dimension: 'team_efficiency',
+        signal_type: 'uat_forwarded_incomplete_then_recovered',
+        value: -5,
+        description: 'Forwarded incomplete v1 to Daniel first, but recovered upon prompt and sent complete v2.',
+      });
+    } else {
+      scorecard = {
+        scheduleScore: 55,
+        riskScore: 50,
+        governanceScore: 60,
+        efficiencyScore: 58,
+        totalScore: 56,
+        outcomeType: 'poor',
+        outcomeText: 'You forwarded the incomplete environment document to Daniel without verifying the outstanding network access requirement, leaving engineering blocked.',
+        personalizedTakeaway: 'Always cross-reference client technical documentation against developer prerequisites. Forwarding unconfirmed deliverables creates false assumptions and implementation stalls.',
+        explanations: {
+          schedule: 'Unconfirmed network access will cause immediate blockers when the team attempts integration testing.',
+          risk: 'High probability of bank firewall rejection and security policy violation.',
+          governance: 'Incomplete handoff pack violates enterprise infrastructure readiness standards.',
+          efficiency: 'Developer time will be lost troubleshooting connectivity issues that could have been resolved upfront.',
+        },
+      };
+      await logSignal(sessionId, {
+        dimension: 'trust_and_risk',
+        signal_type: 'uat_network_requirements_omitted',
+        value: -20,
+        description: 'Completed Chapter 3 without verifying network access or firewall configuration.',
+      });
+    }
+
+    await mutateWorldState(sessionId, (ws) => ({
+      ...ws,
+      chapter3: {
+        state,
+        scorecard,
+        completed_at: new Date(),
+      },
+    } as any));
+
+    return scorecard;
+  }
+
   const baseSchedule = ch2Baseline?.scheduleScore ?? 80;
   const baseRisk = ch2Baseline?.riskScore ?? 80;
   const baseGov = ch2Baseline?.governanceScore ?? 80;
@@ -160,6 +251,40 @@ export async function evaluateChapter3Submission(
   } else {
     deltaEff -= 35;
     deltaSchedule -= 20;
+  }
+
+  // 5. UI/UX Design Inspection Assignment (Chapter 3)
+  if (state.uiDesignSelected === 'design_3') {
+    deltaSchedule += 10;
+    deltaRisk += 10;
+    deltaGov += 10;
+    deltaEff += 10;
+    await logSignal(sessionId, {
+      dimension: 'team_efficiency',
+      signal_type: 'balanced_ui_design_selected',
+      value: 10,
+      description: 'Selected balanced UI design (Option 3) combining usability, clarity, and compliance.',
+    });
+  } else if (state.uiDesignSelected === 'design_1') {
+    deltaSchedule -= 5;
+    deltaRisk -= 10;
+    deltaEff -= 15;
+    await logSignal(sessionId, {
+      dimension: 'team_efficiency',
+      signal_type: 'visual_first_ui_selected',
+      value: -10,
+      description: 'Selected visually rich design (Option 1) that introduces friction to high-frequency HR operations.',
+    });
+  } else if (state.uiDesignSelected === 'design_2') {
+    deltaGov += 5;
+    deltaRisk += 5;
+    deltaEff -= 10;
+    await logSignal(sessionId, {
+      dimension: 'team_efficiency',
+      signal_type: 'functional_dense_ui_selected',
+      value: -5,
+      description: 'Selected dense enterprise design (Option 2) with high compliance but cluttered usability.',
+    });
   }
 
   const clamp = (val: number) => Math.min(Math.max(Math.round(val), 10), 100);

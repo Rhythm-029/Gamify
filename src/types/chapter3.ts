@@ -1,26 +1,35 @@
-export type Chapter3EscalationChoice =
-  | 'investigate_independently' // Option A: Handle it without escalation
-  | 'escalate_aarav'           // Option B: Bring Aarav into the meeting (Recommended)
-  | 'bypass_gateway';           // Option C: Tell Daniel to bypass the gateway (Risky)
-
-export type Chapter3BlockerChoice =
-  | 'database_overload'       // A: The bank's database cannot handle the number of requests
-  | 'protocol_mismatch'       // B: The HRMS expects JSON over REST, while legacy uses SOAP/XML (Correct)
-  | 'expired_credentials'     // C: Employee passwords have expired
-  | 'incorrect_ui';           // D: The HRMS screens are sending the wrong information
-
-export type Chapter3ApproachChoice =
-  | 'direct_database'         // Option A: Direct Database Connection (Risky)
-  | 'custom_converter'        // Option B: Unapproved Custom Converter (Risky)
-  | 'approved_gateway';       // Option C: Approved Integration Gateway (Correct reference)
-
-export type Chapter3ActionId =
-  | 'action_confirm_interface'   // Action A: Confirm the approved interface & validate schema
-  | 'action_verify_auth'         // Action B: Verify LDAP/SSO authentication access
-  | 'action_prepare_mock_tests'  // Action C: Prepare controlled integration tests with mock data
-  | 'action_validate_integrate'; // Action D: Validate and integrate after dependencies confirmed
-
 export type Chapter3OutcomeType = 'strong' | 'partial' | 'poor';
+
+export type Chapter3Step =
+  | 'daniel_initial_request'
+  | 'email_sent_to_sophia'
+  | 'sophia_typing_v1'
+  | 'sophia_v1_delivered'
+  | 'asking_sophia_more'
+  | 'sophia_typing_v2'
+  | 'sophia_v2_delivered'
+  | 'v1_sent_to_daniel'
+  | 'v2_sent_to_daniel'
+  | 'assignment_completed';
+
+export type Chapter3PathType = 'full_credit' | 'recovery' | 'incomplete';
+
+export interface Chapter3UatItem {
+  no: number;
+  item: string;
+  confirmedDetails: string;
+  isConfirmed: boolean;
+  notes?: string;
+}
+
+export interface Chapter3UatDocument {
+  version: 'v1' | 'v2';
+  filename: string;
+  title: string;
+  preparedBy: string;
+  items: Chapter3UatItem[];
+  note: string;
+}
 
 export interface Chapter3Scorecard {
   shown: boolean;
@@ -30,8 +39,27 @@ export interface Chapter3Scorecard {
   efficiencyScore: number;
   totalScore: number;
   outcomeType: Chapter3OutcomeType;
+  outcomeTitle: string;
   outcomeText: string;
   personalizedTakeaway: string;
+  learningInsight: string;
+  behaviours: {
+    requirementCompleteness: {
+      score: number;
+      passed: boolean;
+      feedback: string;
+    };
+    stakeholderCommunication: {
+      score: number;
+      passed: boolean;
+      feedback: string;
+    };
+    deliveryCoordination: {
+      score: number;
+      passed: boolean;
+      feedback: string;
+    };
+  };
   explanations: {
     schedule: string;
     risk: string;
@@ -41,43 +69,53 @@ export interface Chapter3Scorecard {
 }
 
 export interface Chapter3State {
-  entered: boolean;
-  meetingStatus:
-    | 'calling'
-    | 'connected'
-    | 'screen_sharing'
-    | 'decision_pending'
-    | 'aarav_joined'
-    | 'portal_unlocked'
-    | 'reviewing_plan'
-    | 'completed';
-  escalationChoice: Chapter3EscalationChoice | null;
-  escalationWarningShown: boolean;
-  escalationRecovered: boolean;
+  step: Chapter3Step;
+  pathTaken: Chapter3PathType | null;
 
-  // Integration Portal & Triage status
-  portalAccessGranted: boolean;
-  currentTriageTask: 1 | 2 | 3;
+  // Step 1: Daniel's request
+  danielRequestRead: boolean;
 
-  // Task 1: Blocker
-  task1Selected: Chapter3BlockerChoice | null;
-  task1Submitted: boolean;
-  task1Feedback: string | null;
+  // Step 2: Email sent to Sophia
+  emailSubject: string;
+  emailBody: string;
+  emailSentAt: string | null;
 
-  // Task 2: Approach
-  task2Selected: Chapter3ApproachChoice | null;
-  task2Submitted: boolean;
-  task2WarningShown: boolean;
-  task2Recovered: boolean;
+  // Step 3 & 4: Sophia's response & v1 doc
+  sophiaTyping: boolean;
+  v1Delivered: boolean;
+  v1Document: Chapter3UatDocument;
+  documentViewerOpen: boolean;
+  currentViewingDoc: 'v1' | 'v2' | null;
 
-  // Task 3: Prioritization Action Order
-  task3Order: Chapter3ActionId[];
-  task3Submitted: boolean;
+  // Step 5 & 6: Follow-up & Branching
+  firstForwardTarget: 'daniel' | 'sophia_followup' | null;
+  playerFollowUpMessage: string;
+  playerFollowUpSent: boolean;
+  playerIdentifiedNetworkGap: boolean;
 
-  // Final Meeting Review
-  finalReviewComplete: boolean;
+  // Branch A / v2
+  v2Delivered: boolean;
+  v2Document: Chapter3UatDocument;
 
-  // Scorecard
+  // Branch B
+  sentV1ToDaniel: boolean;
+  danielPromptedForNetwork: boolean;
+
+  // Completion
+  v2SentToDaniel: boolean;
+  danielFinalConfirmed: boolean;
+  aaravSummaryGiven: boolean;
+
+  // Active chat contact in Teams / Messages
+  activeChatRecipient: 'daniel' | 'sophia';
+
+  // Legacy compatibility fields
+  portalAccessGranted?: boolean;
+  meetingStatus?: string;
+  finalReviewComplete?: boolean;
+  task3Submitted?: boolean;
+
+  // Evaluation & Scorecard
   scorecard: Chapter3Scorecard;
   completed: boolean;
 }
