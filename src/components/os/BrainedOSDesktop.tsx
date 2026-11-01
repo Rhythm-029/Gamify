@@ -879,94 +879,50 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
     return () => clearTimeout(timer);
   }, [chapter7State.callCompleted, chapter7State.meetingCompleted, activeChapter]);
 
-  // ── Chapter 8 Step 1: Marcus Release & Handover Request Notification ──
+  // ── Chapter 8 Step 1: Bank CISO Automated Threat Feed Alert Notification ──
   useEffect(() => {
     if (bootStep !== 'ready' || activeChapter !== 8) return;
-    if (seenNotifIds.current.has('ch8_marcus_release_alert')) return;
+    if (seenNotifIds.current.has('ch8_ciso_threat_alert')) return;
 
     const timer = setTimeout(() => {
       sound.playMessagePing();
       pushNotification({
-        id: 'ch8_marcus_release_alert',
+        id: 'ch8_ciso_threat_alert',
         app: 'Teams',
-        title: 'Marcus Reed',
-        subtitle: 'Project Amigo — Leadership',
-        body: "Good work getting the Attendance Sync issue under control. Before we close out the release, I need the final technical evidence and operational handover package. We need to make sure the receiving team has everything required to support the platform.",
+        title: 'Bank CISO · Threat Alert',
+        subtitle: 'Security Operations Center (SOC) Liaison',
+        body: 'CRITICAL ALERT: Anomalous bot traffic slamming employee login gateway. Credential-stuffing attack detected. Immediate WAF bot mitigation & MFA rate-limiting required under bank cybersecurity policies and IT acts.',
         timestamp: 'Now',
-        actionText: 'View Message',
-        onActionAppId: 'teams',
+        actionText: 'Join SOC Liaison',
+        onActionAppId: 'chapter8_meeting',
+        isCall: true,
       });
       handleUpdateChapter8State({ alertNotificationShown: true });
     }, 1200);
     return () => clearTimeout(timer);
   }, [bootStep, activeChapter]);
 
-  // ── Chapter 8 Step 2: Sophia Scope Confirmation Notification ──
+  // ── Chapter 8 Step 2: Security Response Console Unlock ──
   useEffect(() => {
-    if (activeChapter !== 8) return;
-    if (seenNotifIds.current.has('ch8_sophia_scope_alert')) return;
-
-    const timer = setTimeout(() => {
-      sound.playMessagePing();
-      pushNotification({
-        id: 'ch8_sophia_scope_alert',
-        app: 'Teams',
-        title: 'Sophia Bennett',
-        subtitle: 'Head of HR Operations · ICICI Bank',
-        body: "From the HR side, I need confirmation that the agreed Phase 1 requirements have been delivered. Please include anything deferred or still awaiting approval so we have a clear picture before acceptance.",
-        timestamp: 'Now',
-        actionText: 'View Message',
-        onActionAppId: 'teams',
-      });
-    }, 2800);
-    return () => clearTimeout(timer);
-  }, [bootStep, activeChapter]);
-
-  // ── Chapter 8 Step 3: Aarav's Final Review Call ──
-  useEffect(() => {
-    if (activeChapter !== 8) return;
-    if (chapter8State.callCompleted || chapter8State.meetingCompleted) return;
-    if (seenNotifIds.current.has('ch8_aarav_final_call')) return;
-
-    const timer = setTimeout(() => {
-      sound.playMessagePing();
-      pushNotification({
-        id: 'ch8_aarav_final_call',
-        app: 'Teams',
-        title: 'Incoming Call',
-        subtitle: 'Aarav Kapoor · Project Manager',
-        body: 'Project Amigo Final Review & Handover Alignment · Aarav is requesting a call before final package assembly.',
-        timestamp: 'Now',
-        actionText: 'Join Call',
-        onActionAppId: 'chapter8_meeting',
-        isCall: true,
-      });
-      handleUpdateChapter8State({ callInitiated: true });
-    }, 4500);
-    return () => clearTimeout(timer);
-  }, [chapter8State.callCompleted, chapter8State.meetingCompleted, activeChapter]);
-
-  // ── Chapter 8 Step 4: Aarav's Assignment & Release & Handover Desk Unlock ──
-  useEffect(() => {
-    if (activeChapter !== 8 || (!chapter8State.callCompleted && !chapter8State.meetingCompleted)) return;
-    if (seenNotifIds.current.has('ch8_aarav_assignment_desk')) return;
+    if (activeChapter !== 8 || (!chapter8State.callCompleted && !chapter8State.meetingCompleted && !chapter8State.deskUnlocked)) return;
+    if (seenNotifIds.current.has('ch8_ciso_console_unlocked')) return;
 
     const timer = setTimeout(() => {
       sound.playSystemClearance();
       pushNotification({
-        id: 'ch8_aarav_assignment_desk',
+        id: 'ch8_ciso_console_unlocked',
         app: 'Teams',
-        title: 'Aarav Kapoor',
-        subtitle: 'Project Manager · Release Handover',
-        body: "I've added Release & Handover Desk to your desktop. Use it to put together the final delivery package. Marcus will review the technical handover, and Sophia will review the Phase 1 delivery.",
+        title: 'Security Response Console',
+        subtitle: 'Bank SOC Liaison · Project Amigo',
+        body: 'Security Response Console is active. Deploy perimeter WAF bot mitigation rules and enforce strict MFA rate-limiting to preserve portal compliance.',
         timestamp: 'Now',
-        actionText: 'Open Handover Desk',
+        actionText: 'Open Security Console',
         onActionAppId: 'release_handover_desk',
       });
-      handleUpdateChapter8State({ deskUnlocked: true, aaravAssignmentViewed: true });
+      handleUpdateChapter8State({ deskUnlocked: true });
     }, 800);
     return () => clearTimeout(timer);
-  }, [chapter8State.callCompleted, chapter8State.meetingCompleted, activeChapter]);
+  }, [chapter8State.callCompleted, chapter8State.meetingCompleted, chapter8State.deskUnlocked, activeChapter]);
 
 
 
@@ -1143,8 +1099,8 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
     performance_command_centre: { title: 'Performance Command Centre — Project Amigo Cluster APM', icon: <Activity className="w-4 h-4 text-cyan-400" /> },
     chapter7_meeting: { title: 'Microsoft Teams — Attendance Sync Incident Response', icon: <span>📹</span> },
     incident_studio: { title: 'Incident Response & RCA Studio — Attendance Sync', icon: <Wrench className="w-4 h-4 text-rose-400" /> },
-    chapter8_meeting: { title: 'Teams Call — Aarav Kapoor (Final Project Review)', icon: <span>📹</span> },
-    release_handover_desk: { title: 'Release & Handover Desk — Project Amigo Phase 1', icon: <FileCheck2 className="w-4 h-4 text-cyan-400" /> },
+    chapter8_meeting: { title: 'Bank SOC Liaison Channel — Defending Against Credential Stuffing', icon: <span>🛡️</span> },
+    release_handover_desk: { title: 'Security Response Console — Project Amigo', icon: <FileCheck2 className="w-4 h-4 text-emerald-400" /> },
     brief: { title: 'Preview — Project_Amigo_Internal_Brief.pdf', icon: <span>📄</span> },
     assignment: { title: 'Project Amigo — Initial Planning · Assignment 01', icon: <span>📋</span> },
     review: { title: 'Microsoft Teams — Prototype Review · Day 7', icon: <span>📹</span> },
