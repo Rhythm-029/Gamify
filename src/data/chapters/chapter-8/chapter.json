@@ -1,31 +1,33 @@
 {
   "id": 8,
   "slug": "chapter-8",
-  "title": "The Pivot",
-  "subtitle": "When the Plan Breaks & Regulatory Shock",
+  "title": "Production Stabilisation & Project Handover",
+  "subtitle": "Final Handover & Enterprise Acceptance",
   "act": "III",
   "actLabel": "Act III — Delivery",
   "day": "Day 14",
   "duration": "~25 mins",
   "difficulty": "Expert",
   "xpReward": 500,
-  "description": "Midway through rollout, a regulatory compliance issue surfaces. The entire deployment plan must be re-evaluated in 48 hours. Your credibility is on the line.",
+  "description": "Substantiate Phase 1 delivery claims with verified project evidence, classify deliverables and deferred scope, organize operational handover runbooks, and secure formal technical and client acceptance.",
   "stakeholders": [
-    { "name": "Reserve Bank Compliance Auditor", "role": "Regulatory Liaison", "agenda": "Enforcing strict localized data residency and statutory audit trails." },
-    { "name": "Aarav Kapoor", "role": "Senior Consultant · Brained", "agenda": "Assessing impact on contract deliverables and steering committee optics." }
+    { "name": "Marcus Reed", "role": "Chief Technology Officer · Technical Leadership", "agenda": "Verifying production stability, testing evidence, and operational handover readiness." },
+    { "name": "Sophia Bennett", "role": "Head of HR Operations · ICICI Bank", "agenda": "Validating delivered Phase 1 scope baseline and confirming deferred module boundaries." },
+    { "name": "Aarav Kapoor", "role": "Senior Consultant · Brained", "agenda": "Guiding the final handover package and formally closing Project Amigo Phase 1." }
   ],
   "objectives": [
-    { "label": "Assess regulatory compliance risk impact on existing cloud architecture", "type": "analysis" },
-    { "label": "Propose and defend a zero-downtime architectural pivot strategy", "type": "decision" },
-    { "label": "Maintain stakeholder confidence while revising milestone commitments", "type": "stakeholder" }
+    { "label": "Substantiate Phase 1 claims against verified project audit evidence", "type": "analysis" },
+    { "label": "Accurately classify deliverables, deferred scope, and pending approvals", "type": "governance" },
+    { "label": "Organize operational handover runbooks and secure dual stakeholder signoffs", "type": "decision" }
   ],
   "deliverables": [
-    "Regulatory Compliance Impact Assessment",
-    "Revised Deployment Pivot Plan",
-    "Emergency Steering Committee Briefing Deck"
+    "Evidence Verification & Audit Matrix",
+    "Delivery Status & Scope Classification Record",
+    "Operational Handover & Incident Continuity Runbooks",
+    "Executive Delivery Package & Formal Acceptance Signoffs"
   ],
-  "primaryColor": "#dc2626",
-  "secondaryColor": "#7c3aed",
-  "accentColor": "#f43f5e",
-  "backgroundIcon": "⚠️"
+  "primaryColor": "#06b6d4",
+  "secondaryColor": "#3b82f6",
+  "accentColor": "#22d3ee",
+  "backgroundIcon": "🏁"
 }
