@@ -1,31 +1,33 @@
 {
   "id": 7,
   "slug": "chapter-7",
-  "title": "The Resistance",
-  "subtitle": "Change Management Crisis & Cultural Friction",
+  "title": "Production Incident: Attendance Sync",
+  "subtitle": "Incident Response & Root Cause Analysis (RCA) Studio",
   "act": "III",
   "actLabel": "Act III — Delivery",
   "day": "Day 12–13",
-  "duration": "~30 mins",
-  "difficulty": "Expert",
+  "duration": "~2 mins",
+  "difficulty": "Hard",
   "xpReward": 500,
-  "description": "The workforce is pushing back. A union rep files a concern. Middle management sabotages the training sessions. This is where most transformations die. How do you lead through resistance?",
+  "description": "A production issue occurs in the Attendance Sync microservice. 12 branch officers experience intermittent 504 Gateway Timeouts. Deploy the hotfix, verify affected branch officers, document the formal Root Cause Analysis (RCA), and configure preventive monitoring.",
   "stakeholders": [
-    { "name": "Arun Verma", "role": "Employee Union Representative", "agenda": "Concerned biometric attendance tracking infringes on worker privacy." },
-    { "name": "Meera Joshi", "role": "Regional Branch Operations Manager", "agenda": "Frustrated with additional data entry overhead on branch employees." }
+    { "name": "Martha", "role": "Regional Branch Operations Manager", "agenda": "Urgent restoration of branch check-in capabilities for 12 locked-out branch officers." },
+    { "name": "Daniel Kapoor", "role": "Lead Developer", "agenda": "Diagnosing memory leak in container connection pool and deploying hotfix PR #142." },
+    { "name": "Aarav", "role": "Lead Delivery Partner", "agenda": "Enforcing rigorous post-mortem governance: RCA, socket leak prevention, and alert thresholds." }
   ],
   "objectives": [
-    { "label": "De-escalate the union concern through transparent privacy policy alignment", "type": "stakeholder" },
-    { "label": "Design a targeted, empathetic change management and enablement program", "type": "delivery" },
-    { "label": "Turn a resistant regional manager into an enthusiastic transformation champion", "type": "stakeholder" }
+    { "label": "Execute immediate production response & verify affected branch officers", "type": "decision" },
+    { "label": "Build formal Root Cause Analysis identifying socket memory leaks", "type": "analysis" },
+    { "label": "Establish preventive monitoring alerts and secure incident closure", "type": "delivery" }
   ],
   "deliverables": [
-    "Transformation Privacy & Data Ethics Charter",
-    "Change Enablement & Champion Network Plan",
-    "Branch Operational Efficiency Agreement"
+    "Immediate Production Remediation & User Verification",
+    "Formal 4-Part Root Cause Analysis (RCA)",
+    "Preventive Memory Alerting Thresholds Configuration",
+    "Executive Incident Resolution & Closure Report"
   ],
   "primaryColor": "#ef4444",
   "secondaryColor": "#f97316",
   "accentColor": "#f87171",
-  "backgroundIcon": "🔥"
+  "backgroundIcon": "🚨"
 }
