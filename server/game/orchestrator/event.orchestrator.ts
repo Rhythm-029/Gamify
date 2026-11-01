@@ -114,18 +114,25 @@ export function initOrchestrator(): void {
 // ── Redis pub/sub listener (World State changes trigger rule re-evaluation) ────
 
 function startStatePubSubListener(): void {
-  const subscriber = getRedis().duplicate();
-  subscriber.subscribe('state:changed', (err) => {
-    if (err) console.error('[ORCHESTRATOR] Sub error:', err);
-  });
+  try {
+    const subscriber = getRedis().duplicate();
+    subscriber.on('error', (err) => {
+      // In-memory fallback active when Redis is offline
+    });
+    subscriber.subscribe('state:changed', (err) => {
+      if (err) console.warn('[ORCHESTRATOR] Redis pub/sub warning (in-memory fallback active):', err.message);
+    });
 
-  subscriber.on('message', async (_channel: string, message: string) => {
-    try {
-      const { session_id } = JSON.parse(message) as { session_id: string };
-      // Re-evaluate rules on every World State change (conditional rules)
-      await evaluateRules(session_id);
-    } catch (err) {
-      console.error('[ORCHESTRATOR] Message handling error:', err);
-    }
-  });
+    subscriber.on('message', async (_channel: string, message: string) => {
+      try {
+        const { session_id } = JSON.parse(message) as { session_id: string };
+        // Re-evaluate rules on every World State change (conditional rules)
+        await evaluateRules(session_id);
+      } catch (err) {
+        console.error('[ORCHESTRATOR] Message handling error:', err);
+      }
+    });
+  } catch (err: any) {
+    console.warn('[ORCHESTRATOR] Redis pub/sub unavailable, using in-memory state:', err.message);
+  }
 }
