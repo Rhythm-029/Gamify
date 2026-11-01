@@ -10,11 +10,18 @@ import {
   Sparkles,
   Award,
   Layers,
-  FileCheck2,
+  Lock,
+  ShieldCheck,
+  ShieldAlert,
 } from 'lucide-react';
 import { updateChapterStatus } from '../../data/chaptersData';
 import type { Chapter8Scorecard } from '../../types/chapter8';
-import { CHAPTER8_LEARNING_TAKEAWAY } from '../../data/chapter8Data';
+import {
+  CHAPTER8_TITLE,
+  CHAPTER8_SUBTITLE,
+  CHAPTER8_PROJECT_NAME,
+  CHAPTER8_KEY_TAKEAWAY,
+} from '../../data/chapter8Data';
 
 interface Chapter8ScorecardModalProps {
   scorecardData: Chapter8Scorecard;
@@ -38,18 +45,18 @@ export const Chapter8ScorecardModal: React.FC<Chapter8ScorecardModalProps> = ({
   const getStatusBadge = () => {
     if (scorecardData.outcomeType === 'strong') {
       return {
-        text: 'HANDOVER COMPLETE · PHASE 1 FORMALLY ACCEPTED',
+        text: 'SECURITY COMPLIANCE VERIFIED · PORTAL SUSPENSION AVERTED',
         className: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40',
       };
     }
     if (scorecardData.outcomeType === 'mixed') {
       return {
-        text: 'DELIVERY ACCEPTED WITH MINOR GOVERNANCE REVISIONS',
+        text: 'COMPLIANCE ACHIEVED WITH MINOR CONFIGURATION DELAYS',
         className: 'bg-amber-500/20 text-amber-300 border border-amber-500/40',
       };
     }
     return {
-      text: 'HANDOVER OVERVIEW · GOVERNANCE GAPS OR MISSING EVIDENCE',
+      text: 'POLICY VIOLATION · INSUFFICIENT DEFENSE POSTURE',
       className: 'bg-rose-500/20 text-rose-300 border border-rose-500/40',
     };
   };
@@ -62,26 +69,26 @@ export const Chapter8ScorecardModal: React.FC<Chapter8ScorecardModalProps> = ({
         initial={{ scale: 0.92, opacity: 0, y: 25 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 350, damping: 26 }}
-        className="max-w-2xl w-full bg-[#0a1122] border border-cyan-500/50 rounded-3xl p-6 sm:p-8 shadow-[0_0_60px_rgba(6,182,212,0.25)] space-y-5 relative overflow-hidden"
+        className="max-w-2xl w-full bg-[#08101e] border border-emerald-500/40 rounded-3xl p-6 sm:p-8 shadow-[0_0_60px_rgba(16,185,129,0.2)] space-y-5 relative overflow-hidden"
       >
         {/* Ambient Glow */}
-        <div className="absolute top-0 right-0 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
         {/* Header */}
         <div className="flex items-start justify-between pr-2">
           <div className="max-w-md">
-            <div className="text-[10px] font-mono tracking-[0.22em] text-cyan-400 font-bold uppercase mb-1">
-              CHAPTER 8 COMPLETE · FINAL STAGE CLOSURE
+            <div className="text-[10px] font-mono tracking-[0.22em] text-emerald-400 font-bold uppercase mb-1">
+              CHAPTER 8 EVALUATION · CYBERSECURITY COMPLIANCE
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-              PRODUCTION STABILISATION & HANDOVER
+              {CHAPTER8_TITLE}
             </h2>
             <p className="text-xs text-slate-400 mt-1">
-              Project Amigo · ICICI Bank Enterprise HRMS Phase 1 Delivery
+              {CHAPTER8_PROJECT_NAME} · {CHAPTER8_SUBTITLE}
             </p>
           </div>
           <div className="text-right">
-            <div className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 font-mono">
+            <div className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400 font-mono">
               {scorecardData.totalScore}
               <span className="text-xs text-slate-500 font-normal">/100</span>
             </div>
@@ -100,111 +107,83 @@ export const Chapter8ScorecardModal: React.FC<Chapter8ScorecardModalProps> = ({
           </span>
         </div>
 
-        {/* 4 Core Brained OS Corporate Metrics Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-          {/* Schedule */}
-          <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 flex flex-col justify-between">
-            <div className="flex items-center justify-between text-slate-400 text-xs">
-              <span className="text-[10px] font-mono uppercase">Timeline</span>
-              <Clock className="w-3.5 h-3.5 text-cyan-400" />
+        {/* Core 4 Dimensions Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 text-center">
+            <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider flex items-center justify-center gap-1">
+              <Clock className="w-3 h-3 text-sky-400" />
+              <span>Timeline</span>
             </div>
-            <div className="mt-2 flex items-baseline justify-between">
-              <span className="text-xl font-black text-white font-mono">
-                {scorecardData.scheduleScore}
-              </span>
-              <span className="text-[10px] text-slate-500 font-mono">/100</span>
-            </div>
-            <div className="text-[9px] text-slate-400 mt-1 line-clamp-2">
-              {scorecardData.explanations.schedule}
+            <div className="text-lg font-bold text-white mt-1 font-mono">
+              {scorecardData.scheduleScore}
+              <span className="text-[10px] text-slate-500">/100</span>
             </div>
           </div>
 
-          {/* Risk Management */}
-          <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 flex flex-col justify-between">
-            <div className="flex items-center justify-between text-slate-400 text-xs">
-              <span className="text-[10px] font-mono uppercase">Trust & Risk</span>
-              <Shield className="w-3.5 h-3.5 text-blue-400" />
+          <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 text-center">
+            <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider flex items-center justify-center gap-1">
+              <Shield className="w-3 h-3 text-rose-400" />
+              <span>Risk & Trust</span>
             </div>
-            <div className="mt-2 flex items-baseline justify-between">
-              <span className="text-xl font-black text-white font-mono">
-                {scorecardData.riskScore}
-              </span>
-              <span className="text-[10px] text-slate-500 font-mono">/100</span>
-            </div>
-            <div className="text-[9px] text-slate-400 mt-1 line-clamp-2">
-              {scorecardData.explanations.risk}
+            <div className="text-lg font-bold text-white mt-1 font-mono">
+              {scorecardData.riskScore}
+              <span className="text-[10px] text-slate-500">/100</span>
             </div>
           </div>
 
-          {/* Delivery Governance */}
-          <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 flex flex-col justify-between">
-            <div className="flex items-center justify-between text-slate-400 text-xs">
-              <span className="text-[10px] font-mono uppercase">Governance</span>
-              <FileCheck2 className="w-3.5 h-3.5 text-teal-400" />
+          <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 text-center">
+            <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider flex items-center justify-center gap-1">
+              <ShieldCheck className="w-3 h-3 text-emerald-400" />
+              <span>Governance</span>
             </div>
-            <div className="mt-2 flex items-baseline justify-between">
-              <span className="text-xl font-black text-white font-mono">
-                {scorecardData.governanceScore}
-              </span>
-              <span className="text-[10px] text-slate-500 font-mono">/100</span>
-            </div>
-            <div className="text-[9px] text-slate-400 mt-1 line-clamp-2">
-              {scorecardData.explanations.governance}
+            <div className="text-lg font-bold text-white mt-1 font-mono">
+              {scorecardData.governanceScore}
+              <span className="text-[10px] text-slate-500">/100</span>
             </div>
           </div>
 
-          {/* Team Efficiency */}
-          <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 flex flex-col justify-between">
-            <div className="flex items-center justify-between text-slate-400 text-xs">
-              <span className="text-[10px] font-mono uppercase">Efficiency</span>
-              <Zap className="w-3.5 h-3.5 text-emerald-400" />
+          <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 text-center">
+            <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider flex items-center justify-center gap-1">
+              <Zap className="w-3 h-3 text-amber-400" />
+              <span>Velocity</span>
             </div>
-            <div className="mt-2 flex items-baseline justify-between">
-              <span className="text-xl font-black text-white font-mono">
-                {scorecardData.efficiencyScore}
-              </span>
-              <span className="text-[10px] text-slate-500 font-mono">/100</span>
-            </div>
-            <div className="text-[9px] text-slate-400 mt-1 line-clamp-2">
-              {scorecardData.explanations.efficiency}
+            <div className="text-lg font-bold text-white mt-1 font-mono">
+              {scorecardData.efficiencyScore}
+              <span className="text-[10px] text-slate-500">/100</span>
             </div>
           </div>
         </div>
 
-        {/* 4 Activity Subscore Breakdown */}
-        <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-3.5">
-          <div className="text-[10px] font-mono uppercase text-slate-400 font-bold mb-2">
-            Activity Points Breakdown
+        {/* Activity Breakdown (Investigate, Configure, Validate) */}
+        <div className="bg-[#0b1424] border border-slate-800 rounded-2xl p-4 space-y-3">
+          <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-bold">
+            Activity Performance Breakdown
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
-            <div className="bg-slate-950/80 p-2 rounded-xl border border-slate-800/60">
-              <div className="text-slate-400 text-[10px]">1. Evidence Match</div>
-              <div className="text-cyan-300 font-bold mt-0.5">
-                {scorecardData.breakdown.evidenceScore} / 25 pts
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+            <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800/80">
+              <div className="text-slate-400 text-[10px]">1. Threat Investigation</div>
+              <div className="text-emerald-400 font-bold mt-0.5 font-mono">
+                {scorecardData.breakdown.investigationScore} / 25 pts
               </div>
             </div>
-            <div className="bg-slate-950/80 p-2 rounded-xl border border-slate-800/60">
-              <div className="text-slate-400 text-[10px]">2. Scope Classify</div>
-              <div className="text-cyan-300 font-bold mt-0.5">
-                {scorecardData.breakdown.statusScore} / 25 pts
+
+            <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800/80">
+              <div className="text-slate-400 text-[10px]">2. WAF & MFA Controls</div>
+              <div className="text-emerald-400 font-bold mt-0.5 font-mono">
+                {scorecardData.breakdown.controlsScore} / 50 pts
               </div>
             </div>
-            <div className="bg-slate-950/80 p-2 rounded-xl border border-slate-800/60">
-              <div className="text-slate-400 text-[10px]">3. Handover Runbooks</div>
-              <div className="text-cyan-300 font-bold mt-0.5">
-                {scorecardData.breakdown.handoverScore} / 25 pts
-              </div>
-            </div>
-            <div className="bg-slate-950/80 p-2 rounded-xl border border-slate-800/60">
-              <div className="text-slate-400 text-[10px]">4. Package Review</div>
-              <div className="text-cyan-300 font-bold mt-0.5">
-                {scorecardData.breakdown.packageScore} / 25 pts
+
+            <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800/80">
+              <div className="text-slate-400 text-[10px]">3. Readiness Validation</div>
+              <div className="text-emerald-400 font-bold mt-0.5 font-mono">
+                {scorecardData.breakdown.validationScore} / 25 pts
               </div>
             </div>
           </div>
         </div>
 
-        {/* Qualitative Feedback */}
+        {/* Qualitative Feedback & Key Takeaway */}
         <div className="space-y-2 text-xs">
           <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-2xl p-3">
             <div className="text-emerald-400 font-bold text-[11px] flex items-center gap-1.5 mb-1">
@@ -216,13 +195,13 @@ export const Chapter8ScorecardModal: React.FC<Chapter8ScorecardModalProps> = ({
             </p>
           </div>
 
-          <div className="bg-cyan-950/20 border border-cyan-500/30 rounded-2xl p-3">
-            <div className="text-cyan-400 font-bold text-[11px] flex items-center gap-1.5 mb-1">
+          <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-2xl p-3">
+            <div className="text-emerald-400 font-bold text-[11px] flex items-center gap-1.5 mb-1">
               <Sparkles className="w-3.5 h-3.5" />
-              Key Project Governance Takeaway
+              PM Leadership Lens Takeaway
             </div>
-            <p className="text-slate-300 text-[11px] leading-relaxed italic">
-              "{CHAPTER8_LEARNING_TAKEAWAY}"
+            <p className="text-slate-200 text-[11px] leading-relaxed italic">
+              "{CHAPTER8_KEY_TAKEAWAY}"
             </p>
           </div>
         </div>
@@ -233,16 +212,16 @@ export const Chapter8ScorecardModal: React.FC<Chapter8ScorecardModalProps> = ({
             {onReplayChapter && (
               <button
                 onClick={onReplayChapter}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs text-slate-400 hover:text-white bg-slate-900 border border-slate-800 hover:bg-slate-800 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs text-slate-400 hover:text-white bg-slate-900 border border-slate-800 hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>Replay Handover Desk</span>
+                <span>Replay Scenario</span>
               </button>
             )}
             {onReturnToChapterSelect && (
               <button
                 onClick={onReturnToChapterSelect}
-                className="px-3 py-2 rounded-xl text-xs text-slate-400 hover:text-white bg-slate-900 border border-slate-800 hover:bg-slate-800 transition-colors"
+                className="px-3 py-2 rounded-xl text-xs text-slate-400 hover:text-white bg-slate-900 border border-slate-800 hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 Chapter Select
               </button>
@@ -251,9 +230,9 @@ export const Chapter8ScorecardModal: React.FC<Chapter8ScorecardModalProps> = ({
 
           <button
             onClick={handleProceed}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs shadow-lg hover:shadow-cyan-500/25 transition-all"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs shadow-lg hover:shadow-emerald-500/25 transition-all cursor-pointer"
           >
-            <span>Finish Project Amigo · View Transformation Room Results</span>
+            <span>Proceed · View Final Progress</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
