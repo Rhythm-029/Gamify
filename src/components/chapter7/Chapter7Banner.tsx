@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { AlertCircle, Clock, Wrench } from 'lucide-react';
+import { INCIDENT_ID, INCIDENT_SEVERITY } from '../../data/chapter7Data';
 
 interface Chapter7BannerProps {
   onOpenMeeting?: () => void;
@@ -28,10 +29,10 @@ export const Chapter7Banner: React.FC<Chapter7BannerProps> = ({
           <div>
             <div className="flex items-center space-x-2">
               <span className="font-mono text-[10px] font-extrabold uppercase tracking-wider text-rose-400">
-                PROD INCIDENT #INC-2849 — ATTENDANCE SYNC 504 TIMEOUTS
+                PROD INCIDENT #{INCIDENT_ID} — ATTENDANCE SYNC 504 TIMEOUTS
               </span>
-              <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
-                Chapter 7 Active
+              <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono">
+                &lt;{INCIDENT_SEVERITY}&gt;
               </span>
             </div>
             <div className="text-slate-300 font-medium text-[11px] mt-0.5 flex items-center gap-2">
