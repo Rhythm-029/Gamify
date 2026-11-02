@@ -1,31 +1,32 @@
 {
   "id": 9,
   "slug": "chapter-9",
-  "title": "The Launch",
-  "subtitle": "Go-Live Day & Incident War Room",
+  "title": "ROI Validation",
+  "subtitle": "Executive Leadership Phase — Financial & Operational Impact",
   "act": "III",
-  "actLabel": "Act III — Delivery",
-  "day": "Day 15–16",
-  "duration": "~30 mins",
-  "difficulty": "Expert",
-  "xpReward": 550,
-  "description": "Go-live. Systems are live. Users are logging in. Something breaks in production. The executive team is watching. Support queues are flooding. Lead the war room.",
+  "actLabel": "Act III — Delivery & Executive Leadership",
+  "day": "Day 15–16 (23:00–25:00)",
+  "duration": "~20 mins",
+  "difficulty": "Executive",
+  "xpReward": 600,
+  "description": "Enter the Executive Boardroom Presentation Suite. Prove that Project Amigo delivered measurable business value: analyze telemetry showing a 42% appraisal cycle reduction and 15,000 man-hours saved, model monetary ROI, and deliver an executive impact presentation to secure Phase 2 investment.",
   "stakeholders": [
-    { "name": "Marcus Reed", "role": "CTO · Brained", "agenda": "Diagnosing database connection pool starvation under real production load." },
-    { "name": "Sophia Bennett", "role": "Head of HR Operations", "agenda": "Urgent status reports as 15,000 employees fail to log attendance on Day 1." }
+    { "name": "Mark Sterling", "role": "Head of HR & Executive Steering Committee Sponsor", "agenda": "Waiting for evidence of business impact and justification for continued investment before the Board convenes." },
+    { "name": "Martha Vance", "role": "Lead Systems & Operations Telemetry Specialist", "agenda": "Presents verified telemetry: 42% cycle reduction and 15,000 operational man-hours saved." },
+    { "name": "Jane Cooper", "role": "Lead PM & Transformation Consultant", "agenda": "Translating operational efficiency into balance sheet ROI, payback period, and business case for Phase 2." }
   ],
   "objectives": [
-    { "label": "Manage live production incident under real-time telemetry pressure", "type": "delivery" },
-    { "label": "Coordinate cross-functional war room between DevOps, DBAs, and Support", "type": "stakeholder" },
-    { "label": "Communicate transparent status and resolution ETA to executive leadership", "type": "communication" }
+    { "label": "Analyze operational telemetry: 42% appraisal cycle drop and 15,000 man-hours saved", "type": "analysis" },
+    { "label": "Model financial ROI translating operational capacity into ₹97.5 Lakhs savings against ₹55 Lakh investment", "type": "analysis" },
+    { "label": "Deliver detailed ROI presentation to the Executive Steering Committee to unlock Phase 2", "type": "decision" }
   ],
   "deliverables": [
-    "Production Incident Post-Mortem (RCA)",
-    "War Room Executive Incident Bulletins",
-    "System Remediation & Auto-Scaling Patch"
+    "Executive ROI & Telemetry Dashboard",
+    "Operational-to-Financial Capital Justification Model",
+    "Boardroom Steering Committee Presentation Deck"
   ],
-  "primaryColor": "#16a34a",
-  "secondaryColor": "#0891b2",
-  "accentColor": "#4ade80",
-  "backgroundIcon": "🌐"
+  "primaryColor": "#10b981",
+  "secondaryColor": "#0d9488",
+  "accentColor": "#34d399",
+  "backgroundIcon": "📈"
 }

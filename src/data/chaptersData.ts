@@ -9,6 +9,7 @@ import { resetChapter5SessionState } from './chapter5Data';
 import { resetChapter6SessionState } from './chapter6Data';
 import { resetChapter7SessionState } from './chapter7Data';
 import { resetChapter8SessionState } from './chapter8Data';
+import { resetChapter9SessionState } from './chapter9Data';
 
 export type ChapterStatus = 'locked' | 'unlocked' | 'in_progress' | 'completed';
 
@@ -235,25 +236,25 @@ export const CHAPTERS: Chapter[] = [
   {
     id: 9,
     slug: 'chapter-9',
-    title: 'The Launch',
-    subtitle: 'Go-Live Day',
+    title: 'ROI Validation',
+    subtitle: 'Executive Leadership Phase',
     act: 'III',
     actLabel: 'Act III — Delivery',
-    day: 'Day 15–16',
-    duration: '~30 mins',
+    day: 'Day 15–16 (23:00–25:00)',
+    duration: '~20 mins',
     difficulty: 'Expert',
-    xpReward: 550,
+    xpReward: 600,
     description:
-      'Go-live. Systems are live. Users are logging in. Something breaks in production. The executive team is watching. Support queues are flooding. Lead the war room.',
+      'The system is live in production across 80,000 employees. Martha presents telemetry showing a 42% appraisal cycle drop and 15,000 man-hours saved. Translate operational telemetry into monetary ROI and face the Executive Steering Committee.',
     objectives: [
-      { label: 'Manage live production incident', type: 'delivery' },
-      { label: 'Coordinate cross-functional war room', type: 'stakeholder' },
-      { label: 'Communicate status to executive team', type: 'communication' },
+      { label: 'Analyze telemetry: 42% cycle reduction and 15,000 man-hours saved', type: 'analysis' },
+      { label: 'Model financial ROI converting capacity into ₹97.5 Lakhs savings', type: 'analysis' },
+      { label: 'Deliver detailed executive presentation to secure Phase 2 investment', type: 'decision' },
     ],
-    primaryColor: '#16a34a',
-    secondaryColor: '#0891b2',
-    accentColor: '#4ade80',
-    backgroundIcon: '🌐',
+    primaryColor: '#10b981',
+    secondaryColor: '#0d9488',
+    accentColor: '#34d399',
+    backgroundIcon: '📈',
     status: 'locked',
   },
   {
@@ -386,6 +387,8 @@ export function resetChapterSession(chapterId: number) {
     resetChapter7SessionState();
   } else if (chapterId === 8) {
     resetChapter8SessionState();
+  } else if (chapterId === 9) {
+    resetChapter9SessionState();
   }
 }
 
@@ -399,6 +402,7 @@ export function resetChapterStatuses() {
   resetChapter6SessionState();
   resetChapter7SessionState();
   resetChapter8SessionState();
+  resetChapter9SessionState();
   try {
     localStorage.removeItem('brained_chapter_statuses');
     localStorage.removeItem('brained_just_unlocked_chapter');
@@ -410,6 +414,7 @@ export function resetChapterStatuses() {
     localStorage.removeItem('brained_chapter6_state');
     localStorage.removeItem('brained_chapter7_state');
     localStorage.removeItem('brained_chapter8_state');
+    localStorage.removeItem('brained_chapter9_state');
   } catch {}
 }
 

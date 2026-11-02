@@ -52,6 +52,7 @@ import { SimulationEventModal } from '../overlays/SimulationEventModal';
 
 // Chapter 2 Components & Data
 import type { Chapter2State, InfrastructureOption, CommunicationOption, UiUxOption } from '../../types/chapter2';
+import { requestChapterAIEvaluation } from '../../services/aiEvaluationService';
 import {
   getChapter2SessionState,
   setChapter2SessionState,
@@ -136,6 +137,16 @@ import { Chapter8Banner } from '../chapter8/Chapter8Banner';
 import { Chapter8MeetingApp } from '../chapter8/Chapter8MeetingApp';
 import { ReleaseHandoverDeskApp } from '../chapter8/ReleaseHandoverDeskApp';
 import { Chapter8ScorecardModal } from '../chapter8/Chapter8ScorecardModal';
+
+// Chapter 9 Components & Data
+import type { Chapter9State } from '../../types/chapter9';
+import {
+  getChapter9SessionState,
+  setChapter9SessionState,
+} from '../../data/chapter9Data';
+import { Chapter9Banner } from '../chapter9/Chapter9Banner';
+import { ExecutiveRoiBoardroomApp } from '../chapter9/ExecutiveRoiBoardroomApp';
+import { Chapter9ScorecardModal } from '../chapter9/Chapter9ScorecardModal';
 
 interface BrainedOSDesktopProps {
   onOpenEventModal?: () => void;
@@ -469,6 +480,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
         onSend: () => {
           setEmailComposer(null);
           const computed = computeChapter2Score(chapter2State, assignmentResult);
+          
           setChapter2State((prev) => {
             const next: Chapter2State = {
               ...prev,
@@ -486,6 +498,40 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
             return next;
           });
 
+          // Trigger asynchronous Grok AI Evaluation
+          requestChapterAIEvaluation(2, {
+            infrastructure: chapter2State.infrastructure,
+            communication: chapter2State.communication,
+            uiux: chapter2State.uiux,
+            sprint: chapter2State.sprint,
+          }, {
+            ...computed,
+            totalScore: computed.totalScore,
+          }).then((aiScorecard) => {
+            setChapter2State((curr) => {
+              const updated: Chapter2State = {
+                ...curr,
+                scorecard: {
+                  shown: true,
+                  scheduleScore: aiScorecard.scheduleScore,
+                  riskScore: aiScorecard.riskScore,
+                  governanceScore: aiScorecard.governanceScore,
+                  efficiencyScore: aiScorecard.efficiencyScore,
+                  totalScore: aiScorecard.totalScore,
+                  explanations: aiScorecard.explanations,
+                  aiEvaluated: aiScorecard.aiEvaluated,
+                  outcomeTitle: aiScorecard.outcomeTitle,
+                  executiveSummary: aiScorecard.executiveSummary,
+                  strengths: aiScorecard.strengths,
+                  improvements: aiScorecard.improvements,
+                  leadershipCoaching: aiScorecard.leadershipCoaching,
+                },
+              };
+              setChapter2SessionState(updated);
+              return updated;
+            });
+          }).catch(console.warn);
+
           sound.playSystemClearance();
           pushNotification({
             id: 'ch2_greenlight_sent',
@@ -500,7 +546,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
 
           setTimeout(() => {
             setIsChapter2ScorecardOpen(true);
-          }, 1000);
+          }, 800);
         },
       });
     }
@@ -626,6 +672,20 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
     setChapter8State((prev) => {
       const next = typeof updater === 'function' ? updater(prev) : { ...prev, ...updater };
       setChapter8SessionState(next);
+      return next;
+    });
+  };
+
+  // ── Chapter 9 Interactive Simulation State (ROI Validation) ──
+  const [chapter9State, setChapter9State] = useState<Chapter9State>(() => getChapter9SessionState());
+  const [isChapter9ScorecardOpen, setIsChapter9ScorecardOpen] = useState(false);
+
+  const handleUpdateChapter9State = (
+    updater: Partial<Chapter9State> | ((prev: Chapter9State) => Chapter9State)
+  ) => {
+    setChapter9State((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : { ...prev, ...updater };
+      setChapter9SessionState(next);
       return next;
     });
   };
@@ -924,6 +984,29 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
     return () => clearTimeout(timer);
   }, [chapter8State.callCompleted, chapter8State.meetingCompleted, chapter8State.deskUnlocked, activeChapter]);
 
+  // ── Chapter 9 Step 1: Executive Boardroom Presentation Suite Invitation ──
+  useEffect(() => {
+    if (bootStep !== 'ready' || activeChapter !== 9) return;
+    if (seenNotifIds.current.has('ch9_boardroom_invitation')) return;
+
+    const timer = setTimeout(() => {
+      sound.playMessagePing();
+      pushNotification({
+        id: 'ch9_boardroom_invitation',
+        app: 'Teams',
+        title: 'Mark Sterling · Head of HR',
+        subtitle: 'Executive Boardroom Presentation Suite (23:00)',
+        body: 'Jane, the Executive Steering Committee convenes in 15 minutes. Martha verified telemetry showing a 42% appraisal cycle drop and 15,000 man-hours saved. Prepare your ROI model to secure Phase 2 budget!',
+        timestamp: 'Now',
+        actionText: 'Enter Boardroom',
+        onActionAppId: 'executive_roi_boardroom',
+        isCall: true,
+      });
+      handleUpdateChapter9State({ boardroomRoomOpened: true });
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [bootStep, activeChapter]);
+
 
 
   // Register Cera active app checker, external notification handler, and browser open callback
@@ -1101,6 +1184,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
     incident_studio: { title: 'Incident Response & RCA Studio — Attendance Sync', icon: <Wrench className="w-4 h-4 text-rose-400" /> },
     chapter8_meeting: { title: 'Bank SOC Liaison Channel — Defending Against Credential Stuffing', icon: <span>🛡️</span> },
     release_handover_desk: { title: 'Security Response Console — Project Amigo', icon: <FileCheck2 className="w-4 h-4 text-emerald-400" /> },
+    executive_roi_boardroom: { title: 'Executive Boardroom — ROI Validation & Impact Suite', icon: <span>📈</span> },
     brief: { title: 'Preview — Project_Amigo_Internal_Brief.pdf', icon: <span>📄</span> },
     assignment: { title: 'Project Amigo — Initial Planning · Assignment 01', icon: <span>📋</span> },
     review: { title: 'Microsoft Teams — Prototype Review · Day 7', icon: <span>📹</span> },
@@ -1270,6 +1354,15 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
         />
       )}
 
+      {/* CHAPTER 9 STATUS BANNER */}
+      {activeChapter === 9 && (
+        <Chapter9Banner
+          chapter9State={chapter9State}
+          onOpenBoardroom={() => handleOpenApp('executive_roi_boardroom')}
+          onOpenScorecard={() => setIsChapter9ScorecardOpen(true)}
+        />
+      )}
+
       {/* DESKTOP CANVAS */}
       <main className="flex-1 relative z-10 pt-16 pb-24 px-8 overflow-hidden flex flex-col justify-between">
         {/* DESKTOP WIDGETS (CLOCK & STREAK) */}
@@ -1403,7 +1496,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
                   }}
                   hasReadBrief={hasReadBrief}
                   onOpenChapterCompletion={() => setIsChapter1CompletionOpen(true)}
-                  initialChatId={activeChapter === 8 ? 'marcus' : activeChapter === 7 ? 'martha' : activeChapter === 3 ? (chapter3State.activeChatRecipient || 'daniel') : activeChapter >= 2 ? 'daniel' : 'aarav'}
+                  initialChatId={activeChapter === 9 ? 'mark' : activeChapter === 8 ? 'marcus' : activeChapter === 7 ? 'martha' : activeChapter === 3 ? (chapter3State.activeChatRecipient || 'daniel') : activeChapter >= 2 ? 'daniel' : 'aarav'}
                   activeChapter={activeChapter}
                   chapter2State={chapter2State}
                   chapter3State={chapter3State}
@@ -1416,6 +1509,9 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
                   onUpdateChapter8State={handleUpdateChapter8State}
                   onOpenReleaseHandoverDesk={() => handleOpenApp('release_handover_desk')}
                   onOpenChapter8Meeting={() => handleOpenApp('chapter8_meeting')}
+                  chapter9State={chapter9State}
+                  onUpdateChapter9State={handleUpdateChapter9State}
+                  onOpenExecutiveBoardroom={() => handleOpenApp('executive_roi_boardroom')}
                   onOpenMailComposer={(to, email, subject, body) => {
                     setEmailComposer({
                       isOpen: true,
@@ -1610,6 +1706,23 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
                   onNotifyDesktop={(title, body) => {
                     pushNotification({
                       id: `ch8_desktop_notif_${Date.now()}`,
+                      app: 'Teams',
+                      title,
+                      body,
+                      timestamp: 'Now',
+                    });
+                  }}
+                />
+              )}
+              {/* CHAPTER 9 SIMULATION APPS (ROI VALIDATION) */}
+              {activeAppId === 'executive_roi_boardroom' && (
+                <ExecutiveRoiBoardroomApp
+                  chapter9State={chapter9State}
+                  onUpdateState={handleUpdateChapter9State}
+                  onOpenScorecard={() => setIsChapter9ScorecardOpen(true)}
+                  onNotifyDesktop={(title, body) => {
+                    pushNotification({
+                      id: `ch9_desktop_notif_${Date.now()}`,
                       app: 'Teams',
                       title,
                       body,
@@ -1942,6 +2055,52 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
             setIsChapter7ScorecardOpen(false);
             resetChapterSession(7);
             if (onStartChapter) onStartChapter(7);
+          }}
+        />
+      )}
+
+      {/* CHAPTER 8 SCORECARD MODAL */}
+      {isChapter8ScorecardOpen && (
+        <Chapter8ScorecardModal
+          scorecardData={chapter8State.scorecard}
+          onProceedToNextChapter={() => {
+            setIsChapter8ScorecardOpen(false);
+            localStorage.setItem('brained_just_unlocked_chapter', '9');
+            if (onStartChapter) onStartChapter(9);
+            else if (onReturnToChapterSelect) onReturnToChapterSelect();
+          }}
+          onReturnToChapterSelect={() => {
+            setIsChapter8ScorecardOpen(false);
+            localStorage.setItem('brained_just_unlocked_chapter', '9');
+            if (onReturnToChapterSelect) onReturnToChapterSelect();
+          }}
+          onReplayChapter={() => {
+            setIsChapter8ScorecardOpen(false);
+            resetChapterSession(8);
+            if (onStartChapter) onStartChapter(8);
+          }}
+        />
+      )}
+
+      {/* CHAPTER 9 SCORECARD MODAL (ROI VALIDATION) */}
+      {isChapter9ScorecardOpen && (
+        <Chapter9ScorecardModal
+          scorecardData={chapter9State.scorecard}
+          onProceedToNextChapter={() => {
+            setIsChapter9ScorecardOpen(false);
+            localStorage.setItem('brained_just_unlocked_chapter', '10');
+            if (onStartChapter) onStartChapter(10);
+            else if (onReturnToChapterSelect) onReturnToChapterSelect();
+          }}
+          onReturnToChapterSelect={() => {
+            setIsChapter9ScorecardOpen(false);
+            localStorage.setItem('brained_just_unlocked_chapter', '10');
+            if (onReturnToChapterSelect) onReturnToChapterSelect();
+          }}
+          onReplayChapter={() => {
+            setIsChapter9ScorecardOpen(false);
+            resetChapterSession(9);
+            if (onStartChapter) onStartChapter(9);
           }}
         />
       )}

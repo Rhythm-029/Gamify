@@ -12,6 +12,7 @@ import type { Chapter2State } from '../../types/chapter2';
 import type { Chapter3State } from '../../types/chapter3';
 import type { Chapter7State } from '../../types/chapter7';
 import type { Chapter8State } from '../../types/chapter8';
+import type { Chapter9State } from '../../types/chapter9';
 import { Chapter3ChatWorkspace } from '../chapter3/Chapter3ChatWorkspace';
 
 interface MSTeamsAppProps {
@@ -20,7 +21,7 @@ interface MSTeamsAppProps {
   onOpenBrief?: () => void;
   onOpenChapterCompletion?: () => void;
   hasReadBrief?: boolean;
-  initialChatId?: 'aarav' | 'marcus' | 'sophia' | 'daniel' | 'amigo-dev-ops' | 'martha';
+  initialChatId?: 'aarav' | 'marcus' | 'sophia' | 'daniel' | 'amigo-dev-ops' | 'martha' | 'ciso' | 'alex' | 'mark';
   activeChapter?: number;
   chapter2State?: Chapter2State;
   onOpenIncidentPanel?: () => void;
@@ -45,10 +46,13 @@ interface MSTeamsAppProps {
   onUpdateChapter8State?: (updater: Partial<Chapter8State> | ((prev: Chapter8State) => Chapter8State)) => void;
   onOpenReleaseHandoverDesk?: () => void;
   onOpenChapter8Meeting?: () => void;
+  chapter9State?: Chapter9State;
+  onUpdateChapter9State?: (updater: Partial<Chapter9State> | ((prev: Chapter9State) => Chapter9State)) => void;
+  onOpenExecutiveBoardroom?: () => void;
 }
 
 interface ChatContact {
-  id: 'aarav' | 'marcus' | 'sophia' | 'daniel' | 'amigo-dev-ops' | 'martha' | 'ciso' | 'alex';
+  id: 'aarav' | 'marcus' | 'sophia' | 'daniel' | 'amigo-dev-ops' | 'martha' | 'ciso' | 'alex' | 'mark';
   name: string;
   role: string;
   avatar: string;
@@ -116,7 +120,11 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
   onUpdateChapter8State,
   onOpenReleaseHandoverDesk,
   onOpenChapter8Meeting,
+  chapter9State,
+  onUpdateChapter9State,
+  onOpenExecutiveBoardroom,
 }) => {
+  const isCh9 = activeChapter === 9;
   const isCh8 = activeChapter === 8;
   const isCh7 = activeChapter === 7;
   const isCh4 = activeChapter === 4;
@@ -125,10 +133,10 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
   const isPastCh1 = (activeChapter ?? 1) >= 2;
   const [activeTab, setActiveTab] = useState<'chat' | 'calls' | 'teams'>('chat');
   const [activeChatId, setActiveChatId] = useState<
-    'aarav' | 'marcus' | 'sophia' | 'daniel' | 'amigo-dev-ops' | 'martha' | 'ciso' | 'alex'
+    'aarav' | 'marcus' | 'sophia' | 'daniel' | 'amigo-dev-ops' | 'martha' | 'ciso' | 'alex' | 'mark'
   >(
     (initialChatId as any) ||
-      (isCh8 ? 'ciso' : isCh7 ? 'martha' : isCh4 ? 'sophia' : isCh3 ? (chapter3State?.activeChatRecipient || 'daniel') : isPastCh1 ? 'daniel' : 'aarav')
+      (isCh9 ? 'mark' : isCh8 ? 'ciso' : isCh7 ? 'martha' : isCh4 ? 'sophia' : isCh3 ? (chapter3State?.activeChatRecipient || 'daniel') : isPastCh1 ? 'daniel' : 'aarav')
   );
   const [messageInput, setMessageInput] = useState('');
   const [customMessages, setCustomMessages] = useState<Record<string, CustomMessage[]>>({});
@@ -176,7 +184,33 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
   const effectiveAssignmentResult = assignmentResult || (isPastCh1 ? CANONICAL_CHAPTER1_RESULT : null);
 
   // Dynamic Contacts List depending on Active Chapter
-  const contactsList: ChatContact[] = isCh8
+  const contactsList: ChatContact[] = isCh9
+    ? [
+        {
+          id: 'mark',
+          name: 'Mark Sterling',
+          role: 'Head of HR · Executive Steering Committee Sponsor',
+          avatar: '/character/Marcus_reed/MarcusDP.png',
+          lastMessage: chapter9State?.completed
+            ? 'The Executive Steering Committee unanimously approved the ROI model. Phase 2 budget is officially ratified!'
+            : 'Jane, the Board convenes shortly. We need your ROI presentation to demonstrate that Project Amigo delivered measurable business value.',
+          time: '23:00',
+          unread: !chapter9State?.completed,
+          online: true,
+        },
+        {
+          id: 'martha',
+          name: 'Martha Vance',
+          role: 'Monitoring / Operations Telemetry',
+          avatar: '/character/Emma_Carter/EmmaDP.png',
+          lastMessage:
+            'Telemetry confirmed: 42% reduction in appraisal cycle completion time and 15,000 operational man-hours saved.',
+          time: '23:15',
+          unread: false,
+          online: true,
+        },
+      ]
+    : isCh8
     ? [
         {
           id: 'ciso',
@@ -649,7 +683,101 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
 
         {/* Chat Messages Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {isCh8 && (activeChatId === 'ciso' || activeChatId === 'marcus' || activeChatId === 'aarav' || activeChatId === 'sophia') ? (
+          {isCh9 && (activeChatId === 'mark' || activeChatId === 'martha') ? (
+            /* ── MARK STERLING & MARTHA — CHAPTER 9 ROI VALIDATION ── */
+            <div className="space-y-4">
+              <div className="flex justify-center">
+                <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/15 px-3.5 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1.5 font-bold shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  Today · 23:00 · Executive Boardroom Presentation Suite · ROI Validation
+                </span>
+              </div>
+
+              {/* Message 1: Mark Sterling Prompt */}
+              <div className="flex items-start space-x-3 max-w-2xl">
+                <img
+                  src="/character/Marcus_reed/MarcusDP.png"
+                  alt="Mark Sterling"
+                  className="w-8 h-8 rounded-full object-cover border border-amber-400/50 shrink-0 mt-1"
+                />
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-bold text-xs text-amber-300">Mark Sterling</span>
+                    <span className="text-[10px] font-mono text-slate-400">Head of HR & Sponsor · 23:00</span>
+                  </div>
+                  <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#121c24] border border-amber-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                    <p className="font-bold text-amber-200">
+                      "Jane, the Executive Steering Committee is sitting down in the boardroom. The CFO and Managing Director have asked for quantifiable proof of business impact before releasing the Phase 2 budget."
+                    </p>
+                    <p className="text-slate-300 text-xs">
+                      "Martha's telemetry confirmed a 42% appraisal cycle reduction and 15,000 man-hours saved — but we need your financial ROI model and business impact deck to defend the capital allocation."
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Message 2: Martha Vance Telemetry Summary */}
+              <div className="flex items-start space-x-3 max-w-2xl">
+                <img
+                  src="/character/Emma_Carter/EmmaDP.png"
+                  alt="Martha Vance"
+                  className="w-8 h-8 rounded-full object-cover border border-emerald-400/50 shrink-0 mt-1"
+                />
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-bold text-xs text-emerald-300">Martha Vance</span>
+                    <span className="text-[10px] font-mono text-slate-400">Ops Telemetry Specialist · 23:05</span>
+                  </div>
+                  <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#0a1820] border border-emerald-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                    <p className="font-bold text-emerald-200">
+                      "Telemetry aggregated across 4,800 branches: appraisal cycle duration collapsed from 21 days to 12.2 days. 15,000 operational hours saved!"
+                    </p>
+                    <p className="text-slate-300 text-xs">
+                      "At ICICI's blended workforce rate of ₹650/hr, that's ₹97.5 Lakhs in annual capacity value against our ₹55 Lakh Phase 1 spend. Let's deliver the ROI presentation!"
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Message 3: Mark Sterling After Outcome */}
+              {chapter9State?.completed && (
+                <div className="flex items-start space-x-3 max-w-2xl">
+                  <img
+                    src="/character/Marcus_reed/MarcusDP.png"
+                    alt="Mark Sterling"
+                    className="w-8 h-8 rounded-full object-cover border border-emerald-400/50 shrink-0 mt-1"
+                  />
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-bold text-xs text-emerald-300">Mark Sterling</span>
+                      <span className="text-[10px] font-mono text-emerald-400 font-bold px-2 py-0.2 rounded bg-emerald-500/20">
+                        {chapter9State?.decisionChosen === 'choice_b' ? 'Unanimous Approval' : 'Boardroom Review Held'}
+                      </span>
+                    </div>
+                    <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#09181a] border border-emerald-500/40 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                      <p className="font-bold text-emerald-200">
+                        {chapter9State?.decisionChosen === 'choice_b'
+                          ? '"Sensational outcome, Jane! The CFO was thoroughly impressed by your +77.3% Net ROI model and 6.8-month payback period. The Steering Committee voted unanimously to approve Phase 2 budget in full."'
+                          : '"Jane, the Board refused to release Phase 2 capital without hard financial figures. Projects must communicate measurable business value to justify continued investment."'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-2 flex items-center gap-3">
+                {onOpenExecutiveBoardroom && (
+                  <button
+                    onClick={onOpenExecutiveBoardroom}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-900/40 flex items-center gap-2 cursor-pointer transition-all border border-emerald-400/40"
+                  >
+                    <span>{chapter9State?.completed ? 'Review Boardroom Presentation' : 'Enter Executive Boardroom (Chapter 9)'}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : isCh8 && (activeChatId === 'ciso' || activeChatId === 'marcus' || activeChatId === 'aarav' || activeChatId === 'sophia') ? (
             /* ── BANK CISO — CHAPTER 8 SOC THREAT LIAISON CONVERSATION ── */
             <div className="space-y-4">
               <div className="flex justify-center">
