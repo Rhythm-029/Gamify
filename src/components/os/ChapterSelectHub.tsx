@@ -136,7 +136,12 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
   const [autoLaunchTarget, setAutoLaunchTarget] = useState<number>(2);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const playerName = playerConfig?.name || localStorage.getItem('brained_player_name') || 'Riya Mehta';
+  const storedName = typeof window !== 'undefined' ? localStorage.getItem('brained_player_name') : null;
+  const playerName = (playerConfig?.name && playerConfig.name !== 'Riya Mehta')
+    ? playerConfig.name
+    : (storedName && storedName !== 'Riya Mehta')
+      ? storedName
+      : 'Player';
   const playerRole = playerConfig?.role || 'Digital Transformer';
 
   // Check if a chapter was just unlocked from previous completion
@@ -292,12 +297,7 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
             <span>Reset Progress</span>
           </button>
 
-          <div className="flex items-center space-x-3 bg-white/[0.06] hover:bg-white/[0.10] transition-all border border-white/10 rounded-full py-1.5 pl-2 pr-4 backdrop-blur-md cursor-pointer shadow-lg">
-            <img 
-              src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80" 
-              className="w-8 h-8 rounded-full object-cover ring-1 ring-amber-400/60 shadow-[0_0_8px_rgba(245,158,11,0.3)]" 
-              alt={playerName} 
-            />
+          <div className="flex items-center space-x-2.5 bg-white/[0.06] hover:bg-white/[0.10] transition-all border border-white/10 rounded-full py-1.5 px-4 backdrop-blur-md cursor-pointer shadow-lg">
             <div className="text-left">
               <div className="text-xs font-semibold text-white leading-tight">{playerName}</div>
               <div className="text-[10px] text-slate-400 leading-tight">{playerRole}</div>

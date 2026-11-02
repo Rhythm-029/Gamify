@@ -143,11 +143,12 @@ export function App() {
   /* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */
   const handleDevJumpChapter = (chapterId: number) => {
     if (!playerConfig) {
+      const storedName = localStorage.getItem('brained_player_name');
       setPlayerConfig({
-        name: localStorage.getItem('brained_player_name') || 'Riya Mehta',
+        name: (storedName && storedName !== 'Riya Mehta') ? storedName : 'Player',
         role: 'Digital Transformation Consultant',
         company: localStorage.getItem('brained_player_company') || 'ICICI Bank / Brained',
-        email: localStorage.getItem('brained_player_email') || 'riya.mehta@brained.io',
+        email: localStorage.getItem('brained_player_email') || 'player@brained.io',
         linkedin: '',
       });
     }
