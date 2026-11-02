@@ -245,7 +245,7 @@ export const CHAPTERS: Chapter[] = [
     difficulty: 'Expert',
     xpReward: 600,
     description:
-      'The system is live in production across 80,000 employees. Martha presents telemetry showing a 42% appraisal cycle drop and 15,000 man-hours saved. Translate operational telemetry into monetary ROI and face the Executive Steering Committee.',
+      'The system is live in production across 80,000 employees. Martha presents telemetry showing a 42% appraisal cycle drop and 15,000 man-hours saved. Translate operational telemetry into monetary ROI, audit regional anomalies, and defend Phase 2 investment before CFO Vikram Malhotra and CTO Marcus Reed.',
     objectives: [
       { label: 'Analyze telemetry: 42% cycle reduction and 15,000 man-hours saved', type: 'analysis' },
       { label: 'Model financial ROI converting capacity into ₹97.5 Lakhs savings', type: 'analysis' },

@@ -296,7 +296,7 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
             </div>
           </div>
 
-          {/* Jane (Player / Lead PM) */}
+          {/* Player Feed (Lead PM / Transformation Consultant) */}
           <div
             className={`p-3.5 rounded-2xl border transition-all ${
               activeSpeaker === 'jane'
@@ -306,17 +306,15 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
           >
             <div className="flex items-center space-x-3">
               <div className="relative">
-                <img
-                  src={CHAPTER9_CHARACTERS.jane.avatar}
-                  alt={CHAPTER9_CHARACTERS.jane.name}
-                  className="w-12 h-12 rounded-xl object-cover border border-indigo-500/50 shadow"
-                />
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-cyan-500 flex items-center justify-center font-bold text-white text-sm shadow-md border border-indigo-400/40 font-mono">
+                  YOU
+                </div>
                 <span className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-slate-950" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-white truncate">
-                    Jane (You)
+                    Player (You)
                   </span>
                   {activeSpeaker === 'jane' && (
                     <span className="text-indigo-400 text-[10px] font-mono flex items-center gap-1 font-bold">
@@ -329,7 +327,7 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
                 </div>
                 <div className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  <span>Delivery Governance & ROI Lead</span>
+                  <span>Brained Consulting · Delivery Lead</span>
                 </div>
               </div>
             </div>
@@ -371,7 +369,7 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
                     <button
                       onClick={() =>
                         speakDialogue(
-                          "Jane, Martha, thanks for hopping on. In 15 minutes, the Executive Steering Committee convenes with the CFO and Managing Director. They want verified outcomes from Project Amigo before entertaining our Phase 2 expansion budget."
+                          "Thanks for hopping on. In 15 minutes, the Executive Steering Committee convenes with CFO Vikram Malhotra and CTO Marcus Reed. They want verified outcomes from Project Amigo before entertaining our Phase 2 expansion budget. Martha, what does the post-rollout telemetry tell us?"
                         )
                       }
                       className="text-slate-400 hover:text-white p-1 rounded"
@@ -380,7 +378,7 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
                     </button>
                   </div>
                   <p className="text-white text-sm sm:text-base font-medium leading-relaxed italic">
-                    "Jane, Martha, thanks for hopping on. In 15 minutes, the Executive Steering Committee convenes with the CFO and Managing Director. They want verified outcomes from Project Amigo before entertaining our Phase 2 expansion budget. Martha, what does the post-rollout telemetry tell us?"
+                    "Thanks for hopping on. In 15 minutes, the Executive Steering Committee convenes with CFO Vikram Malhotra and CTO Marcus Reed. They want verified outcomes from Project Amigo before entertaining our Phase 2 expansion budget. Martha, what does the post-rollout telemetry tell us?"
                   </p>
                 </div>
 
@@ -470,14 +468,14 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
                     onClick={handleMarthaTelemetryNext}
                     className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-cyan-600/30 transition-all cursor-pointer border border-cyan-400/40"
                   >
-                    <span>Jane's Lead PM Response</span>
+                    <span>Your Lead PM Response</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
               </motion.div>
             )}
 
-            {/* ── TURN 3: Interactive Jane Senior PM Intervention ── */}
+            {/* ── TURN 3: Interactive Senior PM Intervention ── */}
             {meetingStage === 'jane_intervention' && (
               <motion.div
                 key="stage_intervention"
@@ -489,7 +487,7 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
                 <div className="flex items-center justify-between border-b border-indigo-500/20 pb-3">
                   <div className="flex items-center space-x-2 text-indigo-400 font-mono text-xs font-bold tracking-wider uppercase">
                     <MessageSquare className="w-4 h-4 text-indigo-400" />
-                    <span>23:18 · Jane's Strategic PM Intervention</span>
+                    <span>23:18 · Strategic PM Intervention</span>
                   </div>
                   <span className="text-[10px] font-mono text-slate-400">
                     HOW WILL YOU STEER THE BOARDROOM NARRATIVE?
@@ -498,7 +496,7 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
 
                 <div className="space-y-1">
                   <h2 className="text-sm sm:text-base font-black text-white">
-                    Select Jane's response to Martha's telemetry:
+                    Select your response to Martha's telemetry:
                   </h2>
                   <p className="text-xs text-slate-400">
                     A senior PM does not stop at engineering metrics. Choose how to frame the business outcome.
@@ -518,7 +516,7 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
                         </span>
                       </div>
                       <p className="text-white font-semibold text-xs sm:text-sm leading-relaxed">
-                        "15,000 hours saved is a huge operational win, but leadership thinks in capital return, payback velocity, and EBITDA. What is our blended workforce cost so we can monetize this?"
+                        "15,000 hours saved is a huge operational win, but CFO Vikram Malhotra and CTO Marcus Reed think in capital return, payback velocity, and architectural scale. We must monetize these hours at our blended workforce cost."
                       </p>
                       <p className="text-slate-400 text-xs">
                         Translates technical engineering metrics into balance sheet capacity and sets up a watertight financial defense for Phase 2.
@@ -581,7 +579,7 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
                     <button
                       onClick={() =>
                         speakDialogue(
-                          "Spot on, Jane. Operational hours alone won't convince Finance. Our corporate finance rate for branch staff is ₹650 per hour. At ₹650/hr, 15,000 hours converts into ₹97.5 Lakhs in annual capacity value! Against our ₹55 Lakh Phase 1 capital spend, that yields a +77.3% Net ROI and a 6.8-month payback. But the CFO expects you to configure the financial model, verify regional branch data, and validate the corporate boardroom deck before the final vote."
+                          "Spot on! Operational hours alone won't convince CFO Vikram Malhotra. Our corporate finance rate for branch staff is ₹650 per hour. At ₹650/hr, 15,000 hours converts into ₹97.5 Lakhs in annual capacity value! Against our ₹55 Lakh Phase 1 capital spend, that yields a +77.3% Net ROI and a 6.8-month payback. But the CFO expects you to configure the financial model, verify regional branch data, and validate the corporate boardroom deck before the final vote."
                         )
                       }
                       className="text-slate-400 hover:text-white p-1 rounded"
@@ -591,8 +589,8 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
                   </div>
                   <p className="text-white text-sm sm:text-base font-medium leading-relaxed italic">
                     {playerDialogueChoice === 'monetize_hours'
-                      ? '"Spot on, Jane! Operational hours alone will not satisfy Finance. Our corporate finance blended rate for branch officers is ₹650 per hour. At ₹650/hr, 15,000 hours converts into ₹97.5 Lakhs in annual capacity value! Against our ₹55 Lakh Phase 1 capital spend, that’s +77.3% Net ROI and full payback in 6.8 months."'
-                      : '"Careful, Jane. The CFO will dismiss raw operational charts as engineering overhead. We must monetize those 15,000 hours at our ₹650/hr branch rate into ₹97.5 Lakhs. Go into the Executive ROI Dashboard right now, model the numbers, and prepare the Boardroom Deck."'}
+                      ? '"Spot on! Operational hours alone will not satisfy CFO Vikram Malhotra. Our corporate finance blended rate for branch officers is ₹650 per hour. At ₹650/hr, 15,000 hours converts into ₹97.5 Lakhs in annual capacity value! Against our ₹55 Lakh Phase 1 capital spend, that’s +77.3% Net ROI and full payback in 6.8 months."'
+                      : '"Careful! CFO Vikram Malhotra will dismiss raw operational charts as engineering overhead, and CTO Marcus Reed will question scale. We must monetize those 15,000 hours at our ₹650/hr branch rate into ₹97.5 Lakhs. Go into the Executive ROI Dashboard right now, model the numbers, and prepare the Boardroom Deck."'}
                   </p>
                 </div>
 
@@ -640,7 +638,7 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
                     </div>
                   </div>
                   <p className="text-white text-sm sm:text-base font-medium leading-relaxed italic">
-                    "Jane, I've loaded the telemetry metrics, regional pilot breakdown (Mumbai, Pune, Bangalore, Delhi), and financial equations directly into your Executive ROI Dashboard. Complete the verification, calibrate the financial levers, and validate the slide deck before entering the Boardroom."
+                    "I've loaded the telemetry metrics, regional pilot breakdown (Mumbai, Pune, Bangalore, Delhi), and financial equations directly into your Executive ROI Dashboard. Complete the verification, calibrate the financial levers, and validate the slide deck before entering the Boardroom to face Vikram Malhotra and Marcus Reed."
                   </p>
                 </div>
 

@@ -997,7 +997,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
         app: 'Teams',
         title: 'Incoming Call · Sophia Bennett',
         subtitle: 'Head of HR Operations · Executive Steering Committee Sponsor',
-        body: 'Jane, join the Executive Briefing call. Martha has the verified post-rollout telemetry from Mumbai & Pune ready for your ROI presentation.',
+        body: 'Join the Executive Briefing call. Martha has the verified post-rollout APM telemetry ready for your ROI presentation to CFO Vikram Malhotra and CTO Marcus Reed.',
         timestamp: 'Now',
         actionText: 'Join Call',
         onActionAppId: 'chapter9_meeting',

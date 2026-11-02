@@ -83,7 +83,7 @@ export interface Chapter9Scorecard {
 
 export interface BoardroomDialogue {
   id: string;
-  speaker: 'Martha' | 'Jane' | 'Sophia' | 'Mark';
+  speaker: 'Martha' | 'Jane' | 'Sophia' | 'Vikram' | 'Marcus' | 'Player';
   role: string;
   avatar: string;
   timestamp: string; // e.g. "23:12"
@@ -119,4 +119,5 @@ export interface Chapter9State {
   executiveFraming?: 'commercial_value' | 'technical_latency' | 'headcount_reduction';
   cfoChallengeAnswer?: 'revenue_tied' | 'strict_timesheets' | 'unquantified';
   cooChallengeAnswer?: 'canary_sharding' | 'big_bang' | 'delay_months';
+  ctoChallengeAnswer?: 'canary_sharding' | 'big_bang' | 'delay_months';
 }

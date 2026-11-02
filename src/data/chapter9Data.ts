@@ -34,19 +34,37 @@ export const CHAPTER9_CHARACTERS = {
     avatar: '/character/Sophia_bennett/SophiaDP.png',
     affiliation: 'ICICI Bank Executive Leadership',
   },
+  vikram: {
+    name: 'Vikram Malhotra',
+    role: 'Chief Financial Officer (CFO)',
+    avatar: '', // Custom monogram in UI
+    affiliation: 'ICICI Bank Executive Board',
+  },
+  marcus: {
+    name: 'Marcus Reed',
+    role: 'Chief Technology Officer (CTO)',
+    avatar: '/character/marcus_reed/MarcusDP.png',
+    affiliation: 'Enterprise Technology & Architecture',
+  },
   martha: {
     name: 'Martha',
     role: 'Monitoring & Operations Telemetry Specialist',
     avatar: '/character/Emma_Carter/EmmaDP.png',
     affiliation: 'ICICI Bank Ops Telemetry',
   },
-  jane: {
-    name: 'Jane (You)',
+  player: {
+    name: 'Player (You)',
     role: 'Lead Project Manager · Transformation Consultant',
-    avatar: '/character/AaravDP.png',
+    avatar: '',
     affiliation: 'Brained Consulting',
   },
   // Backward compatibility alias for any existing state references
+  jane: {
+    name: 'Player (You)',
+    role: 'Lead Project Manager · Transformation Consultant',
+    avatar: '',
+    affiliation: 'Brained Consulting',
+  },
   mark: {
     name: 'Sophia Bennett',
     role: 'Head of HR Operations · Executive Sponsor',
@@ -155,7 +173,7 @@ export const BOARDROOM_DIALOGUES: Record<string, BoardroomDialogue[]> = {
       role: 'Monitoring & Operations Telemetry Specialist',
       avatar: '/character/Emma_Carter/EmmaDP.png',
       timestamp: '23:05',
-      text: 'Jane, Sophia, I’ve just finished aggregating the telemetry from our production clusters and Mumbai/Pune pilot branches.',
+      text: 'Sophia, Player, I’ve just finished aggregating the post-rollout APM telemetry from our production clusters across Mumbai, Pune, Bangalore, and Delhi pilot branches.',
       sentiment: 'neutral',
     },
     {
@@ -164,16 +182,16 @@ export const BOARDROOM_DIALOGUES: Record<string, BoardroomDialogue[]> = {
       role: 'Monitoring & Operations Telemetry Specialist',
       avatar: '/character/Emma_Carter/EmmaDP.png',
       timestamp: '23:18',
-      text: 'The numbers are astounding: appraisal cycle completion dropped from 21 days down to 12.2 days — that’s a clean 42% reduction. More importantly, we clocked 15,000 verified operational man-hours saved.',
+      text: 'The numbers are astounding: appraisal cycle completion dropped from 21 days down to 12.2 days — that’s a clean 42% reduction. More importantly, we clocked 15,000 verified operational man-hours saved across branch managers.',
       sentiment: 'positive',
     },
     {
       id: 'd3',
-      speaker: 'Jane',
-      role: 'Lead Project Manager',
-      avatar: '/character/AaravDP.png',
+      speaker: 'Player',
+      role: 'Lead Project Manager · Transformation Consultant',
+      avatar: '',
       timestamp: '23:32',
-      text: 'Phenomenal data, Martha. But the Board and Finance won’t fund Phase 2 on operational hours alone. They think in capital returns, payback periods, and balance sheet impact.',
+      text: 'Phenomenal data, Martha. But CFO Vikram Malhotra and CTO Marcus Reed won’t release Phase 2 capital on operational hours alone. Vikram wants balance sheet cash-flow realization, and Marcus needs architectural scale assurance.',
       sentiment: 'executive',
     },
     {
@@ -182,16 +200,16 @@ export const BOARDROOM_DIALOGUES: Record<string, BoardroomDialogue[]> = {
       role: 'Head of HR Operations · Executive Sponsor',
       avatar: '/character/Sophia_bennett/SophiaDP.png',
       timestamp: '23:42',
-      text: 'Jane is right. In 15 minutes, the Executive Steering Committee convenes. The CFO already warned me that without concrete ROI proof, our Phase 2 budget will be frozen.',
+      text: 'Exactly right. In 15 minutes, the Executive Steering Committee convenes. CFO Vikram Malhotra warned me that without concrete ROI proof, our Phase 2 budget will be frozen. Let us synthesize our financial defense.',
       sentiment: 'urgent',
     },
   ],
   roi_preparation: [
     {
       id: 'd5',
-      speaker: 'Jane',
-      role: 'Lead Project Manager',
-      avatar: '/character/AaravDP.png',
+      speaker: 'Player',
+      role: 'Lead Project Manager · Transformation Consultant',
+      avatar: '',
       timestamp: '23:48',
       text: 'Let’s translate the operational win into financial reality: 15,000 hours saved across branch staff at ICICI’s blended ₹650/hr rate equals ₹97.5 Lakhs in annual capacity value.',
       sentiment: 'executive',
@@ -207,11 +225,11 @@ export const BOARDROOM_DIALOGUES: Record<string, BoardroomDialogue[]> = {
     },
     {
       id: 'd7',
-      speaker: 'Jane',
-      role: 'Lead Project Manager',
-      avatar: '/character/AaravDP.png',
+      speaker: 'Player',
+      role: 'Lead Project Manager · Transformation Consultant',
+      avatar: '',
       timestamp: '24:14',
-      text: 'Exactly. That is a +77.3% Net ROI with a full capital payback period of just 6.8 months. We have a waterproof business case.',
+      text: 'Exactly. That is a +77.3% Net ROI with a full capital payback period of just 6.8 months. We have a waterproof business case to present to Vikram and Marcus.',
       sentiment: 'positive',
     },
   ],
@@ -222,16 +240,16 @@ export const BOARDROOM_DIALOGUES: Record<string, BoardroomDialogue[]> = {
       role: 'Head of HR Operations · Executive Sponsor',
       avatar: '/character/Sophia_bennett/SophiaDP.png',
       timestamp: '24:25',
-      text: 'The Executive Boardroom doors are opening. The CFO and Managing Director are taking their seats. Jane, how do you want to handle this agenda?',
+      text: 'The Executive Boardroom doors are opening. CFO Vikram Malhotra and CTO Marcus Reed are taking their seats alongside the Committee. How do you want to lead this presentation?',
       sentiment: 'urgent',
     },
     {
       id: 'd9',
-      speaker: 'Jane',
-      role: 'Lead Project Manager',
-      avatar: '/character/AaravDP.png',
+      speaker: 'Player',
+      role: 'Lead Project Manager · Transformation Consultant',
+      avatar: '',
       timestamp: '24:35',
-      text: 'We have two approaches: some PMs skip formal ROI and assume delivery speaks for itself. Others present the rigorous business model. It’s decision time.',
+      text: 'We have two approaches: some PMs skip formal ROI and assume technical delivery speaks for itself. Others present the rigorous business model and defend technical scale. It’s decision time.',
       sentiment: 'executive',
     },
   ],
@@ -242,7 +260,7 @@ export const BOARDROOM_DIALOGUES: Record<string, BoardroomDialogue[]> = {
       role: 'Head of HR Operations · Executive Sponsor',
       avatar: '/character/Sophia_bennett/SophiaDP.png',
       timestamp: '24:45',
-      text: 'Outstanding delivery, Jane! The CFO said this was the first technology review where a PM spoke the language of EBITDA, payback velocity, and workforce productivity.',
+      text: 'Outstanding delivery! CFO Vikram Malhotra commended our commercial rigor, noting this was the first technology review where a PM spoke the language of EBITDA, payback velocity, and workforce productivity.',
       sentiment: 'positive',
     },
     {
@@ -251,7 +269,7 @@ export const BOARDROOM_DIALOGUES: Record<string, BoardroomDialogue[]> = {
       role: 'Monitoring & Operations Telemetry Specialist',
       avatar: '/character/Emma_Carter/EmmaDP.png',
       timestamp: '24:52',
-      text: 'The steering committee not only commended the 42% cycle reduction — they formally approved the full budget for Phase 2 without a single deduction!',
+      text: 'CTO Marcus Reed and the Steering Committee ratified our 4-wave rollout across all 4,800 branches and formally approved the full Phase 2 budget without a single deduction!',
       sentiment: 'positive',
     },
   ],
@@ -262,7 +280,7 @@ export const BOARDROOM_DIALOGUES: Record<string, BoardroomDialogue[]> = {
       role: 'Head of HR Operations · Executive Sponsor',
       avatar: '/character/Sophia_bennett/SophiaDP.png',
       timestamp: '24:45',
-      text: 'Jane, that was a disaster. Because we presented no quantitative financial justification, the CFO assumed Project Amigo was an expensive vanity project.',
+      text: 'That did not go well. Because we presented no quantitative financial justification, CFO Vikram Malhotra concluded Project Amigo was an expensive vanity project.',
       sentiment: 'urgent',
     },
     {
@@ -271,7 +289,7 @@ export const BOARDROOM_DIALOGUES: Record<string, BoardroomDialogue[]> = {
       role: 'Head of HR Operations · Executive Sponsor',
       avatar: '/character/Sophia_bennett/SophiaDP.png',
       timestamp: '24:55',
-      text: 'They just placed Phase 2 under indefinite audit hold. Completing tickets isn’t enough if you cannot prove business value to the people writing the checks.',
+      text: 'They just placed Phase 2 under indefinite audit hold. Completing tickets isn’t enough if you cannot prove business value to the leaders writing the checks.',
       sentiment: 'urgent',
     },
   ],
@@ -388,8 +406,8 @@ export function computeChapter9Score(
     : 'Never assume leadership or the CFO inherently understands technical wins. Projects that cannot communicate financial ROI face budget cancellation.';
 
   const executiveFeedback = isChoiceB
-    ? 'Sophia Bennett (Head of HR): "Jane demonstrated the mindset of a true business partner. Translating technical metrics into financial EBITDA impact made our Phase 2 funding an easy decision for the Board."'
-    : 'Sophia Bennett (Head of HR): "The CFO refused to release Phase 2 capital. Technical delivery without quantifiable business value is treated as overhead by the executive committee."';
+    ? 'Sophia Bennett (Head of HR): "You demonstrated the mindset of a true business partner. Translating technical telemetry into financial EBITDA impact and addressing CFO Vikram Malhotra and CTO Marcus Reed gave the Board full confidence to fund Phase 2."'
+    : 'Vikram Malhotra (CFO): "The executive committee refused to release Phase 2 capital. Technical delivery without quantifiable balance sheet impact is treated as operational overhead."';
 
   return {
     shown: true,
@@ -427,8 +445,8 @@ export function computeChapter9Score(
     },
     aiEvaluated: false,
     evaluatedAt: new Date().toISOString(),
-    evaluatorName: CHAPTER9_CHARACTERS.mark.name,
-    evaluatorRole: CHAPTER9_CHARACTERS.mark.role,
+    evaluatorName: 'Sophia Bennett, Vikram Malhotra (CFO) & Marcus Reed (CTO)',
+    evaluatorRole: 'Executive Steering Committee · ICICI Bank',
   };
 }
 

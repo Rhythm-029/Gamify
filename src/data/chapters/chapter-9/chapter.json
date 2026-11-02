@@ -11,9 +11,11 @@
   "xpReward": 600,
   "description": "Enter the Executive Boardroom Presentation Suite. Prove that Project Amigo delivered measurable business value: analyze telemetry showing a 42% appraisal cycle reduction and 15,000 man-hours saved, model monetary ROI, and deliver an executive impact presentation to secure Phase 2 investment.",
   "stakeholders": [
-    { "name": "Sophia Bennett", "role": "Head of HR Operations & Executive Steering Committee Sponsor", "agenda": "Waiting for evidence of business impact and justification for continued investment before the Board convenes." },
-    { "name": "Martha", "role": "Monitoring & Operations Telemetry Specialist", "agenda": "Presents verified telemetry: 42% cycle reduction and 15,000 operational man-hours saved." },
-    { "name": "Jane", "role": "Lead PM & Transformation Consultant", "agenda": "Translating operational efficiency into balance sheet ROI, payback period, and business case for Phase 2." }
+    { "name": "Sophia Bennett", "role": "Head of HR Operations · Executive Sponsor", "agenda": "Waiting for verified operational evidence and ROI models to justify continued Phase 2 investment before the Board convenes." },
+    { "name": "Vikram Malhotra", "role": "Chief Financial Officer (CFO)", "agenda": "Auditing operational expenditure and demanding verifiable EBITDA return on the ₹55 Lakh Phase 1 capital investment." },
+    { "name": "Marcus Reed", "role": "Chief Technology Officer (CTO)", "agenda": "Challenging nationwide architectural scale to 4,800 branches without repeating Chapter 6 connection pool saturation or Chapter 7 memory leaks." },
+    { "name": "Martha", "role": "Monitoring & Operations Telemetry Specialist", "agenda": "Presents verified APM telemetry: 42% cycle reduction and 15,000 operational man-hours saved across Mumbai, Pune, Bangalore, and Delhi." },
+    { "name": "Player (You)", "role": "Lead PM & Transformation Consultant", "agenda": "Translating operational efficiency into balance sheet ROI, payback period, and business case for Phase 2." }
   ],
   "objectives": [
     { "label": "Analyze operational telemetry: 42% appraisal cycle drop and 15,000 man-hours saved", "type": "analysis" },

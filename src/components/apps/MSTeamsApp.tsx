@@ -53,7 +53,7 @@ interface MSTeamsAppProps {
 }
 
 interface ChatContact {
-  id: 'aarav' | 'marcus' | 'sophia' | 'daniel' | 'amigo-dev-ops' | 'martha' | 'ciso' | 'alex' | 'mark';
+  id: 'aarav' | 'marcus' | 'sophia' | 'daniel' | 'amigo-dev-ops' | 'martha' | 'ciso' | 'alex' | 'mark' | 'vikram';
   name: string;
   role: string;
   avatar: string;
@@ -135,10 +135,10 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
   const isPastCh1 = (activeChapter ?? 1) >= 2;
   const [activeTab, setActiveTab] = useState<'chat' | 'calls' | 'teams'>('chat');
   const [activeChatId, setActiveChatId] = useState<
-    'aarav' | 'marcus' | 'sophia' | 'daniel' | 'amigo-dev-ops' | 'martha' | 'ciso' | 'alex' | 'mark'
+    'aarav' | 'marcus' | 'sophia' | 'daniel' | 'amigo-dev-ops' | 'martha' | 'ciso' | 'alex' | 'mark' | 'vikram'
   >(
     (initialChatId as any) ||
-      (isCh9 ? 'mark' : isCh8 ? 'ciso' : isCh7 ? 'martha' : isCh4 ? 'sophia' : isCh3 ? (chapter3State?.activeChatRecipient || 'daniel') : isPastCh1 ? 'daniel' : 'aarav')
+      (isCh9 ? 'sophia' : isCh8 ? 'ciso' : isCh7 ? 'martha' : isCh4 ? 'sophia' : isCh3 ? (chapter3State?.activeChatRecipient || 'daniel') : isPastCh1 ? 'daniel' : 'aarav')
   );
   const [messageInput, setMessageInput] = useState('');
   const [customMessages, setCustomMessages] = useState<Record<string, CustomMessage[]>>({});
@@ -195,9 +195,33 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
           avatar: '/character/Sophia_bennett/SophiaDP.png',
           lastMessage: chapter9State?.completed
             ? 'The Executive Steering Committee unanimously approved the ROI model. Phase 2 budget is officially ratified!'
-            : 'Jane, the Board convenes shortly. We need your ROI presentation to demonstrate that Project Amigo delivered measurable business value.',
+            : 'The Board convenes shortly. We need your ROI presentation to demonstrate that Project Amigo delivered measurable business value.',
           time: '23:00',
           unread: !chapter9State?.completed,
+          online: true,
+        },
+        {
+          id: 'vikram',
+          name: 'Vikram Malhotra',
+          role: 'Chief Financial Officer (CFO)',
+          avatar: '',
+          lastMessage: chapter9State?.completed
+            ? 'ROI verified: +77.3% net return and 6.8-month payback amortizes the ₹55L spend. Phase 2 authorized.'
+            : 'Hours saved are an accounting illusion unless converted into top-line revenue or cost deflation. Convince me in the Boardroom.',
+          time: '23:10',
+          unread: false,
+          online: true,
+        },
+        {
+          id: 'marcus',
+          name: 'Marcus Reed',
+          role: 'Chief Technology Officer (CTO)',
+          avatar: '/character/marcus_reed/MarcusDP.png',
+          lastMessage: chapter9State?.completed
+            ? 'The 4-wave canary deployment pattern is technically sound. Proceed with Kafka sharding across all 4,800 branches.'
+            : 'Given our Chapter 6 & 7 load issues, what guarantees our architecture scales to 4,800 branches nationwide?',
+          time: '23:12',
+          unread: false,
           online: true,
         },
         {
@@ -685,82 +709,183 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
 
         {/* Chat Messages Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {isCh9 && (activeChatId === 'mark' || activeChatId === 'martha') ? (
-            /* ── MARK STERLING & MARTHA — CHAPTER 9 ROI VALIDATION ── */
+          {isCh9 && (activeChatId === 'sophia' || activeChatId === 'mark' || activeChatId === 'martha' || activeChatId === 'vikram' || activeChatId === 'marcus') ? (
+            /* ── CHAPTER 9 EXECUTIVE STEERING COMMITTEE & TELEMETRY CHATS ── */
             <div className="space-y-4">
               <div className="flex justify-center">
                 <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/15 px-3.5 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1.5 font-bold shadow-sm">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  Today · 23:00 · Executive Boardroom Presentation Suite · ROI Validation
+                  Today · 23:00 · Executive Boardroom Presentation Suite · ROI Validation & Phase 2 Gate
                 </span>
               </div>
 
-              {/* Message 1: Sophia Bennett Prompt */}
-              <div className="flex items-start space-x-3 max-w-2xl">
-                <img
-                  src="/character/Sophia_bennett/SophiaDP.png"
-                  alt="Sophia Bennett"
-                  className="w-8 h-8 rounded-full object-cover border border-amber-400/50 shrink-0 mt-1"
-                />
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-bold text-xs text-amber-300">Sophia Bennett</span>
-                    <span className="text-[10px] font-mono text-slate-400">Head of HR & Sponsor · 23:00</span>
+              {/* VIEW 1: SOPHIA BENNETT CHAT */}
+              {(activeChatId === 'sophia' || activeChatId === 'mark') && (
+                <>
+                  <div className="flex items-start space-x-3 max-w-2xl">
+                    <img
+                      src="/character/Sophia_bennett/SophiaDP.png"
+                      alt="Sophia Bennett"
+                      className="w-8 h-8 rounded-full object-cover border border-amber-400/50 shrink-0 mt-1"
+                    />
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-xs text-amber-300">Sophia Bennett</span>
+                        <span className="text-[10px] font-mono text-slate-400">Head of HR & Sponsor · 23:00</span>
+                      </div>
+                      <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#121c24] border border-amber-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                        <p className="font-bold text-amber-200">
+                          "The Executive Steering Committee is sitting down in the boardroom. CFO Vikram Malhotra and CTO Marcus Reed have asked for quantifiable proof of business impact and scale assurance before releasing the Phase 2 budget."
+                        </p>
+                        <p className="text-slate-300 text-xs">
+                          "Martha's telemetry confirmed a 42% appraisal cycle reduction and 15,000 man-hours saved — but we need your financial ROI model and business impact deck to defend the capital allocation."
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#121c24] border border-amber-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
-                    <p className="font-bold text-amber-200">
-                      "Jane, the Executive Steering Committee is sitting down in the boardroom. The CFO and Managing Director have asked for quantifiable proof of business impact before releasing the Phase 2 budget."
-                    </p>
-                    <p className="text-slate-300 text-xs">
-                      "Martha's telemetry confirmed a 42% appraisal cycle reduction and 15,000 man-hours saved — but we need your financial ROI model and business impact deck to defend the capital allocation."
-                    </p>
-                  </div>
-                </div>
-              </div>
 
-              {/* Message 2: Martha Telemetry Summary */}
-              <div className="flex items-start space-x-3 max-w-2xl">
-                <img
-                  src="/character/Emma_Carter/EmmaDP.png"
-                  alt="Martha"
-                  className="w-8 h-8 rounded-full object-cover border border-emerald-400/50 shrink-0 mt-1"
-                />
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-bold text-xs text-emerald-300">Martha</span>
-                    <span className="text-[10px] font-mono text-slate-400">Ops Telemetry Specialist · 23:05</span>
-                  </div>
-                  <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#0a1820] border border-emerald-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
-                    <p className="font-bold text-emerald-200">
-                      "Telemetry aggregated across 4,800 branches: appraisal cycle duration collapsed from 21 days to 12.2 days. 15,000 operational hours saved!"
-                    </p>
-                    <p className="text-slate-300 text-xs">
-                      "At ICICI's blended workforce rate of ₹650/hr, that's ₹97.5 Lakhs in annual capacity value against our ₹55 Lakh Phase 1 spend. Let's deliver the ROI presentation!"
-                    </p>
-                  </div>
-                </div>
-              </div>
+                  {chapter9State?.completed && (
+                    <div className="flex items-start space-x-3 max-w-2xl">
+                      <img
+                        src="/character/Sophia_bennett/SophiaDP.png"
+                        alt="Sophia Bennett"
+                        className="w-8 h-8 rounded-full object-cover border border-emerald-400/50 shrink-0 mt-1"
+                      />
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-bold text-xs text-emerald-300">Sophia Bennett</span>
+                          <span className="text-[10px] font-mono text-emerald-400 font-bold px-2 py-0.2 rounded bg-emerald-500/20">
+                            {chapter9State?.decisionChosen === 'choice_b' ? 'Unanimous Approval' : 'Boardroom Review Held'}
+                          </span>
+                        </div>
+                        <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#09181a] border border-emerald-500/40 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                          <p className="font-bold text-emerald-200">
+                            {chapter9State?.decisionChosen === 'choice_b'
+                              ? '"Sensational outcome! CFO Vikram Malhotra and CTO Marcus Reed were thoroughly impressed by your +77.3% Net ROI model, 6.8-month payback period, and 4-wave scale plan. The Steering Committee voted unanimously to approve Phase 2 budget in full."'
+                              : '"The Board refused to release Phase 2 capital without hard financial figures. Projects must communicate measurable business value to justify continued investment."'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
 
-              {/* Message 3: Sophia Bennett After Outcome */}
-              {chapter9State?.completed && (
+              {/* VIEW 2: CFO VIKRAM MALHOTRA CHAT */}
+              {activeChatId === 'vikram' && (
+                <>
+                  <div className="flex items-start space-x-3 max-w-2xl">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-600 to-yellow-500 border border-amber-400/50 flex items-center justify-center font-bold text-white font-mono text-xs shadow shrink-0 mt-1">
+                      VM
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-xs text-amber-300">Vikram Malhotra</span>
+                        <span className="text-[10px] font-mono text-slate-400">Chief Financial Officer (CFO) · 23:10</span>
+                      </div>
+                      <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#181622] border border-amber-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                        <p className="font-bold text-amber-200">
+                          "I saw the pilot report of 15,000 hours saved across branch staff. In Chapter 2, I made it clear that I evaluate investments on cash-flow return and cost deflation, not engineering vanity metrics."
+                        </p>
+                        <p className="text-slate-300 text-xs">
+                          "Show me how those 15,000 hours translate into realized EBITDA and payback speed against our ₹55 Lakh Phase 1 capital spend when you enter the Boardroom."
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {chapter9State?.completed && (
+                    <div className="flex items-start space-x-3 max-w-2xl">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-600 to-yellow-500 border border-emerald-400/50 flex items-center justify-center font-bold text-white font-mono text-xs shadow shrink-0 mt-1">
+                        VM
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-bold text-xs text-emerald-300">Vikram Malhotra</span>
+                          <span className="text-[10px] font-mono text-emerald-400 font-bold px-2 py-0.2 rounded bg-emerald-500/20">
+                            CFO Endorsement
+                          </span>
+                        </div>
+                        <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#09181a] border border-emerald-500/40 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                          <p className="font-bold text-emerald-200">
+                            "Your financial model passed audit. Converting capacity into ₹97.5 Lakhs of frontline CASA sales with a 6.8-month capital payback satisfies my fiduciary requirements. Phase 2 funding has my signoff."
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* VIEW 3: CTO MARCUS REED CHAT */}
+              {activeChatId === 'marcus' && (
+                <>
+                  <div className="flex items-start space-x-3 max-w-2xl">
+                    <img
+                      src="/character/marcus_reed/MarcusDP.png"
+                      alt="Marcus Reed"
+                      className="w-8 h-8 rounded-full object-cover border border-cyan-400/50 shrink-0 mt-1"
+                    />
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-xs text-cyan-300">Marcus Reed</span>
+                        <span className="text-[10px] font-mono text-slate-400">Chief Technology Officer (CTO) · 23:12</span>
+                      </div>
+                      <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#0a1824] border border-cyan-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                        <p className="font-bold text-cyan-200">
+                          "Under Chapter 6's stress test, DB connection pool saturation throttled us, and Chapter 7's memory leak produced 504 gateway timeouts across 12 branches."
+                        </p>
+                        <p className="text-slate-300 text-xs">
+                          "Before I authorize expanding from 4 pilot clusters to 4,800 branches nationwide for 80,000 employees, you must defend your deployment rollout and partition sharding in Round 2 of the Boardroom defense."
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {chapter9State?.completed && (
+                    <div className="flex items-start space-x-3 max-w-2xl">
+                      <img
+                        src="/character/marcus_reed/MarcusDP.png"
+                        alt="Marcus Reed"
+                        className="w-8 h-8 rounded-full object-cover border border-cyan-400/50 shrink-0 mt-1"
+                      />
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-bold text-xs text-cyan-300">Marcus Reed</span>
+                          <span className="text-[10px] font-mono text-cyan-400 font-bold px-2 py-0.2 rounded bg-cyan-500/20">
+                            Architecture Approved
+                          </span>
+                        </div>
+                        <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#081822] border border-cyan-500/40 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                          <p className="font-bold text-cyan-200">
+                            "The 4-wave regional canary rollout (1,200 branches/wave) combined with Kafka partition sharding and circuit breakers eliminates cluster collapse risk. Engineering gives Phase 2 the green light."
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* VIEW 4: MARTHA TELEMETRY CHAT */}
+              {activeChatId === 'martha' && (
                 <div className="flex items-start space-x-3 max-w-2xl">
                   <img
-                    src="/character/Sophia_bennett/SophiaDP.png"
-                    alt="Sophia Bennett"
+                    src="/character/Emma_Carter/EmmaDP.png"
+                    alt="Martha"
                     className="w-8 h-8 rounded-full object-cover border border-emerald-400/50 shrink-0 mt-1"
                   />
                   <div className="space-y-1">
                     <div className="flex items-center space-x-2">
-                      <span className="font-bold text-xs text-emerald-300">Sophia Bennett</span>
-                      <span className="text-[10px] font-mono text-emerald-400 font-bold px-2 py-0.2 rounded bg-emerald-500/20">
-                        {chapter9State?.decisionChosen === 'choice_b' ? 'Unanimous Approval' : 'Boardroom Review Held'}
-                      </span>
+                      <span className="font-bold text-xs text-emerald-300">Martha</span>
+                      <span className="text-[10px] font-mono text-slate-400">Ops Telemetry Specialist · 23:15</span>
                     </div>
-                    <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#09181a] border border-emerald-500/40 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                    <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#0a1820] border border-emerald-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
                       <p className="font-bold text-emerald-200">
-                        {chapter9State?.decisionChosen === 'choice_b'
-                          ? '"Sensational outcome, Jane! The CFO was thoroughly impressed by your +77.3% Net ROI model and 6.8-month payback period. The Steering Committee voted unanimously to approve Phase 2 budget in full."'
-                          : '"Jane, the Board refused to release Phase 2 capital without hard financial figures. Projects must communicate measurable business value to justify continued investment."'}
+                        "Telemetry aggregated across 4,800 branches: appraisal cycle duration collapsed from 21 days to 12.2 days. 15,000 operational hours saved!"
+                      </p>
+                      <p className="text-slate-300 text-xs">
+                        "At ICICI's blended workforce rate of ₹650/hr, that's ₹97.5 Lakhs in annual capacity value against our ₹55 Lakh Phase 1 spend. Check your Executive ROI Dashboard for the full regional breakdown."
                       </p>
                     </div>
                   </div>

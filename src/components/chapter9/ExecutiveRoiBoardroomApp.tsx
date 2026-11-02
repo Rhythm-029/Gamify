@@ -263,7 +263,7 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
       onNotifyDesktop(
         isRecommended ? 'Executive Boardroom Unanimous Approval!' : 'Boardroom Skepticism Notice',
         isRecommended
-          ? 'Sophia Bennett, CFO Rajiv Mehra, and the Board ratified Phase 2 budget (+₹1.2 Crore authorized)!'
+          ? 'Sophia Bennett, CFO Vikram Malhotra, and CTO Marcus Reed ratified Phase 2 budget (+₹1.2 Crore authorized)!'
           : 'The Board questioned the project business value due to lack of quantified ROI.'
       );
     }
@@ -301,7 +301,7 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
           outcomeType: initialScorecard.outcomeType,
           outcomeTitle: initialScorecard.outcomeTitle,
           outcomeText: initialScorecard.outcomeText,
-          evaluatorName: 'Sophia Bennett & Rajiv Mehra (CFO)',
+          evaluatorName: 'Sophia Bennett, Vikram Malhotra (CFO) & Marcus Reed (CTO)',
           evaluatorRole: 'Executive Steering Committee · ICICI Bank',
           executiveSummary: initialScorecard.executiveFeedback,
           whatYouDidWell: [initialScorecard.whatYouDidWell],
@@ -883,7 +883,7 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                   </h4>
                 </div>
                 <p className="text-xs text-slate-300 mt-1">
-                  CFO Rajiv Mehra's condition: <span className="italic">"Hours saved are an accounting illusion unless converted into top-line revenue or cost deflation."</span> How will you allocate the {certifiedHours.toLocaleString()} freed branch hours?
+                  CFO Vikram Malhotra's condition: <span className="italic">"Hours saved are an accounting illusion unless converted into top-line revenue or cost deflation."</span> How will you allocate the {certifiedHours.toLocaleString()} freed branch hours?
                 </p>
               </div>
 
@@ -1070,7 +1070,7 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                   </h4>
                 </div>
                 <p className="text-xs text-slate-300 mt-1">
-                  How should Jane frame the opening presentation to win immediate alignment from both the CEO and the CFO?
+                  How should you frame the opening presentation to win immediate alignment from CFO Vikram Malhotra and CTO Marcus Reed?
                 </p>
               </div>
 
@@ -1210,26 +1210,28 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                   </div>
                 </div>
 
-                {/* CFO Rajiv Mehra */}
+                {/* CFO Vikram Malhotra */}
                 <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center font-bold text-amber-300 font-mono">
-                    RM
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-600 to-yellow-500 border border-amber-400/50 flex items-center justify-center font-bold text-white font-mono text-sm shadow">
+                    VM
                   </div>
                   <div>
-                    <div className="font-bold text-white">Rajiv Mehra</div>
+                    <div className="font-bold text-white">Vikram Malhotra</div>
                     <div className="text-[11px] text-amber-400">Chief Financial Officer</div>
                     <div className="text-[10px] text-slate-400">Challenging Realized P&L Impact</div>
                   </div>
                 </div>
 
-                {/* COO Vikram Malhotra */}
+                {/* CTO Marcus Reed */}
                 <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center font-bold text-cyan-300 font-mono">
-                    VM
-                  </div>
+                  <img
+                    src="/character/marcus_reed/MarcusDP.png"
+                    alt="Marcus Reed"
+                    className="w-10 h-10 rounded-full border border-cyan-500/40 object-cover"
+                  />
                   <div>
-                    <div className="font-bold text-white">Vikram Malhotra</div>
-                    <div className="text-[11px] text-cyan-400">Chief Operating Officer</div>
+                    <div className="font-bold text-white">Marcus Reed</div>
+                    <div className="text-[11px] text-cyan-400">Chief Technology Officer</div>
                     <div className="text-[10px] text-slate-400">Challenging 4,800 Branch Scale Risk</div>
                   </div>
                 </div>
@@ -1241,11 +1243,11 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
               <div className="flex items-center space-x-2">
                 <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
                 <h4 className="text-xs font-bold text-amber-300 uppercase tracking-wider font-mono">
-                  ROUND 1 — CFO RAJIV MEHRA DIRECT CROSS-EXAMINATION:
+                  ROUND 1 — CFO VIKRAM MALHOTRA CROSS-EXAMINATION:
                 </h4>
               </div>
               <p className="text-xs text-slate-200 italic bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                "Jane, operational hours saved is a vanity metric unless it converts into real bank balance sheet value. If 14,150 hours are saved across branch officers, how do you prove they aren't just drinking tea in the staff room?"
+                "Operational hours saved is a vanity metric unless it converts into real bank balance sheet value. If {certifiedHours.toLocaleString()} hours are saved across branch officers, how do you prove they aren't just drinking tea in the staff room?"
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-xs">
@@ -1302,16 +1304,16 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
               </div>
             </div>
 
-            {/* COO CHALLENGE 2: NATIONWIDE SCALE RISK */}
+            {/* CTO CHALLENGE 2: NATIONWIDE SCALE RISK */}
             <div className="p-5 rounded-2xl bg-[#121c2d] border border-cyan-500/40 space-y-3">
               <div className="flex items-center space-x-2">
                 <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
                 <h4 className="text-xs font-bold text-cyan-300 uppercase tracking-wider font-mono">
-                  ROUND 2 — COO VIKRAM MALHOTRA RESILIENCE CHALLENGE:
+                  ROUND 2 — CTO MARCUS REED ARCHITECTURAL RESILIENCE CHALLENGE:
                 </h4>
               </div>
               <p className="text-xs text-slate-200 italic bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                "In Chapter 7, an unhandled memory leak triggered 504 timeouts across 12 branches. When we scale from 4 pilot clusters to 4,800 branches nationwide with 80,000 users hitting the system on morning appraisal deadlines, what prevents total cluster collapse?"
+                "In Chapter 6, we hit connection pool saturation under 30,000 users, and in Chapter 7, an unhandled memory leak triggered 504 timeouts across 12 branches. When we scale from 4 pilot clusters to 4,800 branches nationwide with 80,000 users hitting the system on morning appraisal deadlines, what prevents total cluster collapse?"
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-xs">
