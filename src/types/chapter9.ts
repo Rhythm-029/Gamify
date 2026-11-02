@@ -97,8 +97,13 @@ export interface Chapter9State {
   selectedTab: RoiMetricTab;
   currentSlideIndex: number;
   telemetryReviewed: boolean;
+  telemetryVerified?: boolean;
   financialModelReviewed: boolean;
+  financialModelCommitted?: boolean;
+  financialScenario?: 'conservative' | 'base' | 'aggressive';
   slidesReviewed: boolean;
+  slidesApproved?: boolean;
+  cfoDefenseAnswer?: 'casa_cross_sell' | 'idle_time' | null;
   hourlyCostRateINR: number;
   decisionChosen: Chapter9DecisionChoice | null;
   decisionTimestamp?: string;

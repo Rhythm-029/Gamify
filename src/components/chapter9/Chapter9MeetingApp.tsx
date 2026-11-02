@@ -8,21 +8,18 @@ import {
   ArrowRight,
   Clock,
   CheckCircle2,
-  AlertTriangle,
   Users,
-  Presentation,
   TrendingUp,
   BarChart3,
   DollarSign,
-  Building2,
   ChevronRight,
   ShieldCheck,
   Volume2,
-  FileText,
-  Briefcase,
   Sparkles,
+  MessageSquare,
+  FileSpreadsheet,
 } from 'lucide-react';
-import type { Chapter9State, Chapter9DecisionChoice } from '../../types/chapter9';
+import type { Chapter9State } from '../../types/chapter9';
 import {
   CHAPTER9_TITLE,
   CHAPTER9_SUBTITLE,
@@ -30,13 +27,8 @@ import {
   CHAPTER9_LOCATION,
   CHAPTER9_CHARACTERS,
   ROI_TELEMETRY,
-  computeFinancialModel,
-  BOARDROOM_DIALOGUES,
-  CHAPTER9_DECISION_OPTIONS,
-  computeChapter9Score,
 } from '../../data/chapter9Data';
 import { sound } from '../onboarding/SoundEngine';
-import { requestChapterAIEvaluation } from '../../services/aiEvaluationService';
 
 interface Chapter9MeetingAppProps {
   chapter9State: Chapter9State;
@@ -53,34 +45,25 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
   onOpenBoardroom,
   onOpenScorecard,
 }) => {
-  // Call stages:
-  // 1. 'telemetry_briefing': 23:00–23:45 (Martha presents verified 42% cycle reduction & 15,000 hrs saved)
-  // 2. 'roi_preparation': 23:45–24:20 (Jane synthesizes 15,000 hrs into ₹97.5L monetary savings)
-  // 3. 'boardroom_decision': 24:20–25:00 (The Board is waiting: Choice A vs Choice B)
-  // 4. 'decision_feedback': Boardroom reaction, Phase 2 budget approval, next steps
-  const [stage, setStage] = useState<
-    'telemetry_briefing' | 'roi_preparation' | 'boardroom_decision' | 'decision_feedback'
+  // Conversational meeting stages:
+  // 1. 'sophia_welcome': Sophia introduces the high-stakes Steering Committee context
+  // 2. 'martha_telemetry': Martha presents verified 42% drop and 15,000 hrs saved
+  // 3. 'jane_intervention': Player interactive dialogue choice (Senior PM monetizing hours vs basic graphs)
+  // 4. 'sophia_guidance': Sophia's corporate reaction and financial mandate
+  // 5. 'assignment_handoff': Handoff to Executive ROI Dashboard on the desktop
+  const [meetingStage, setMeetingStage] = useState<
+    'sophia_welcome' | 'martha_telemetry' | 'jane_intervention' | 'sophia_guidance' | 'assignment_handoff'
   >(() => {
-    if (chapter9State.completed || chapter9State.decisionChosen) return 'decision_feedback';
-    if (chapter9State.currentStage === 'boardroom_decision') return 'boardroom_decision';
-    if (chapter9State.currentStage === 'roi_preparation') return 'roi_preparation';
-    return 'telemetry_briefing';
+    if (chapter9State.meetingCompleted || chapter9State.boardroomRoomOpened) return 'assignment_handoff';
+    return 'sophia_welcome';
   });
 
-  const [selectedDecision, setSelectedDecision] = useState<Chapter9DecisionChoice | null>(
-    chapter9State.decisionChosen || null
-  );
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [playerDialogueChoice, setPlayerDialogueChoice] = useState<'monetize_hours' | 'basic_graphs' | null>(null);
   const [micMuted, setMicMuted] = useState(false);
   const [cameraOff, setCameraOff] = useState(false);
-  const [activeSpeaker, setActiveSpeaker] = useState<'martha' | 'sophia' | 'jane'>('martha');
+  const [activeSpeaker, setActiveSpeaker] = useState<'sophia' | 'martha' | 'jane'>('sophia');
 
   const streamRef = useRef<MediaStream | null>(null);
-  const financialModel = computeFinancialModel(
-    chapter9State.hourlyCostRateINR || 650,
-    5500000,
-    ROI_TELEMETRY.manHoursSaved
-  );
 
   // Request or stop webcam video if available
   useEffect(() => {
@@ -108,16 +91,16 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
 
   // Sync speaker with stage
   useEffect(() => {
-    if (stage === 'telemetry_briefing') {
-      setActiveSpeaker('martha');
-    } else if (stage === 'roi_preparation') {
-      setActiveSpeaker('jane');
-    } else if (stage === 'boardroom_decision') {
+    if (meetingStage === 'sophia_welcome' || meetingStage === 'sophia_guidance') {
       setActiveSpeaker('sophia');
+    } else if (meetingStage === 'martha_telemetry') {
+      setActiveSpeaker('martha');
+    } else if (meetingStage === 'jane_intervention') {
+      setActiveSpeaker('jane');
     } else {
       setActiveSpeaker('sophia');
     }
-  }, [stage]);
+  }, [meetingStage]);
 
   const speakDialogue = (text: string) => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -129,122 +112,38 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
     }
   };
 
-  const handleAdvanceToRoi = () => {
+  const handleSophiaWelcomeNext = () => {
     sound.playMessagePing();
-    setStage('roi_preparation');
+    setMeetingStage('martha_telemetry');
+  };
+
+  const handleMarthaTelemetryNext = () => {
+    sound.playMessagePing();
+    setMeetingStage('jane_intervention');
+  };
+
+  const handleSelectPlayerDialogue = (choice: 'monetize_hours' | 'basic_graphs') => {
+    setPlayerDialogueChoice(choice);
+    sound.playMessagePing();
+    setMeetingStage('sophia_guidance');
+  };
+
+  const handleSophiaGuidanceNext = () => {
+    sound.playMessagePing();
+    setMeetingStage('assignment_handoff');
+  };
+
+  const handleLaunchDashboard = () => {
+    sound.playSystemClearance();
     onUpdateState({
+      meetingCompleted: true,
+      callCompleted: true,
+      boardroomRoomOpened: true,
+      telemetryReviewed: true,
       currentStage: 'roi_preparation',
       timelineTimestamp: '23:45',
-      telemetryReviewed: true,
-    });
-  };
-
-  const handleAdvanceToDecision = () => {
-    sound.playMessagePing();
-    setStage('boardroom_decision');
-    onUpdateState({
-      currentStage: 'boardroom_decision',
-      timelineTimestamp: '24:20',
-      financialModelReviewed: true,
-    });
-  };
-
-  const handleSelectDecision = async (choice: Chapter9DecisionChoice) => {
-    if (isSubmitting) return;
-    setSelectedDecision(choice);
-    setIsSubmitting(true);
-
-    if (choice === 'choice_b') {
-      sound.playSystemClearance();
-    } else {
-      sound.playPenaltyPing();
-    }
-
-    const tempState: Chapter9State = {
-      ...chapter9State,
-      decisionChosen: choice,
-      currentStage: 'presentation_delivered',
-      timelineTimestamp: '25:00',
-      completed: true,
-      meetingCompleted: true,
-      callCompleted: true,
-    };
-
-    const scorecard = computeChapter9Score(tempState);
-
-    onUpdateState({
-      decisionChosen: choice,
-      currentStage: 'presentation_delivered',
-      timelineTimestamp: '25:00',
-      completed: true,
-      meetingCompleted: true,
-      callCompleted: true,
-      scorecard,
     });
 
-    setStage('decision_feedback');
-
-    // Trigger Grok AI evaluation asynchronously
-    try {
-      const aiResult = await requestChapterAIEvaluation(
-        9,
-        {
-          decisionChosen: choice,
-          decisionTitle: CHAPTER9_DECISION_OPTIONS[choice].title,
-          grossSavingsINR: financialModel.totalSavingsINR,
-          netBenefitINR: financialModel.netBenefitINR,
-          netRoiPct: financialModel.roiPercentage,
-          paybackPeriodMonths: financialModel.paybackPeriodMonths,
-          cycleReductionPct: ROI_TELEMETRY.cycleReductionPct,
-          manHoursSaved: ROI_TELEMETRY.manHoursSaved,
-        },
-        {
-          totalScore: scorecard.totalScore,
-          scheduleScore: scorecard.scheduleScore,
-          riskScore: scorecard.riskScore,
-          governanceScore: scorecard.governanceScore,
-          efficiencyScore: scorecard.efficiencyScore,
-          outcomeType: scorecard.outcomeType,
-          outcomeTitle: scorecard.outcomeTitle,
-          outcomeText: scorecard.outcomeText,
-          evaluatorName: scorecard.evaluatorName,
-          evaluatorRole: scorecard.evaluatorRole,
-          executiveSummary: scorecard.executiveFeedback,
-          whatYouDidWell: [scorecard.whatYouDidWell],
-          whatToImprove: [scorecard.whatToImprove],
-          leadershipCoaching: scorecard.keyTakeaway,
-        }
-      );
-
-      if (aiResult) {
-        onUpdateState((prev) => ({
-          ...prev,
-          scorecard: {
-            ...prev.scorecard,
-            totalScore: aiResult.totalScore ?? scorecard.totalScore,
-            scheduleScore: aiResult.scheduleScore ?? scorecard.scheduleScore,
-            riskScore: aiResult.riskScore ?? scorecard.riskScore,
-            governanceScore: aiResult.governanceScore ?? scorecard.governanceScore,
-            efficiencyScore: aiResult.efficiencyScore ?? scorecard.efficiencyScore,
-            outcomeType: aiResult.outcomeType ?? scorecard.outcomeType,
-            outcomeTitle: aiResult.outcomeTitle ?? scorecard.outcomeTitle,
-            outcomeText: aiResult.outcomeText ?? scorecard.outcomeText,
-            whatYouDidWell: (aiResult.strengths && aiResult.strengths[0]) || scorecard.whatYouDidWell,
-            whatToImprove: (aiResult.improvements && aiResult.improvements[0]) || scorecard.whatToImprove,
-            executiveFeedback: aiResult.executiveSummary || scorecard.executiveFeedback,
-          },
-        }));
-      }
-    } catch (e) {
-      console.warn('AI evaluation error, deterministic scoring preserved:', e);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleOpenBoardroomSuite = () => {
-    sound.playClick();
-    onUpdateState({ boardroomRoomOpened: true });
     if (onOpenBoardroom) {
       onOpenBoardroom();
     } else if (onCompleteMeeting) {
@@ -269,13 +168,13 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
                 EXECUTIVE LEADERSHIP PHASE · SCENE 9.1
               </span>
               <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
-                BOARDROOM STEERING COMMITTEE
+                TEAMS EXECUTIVE SYNC
               </span>
             </div>
             <h1 className="text-sm font-bold text-white flex items-center gap-2">
               <span>{CHAPTER9_LOCATION}</span>
               <span className="text-slate-400 text-xs font-normal">
-                · {CHAPTER9_PROJECT_NAME} ROI Validation & Impact
+                · {CHAPTER9_PROJECT_NAME} Pre-Boardroom Briefing
               </span>
             </h1>
           </div>
@@ -285,29 +184,21 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
         <div className="flex items-center space-x-3 text-xs">
           <div className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300">
             <Clock className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="font-mono text-[11px]">
-              {stage === 'telemetry_briefing'
-                ? '23:00–23:45'
-                : stage === 'roi_preparation'
-                ? '23:45–24:20'
-                : stage === 'boardroom_decision'
-                ? '24:20–25:00'
-                : '25:00 Concluded'}
-            </span>
+            <span className="font-mono text-[11px]">23:00–23:45 Pre-Boardroom Sync</span>
           </div>
 
           <div className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-950/40 border border-emerald-500/30 text-emerald-300">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-mono text-[11px] font-bold">STEERING COMMITTEE IN SESSION</span>
+            <span className="font-mono text-[11px] font-bold">EXECUTIVE VIDEO CALL ACTIVE</span>
           </div>
 
-          {stage === 'decision_feedback' && (
+          {onOpenBoardroom && (chapter9State.meetingCompleted || meetingStage === 'assignment_handoff') && (
             <button
-              onClick={handleOpenBoardroomSuite}
+              onClick={handleLaunchDashboard}
               className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-950 flex items-center space-x-1.5 cursor-pointer border border-emerald-400/40 transition-all"
             >
               <BarChart3 className="w-3.5 h-3.5" />
-              <span>Launch Executive ROI Dashboard</span>
+              <span>Enter Executive ROI Dashboard</span>
             </button>
           )}
 
@@ -317,7 +208,7 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
               className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center space-x-1.5 cursor-pointer border border-slate-700 transition-all"
             >
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              <span>View Scorecard</span>
+              <span>Scorecard</span>
             </button>
           )}
         </div>
@@ -325,7 +216,7 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
 
       {/* ── MAIN CONTENT AREA ── */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 flex flex-col justify-between max-w-6xl mx-auto w-full">
-        {/* ── PARTICIPANTS ROW (SOPHIA BENNETT, MARTHA, JANE) ── */}
+        {/* ── PARTICIPANTS GALLERY (SOPHIA BENNETT, MARTHA, JANE) ── */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 shrink-0">
           {/* Sophia Bennett (Head of HR & Executive Sponsor) */}
           <div
@@ -366,7 +257,7 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
             </div>
           </div>
 
-          {/* Martha (Monitoring & Ops Telemetry) */}
+          {/* Martha (Monitoring & Ops Telemetry Specialist) */}
           <div
             className={`p-3.5 rounded-2xl border transition-all ${
               activeSpeaker === 'martha'
@@ -405,7 +296,7 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
             </div>
           </div>
 
-          {/* Jane (Player / PM) */}
+          {/* Jane (Player / Lead PM) */}
           <div
             className={`p-3.5 rounded-2xl border transition-all ${
               activeSpeaker === 'jane'
@@ -445,13 +336,70 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
           </div>
         </div>
 
-        {/* ── DYNAMIC CENTER STAGE (SCENE 9.1 PROGRESSION) ── */}
+        {/* ── CONVERSATIONAL CENTER STAGE ── */}
         <div className="flex-1 flex flex-col justify-center">
           <AnimatePresence mode="wait">
-            {/* ── STAGE 1: 23:00–23:45 Operations Telemetry Presentation ── */}
-            {stage === 'telemetry_briefing' && (
+            {/* ── TURN 1: Sophia Bennett Context & Welcome ── */}
+            {meetingStage === 'sophia_welcome' && (
               <motion.div
-                key="stage_telemetry"
+                key="stage_welcome"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                className="bg-[#101726] border border-amber-500/40 rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl relative overflow-hidden"
+              >
+                <div className="flex items-center justify-between border-b border-amber-500/20 pb-3">
+                  <div className="flex items-center space-x-2 text-amber-400 font-mono text-xs font-bold tracking-wider uppercase">
+                    <Sparkles className="w-4 h-4 text-amber-400" />
+                    <span>23:00 · Executive Briefing Call</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-400">
+                    CALL TIME REMAINING: 15 MINS
+                  </span>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-[#1b1c28] border border-amber-500/40 relative space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2.5">
+                      <img
+                        src={CHAPTER9_CHARACTERS.sophia.avatar}
+                        alt="Sophia"
+                        className="w-9 h-9 rounded-xl object-cover border border-amber-500/50"
+                      />
+                      <span className="font-bold text-amber-300 text-sm">Sophia Bennett (Head of HR):</span>
+                    </div>
+                    <button
+                      onClick={() =>
+                        speakDialogue(
+                          "Jane, Martha, thanks for hopping on. In 15 minutes, the Executive Steering Committee convenes with the CFO and Managing Director. They want verified outcomes from Project Amigo before entertaining our Phase 2 expansion budget."
+                        )
+                      }
+                      className="text-slate-400 hover:text-white p-1 rounded"
+                    >
+                      <Volume2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p className="text-white text-sm sm:text-base font-medium leading-relaxed italic">
+                    "Jane, Martha, thanks for hopping on. In 15 minutes, the Executive Steering Committee convenes with the CFO and Managing Director. They want verified outcomes from Project Amigo before entertaining our Phase 2 expansion budget. Martha, what does the post-rollout telemetry tell us?"
+                  </p>
+                </div>
+
+                <div className="pt-2 flex justify-end">
+                  <button
+                    onClick={handleSophiaWelcomeNext}
+                    className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold text-xs shadow-lg shadow-amber-600/30 transition-all cursor-pointer border border-amber-400/40"
+                  >
+                    <span>Hear Martha's Telemetry Briefing</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── TURN 2: Martha Vance Telemetry Summary ── */}
+            {meetingStage === 'martha_telemetry' && (
+              <motion.div
+                key="stage_martha"
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -15 }}
@@ -460,7 +408,7 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
                 <div className="flex items-center justify-between border-b border-cyan-500/20 pb-3">
                   <div className="flex items-center space-x-2 text-cyan-400 font-mono text-xs font-bold tracking-wider uppercase">
                     <BarChart3 className="w-4 h-4 text-cyan-400" />
-                    <span>23:00–23:45 · Verified Operations Telemetry</span>
+                    <span>23:10 · Operations Telemetry Briefing</span>
                   </div>
                   <span className="text-[10px] font-mono text-slate-400">
                     4,800 BRANCHES · PILOT TELEMETRY
@@ -471,9 +419,7 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                   <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
                     <div className="text-[10px] font-mono text-slate-400 uppercase">Appraisal Duration</div>
-                    <div className="text-sm font-bold text-emerald-400 mt-0.5">
-                      42% Reduction
-                    </div>
+                    <div className="text-sm font-bold text-emerald-400 mt-0.5">42% Reduction</div>
                     <div className="text-[10px] text-slate-400 mt-0.5">21.0 Days → 12.2 Days</div>
                   </div>
                   <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
@@ -484,129 +430,29 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
                   <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
                     <div className="text-[10px] font-mono text-slate-400 uppercase">Active Coverage</div>
                     <div className="text-sm font-bold text-amber-300 mt-0.5">80,000 Employees</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">Mumbai, Pune & Nationwide</div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">Mumbai, Pune & Regional</div>
                   </div>
                   <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-                    <div className="text-[10px] font-mono text-slate-400 uppercase">System SLA</div>
-                    <div className="text-sm font-bold text-cyan-300 mt-0.5">99.4% Compliance</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">Zero 504 Timeouts</div>
+                    <div className="text-[10px] font-mono text-slate-400 uppercase">System Availability</div>
+                    <div className="text-sm font-bold text-cyan-300 mt-0.5">99.4% SLA</div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">Zero Microservice Errors</div>
                   </div>
                 </div>
 
-                {/* Martha Exact Dialogue Box */}
                 <div className="p-5 rounded-2xl bg-[#141d2d] border border-cyan-500/40 relative space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2.5">
                       <img
                         src={CHAPTER9_CHARACTERS.martha.avatar}
                         alt="Martha"
-                        className="w-8 h-8 rounded-lg object-cover border border-cyan-500/50"
+                        className="w-9 h-9 rounded-xl object-cover border border-cyan-500/50"
                       />
                       <span className="font-bold text-cyan-300 text-sm">Martha (Ops Telemetry):</span>
                     </div>
                     <button
                       onClick={() =>
                         speakDialogue(
-                          "Jane, Sophia, I've just finished aggregating the telemetry across our 4,800 branches: appraisal cycle duration collapsed from 21 days to 12.2 days — a 42% reduction, saving 15,000 operational man-hours!"
-                        )
-                      }
-                      className="text-slate-400 hover:text-white p-1 rounded transition-colors"
-                      title="Read dialogue aloud"
-                    >
-                      <Volume2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <p className="text-white text-sm sm:text-base font-medium leading-relaxed italic">
-                    "{BOARDROOM_DIALOGUES.telemetry_briefing[1].text}"
-                  </p>
-                </div>
-
-                {/* Sophia Bennett Sponsor Prompt */}
-                <div className="p-4 rounded-2xl bg-[#1a1c2a] border border-amber-500/30 flex items-start space-x-3">
-                  <img
-                    src={CHAPTER9_CHARACTERS.sophia.avatar}
-                    alt="Sophia"
-                    className="w-8 h-8 rounded-lg object-cover border border-amber-500/50 shrink-0 mt-0.5"
-                  />
-                  <div className="space-y-1 text-xs sm:text-[13px] text-slate-200">
-                    <span className="font-bold text-amber-300">Sophia Bennett (Head of HR): </span>
-                    <span>
-                      "Phenomenal data from Mumbai and Pune. But the Board and Finance won't release Phase 2 funding on operational hours alone. They think in financial return, payback periods, and EBITDA impact. Jane, prepare the financial equation."
-                    </span>
-                  </div>
-                </div>
-
-                {/* Next Button */}
-                <div className="pt-2 flex justify-end">
-                  <button
-                    onClick={handleAdvanceToRoi}
-                    className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-cyan-600/30 transition-all cursor-pointer border border-cyan-400/40"
-                  >
-                    <span>Synthesize Financial ROI (Jane's Turn)</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
-            {/* ── STAGE 2: 23:45–24:20 Monetary ROI Synthesis ── */}
-            {stage === 'roi_preparation' && (
-              <motion.div
-                key="stage_roi"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                className="bg-[#101726] border border-emerald-500/40 rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl relative overflow-hidden"
-              >
-                <div className="flex items-center justify-between border-b border-emerald-500/20 pb-3">
-                  <div className="flex items-center space-x-2 text-emerald-400 font-mono text-xs font-bold tracking-wider uppercase">
-                    <DollarSign className="w-4 h-4 text-emerald-400" />
-                    <span>23:45–24:20 · Monetary ROI & Financial Model Synthesis</span>
-                  </div>
-                  <span className="text-[10px] font-mono text-slate-400">
-                    CFO & EXECUTIVE STEERING COMMITTEE
-                  </span>
-                </div>
-
-                {/* 4 Financial Highlight Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                  <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-                    <div className="text-[10px] font-mono text-slate-400 uppercase">Hourly Cost Assumption</div>
-                    <div className="text-sm font-bold text-white mt-0.5">₹650 / hr</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">Blended Branch Rate</div>
-                  </div>
-                  <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-                    <div className="text-[10px] font-mono text-slate-400 uppercase">Gross Annual Savings</div>
-                    <div className="text-sm font-bold text-emerald-400 mt-0.5">₹97.5 Lakhs</div>
-                    <div className="text-[10px] text-emerald-400 mt-0.5">15,000 hrs × ₹650/hr</div>
-                  </div>
-                  <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-                    <div className="text-[10px] font-mono text-slate-400 uppercase">Phase 1 Capital Spend</div>
-                    <div className="text-sm font-bold text-amber-300 mt-0.5">₹55.0 Lakhs</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">Engineering & Setup</div>
-                  </div>
-                  <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-                    <div className="text-[10px] font-mono text-slate-400 uppercase">Net ROI & Payback</div>
-                    <div className="text-sm font-bold text-emerald-400 mt-0.5">+77.3% ROI</div>
-                    <div className="text-[10px] text-emerald-400 font-bold mt-0.5">6.8 Months Payback</div>
-                  </div>
-                </div>
-
-                {/* Jane's Presentation Dialogue Box */}
-                <div className="p-5 rounded-2xl bg-[#14202c] border border-emerald-500/40 relative space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2.5">
-                      <img
-                        src={CHAPTER9_CHARACTERS.jane.avatar}
-                        alt="Jane"
-                        className="w-8 h-8 rounded-lg object-cover border border-emerald-500/50"
-                      />
-                      <span className="font-bold text-emerald-300 text-sm">Jane (Lead PM):</span>
-                    </div>
-                    <button
-                      onClick={() =>
-                        speakDialogue(
-                          "Let's translate the operational win into financial reality: 15,000 hours saved across branch staff at our ₹650/hr rate equals ₹97.5 Lakhs in annual capacity value. Against our ₹55 Lakh Phase 1 spend, that delivers a +77.3% Net ROI and full payback in just 6.8 months!"
+                          "I’ve compiled the verified post-rollout APM telemetry from Mumbai, Pune, and regional branches. The appraisal completion cycle dropped from 21 days down to 12.2 days — a 42% reduction. Across 80,000 active branch employees, we clocked 15,000 verified operational man-hours saved with 99.4% SLA uptime."
                         )
                       }
                       className="text-slate-400 hover:text-white p-1 rounded"
@@ -615,42 +461,26 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
                     </button>
                   </div>
                   <p className="text-white text-sm sm:text-base font-medium leading-relaxed italic">
-                    "{BOARDROOM_DIALOGUES.roi_preparation[0].text} Against our ₹55 Lakh Phase 1 capital expenditure, that yields a Net Financial Benefit of ₹42.5 Lakhs in Year 1 alone — delivering a +77.3% Net ROI and 6.8-month payback period."
+                    "I’ve compiled the verified post-rollout APM telemetry from Mumbai, Pune, and regional branches. The appraisal completion cycle dropped from 21 days down to 12.2 days — a 42% reduction. Across 80,000 active branch employees, we saved 15,000 operational man-hours with 99.4% SLA uptime."
                   </p>
                 </div>
 
-                {/* Sophia Bennett Reaction */}
-                <div className="p-4 rounded-2xl bg-[#1c1a26] border border-amber-500/30 flex items-start space-x-3">
-                  <img
-                    src={CHAPTER9_CHARACTERS.sophia.avatar}
-                    alt="Sophia"
-                    className="w-8 h-8 rounded-lg object-cover border border-amber-500/50 shrink-0 mt-0.5"
-                  />
-                  <div className="space-y-1 text-xs sm:text-[13px] text-slate-200">
-                    <span className="font-bold text-amber-300">Sophia Bennett (Head of HR): </span>
-                    <span>
-                      "That is the exact financial justification the Board needs. The CFO will not be able to argue against a 6.8-month payback. The boardroom doors are opening now. Let's decide how you present this."
-                    </span>
-                  </div>
-                </div>
-
-                {/* Proceed Button */}
                 <div className="pt-2 flex justify-end">
                   <button
-                    onClick={handleAdvanceToDecision}
-                    className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 transition-all cursor-pointer border border-emerald-400/40"
+                    onClick={handleMarthaTelemetryNext}
+                    className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-cyan-600/30 transition-all cursor-pointer border border-cyan-400/40"
                   >
-                    <span>Proceed to Executive Decision</span>
+                    <span>Jane's Lead PM Response</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
               </motion.div>
             )}
 
-            {/* ── STAGE 3: 24:20–25:00 Strategic Executive Decision Screen ── */}
-            {stage === 'boardroom_decision' && (
+            {/* ── TURN 3: Interactive Jane Senior PM Intervention ── */}
+            {meetingStage === 'jane_intervention' && (
               <motion.div
-                key="stage_decision"
+                key="stage_intervention"
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -15 }}
@@ -658,200 +488,207 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
               >
                 <div className="flex items-center justify-between border-b border-indigo-500/20 pb-3">
                   <div className="flex items-center space-x-2 text-indigo-400 font-mono text-xs font-bold tracking-wider uppercase">
-                    <Briefcase className="w-4 h-4 text-indigo-400" />
-                    <span>24:20–25:00 · Strategic Decision Screen</span>
+                    <MessageSquare className="w-4 h-4 text-indigo-400" />
+                    <span>23:18 · Jane's Strategic PM Intervention</span>
                   </div>
                   <span className="text-[10px] font-mono text-slate-400">
-                    EXECUTIVE STEERING COMMITTEE DIRECTIVE
+                    HOW WILL YOU STEER THE BOARDROOM NARRATIVE?
                   </span>
                 </div>
 
                 <div className="space-y-1">
-                  <h2 className="text-base sm:text-lg font-black text-white">
-                    The Board is waiting for evidence of business impact. What should Jane do?
+                  <h2 className="text-sm sm:text-base font-black text-white">
+                    Select Jane's response to Martha's telemetry:
                   </h2>
                   <p className="text-xs text-slate-400">
-                    Choose how Jane presents the outcomes of Project Amigo to the Executive Steering Committee and CFO.
+                    A senior PM does not stop at engineering metrics. Choose how to frame the business outcome.
                   </p>
                 </div>
 
-                {/* Choices Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-                  {/* CHOICE A */}
+                  {/* OPTION 1: SENIOR PM (MONETIZE HOURS) */}
                   <div
-                    onClick={() => handleSelectDecision('choice_a')}
-                    className="group cursor-pointer rounded-2xl p-5 border border-slate-700 bg-[#0d1322] hover:bg-rose-950/20 hover:border-rose-500/60 transition-all flex flex-col justify-between space-y-4"
-                  >
-                    <div className="space-y-2.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-rose-400">
-                          {CHAPTER9_DECISION_OPTIONS.choice_a.title}
-                        </span>
-                        <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-rose-500/10 text-rose-300 border border-rose-500/20">
-                          Poor Decision
-                        </span>
-                      </div>
-                      <p className="text-white font-semibold text-xs sm:text-sm leading-relaxed">
-                        "Skip formal ROI tracking. Assume leadership already knows the project was successful and rely on informal word-of-mouth."
-                      </p>
-                      <p className="text-slate-400 text-xs">
-                        {CHAPTER9_DECISION_OPTIONS.choice_a.description}
-                      </p>
-                    </div>
-
-                    <div className="pt-3 border-t border-slate-800 text-[11px] font-mono flex items-center justify-between text-rose-400">
-                      <span>Delivery Governance: -20 pts</span>
-                      <span>Trust & Risk: -15 pts</span>
-                    </div>
-                  </div>
-
-                  {/* CHOICE B */}
-                  <div
-                    onClick={() => handleSelectDecision('choice_b')}
+                    onClick={() => handleSelectPlayerDialogue('monetize_hours')}
                     className="group cursor-pointer rounded-2xl p-5 border border-emerald-500/50 bg-[#0d1829] hover:bg-emerald-950/30 hover:border-emerald-400 transition-all flex flex-col justify-between space-y-4 shadow-[0_0_20px_rgba(16,185,129,0.15)] ring-1 ring-emerald-500/40"
                   >
                     <div className="space-y-2.5">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                          {CHAPTER9_DECISION_OPTIONS.choice_b.title}
-                        </span>
-                        <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                          Recommended
+                          Strategic Business Leader (Recommended)
                         </span>
                       </div>
                       <p className="text-white font-semibold text-xs sm:text-sm leading-relaxed">
-                        "Deliver a detailed ROI and business value impact presentation to the executive steering committee."
+                        "15,000 hours saved is a huge operational win, but leadership thinks in capital return, payback velocity, and EBITDA. What is our blended workforce cost so we can monetize this?"
                       </p>
                       <p className="text-slate-400 text-xs">
-                        {CHAPTER9_DECISION_OPTIONS.choice_b.description}
+                        Translates technical engineering metrics into balance sheet capacity and sets up a watertight financial defense for Phase 2.
                       </p>
                     </div>
+                  </div>
 
-                    <div className="pt-3 border-t border-slate-800 text-[11px] font-mono flex items-center justify-between text-emerald-400 font-bold">
-                      <span>Schedule: +15 | Governance: +25</span>
-                      <span>Trust & Risk: +20 pts</span>
+                  {/* OPTION 2: JUNIOR PM (BASIC GRAPHS) */}
+                  <div
+                    onClick={() => handleSelectPlayerDialogue('basic_graphs')}
+                    className="group cursor-pointer rounded-2xl p-5 border border-slate-700 bg-[#0d1322] hover:bg-rose-950/20 hover:border-rose-500/60 transition-all flex flex-col justify-between space-y-4"
+                  >
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-400">
+                          Operational View Only
+                        </span>
+                      </div>
+                      <p className="text-white font-semibold text-xs sm:text-sm leading-relaxed">
+                        "Let's just show them the 42% cycle reduction chart; surely engineering metrics alone will impress the CFO and Executive Committee."
+                      </p>
+                      <p className="text-slate-400 text-xs">
+                        Assumes leadership understands the monetary value of software improvements without financial translation.
+                      </p>
                     </div>
                   </div>
                 </div>
               </motion.div>
             )}
 
-            {/* ── STAGE 4: Decision Feedback & Boardroom Ratification ── */}
-            {stage === 'decision_feedback' && selectedDecision && (
+            {/* ── TURN 4: Sophia Bennett Corporate Mandate ── */}
+            {meetingStage === 'sophia_guidance' && (
               <motion.div
-                key="stage_feedback"
+                key="stage_guidance"
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -15 }}
-                className={`border rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl relative overflow-hidden ${
-                  selectedDecision === 'choice_b'
-                    ? 'bg-[#0f1d2a] border-emerald-500/50'
-                    : 'bg-[#1a0f16] border-rose-500/50'
-                }`}
+                className="bg-[#101726] border border-amber-500/40 rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl relative overflow-hidden"
               >
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <div className="flex items-center space-x-2 font-mono text-xs font-bold tracking-wider uppercase">
-                    {selectedDecision === 'choice_b' ? (
-                      <span className="text-emerald-400 flex items-center gap-1.5">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                        Executive Steering Committee Ratification
-                      </span>
-                    ) : (
-                      <span className="text-rose-400 flex items-center gap-1.5">
-                        <AlertTriangle className="w-4 h-4 text-rose-400" />
-                        Executive Funding Refusal (Phase 2 Frozen)
-                      </span>
-                    )}
+                <div className="flex items-center justify-between border-b border-amber-500/20 pb-3">
+                  <div className="flex items-center space-x-2 text-amber-400 font-mono text-xs font-bold tracking-wider uppercase">
+                    <TrendingUp className="w-4 h-4 text-amber-400" />
+                    <span>23:25 · Executive Corporate Alignment</span>
                   </div>
                   <span className="text-[10px] font-mono text-slate-400">
-                    25:00 · FINAL BOARDROOM VOTE
+                    BLENDED RATE: ₹650 / HOUR
                   </span>
                 </div>
 
-                {/* Outcome Speech Box */}
-                <div
-                  className={`p-5 rounded-2xl border relative space-y-3 ${
-                    selectedDecision === 'choice_b'
-                      ? 'bg-[#13282b] border-emerald-500/40 text-emerald-100'
-                      : 'bg-[#29131a] border-rose-500/40 text-rose-100'
-                  }`}
-                >
-                  <div className="flex items-center space-x-2.5">
-                    <img
-                      src={CHAPTER9_CHARACTERS.sophia.avatar}
-                      alt="Sophia Bennett"
-                      className="w-10 h-10 rounded-xl object-cover border border-amber-400/50 shadow"
-                    />
-                    <div>
-                      <span className="font-bold text-amber-300 text-sm">
-                        Sophia Bennett (Head of HR Operations):
-                      </span>
-                      <div className="text-[11px] text-slate-400">
-                        {selectedDecision === 'choice_b'
-                          ? 'Reporting Unanimous Approval by the CFO and Board'
-                          : 'Reporting Rejection of Phase 2 Capital by the Board'}
-                      </div>
+                <div className="p-5 rounded-2xl bg-[#1b1c28] border border-amber-500/40 relative space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2.5">
+                      <img
+                        src={CHAPTER9_CHARACTERS.sophia.avatar}
+                        alt="Sophia"
+                        className="w-9 h-9 rounded-xl object-cover border border-amber-500/50"
+                      />
+                      <span className="font-bold text-amber-300 text-sm">Sophia Bennett (Head of HR):</span>
                     </div>
+                    <button
+                      onClick={() =>
+                        speakDialogue(
+                          "Spot on, Jane. Operational hours alone won't convince Finance. Our corporate finance rate for branch staff is ₹650 per hour. At ₹650/hr, 15,000 hours converts into ₹97.5 Lakhs in annual capacity value! Against our ₹55 Lakh Phase 1 capital spend, that yields a +77.3% Net ROI and a 6.8-month payback. But the CFO expects you to configure the financial model, verify regional branch data, and validate the corporate boardroom deck before the final vote."
+                        )
+                      }
+                      className="text-slate-400 hover:text-white p-1 rounded"
+                    >
+                      <Volume2 className="w-4 h-4" />
+                    </button>
                   </div>
                   <p className="text-white text-sm sm:text-base font-medium leading-relaxed italic">
-                    {selectedDecision === 'choice_b'
-                      ? '"Sensational outcome, Jane! The CFO was thoroughly impressed by your +77.3% Net ROI model and 6.8-month payback period. The Steering Committee voted unanimously to approve Phase 2 budget in full."'
-                      : '"Jane, that was a disaster. Because we presented no quantitative financial justification, the CFO assumed Project Amigo was an expensive vanity project. The Board placed Phase 2 under indefinite audit hold."'}
+                    {playerDialogueChoice === 'monetize_hours'
+                      ? '"Spot on, Jane! Operational hours alone will not satisfy Finance. Our corporate finance blended rate for branch officers is ₹650 per hour. At ₹650/hr, 15,000 hours converts into ₹97.5 Lakhs in annual capacity value! Against our ₹55 Lakh Phase 1 capital spend, that’s +77.3% Net ROI and full payback in 6.8 months."'
+                      : '"Careful, Jane. The CFO will dismiss raw operational charts as engineering overhead. We must monetize those 15,000 hours at our ₹650/hr branch rate into ₹97.5 Lakhs. Go into the Executive ROI Dashboard right now, model the numbers, and prepare the Boardroom Deck."'}
                   </p>
                 </div>
 
-                {/* Score Delta Pill */}
-                <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between text-xs">
-                  <span className="text-slate-400">Applied Evaluation Scores:</span>
-                  {selectedDecision === 'choice_b' ? (
-                    <span className="font-mono text-emerald-400 font-bold">
-                      +15 Schedule · +25 Governance · +20 Trust & Risk Management
-                    </span>
-                  ) : (
-                    <span className="font-mono text-rose-400 font-bold">
-                      -20 Delivery Governance · -15 Trust & Risk Management
-                    </span>
-                  )}
+                <div className="pt-2 flex justify-end">
+                  <button
+                    onClick={handleSophiaGuidanceNext}
+                    className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold text-xs shadow-lg shadow-amber-600/30 transition-all cursor-pointer border border-amber-400/40"
+                  >
+                    <span>Receive Dashboard Assignment</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── TURN 5: Assignment Handoff to ROI Dashboard ── */}
+            {meetingStage === 'assignment_handoff' && (
+              <motion.div
+                key="stage_handoff"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                className="bg-[#0f1d2a] border border-emerald-500/50 rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl relative overflow-hidden"
+              >
+                <div className="flex items-center justify-between border-b border-emerald-500/20 pb-3">
+                  <div className="flex items-center space-x-2 text-emerald-400 font-mono text-xs font-bold tracking-wider uppercase">
+                    <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+                    <span>23:40 · Executive Dashboard Assignment</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-400">
+                    EXECUTIVE LEADERSHIP WORKSPACE
+                  </span>
                 </div>
 
-                {/* Actions */}
-                <div className="pt-2 flex flex-wrap items-center justify-between gap-3">
-                  {selectedDecision === 'choice_a' ? (
-                    <button
-                      onClick={() => handleSelectDecision('choice_b')}
-                      className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all flex items-center space-x-1.5 cursor-pointer shadow-md"
-                    >
-                      <ShieldCheck className="w-4 h-4" />
-                      <span>Revise to Recommended Approach (Choice B)</span>
-                    </button>
-                  ) : (
-                    <div className="text-xs text-emerald-300 font-medium flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                      <span>Phase 2 is funded. Executive Boardroom Dashboard unlocked!</span>
+                <div className="p-5 rounded-2xl bg-[#13282b] border border-emerald-500/40 space-y-3">
+                  <div className="flex items-center space-x-2.5">
+                    <img
+                      src={CHAPTER9_CHARACTERS.martha.avatar}
+                      alt="Martha"
+                      className="w-9 h-9 rounded-xl object-cover border border-emerald-400/50"
+                    />
+                    <div>
+                      <span className="font-bold text-emerald-300 text-sm">Martha (Ops Telemetry Specialist):</span>
+                      <div className="text-[11px] text-slate-400">Ready on Brained OS</div>
                     </div>
-                  )}
-
-                  <div className="flex items-center gap-2.5">
-                    <button
-                      onClick={handleOpenBoardroomSuite}
-                      className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs transition-all flex items-center space-x-2 cursor-pointer shadow-[0_0_20px_rgba(16,185,129,0.3)]"
-                    >
-                      <BarChart3 className="w-4 h-4 text-slate-950" />
-                      <span>Open Executive ROI Dashboard</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
-
-                    {onOpenScorecard && (
-                      <button
-                        onClick={onOpenScorecard}
-                        className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition-all flex items-center space-x-1.5 cursor-pointer border border-slate-700"
-                      >
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                        <span>View Scorecard</span>
-                      </button>
-                    )}
                   </div>
+                  <p className="text-white text-sm sm:text-base font-medium leading-relaxed italic">
+                    "Jane, I've loaded the telemetry metrics, regional pilot breakdown (Mumbai, Pune, Bangalore, Delhi), and financial equations directly into your Executive ROI Dashboard. Complete the verification, calibrate the financial levers, and validate the slide deck before entering the Boardroom."
+                  </p>
+                </div>
+
+                {/* 3 Core Responsibilities */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                  <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
+                    <div className="font-bold text-cyan-300 flex items-center gap-1.5">
+                      <span>1. Telemetry Audit</span>
+                    </div>
+                    <p className="text-slate-400 text-[11px] leading-relaxed">
+                      Reconcile 4,800 branch logs and verify 15,000 man-hours saved across clusters.
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
+                    <div className="font-bold text-emerald-300 flex items-center gap-1.5">
+                      <span>2. Financial Modeling</span>
+                    </div>
+                    <p className="text-slate-400 text-[11px] leading-relaxed">
+                      Calibrate ₹650/hr rate to prove ₹97.5L capacity gain, +77.3% ROI, and 6.8-month payback.
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
+                    <div className="font-bold text-amber-300 flex items-center gap-1.5">
+                      <span>3. Boardroom Defense</span>
+                    </div>
+                    <p className="text-slate-400 text-[11px] leading-relaxed">
+                      Approve the deck and defend Phase 2 investment before the Steering Committee & CFO.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex flex-wrap items-center justify-between gap-3">
+                  <div className="text-xs text-emerald-300 font-medium flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    <span>Executive Briefing concluded. Dashboard workspace ready.</span>
+                  </div>
+
+                  <button
+                    onClick={handleLaunchDashboard}
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs transition-all flex items-center space-x-2 cursor-pointer shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+                  >
+                    <BarChart3 className="w-4 h-4 text-slate-950" />
+                    <span>Open Executive ROI Dashboard & Begin Work</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
                 </div>
               </motion.div>
             )}
