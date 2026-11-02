@@ -28,22 +28,29 @@ export const CHAPTER9_KEY_TAKEAWAY =
   'Senior PMs do not stop at functional delivery or incident stability. True executive leadership requires translating technical telemetry into measurable financial ROI, operational capacity gains, and strategic justifications that defend capital investment.';
 
 export const CHAPTER9_CHARACTERS = {
-  jane: {
-    name: 'Jane Cooper',
-    role: 'Lead Project Manager & Transformation Consultant',
-    avatar: '👩‍💼',
-    affiliation: 'Brained Consulting',
+  sophia: {
+    name: 'Sophia Bennett',
+    role: 'Head of HR Operations · Executive Sponsor',
+    avatar: '/character/Sophia_bennett/SophiaDP.png',
+    affiliation: 'ICICI Bank Executive Leadership',
   },
   martha: {
-    name: 'Martha Vance',
-    role: 'Lead Systems & Operations Telemetry Specialist',
-    avatar: '👩‍🔬',
+    name: 'Martha',
+    role: 'Monitoring & Operations Telemetry Specialist',
+    avatar: '/character/Emma_Carter/EmmaDP.png',
     affiliation: 'ICICI Bank Ops Telemetry',
   },
+  jane: {
+    name: 'Jane (You)',
+    role: 'Lead Project Manager · Transformation Consultant',
+    avatar: '/character/AaravDP.png',
+    affiliation: 'Brained Consulting',
+  },
+  // Backward compatibility alias for any existing state references
   mark: {
-    name: 'Mark Sterling',
-    role: 'Head of HR & Executive Steering Committee Sponsor',
-    avatar: '👔',
+    name: 'Sophia Bennett',
+    role: 'Head of HR Operations · Executive Sponsor',
+    avatar: '/character/Sophia_bennett/SophiaDP.png',
     affiliation: 'ICICI Bank Executive Leadership',
   },
 };
@@ -145,17 +152,17 @@ export const BOARDROOM_DIALOGUES: Record<string, BoardroomDialogue[]> = {
     {
       id: 'd1',
       speaker: 'Martha',
-      role: 'Lead Systems & Operations Telemetry Specialist',
-      avatar: '👩‍🔬',
+      role: 'Monitoring & Operations Telemetry Specialist',
+      avatar: '/character/Emma_Carter/EmmaDP.png',
       timestamp: '23:05',
-      text: 'Jane, Mark, I’ve just finished aggregating the telemetry from our production clusters and Mumbai/Pune pilot branches.',
+      text: 'Jane, Sophia, I’ve just finished aggregating the telemetry from our production clusters and Mumbai/Pune pilot branches.',
       sentiment: 'neutral',
     },
     {
       id: 'd2',
       speaker: 'Martha',
-      role: 'Lead Systems & Operations Telemetry Specialist',
-      avatar: '👩‍🔬',
+      role: 'Monitoring & Operations Telemetry Specialist',
+      avatar: '/character/Emma_Carter/EmmaDP.png',
       timestamp: '23:18',
       text: 'The numbers are astounding: appraisal cycle completion dropped from 21 days down to 12.2 days — that’s a clean 42% reduction. More importantly, we clocked 15,000 verified operational man-hours saved.',
       sentiment: 'positive',
@@ -164,18 +171,18 @@ export const BOARDROOM_DIALOGUES: Record<string, BoardroomDialogue[]> = {
       id: 'd3',
       speaker: 'Jane',
       role: 'Lead Project Manager',
-      avatar: '👩‍💼',
+      avatar: '/character/AaravDP.png',
       timestamp: '23:32',
       text: 'Phenomenal data, Martha. But the Board and Finance won’t fund Phase 2 on operational hours alone. They think in capital returns, payback periods, and balance sheet impact.',
       sentiment: 'executive',
     },
     {
       id: 'd4',
-      speaker: 'Mark',
-      role: 'Head of HR',
-      avatar: '👔',
+      speaker: 'Sophia',
+      role: 'Head of HR Operations · Executive Sponsor',
+      avatar: '/character/Sophia_bennett/SophiaDP.png',
       timestamp: '23:42',
-      text: 'Jane is right. In 15 minutes, the Executive Steering Committee sits down. The CFO already warned me that without concrete ROI proof, our Phase 2 budget will be frozen.',
+      text: 'Jane is right. In 15 minutes, the Executive Steering Committee convenes. The CFO already warned me that without concrete ROI proof, our Phase 2 budget will be frozen.',
       sentiment: 'urgent',
     },
   ],
@@ -184,7 +191,7 @@ export const BOARDROOM_DIALOGUES: Record<string, BoardroomDialogue[]> = {
       id: 'd5',
       speaker: 'Jane',
       role: 'Lead Project Manager',
-      avatar: '👩‍💼',
+      avatar: '/character/AaravDP.png',
       timestamp: '23:48',
       text: 'Let’s translate the operational win into financial reality: 15,000 hours saved across branch staff at ICICI’s blended ₹650/hr rate equals ₹97.5 Lakhs in annual capacity value.',
       sentiment: 'executive',
@@ -192,8 +199,8 @@ export const BOARDROOM_DIALOGUES: Record<string, BoardroomDialogue[]> = {
     {
       id: 'd6',
       speaker: 'Martha',
-      role: 'Lead Systems & Operations Telemetry Specialist',
-      avatar: '👩‍🔬',
+      role: 'Monitoring & Operations Telemetry Specialist',
+      avatar: '/character/Emma_Carter/EmmaDP.png',
       timestamp: '24:02',
       text: 'Against our ₹55 Lakh Phase 1 capital expenditure, that yields a Net Financial Benefit of ₹42.5 Lakhs in Year 1 alone!',
       sentiment: 'positive',
@@ -202,7 +209,7 @@ export const BOARDROOM_DIALOGUES: Record<string, BoardroomDialogue[]> = {
       id: 'd7',
       speaker: 'Jane',
       role: 'Lead Project Manager',
-      avatar: '👩‍💼',
+      avatar: '/character/AaravDP.png',
       timestamp: '24:14',
       text: 'Exactly. That is a +77.3% Net ROI with a full capital payback period of just 6.8 months. We have a waterproof business case.',
       sentiment: 'positive',
@@ -211,9 +218,9 @@ export const BOARDROOM_DIALOGUES: Record<string, BoardroomDialogue[]> = {
   boardroom_decision: [
     {
       id: 'd8',
-      speaker: 'Mark',
-      role: 'Head of HR',
-      avatar: '👔',
+      speaker: 'Sophia',
+      role: 'Head of HR Operations · Executive Sponsor',
+      avatar: '/character/Sophia_bennett/SophiaDP.png',
       timestamp: '24:25',
       text: 'The Executive Boardroom doors are opening. The CFO and Managing Director are taking their seats. Jane, how do you want to handle this agenda?',
       sentiment: 'urgent',
@@ -222,7 +229,7 @@ export const BOARDROOM_DIALOGUES: Record<string, BoardroomDialogue[]> = {
       id: 'd9',
       speaker: 'Jane',
       role: 'Lead Project Manager',
-      avatar: '👩‍💼',
+      avatar: '/character/AaravDP.png',
       timestamp: '24:35',
       text: 'We have two approaches: some PMs skip formal ROI and assume delivery speaks for itself. Others present the rigorous business model. It’s decision time.',
       sentiment: 'executive',
@@ -231,9 +238,9 @@ export const BOARDROOM_DIALOGUES: Record<string, BoardroomDialogue[]> = {
   choice_b_reaction: [
     {
       id: 'd10',
-      speaker: 'Mark',
-      role: 'Head of HR',
-      avatar: '👔',
+      speaker: 'Sophia',
+      role: 'Head of HR Operations · Executive Sponsor',
+      avatar: '/character/Sophia_bennett/SophiaDP.png',
       timestamp: '24:45',
       text: 'Outstanding delivery, Jane! The CFO said this was the first technology review where a PM spoke the language of EBITDA, payback velocity, and workforce productivity.',
       sentiment: 'positive',
@@ -241,8 +248,8 @@ export const BOARDROOM_DIALOGUES: Record<string, BoardroomDialogue[]> = {
     {
       id: 'd11',
       speaker: 'Martha',
-      role: 'Lead Systems & Operations Telemetry Specialist',
-      avatar: '👩‍🔬',
+      role: 'Monitoring & Operations Telemetry Specialist',
+      avatar: '/character/Emma_Carter/EmmaDP.png',
       timestamp: '24:52',
       text: 'The steering committee not only commended the 42% cycle reduction — they formally approved the full budget for Phase 2 without a single deduction!',
       sentiment: 'positive',
@@ -251,18 +258,18 @@ export const BOARDROOM_DIALOGUES: Record<string, BoardroomDialogue[]> = {
   choice_a_reaction: [
     {
       id: 'd12',
-      speaker: 'Mark',
-      role: 'Head of HR',
-      avatar: '👔',
+      speaker: 'Sophia',
+      role: 'Head of HR Operations · Executive Sponsor',
+      avatar: '/character/Sophia_bennett/SophiaDP.png',
       timestamp: '24:45',
       text: 'Jane, that was a disaster. Because we presented no quantitative financial justification, the CFO assumed Project Amigo was an expensive vanity project.',
       sentiment: 'urgent',
     },
     {
       id: 'd13',
-      speaker: 'Mark',
-      role: 'Head of HR',
-      avatar: '👔',
+      speaker: 'Sophia',
+      role: 'Head of HR Operations · Executive Sponsor',
+      avatar: '/character/Sophia_bennett/SophiaDP.png',
       timestamp: '24:55',
       text: 'They just placed Phase 2 under indefinite audit hold. Completing tickets isn’t enough if you cannot prove business value to the people writing the checks.',
       sentiment: 'urgent',
@@ -381,8 +388,8 @@ export function computeChapter9Score(
     : 'Never assume leadership or the CFO inherently understands technical wins. Projects that cannot communicate financial ROI face budget cancellation.';
 
   const executiveFeedback = isChoiceB
-    ? 'Mark Sterling (Head of HR): "Jane demonstrated the mindset of a true business partner. Translating technical metrics into financial EBITDA impact made our Phase 2 funding an easy decision for the Board."'
-    : 'Mark Sterling (Head of HR): "The CFO refused to release Phase 2 capital. Technical delivery without quantifiable business value is treated as overhead by the executive committee."';
+    ? 'Sophia Bennett (Head of HR): "Jane demonstrated the mindset of a true business partner. Translating technical metrics into financial EBITDA impact made our Phase 2 funding an easy decision for the Board."'
+    : 'Sophia Bennett (Head of HR): "The CFO refused to release Phase 2 capital. Technical delivery without quantifiable business value is treated as overhead by the executive committee."';
 
   return {
     shown: true,

@@ -995,8 +995,8 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
       pushNotification({
         id: 'ch9_boardroom_invitation',
         app: 'Teams',
-        title: 'Incoming Call · Mark Sterling',
-        subtitle: 'Head of HR · Executive Steering Committee Sponsor',
+        title: 'Incoming Call · Sophia Bennett',
+        subtitle: 'Head of HR Operations · Executive Steering Committee Sponsor',
         body: 'Jane, join the Executive Briefing call. Martha has the verified post-rollout telemetry from Mumbai & Pune ready for your ROI presentation.',
         timestamp: 'Now',
         actionText: 'Join Call',
@@ -1018,7 +1018,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
       pushNotification({
         id: 'ch9_boardroom_unlocked',
         app: 'Teams',
-        title: 'Mark Sterling · Head of HR',
+        title: 'Sophia Bennett · Head of HR',
         subtitle: 'Executive Boardroom Suite Ready',
         body: 'Executive briefing concluded. Complete and review your full Phase 2 ROI validation dashboard and scorecard.',
         timestamp: 'Now',

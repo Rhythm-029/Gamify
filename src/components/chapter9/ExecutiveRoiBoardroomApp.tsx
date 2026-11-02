@@ -135,7 +135,7 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
       onNotifyDesktop(
         isRecommended ? 'Boardroom Unanimous Approval!' : 'Boardroom Skepticism Notice',
         isRecommended
-          ? 'Mark Sterling and the CFO accepted the ROI model. Phase 2 budget unlocked!'
+          ? 'Sophia Bennett and the CFO accepted the ROI model. Phase 2 budget unlocked!'
           : 'The Board questioned the project business value due to lack of quantified ROI.'
       );
     }
@@ -307,30 +307,36 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
             <div className="grid grid-cols-3 gap-2">
               {/* JANE */}
               <div className="p-2 rounded-xl bg-slate-800/60 border border-slate-700/60 flex flex-col items-center text-center relative group">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-sky-500/20 to-indigo-500/30 border border-sky-400/50 flex items-center justify-center text-2xl mb-1 shadow-inner">
-                  {CHAPTER9_CHARACTERS.jane.avatar}
-                </div>
-                <span className="text-[11px] font-bold text-slate-200">Jane Cooper</span>
+                <img
+                  src={CHAPTER9_CHARACTERS.jane.avatar}
+                  alt={CHAPTER9_CHARACTERS.jane.name}
+                  className="w-12 h-12 rounded-full object-cover border border-sky-400/50 mb-1 shadow-inner"
+                />
+                <span className="text-[11px] font-bold text-slate-200">Jane (You)</span>
                 <span className="text-[9px] text-sky-400">Lead Senior PM</span>
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-400" />
               </div>
 
               {/* MARTHA */}
               <div className="p-2 rounded-xl bg-slate-800/60 border border-slate-700/60 flex flex-col items-center text-center relative group">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-emerald-500/20 to-teal-500/30 border border-emerald-400/50 flex items-center justify-center text-2xl mb-1 shadow-inner">
-                  {CHAPTER9_CHARACTERS.martha.avatar}
-                </div>
-                <span className="text-[11px] font-bold text-slate-200">Martha Vance</span>
+                <img
+                  src={CHAPTER9_CHARACTERS.martha.avatar}
+                  alt={CHAPTER9_CHARACTERS.martha.name}
+                  className="w-12 h-12 rounded-full object-cover border border-emerald-400/50 mb-1 shadow-inner"
+                />
+                <span className="text-[11px] font-bold text-slate-200">Martha</span>
                 <span className="text-[9px] text-emerald-400">Ops Telemetry</span>
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-400" />
               </div>
 
-              {/* MARK (HEAD OF HR) */}
+              {/* SOPHIA (HEAD OF HR) */}
               <div className="p-2 rounded-xl bg-slate-800/60 border border-slate-700/60 flex flex-col items-center text-center relative group">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-amber-500/20 to-orange-500/30 border border-amber-400/50 flex items-center justify-center text-2xl mb-1 shadow-inner">
-                  {CHAPTER9_CHARACTERS.mark.avatar}
-                </div>
-                <span className="text-[11px] font-bold text-slate-200">Mark Sterling</span>
+                <img
+                  src={CHAPTER9_CHARACTERS.sophia.avatar}
+                  alt={CHAPTER9_CHARACTERS.sophia.name}
+                  className="w-12 h-12 rounded-full object-cover border border-amber-400/50 mb-1 shadow-inner"
+                />
+                <span className="text-[11px] font-bold text-slate-200">Sophia Bennett</span>
                 <span className="text-[9px] text-amber-400">Head of HR (Sponsor)</span>
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-400" />
               </div>
@@ -352,7 +358,7 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={`p-3 rounded-xl border text-xs flex flex-col gap-1.5 ${
-                  d.speaker === 'Mark'
+                  d.speaker === 'Sophia' || d.speaker === 'Mark'
                     ? 'bg-amber-950/20 border-amber-500/30 text-amber-100'
                     : d.speaker === 'Martha'
                     ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-100'
@@ -361,7 +367,11 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
               >
                 <div className="flex items-center justify-between text-[10px]">
                   <span className="font-bold flex items-center gap-1.5">
-                    <span>{d.avatar}</span>
+                    <img
+                      src={d.avatar}
+                      alt={d.speaker}
+                      className="w-5 h-5 rounded-full object-cover border border-slate-600"
+                    />
                     <span>{d.speaker}</span>
                     <span className="text-slate-400 font-normal">({d.role})</span>
                   </span>
@@ -963,7 +973,7 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                 <div className="p-3.5 rounded-xl bg-slate-800/40 border border-slate-700/60 flex items-center justify-between text-xs">
                   <div className="text-slate-300">
                     <span className="font-bold text-sky-300">Jane's Presenter Cue: </span>
-                    "When presenting to Mark and the CFO, tie operational hours directly to balance sheet capacity and payback velocity."
+                    "When presenting to Sophia and the CFO, tie operational hours directly to balance sheet capacity and payback velocity."
                   </div>
                   <button
                     onClick={handleAdvanceToDecision}
@@ -997,7 +1007,7 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                     The Board is waiting for evidence of business impact. What should Jane do?
                   </h2>
                   <p className="text-xs text-slate-300 mt-1">
-                    Mark Sterling (Head of HR) and the Executive Steering Committee are in the boardroom.
+                    Sophia Bennett (Head of HR) and the Executive Steering Committee are in the boardroom.
                     Your decision will determine the future of Project Amigo and funding for Phase 2.
                   </p>
                 </div>
@@ -1159,7 +1169,7 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                 {aiLoading && (
                   <div className="p-3 rounded-xl bg-slate-900/70 border border-emerald-500/30 flex items-center gap-2 text-xs text-slate-300">
                     <span className="w-3 h-3 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin" />
-                    <span>Grok AI Evaluator synthesizing Mark Sterling's executive review...</span>
+                    <span>Grok AI Evaluator synthesizing Sophia Bennett's executive review...</span>
                   </div>
                 )}
               </motion.div>

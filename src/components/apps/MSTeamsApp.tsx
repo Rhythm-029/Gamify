@@ -189,10 +189,10 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
   const contactsList: ChatContact[] = isCh9
     ? [
         {
-          id: 'mark',
-          name: 'Mark Sterling',
-          role: 'Head of HR · Executive Steering Committee Sponsor',
-          avatar: '/character/Marcus_reed/MarcusDP.png',
+          id: 'sophia',
+          name: 'Sophia Bennett',
+          role: 'Head of HR Operations · Executive Sponsor',
+          avatar: '/character/Sophia_bennett/SophiaDP.png',
           lastMessage: chapter9State?.completed
             ? 'The Executive Steering Committee unanimously approved the ROI model. Phase 2 budget is officially ratified!'
             : 'Jane, the Board convenes shortly. We need your ROI presentation to demonstrate that Project Amigo delivered measurable business value.',
@@ -202,7 +202,7 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
         },
         {
           id: 'martha',
-          name: 'Martha Vance',
+          name: 'Martha',
           role: 'Monitoring / Operations Telemetry',
           avatar: '/character/Emma_Carter/EmmaDP.png',
           lastMessage:
@@ -695,16 +695,16 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
                 </span>
               </div>
 
-              {/* Message 1: Mark Sterling Prompt */}
+              {/* Message 1: Sophia Bennett Prompt */}
               <div className="flex items-start space-x-3 max-w-2xl">
                 <img
-                  src="/character/Marcus_reed/MarcusDP.png"
-                  alt="Mark Sterling"
+                  src="/character/Sophia_bennett/SophiaDP.png"
+                  alt="Sophia Bennett"
                   className="w-8 h-8 rounded-full object-cover border border-amber-400/50 shrink-0 mt-1"
                 />
                 <div className="space-y-1">
                   <div className="flex items-center space-x-2">
-                    <span className="font-bold text-xs text-amber-300">Mark Sterling</span>
+                    <span className="font-bold text-xs text-amber-300">Sophia Bennett</span>
                     <span className="text-[10px] font-mono text-slate-400">Head of HR & Sponsor · 23:00</span>
                   </div>
                   <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#121c24] border border-amber-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
@@ -718,16 +718,16 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
                 </div>
               </div>
 
-              {/* Message 2: Martha Vance Telemetry Summary */}
+              {/* Message 2: Martha Telemetry Summary */}
               <div className="flex items-start space-x-3 max-w-2xl">
                 <img
                   src="/character/Emma_Carter/EmmaDP.png"
-                  alt="Martha Vance"
+                  alt="Martha"
                   className="w-8 h-8 rounded-full object-cover border border-emerald-400/50 shrink-0 mt-1"
                 />
                 <div className="space-y-1">
                   <div className="flex items-center space-x-2">
-                    <span className="font-bold text-xs text-emerald-300">Martha Vance</span>
+                    <span className="font-bold text-xs text-emerald-300">Martha</span>
                     <span className="text-[10px] font-mono text-slate-400">Ops Telemetry Specialist · 23:05</span>
                   </div>
                   <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#0a1820] border border-emerald-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
@@ -741,17 +741,17 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
                 </div>
               </div>
 
-              {/* Message 3: Mark Sterling After Outcome */}
+              {/* Message 3: Sophia Bennett After Outcome */}
               {chapter9State?.completed && (
                 <div className="flex items-start space-x-3 max-w-2xl">
                   <img
-                    src="/character/Marcus_reed/MarcusDP.png"
-                    alt="Mark Sterling"
+                    src="/character/Sophia_bennett/SophiaDP.png"
+                    alt="Sophia Bennett"
                     className="w-8 h-8 rounded-full object-cover border border-emerald-400/50 shrink-0 mt-1"
                   />
                   <div className="space-y-1">
                     <div className="flex items-center space-x-2">
-                      <span className="font-bold text-xs text-emerald-300">Mark Sterling</span>
+                      <span className="font-bold text-xs text-emerald-300">Sophia Bennett</span>
                       <span className="text-[10px] font-mono text-emerald-400 font-bold px-2 py-0.2 rounded bg-emerald-500/20">
                         {chapter9State?.decisionChosen === 'choice_b' ? 'Unanimous Approval' : 'Boardroom Review Held'}
                       </span>

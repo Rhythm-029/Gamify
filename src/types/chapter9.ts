@@ -83,7 +83,7 @@ export interface Chapter9Scorecard {
 
 export interface BoardroomDialogue {
   id: string;
-  speaker: 'Martha' | 'Jane' | 'Mark';
+  speaker: 'Martha' | 'Jane' | 'Sophia' | 'Mark';
   role: string;
   avatar: string;
   timestamp: string; // e.g. "23:12"
