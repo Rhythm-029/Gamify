@@ -95,6 +95,15 @@ export const DEV_CHAPTERS: DevChapterOption[] = [
     icon: '🛡️',
     color: '#059669',
   },
+  {
+    id: 9,
+    label: 'Chapter 09',
+    badge: 'ROI VALIDATION',
+    title: 'ROI Validation & Business Value',
+    subtitle: 'Executive Boardroom Presentation Suite · Financial & Operational Impact',
+    icon: '📈',
+    color: '#10b981',
+  },
 ];
 
 /** Resets target chapter state and initiates transition */

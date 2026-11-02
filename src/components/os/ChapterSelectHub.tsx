@@ -79,10 +79,10 @@ const CHAPTER_VISUALS: Record<number, { title: string; subtitle: string; descrip
     yOffset: 110,
   },
   9: {
-    title: 'Delivery Under Pressure',
-    subtitle: 'Act III · The Final Sprint',
-    description: 'Critical production bugs emerge 48 hours before enterprise rollout. Make consequential triage trade-offs under high stakes.',
-    thumb: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=300&auto=format&fit=crop&q=80',
+    title: 'ROI VALIDATION',
+    subtitle: 'Act III · Executive Leadership Phase',
+    description: 'A project is not truly successful until its business value can be measured and communicated. Martha presents 42% cycle reduction and 15,000 hours saved. Translate operational telemetry into monetary ROI and present to the Executive Steering Committee.',
+    thumb: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=300&auto=format&fit=crop&q=80',
     yOffset: 130,
   },
   10: {
@@ -238,7 +238,7 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
 
   /* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */
   const unlockedCount = TEMPORARY_CHAPTER_SKIP_ACTIVE
-    ? 5
+    ? 9
     : Object.values(chapterStatuses).filter(s => s === 'unlocked' || s === 'completed').length;
 
   return (

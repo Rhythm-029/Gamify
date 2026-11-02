@@ -200,8 +200,20 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
   const cera = useSyncExternalStore(subscribeCeraState, getCeraState);
   const [showCeraBottomNotif, setShowCeraBottomNotif] = useState(false);
 
-  const [activeAppId, setActiveAppId] = useState<string | null>(null);
-  const [openAppIds, setOpenAppIds] = useState<string[]>([]);
+  const [activeAppId, setActiveAppId] = useState<string | null>(() => {
+    if (activeChapter === 9) return 'executive_roi_boardroom';
+    if (activeChapter === 8) return 'chapter8_meeting';
+    if (activeChapter === 7) return 'chapter7_meeting';
+    if (activeChapter === 6) return 'chapter6_meeting';
+    return null;
+  });
+  const [openAppIds, setOpenAppIds] = useState<string[]>(() => {
+    if (activeChapter === 9) return ['executive_roi_boardroom'];
+    if (activeChapter === 8) return ['chapter8_meeting'];
+    if (activeChapter === 7) return ['chapter7_meeting'];
+    if (activeChapter === 6) return ['chapter6_meeting'];
+    return [];
+  });
   
   // Notification States
   const [bannerNotifications, setBannerNotifications] = useState<OSNotification[]>([]);
@@ -231,6 +243,13 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
       return () => clearTimeout(timer);
     }
   }, [bootStep]);
+
+  // Auto-open target simulation app if switching into chapter 9
+  useEffect(() => {
+    if (activeChapter === 9 && activeAppId !== 'executive_roi_boardroom') {
+      handleOpenApp('executive_roi_boardroom');
+    }
+  }, [activeChapter]);
 
   const [isChapter1CompletionOpen, setIsChapter1CompletionOpen] = useState(false);
   const [hasReadBrief, setHasReadBrief] = useState(false);

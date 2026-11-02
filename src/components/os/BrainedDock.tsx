@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { 
   Folder, Mail, MessageSquare, Calendar, FileText, 
-  Kanban, Globe, Terminal, Award, Trophy, Settings, Trash2, Video, Code2, Sparkles, FileCheck2, Activity, Wrench, ShieldCheck
+  Kanban, Globe, Terminal, Award, Trophy, Settings, Trash2, Video, Code2, Sparkles, FileCheck2, Activity, Wrench, ShieldCheck, TrendingUp
 } from 'lucide-react';
 
 interface BrainedDockProps {
@@ -19,6 +19,7 @@ export const BrainedDock: React.FC<BrainedDockProps> = ({
   badges,
 }) => {
   const dockApps = [
+    { id: 'executive_roi_boardroom', name: 'Executive Boardroom (ROI)', icon: TrendingUp, color: 'bg-gradient-to-tr from-emerald-600 via-teal-600 to-green-500' },
     { id: 'release_handover_desk', name: 'Security Response Console', icon: ShieldCheck, color: 'bg-gradient-to-tr from-emerald-600 via-teal-600 to-cyan-600' },
     { id: 'incident_studio', name: 'Incident Response & RCA Studio', icon: Wrench, color: 'bg-gradient-to-tr from-rose-600 via-orange-600 to-amber-600' },
     { id: 'performance_command_centre', name: 'Performance Command Centre', icon: Activity, color: 'bg-gradient-to-tr from-cyan-600 via-blue-600 to-indigo-600' },
