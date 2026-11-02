@@ -346,9 +346,9 @@ gameRouter.post('/chapter3/evaluate', asyncHandler(async (req, res) => {
     return;
   }
 
-  const { evaluateChapter3Submission } = await import('../scoring/chapter3.service');
-  const scorecard = await evaluateChapter3Submission(session_id, state, ch2_baseline);
-  res.json({ success: true, scorecard });
+  const { evaluateChapterWithAI } = await import('../scoring/chapterEvaluator.service');
+  const scorecard = await evaluateChapterWithAI(3, state, { sessionId: session_id });
+  res.json({ success: true, scorecard, aiEvaluated: scorecard.aiEvaluated });
 }));
 
 // ── Chapter 4: Change Request & Impact Analysis ─────────────────────────────
@@ -381,9 +381,9 @@ gameRouter.post('/chapter4/state', asyncHandler(async (req, res) => {
   res.json({ success: true, message: 'Chapter 4 state persisted' });
 }));
 
-/** POST /api/game/chapter4/evaluate — evaluate Chapter 4 submission deterministically on backend */
+/** POST /api/game/chapter4/evaluate — evaluate Chapter 4 submission via Grok AI */
 gameRouter.post('/chapter4/evaluate', asyncHandler(async (req, res) => {
-  const { session_id, state, ch3_baseline } = req.body as {
+  const { session_id, state } = req.body as {
     session_id: string;
     state: any;
     ch3_baseline?: any;
@@ -393,14 +393,14 @@ gameRouter.post('/chapter4/evaluate', asyncHandler(async (req, res) => {
     return;
   }
 
-  const { evaluateChapter4Submission } = await import('../scoring/chapter4.service');
-  const scorecard = await evaluateChapter4Submission(session_id, state, ch3_baseline);
-  res.json({ success: true, scorecard });
+  const { evaluateChapterWithAI } = await import('../scoring/chapterEvaluator.service');
+  const scorecard = await evaluateChapterWithAI(4, state, { sessionId: session_id });
+  res.json({ success: true, scorecard, aiEvaluated: scorecard.aiEvaluated });
 }));
 
-/** POST /api/game/chapter5/evaluate — evaluate Chapter 5 submission deterministically on backend */
+/** POST /api/game/chapter5/evaluate — evaluate Chapter 5 submission via Grok AI */
 gameRouter.post('/chapter5/evaluate', asyncHandler(async (req, res) => {
-  const { session_id, state, ch4_baseline } = req.body as {
+  const { session_id, state } = req.body as {
     session_id: string;
     state: any;
     ch4_baseline?: any;
@@ -410,10 +410,47 @@ gameRouter.post('/chapter5/evaluate', asyncHandler(async (req, res) => {
     return;
   }
 
-  const { evaluateChapter5Submission } = await import('../scoring/chapter5.service');
-  const scorecard = await evaluateChapter5Submission(session_id, state, ch4_baseline);
-  res.json({ success: true, scorecard });
+  const { evaluateChapterWithAI } = await import('../scoring/chapterEvaluator.service');
+  const scorecard = await evaluateChapterWithAI(5, state, { sessionId: session_id });
+  res.json({ success: true, scorecard, aiEvaluated: scorecard.aiEvaluated });
 }));
 
+// ── UNIFIED AI CHAPTER EVALUATION (Grok / Groq / OpenAI LLM) ───────────────
 
+/** POST /api/game/evaluate/chapter — unified AI evaluation for Chapters 1-8 */
+gameRouter.post('/evaluate/chapter', asyncHandler(async (req, res) => {
+  const { chapterId, state, playerContext, session_id } = req.body as {
+    chapterId: number;
+    state: any;
+    playerContext?: any;
+    session_id?: string;
+  };
 
+  const chId = Number(chapterId) || 1;
+  const { evaluateChapterWithAI } = await import('../scoring/chapterEvaluator.service');
+  const scorecard = await evaluateChapterWithAI(chId, state || {}, {
+    ...(playerContext || {}),
+    sessionId: session_id,
+  });
+
+  res.json({ success: true, scorecard, aiEvaluated: scorecard.aiEvaluated });
+}));
+
+/** POST /api/game/chapter/evaluate — alias for unified AI evaluation */
+gameRouter.post('/chapter/evaluate', asyncHandler(async (req, res) => {
+  const { chapterId, state, playerContext, session_id } = req.body as {
+    chapterId: number;
+    state: any;
+    playerContext?: any;
+    session_id?: string;
+  };
+
+  const chId = Number(chapterId) || 1;
+  const { evaluateChapterWithAI } = await import('../scoring/chapterEvaluator.service');
+  const scorecard = await evaluateChapterWithAI(chId, state || {}, {
+    ...(playerContext || {}),
+    sessionId: session_id,
+  });
+
+  res.json({ success: true, scorecard, aiEvaluated: scorecard.aiEvaluated });
+}));

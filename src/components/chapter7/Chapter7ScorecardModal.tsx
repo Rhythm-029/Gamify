@@ -72,18 +72,26 @@ export const Chapter7ScorecardModal: React.FC<Chapter7ScorecardModalProps> = ({
         {/* Header */}
         <div className="flex items-start justify-between pr-2">
           <div className="max-w-md">
-            <div className="text-[10px] font-mono tracking-[0.22em] text-rose-400 font-bold uppercase mb-1">
-              CHAPTER 7 COMPLETE · INCIDENT MANAGEMENT
+            <div className="flex items-center space-x-2 mb-1">
+              <span className="text-[10px] font-mono tracking-[0.22em] text-rose-400 font-bold uppercase">
+                CHAPTER 7 COMPLETE · INCIDENT MANAGEMENT
+              </span>
+              {scorecardData.aiEvaluated !== false && (
+                <span className="inline-flex items-center gap-1 text-[9px] font-mono font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30 px-2 py-0.5 rounded-full">
+                  <Sparkles className="w-2.5 h-2.5" />
+                  Grok AI Evaluated
+                </span>
+              )}
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-              ATTENDANCE SYNC PRODUCTION RECOVERY
+              {scorecardData.outcomeTitle || 'ATTENDANCE SYNC PRODUCTION RECOVERY'}
             </h2>
             <div className="text-xs font-semibold text-slate-300 mt-0.5">
               Production Issues & Root Cause Analysis (INC-0241)
             </div>
           </div>
 
-          <div className="text-right">
+          <div className="text-right shrink-0">
             <div className="text-[10px] font-mono text-slate-400 uppercase font-bold">Total Score</div>
             <div className="text-2xl sm:text-3xl font-black text-white font-mono">
               {scorecardData.totalScore}%

@@ -67,6 +67,8 @@ export interface Chapter5Scorecard {
     governance: string;
     efficiency: string;
   };
+  aiEvaluated?: boolean;
+  outcomeTitle?: string;
 }
 
 export interface Chapter5State {

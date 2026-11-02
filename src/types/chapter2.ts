@@ -58,6 +58,12 @@ export interface Chapter2State {
       governance: string;
       efficiency: string;
     };
+    aiEvaluated?: boolean;
+    outcomeTitle?: string;
+    executiveSummary?: string;
+    strengths?: string[];
+    improvements?: string[];
+    leadershipCoaching?: string;
   };
 
   completed: boolean;

@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   FileCheck2,
   RotateCcw,
+  Sparkles,
 } from 'lucide-react';
 import { updateChapterStatus } from '../../data/chaptersData';
 import type { Chapter5Scorecard } from '../../types/chapter5';
@@ -68,18 +69,26 @@ export const Chapter5ScorecardModal: React.FC<Chapter5ScorecardModalProps> = ({
         {/* Header */}
         <div className="flex items-start justify-between pr-2">
           <div className="max-w-md">
-            <div className="text-[10px] font-mono tracking-[0.22em] text-emerald-400 font-bold uppercase mb-1">
-              CHAPTER 5 COMPLETE
+            <div className="flex items-center space-x-2 mb-1">
+              <span className="text-[10px] font-mono tracking-[0.22em] text-emerald-400 font-bold uppercase">
+                CHAPTER 5 COMPLETE
+              </span>
+              {scorecardData.aiEvaluated !== false && (
+                <span className="inline-flex items-center gap-1 text-[9px] font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                  <Sparkles className="w-2.5 h-2.5" />
+                  Grok AI Evaluated
+                </span>
+              )}
             </div>
             <h2 className="text-xl sm:text-2xl font-serif font-black text-white tracking-tight">
-              THE CONTROLLED LAUNCH
+              {scorecardData.outcomeTitle || 'THE CONTROLLED LAUNCH'}
             </h2>
             <div className="text-xs font-semibold text-slate-300 mt-0.5">
               Project Amigo · Sprint 1 Release Decision & Pilot Governance
             </div>
           </div>
 
-          <div className="text-right">
+          <div className="text-right shrink-0">
             <div className="text-[10px] font-mono text-slate-400 uppercase font-bold">Total Score</div>
             <div className="text-2xl sm:text-3xl font-black text-white font-mono">
               {scorecardData.totalScore}%

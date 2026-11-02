@@ -78,8 +78,16 @@ export const Chapter3ScorecardModal: React.FC<Chapter3ScorecardModalProps> = ({
         {/* Header */}
         <div className="flex items-start justify-between pr-2 border-b border-white/10 pb-4">
           <div className="max-w-md">
-            <div className="text-[10px] font-mono tracking-[0.22em] text-sky-400 font-bold uppercase mb-1">
-              CHAPTER 3 COMPLETE · PERFORMANCE ASSESSMENT
+            <div className="flex items-center space-x-2 mb-1">
+              <span className="text-[10px] font-mono tracking-[0.22em] text-sky-400 font-bold uppercase">
+                CHAPTER 3 COMPLETE · PERFORMANCE ASSESSMENT
+              </span>
+              {scorecardData.aiEvaluated !== false && (
+                <span className="inline-flex items-center gap-1 text-[9px] font-mono font-bold bg-sky-500/15 text-sky-300 border border-sky-500/30 px-2 py-0.5 rounded-full">
+                  <Sparkles className="w-2.5 h-2.5" />
+                  Grok AI Evaluated
+                </span>
+              )}
             </div>
             <h2 className="text-xl sm:text-2xl font-serif font-black text-white tracking-tight">
               {scorecardData.outcomeTitle || 'UAT INFRASTRUCTURE COORDINATION'}

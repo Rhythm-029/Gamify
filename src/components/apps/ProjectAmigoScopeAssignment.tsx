@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useGame } from '../../context/GameContext';
 import { getSessionAssignmentResult, setSessionAssignmentResult } from '../../data/chaptersData';
+import { requestChapterAIEvaluation } from '../../services/aiEvaluationService';
 
 export interface ScopeAssignmentResult {
   priorities: string[];
@@ -20,6 +21,17 @@ export interface ScopeAssignmentResult {
     aaravResponse: string;
     isStrong: boolean;
     feedbackItems: string[];
+    aiEvaluated?: boolean;
+    outcomeTitle?: string;
+    strengths?: string[];
+    improvements?: string[];
+    leadershipCoaching?: string;
+    explanations?: {
+      schedule: string;
+      risk: string;
+      governance: string;
+      efficiency: string;
+    };
   };
 }
 
@@ -138,11 +150,11 @@ export const ProjectAmigoScopeAssignment: React.FC<ProjectAmigoScopeAssignmentPr
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!dependencyChoice) return;
     setIsSubmitting(true);
 
-    // ── Scoring Algorithm ──
+    // ── Scoring Baseline Algorithm ──
     const hasAppraisals = selectedPriorities.includes('Appraisals');
     const hasAttendance = selectedPriorities.includes('Attendance');
     const hasLeave = selectedPriorities.includes('Leave Management');
@@ -168,55 +180,86 @@ export const ProjectAmigoScopeAssignment: React.FC<ProjectAmigoScopeAssignmentPr
     if (hasAppraisals && (hasAttendance || hasLeave)) efficiencyScore = 25;
     else if (hasAttendance || hasLeave) efficiencyScore = 18;
 
-    const totalScore = scheduleScore + riskScore + governanceScore + efficiencyScore;
+    const baseTotal = scheduleScore + riskScore + governanceScore + efficiencyScore;
     const isStrong = dependencyChoice === 'B' && hasAppraisals && selectedValidations.length >= 2;
 
-    // Dynamic Aarav response based on actual choices
-    let aaravResponse = '';
-    const feedbackItems: string[] = [];
+    const fallbackScorecard = {
+      scheduleScore: Math.round(scheduleScore * 4),
+      riskScore: Math.round(riskScore * 4),
+      governanceScore: Math.round(governanceScore * 4),
+      efficiencyScore: Math.round(efficiencyScore * 4),
+      totalScore: baseTotal,
+      outcomeType: (isStrong ? 'strong' : baseTotal >= 70 ? 'mixed' : 'incomplete') as any,
+    };
 
-    if (isStrong) {
-      aaravResponse = `Good. We've got a starting point, and you've flagged the areas that still need confirmation.\n\nI'll take the proposed priorities to Sophia, while Daniel checks the technical dependencies. We'll need to validate feasibility before treating the 90-day timeline as a commitment.`;
-      feedbackItems.push('Prioritized critical-path business modules aligned with appraisal cycle');
-      feedbackItems.push('Handled LDAP dependency through explicit governance without stalling work');
-      feedbackItems.push('Identified vital technical capacity and timeline validation gates');
-    } else if (dependencyChoice === 'A') {
-      aaravResponse = `You've identified initial scope priorities, but deferring the LDAP access dependency poses a serious integration risk. Proceeding on unverified assumptions usually causes major rework down the line.\n\nWe need to treat LDAP as an explicit dependency while Daniel keeps unblocked tracks moving.`;
-      feedbackItems.push('Warning: Deferring technical dependencies creates high architectural rework risk');
-      if (hasAppraisals) feedbackItems.push('Good focus on the appraisal cycle deadline');
-    } else if (dependencyChoice === 'C') {
-      aaravResponse = `You've rightly spotted that LDAP is a blocker, but pausing all project tracks stops momentum on work that doesn't rely on authentication. We should keep core module planning moving while escalating the credential access.`;
-      feedbackItems.push('Warning: Halting entire project tracks causes unnecessary delivery delays');
-    } else {
-      aaravResponse = `You've laid out an initial direction, but we must make sure the team validates peak load capacity and feasibility before we commit to Sophia's 90-day target. Let's make sure our technical assumptions hold before building.`;
-      feedbackItems.push('Caution: Delivery feasibility requires explicit verification before client commitment');
+    let aiResult;
+    try {
+      aiResult = await requestChapterAIEvaluation(
+        1,
+        {
+          priorities: selectedPriorities,
+          dependencyChoice,
+          validations: selectedValidations,
+        },
+        fallbackScorecard
+      );
+    } catch {
+      aiResult = null;
     }
 
-    addSignal('Completed Project Amigo Scope Assignment', 'delivery', totalScore >= 80 ? 25 : 15);
+    const finalSchedule = aiResult ? aiResult.scheduleScore : Math.round(scheduleScore * 4);
+    const finalRisk = aiResult ? aiResult.riskScore : Math.round(riskScore * 4);
+    const finalGov = aiResult ? aiResult.governanceScore : Math.round(governanceScore * 4);
+    const finalEff = aiResult ? aiResult.efficiencyScore : Math.round(efficiencyScore * 4);
+    const finalTotal = aiResult ? aiResult.totalScore : baseTotal;
+
+    const aaravResponse =
+      aiResult?.executiveSummary ||
+      (isStrong
+        ? `Good. We've got a starting point, and you've flagged the areas that still need confirmation.\n\nI'll take the proposed priorities to Sophia, while Daniel checks the technical dependencies. We'll need to validate feasibility before treating the 90-day timeline as a commitment.`
+        : dependencyChoice === 'A'
+        ? `You've identified initial scope priorities, but deferring the LDAP access dependency poses a serious integration risk. Proceeding on unverified assumptions usually causes major rework down the line.`
+        : `You've laid out an initial direction, but we must make sure the team validates peak load capacity and feasibility before we commit to Sophia's 90-day target.`);
+
+    const feedbackItems =
+      aiResult && (aiResult.strengths?.length || aiResult.improvements?.length)
+        ? [...(aiResult.strengths || []), ...(aiResult.improvements || [])]
+        : isStrong
+        ? [
+            'Prioritized critical-path business modules aligned with appraisal cycle',
+            'Handled LDAP dependency through explicit governance without stalling work',
+            'Identified vital technical capacity and timeline validation gates',
+          ]
+        : ['Caution: Delivery feasibility requires explicit verification before client commitment'];
+
+    addSignal('Completed Project Amigo Scope Assignment', 'delivery', finalTotal >= 80 ? 25 : 15);
 
     const result: ScopeAssignmentResult = {
       priorities: selectedPriorities,
       dependencyChoice: dependencyChoice,
       validations: selectedValidations,
       evaluation: {
-        score: totalScore,
-        scheduleScore,
-        riskScore,
-        governanceScore,
-        efficiencyScore,
+        score: finalTotal,
+        scheduleScore: finalSchedule,
+        riskScore: finalRisk,
+        governanceScore: finalGov,
+        efficiencyScore: finalEff,
         aaravResponse,
-        isStrong,
+        isStrong: finalTotal >= 85,
         feedbackItems,
+        aiEvaluated: aiResult?.aiEvaluated ?? false,
+        outcomeTitle: aiResult?.outcomeTitle,
+        strengths: aiResult?.strengths,
+        improvements: aiResult?.improvements,
+        leadershipCoaching: aiResult?.leadershipCoaching,
+        explanations: aiResult?.explanations,
       },
     };
 
     setSessionAssignmentResult(result);
-
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmittedData(result);
-      if (onSubmitted) onSubmitted(result);
-    }, 1200);
+    setIsSubmitting(false);
+    setSubmittedData(result);
+    if (onSubmitted) onSubmitted(result);
   };
 
   // If already submitted, show clean executive review card
@@ -567,8 +610,11 @@ export const ProjectAmigoScopeAssignment: React.FC<ProjectAmigoScopeAssignmentPr
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Reviewing your planning decisions…</span>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-300" />
+                      <span className="flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+                        Evaluating with Grok AI…
+                      </span>
                     </>
                   ) : (
                     <>

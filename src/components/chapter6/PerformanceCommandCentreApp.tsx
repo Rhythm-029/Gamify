@@ -29,6 +29,7 @@ import {
   validateRecoverySequence,
   computeChapter6Score,
 } from '../../data/chapter6Data';
+import { requestChapterAIEvaluation } from '../../services/aiEvaluationService';
 import { sound } from '../onboarding/SoundEngine';
 
 interface PerformanceCommandCentreAppProps {
@@ -230,6 +231,42 @@ export const PerformanceCommandCentreApp: React.FC<PerformanceCommandCentreAppPr
       closingChatShown: true,
       scorecard: finalScore,
     });
+
+    // Trigger Grok AI Evaluation for Chapter 6
+    requestChapterAIEvaluation(6, {
+      diagnosedRootCause: chapter6State.selectedBottleneck,
+      remediationSequence: chapter6State.recoverySequence,
+      retestCompleted: chapter6State.retestCompleted,
+      retestLatencyMs: 180,
+      leadApprovalStatus: 'approved',
+      ctoApprovalStatus: 'approved',
+      dualApproved: true,
+    }, {
+      ...finalScore,
+      totalScore: finalScore.totalScore,
+      whatYouDidWell: [finalScore.whatYouDidWell],
+      whatToImprove: [finalScore.whatToImprove],
+    }).then((aiScorecard) => {
+      onUpdateState((prev) => ({
+        ...prev,
+        scorecard: {
+          ...prev.scorecard,
+          scheduleScore: aiScorecard.scheduleScore,
+          riskScore: aiScorecard.riskScore,
+          governanceScore: aiScorecard.governanceScore,
+          efficiencyScore: aiScorecard.efficiencyScore,
+          totalScore: aiScorecard.totalScore,
+          outcomeType: aiScorecard.outcomeType as any,
+          outcomeTitle: aiScorecard.outcomeTitle,
+          outcomeText: aiScorecard.outcomeText,
+          whatYouDidWell: aiScorecard.strengths?.[0] || prev.scorecard.whatYouDidWell,
+          whatToImprove: aiScorecard.improvements?.[0] || prev.scorecard.whatToImprove,
+          keyTakeaway: aiScorecard.leadershipCoaching || prev.scorecard.keyTakeaway,
+          explanations: aiScorecard.explanations,
+          aiEvaluated: aiScorecard.aiEvaluated,
+        },
+      }));
+    }).catch(console.warn);
 
     if (onNotifyDesktop) {
       onNotifyDesktop(

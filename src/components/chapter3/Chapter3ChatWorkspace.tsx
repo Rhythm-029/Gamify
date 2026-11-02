@@ -18,6 +18,7 @@ import {
   SOPHIA_FOLLOWUP_DRAFT,
   computeChapter3Score,
 } from '../../data/chapter3Data';
+import { requestChapterAIEvaluation } from '../../services/aiEvaluationService';
 import { UatDocumentViewer } from './UatDocumentViewer';
 import { sound } from '../onboarding/SoundEngine';
 
@@ -142,6 +143,41 @@ export const Chapter3ChatWorkspace: React.FC<Chapter3ChatWorkspaceProps> = ({
         step: 'assignment_completed',
       });
 
+      // Trigger Grok AI Evaluation
+      requestChapterAIEvaluation(3, {
+        pathTaken: path,
+        playerIdentifiedNetworkGap: updatedState.playerIdentifiedNetworkGap,
+        v2SentToDaniel: true,
+        firstForwardTarget: updatedState.firstForwardTarget,
+      }, {
+        ...scorecard,
+        totalScore: scorecard.totalScore,
+        outcomeType: (scorecard.outcomeType === 'partial' ? 'mixed' : scorecard.outcomeType === 'poor' ? 'incomplete' : 'strong'),
+        whatYouDidWell: [scorecard.outcomeText],
+        whatToImprove: [scorecard.personalizedTakeaway],
+      }).then((aiScorecard) => {
+        onUpdateState((prev) => ({
+          ...prev,
+          scorecard: {
+            ...prev.scorecard,
+            scheduleScore: aiScorecard.scheduleScore,
+            riskScore: aiScorecard.riskScore,
+            governanceScore: aiScorecard.governanceScore,
+            efficiencyScore: aiScorecard.efficiencyScore,
+            totalScore: aiScorecard.totalScore,
+            outcomeType: (aiScorecard.outcomeType === 'mixed' ? 'partial' : aiScorecard.outcomeType) as any,
+            outcomeTitle: aiScorecard.outcomeTitle,
+            outcomeText: aiScorecard.outcomeText,
+            executiveSummary: aiScorecard.executiveSummary,
+            strengths: aiScorecard.strengths,
+            improvements: aiScorecard.improvements,
+            leadershipCoaching: aiScorecard.leadershipCoaching,
+            aiEvaluated: aiScorecard.aiEvaluated,
+            explanations: aiScorecard.explanations,
+          },
+        }));
+      }).catch(console.warn);
+
       onSwitchContact('daniel');
     }, 700);
   };
@@ -161,6 +197,39 @@ export const Chapter3ChatWorkspace: React.FC<Chapter3ChatWorkspaceProps> = ({
       ...updatedState,
       scorecard,
     });
+
+    requestChapterAIEvaluation(3, {
+      pathTaken: 'incomplete',
+      playerIdentifiedNetworkGap: false,
+      v2SentToDaniel: false,
+    }, {
+      ...scorecard,
+      totalScore: scorecard.totalScore,
+      outcomeType: 'incomplete',
+      whatYouDidWell: [scorecard.outcomeText],
+      whatToImprove: [scorecard.personalizedTakeaway],
+    }).then((aiScorecard) => {
+      onUpdateState((prev) => ({
+        ...prev,
+        scorecard: {
+          ...prev.scorecard,
+          scheduleScore: aiScorecard.scheduleScore,
+          riskScore: aiScorecard.riskScore,
+          governanceScore: aiScorecard.governanceScore,
+          efficiencyScore: aiScorecard.efficiencyScore,
+          totalScore: aiScorecard.totalScore,
+          outcomeType: 'poor',
+          outcomeTitle: aiScorecard.outcomeTitle,
+          outcomeText: aiScorecard.outcomeText,
+          executiveSummary: aiScorecard.executiveSummary,
+          strengths: aiScorecard.strengths,
+          improvements: aiScorecard.improvements,
+          leadershipCoaching: aiScorecard.leadershipCoaching,
+          aiEvaluated: aiScorecard.aiEvaluated,
+          explanations: aiScorecard.explanations,
+        },
+      }));
+    }).catch(console.warn);
   };
 
   return (

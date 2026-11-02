@@ -2,7 +2,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import {
   Trophy, ShieldCheck, ArrowRight, Lightbulb, MessageSquare,
-  Clock, Shield, BarChart3, Zap, CheckCircle2, RotateCcw
+  Clock, Shield, BarChart3, Zap, CheckCircle2, RotateCcw,
+  Sparkles, AlertCircle
 } from 'lucide-react';
 import { updateChapterStatus } from '../../data/chaptersData';
 import type { Chapter2State } from '../../types/chapter2';
@@ -35,6 +36,9 @@ export const Chapter2ScorecardModal: React.FC<Chapter2ScorecardModalProps> = ({
     else onContinueToChapter3();
   };
 
+  const isAIEvaluated = scorecardData.aiEvaluated ?? true;
+  const outcomeTitle = scorecardData.outcomeTitle || (scorecardData.totalScore >= 85 ? 'EXEMPLARY GOVERNANCE & GATING' : 'SPRINT READINESS WITH OPERATIONAL DEBT');
+
   return (
     <div className="fixed inset-0 z-[600] bg-slate-950/95 backdrop-blur-2xl flex items-center justify-center p-4 sm:p-6 overflow-y-auto font-sans select-none">
       <motion.div
@@ -49,23 +53,33 @@ export const Chapter2ScorecardModal: React.FC<Chapter2ScorecardModalProps> = ({
         {/* Header */}
         <div className="flex items-start justify-between pr-2">
           <div className="max-w-md">
-            <div className="text-[10px] font-mono tracking-[0.22em] text-blue-400 font-bold uppercase mb-1">
-              CHAPTER 2 COMPLETE
+            <div className="flex items-center space-x-2 mb-1">
+              <span className="text-[10px] font-mono tracking-[0.22em] text-blue-400 font-bold uppercase">
+                CHAPTER 2 COMPLETE
+              </span>
+              {isAIEvaluated && (
+                <span className="inline-flex items-center gap-1 text-[9px] font-mono font-bold bg-blue-500/15 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded-full">
+                  <Sparkles className="w-2.5 h-2.5" />
+                  Grok AI Evaluated
+                </span>
+              )}
             </div>
             <h2 className="text-xl sm:text-2xl font-serif font-black text-white tracking-tight">
-              Environment Prerequisites, Network Gates & UI/UX Signoff
+              {outcomeTitle}
             </h2>
             <div className="text-xs font-semibold text-slate-300 mt-0.5">
               Project Amigo · Sprint 1 Governance & Development Greenlight
             </div>
           </div>
 
-          <div className="text-right">
+          <div className="text-right shrink-0">
             <div className="text-[10px] font-mono text-slate-400 uppercase font-bold">Total Score</div>
             <div className="text-2xl sm:text-3xl font-black text-white font-mono">
               {scorecardData.totalScore}%
             </div>
-            <div className="text-[9px] font-mono text-emerald-400 font-bold">SPRINT GREENLIT</div>
+            <div className="text-[9px] font-mono text-emerald-400 font-bold">
+              {scorecardData.totalScore >= 85 ? 'SPRINT 1 GREENLIT' : 'CONDITIONAL CLEARANCE'}
+            </div>
           </div>
         </div>
 
@@ -128,6 +142,39 @@ export const Chapter2ScorecardModal: React.FC<Chapter2ScorecardModalProps> = ({
           </div>
         </div>
 
+        {/* Strengths & Improvements if available */}
+        {(scorecardData.strengths?.length || scorecardData.improvements?.length) && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {scorecardData.strengths && scorecardData.strengths.length > 0 && (
+              <div className="p-3 rounded-xl bg-emerald-950/20 border border-emerald-500/30 space-y-1">
+                <div className="text-[10px] font-mono text-emerald-400 font-bold uppercase flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                  What You Did Well
+                </div>
+                <ul className="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
+                  {scorecardData.strengths.slice(0, 2).map((s, idx) => (
+                    <li key={idx} className="leading-snug">{s}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {scorecardData.improvements && scorecardData.improvements.length > 0 && (
+              <div className="p-3 rounded-xl bg-amber-950/20 border border-amber-500/30 space-y-1">
+                <div className="text-[10px] font-mono text-amber-400 font-bold uppercase flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3 text-amber-400" />
+                  Focus Areas
+                </div>
+                <ul className="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
+                  {scorecardData.improvements.slice(0, 2).map((imp, idx) => (
+                    <li key={idx} className="leading-snug">{imp}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Aarav's Closing Teams Message */}
         <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-start space-x-3.5 shadow-sm">
           <div className="w-9 h-9 rounded-full overflow-hidden border border-slate-700 shrink-0">
@@ -136,10 +183,11 @@ export const Chapter2ScorecardModal: React.FC<Chapter2ScorecardModalProps> = ({
           <div className="flex-1">
             <div className="flex items-center space-x-2">
               <span className="font-bold text-white text-xs">Aarav Kapoor</span>
-              <span className="text-[10px] text-slate-400 font-mono">Project Manager · Teams</span>
+              <span className="text-[10px] text-slate-400 font-mono">Lead Engagement Partner · Teams</span>
             </div>
-            <p className="text-xs text-slate-200 mt-1 leading-relaxed">
-              “Good work. We've established a secure development path, organized communication, and recorded the approved designs. The team can now begin the work covered by the greenlight. We still need to validate the full scope and delivery timeline before treating the 90-day target as a firm commitment.”
+            <p className="text-xs text-slate-200 mt-1 leading-relaxed italic">
+              "{scorecardData.executiveSummary ||
+                "Good work. We've established a secure development path, organized communication, and recorded the approved designs. The team can now begin the work covered by the greenlight. We still need to validate the full scope and delivery timeline before treating the 90-day target as a firm commitment."}"
             </p>
           </div>
         </div>
@@ -151,10 +199,11 @@ export const Chapter2ScorecardModal: React.FC<Chapter2ScorecardModalProps> = ({
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-[9px] font-mono tracking-[0.2em] text-blue-400 font-bold uppercase">
-              YOUR TAKEAWAY
+              LEADERSHIP TAKEAWAY
             </div>
             <p className="text-xs sm:text-sm font-bold text-white mt-0.5 leading-snug">
-              A team can be ready to code before it is ready to access staging. Secure access, clear communication, and documented design approval create the conditions for controlled delivery.
+              {scorecardData.leadershipCoaching ||
+                'A team can be ready to code before it is ready to access staging. Secure access, clear communication, and documented design approval create the conditions for controlled delivery.'}
             </p>
           </div>
         </div>
@@ -188,7 +237,7 @@ export const Chapter2ScorecardModal: React.FC<Chapter2ScorecardModalProps> = ({
             onClick={handleProceed}
             className="ml-auto px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider flex items-center space-x-2 shadow-[0_0_20px_rgba(59,130,246,0.45)] cursor-pointer transition-all"
           >
-            <span>Proceed to Chapter Select</span>
+            <span>Proceed to Chapter 3</span>
             <ArrowRight className="w-4 h-4" />
           </motion.button>
         </div>

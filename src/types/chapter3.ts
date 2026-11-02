@@ -66,6 +66,11 @@ export interface Chapter3Scorecard {
     governance: string;
     efficiency: string;
   };
+  aiEvaluated?: boolean;
+  strengths?: string[];
+  improvements?: string[];
+  leadershipCoaching?: string;
+  executiveSummary?: string;
 }
 
 export interface Chapter3State {

@@ -44,6 +44,7 @@ import {
   APPROPRIATE_PREVENTION_IDS,
   computeChapter7Score,
 } from '../../data/chapter7Data';
+import { requestChapterAIEvaluation } from '../../services/aiEvaluationService';
 import { sound } from '../onboarding/SoundEngine';
 
 interface IncidentResponseStudioAppProps {
@@ -502,6 +503,44 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
             incidentStatus: 'resolved',
             completed: true,
           });
+
+          // Trigger Grok AI evaluation for Chapter 7
+          requestChapterAIEvaluation(7, {
+            decisionChoice: prev.decisionChoice,
+            restorationSequence: prev.activity1Order,
+            restorationCompleted: prev.activity1Completed,
+            verifiedBranchOfficers: prev.activity1Completed,
+            rcaCompleted: prev.activity2Completed,
+            rcaPartsCompleted: Object.keys(prev.activity2Answers || {}).length,
+            preventionPlanned: prev.activity3Completed,
+            preventionOrder: prev.activity3PriorityOrder,
+          }, {
+            ...finalScorecard,
+            totalScore: finalScorecard.totalScore,
+            whatYouDidWell: [finalScorecard.whatYouDidWell],
+            whatToImprove: [finalScorecard.whatToImprove],
+          }).then((aiScorecard) => {
+            onUpdateState((current) => ({
+              ...current,
+              scorecard: {
+                ...current.scorecard,
+                scheduleScore: aiScorecard.scheduleScore,
+                riskScore: aiScorecard.riskScore,
+                governanceScore: aiScorecard.governanceScore,
+                efficiencyScore: aiScorecard.efficiencyScore,
+                totalScore: aiScorecard.totalScore,
+                outcomeType: aiScorecard.outcomeType as any,
+                outcomeTitle: aiScorecard.outcomeTitle,
+                outcomeText: aiScorecard.outcomeText,
+                whatYouDidWell: aiScorecard.strengths?.[0] || current.scorecard.whatYouDidWell,
+                whatToImprove: aiScorecard.improvements?.[0] || current.scorecard.whatToImprove,
+                keyTakeaway: aiScorecard.leadershipCoaching || current.scorecard.keyTakeaway,
+                explanations: aiScorecard.explanations,
+                aiEvaluated: aiScorecard.aiEvaluated,
+              },
+            }));
+          }).catch(console.warn);
+
           return {
             ...prev,
             incidentStatus: 'resolved',
