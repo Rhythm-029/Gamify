@@ -10,12 +10,14 @@ import {
 
 interface Chapter9BannerProps {
   chapter9State?: Chapter9State;
+  onOpenMeeting?: () => void;
   onOpenBoardroom?: () => void;
   onOpenScorecard?: () => void;
 }
 
 export const Chapter9Banner: React.FC<Chapter9BannerProps> = ({
   chapter9State,
+  onOpenMeeting,
   onOpenBoardroom,
   onOpenScorecard,
 }) => {
@@ -51,13 +53,23 @@ export const Chapter9Banner: React.FC<Chapter9BannerProps> = ({
         </div>
 
         <div className="flex items-center space-x-2">
+          {onOpenMeeting && (
+            <button
+              onClick={onOpenMeeting}
+              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 hover:text-white font-bold text-[11px] transition-all flex items-center space-x-1.5 cursor-pointer shadow-sm"
+            >
+              <span>📹</span>
+              <span>{chapter9State?.meetingCompleted ? 'Review Call' : 'Join Teams Sync'}</span>
+            </button>
+          )}
+
           {onOpenBoardroom && (
             <button
               onClick={onOpenBoardroom}
               className="px-3 py-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/50 text-emerald-200 hover:text-white font-bold text-[11px] transition-all flex items-center space-x-1.5 cursor-pointer shadow-sm"
             >
               <Presentation className="w-3.5 h-3.5 text-emerald-300" />
-              <span>{isCompleted ? 'Review Boardroom Presentation' : 'Open Executive Boardroom'}</span>
+              <span>{isCompleted ? 'Review Presentation' : 'Open ROI Dashboard'}</span>
             </button>
           )}
 

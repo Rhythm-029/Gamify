@@ -436,6 +436,9 @@ export const INITIAL_CHAPTER9_STATE: Chapter9State = {
   hourlyCostRateINR: 650,
   decisionChosen: null,
   boardroomRoomOpened: false,
+  callInitiated: false,
+  meetingCompleted: false,
+  callCompleted: false,
   completed: false,
   scorecard: {
     shown: false,

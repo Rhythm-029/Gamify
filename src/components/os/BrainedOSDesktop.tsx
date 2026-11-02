@@ -145,6 +145,7 @@ import {
   setChapter9SessionState,
 } from '../../data/chapter9Data';
 import { Chapter9Banner } from '../chapter9/Chapter9Banner';
+import { Chapter9MeetingApp } from '../chapter9/Chapter9MeetingApp';
 import { ExecutiveRoiBoardroomApp } from '../chapter9/ExecutiveRoiBoardroomApp';
 import { Chapter9ScorecardModal } from '../chapter9/Chapter9ScorecardModal';
 
@@ -200,20 +201,8 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
   const cera = useSyncExternalStore(subscribeCeraState, getCeraState);
   const [showCeraBottomNotif, setShowCeraBottomNotif] = useState(false);
 
-  const [activeAppId, setActiveAppId] = useState<string | null>(() => {
-    if (activeChapter === 9) return 'executive_roi_boardroom';
-    if (activeChapter === 8) return 'chapter8_meeting';
-    if (activeChapter === 7) return 'chapter7_meeting';
-    if (activeChapter === 6) return 'chapter6_meeting';
-    return null;
-  });
-  const [openAppIds, setOpenAppIds] = useState<string[]>(() => {
-    if (activeChapter === 9) return ['executive_roi_boardroom'];
-    if (activeChapter === 8) return ['chapter8_meeting'];
-    if (activeChapter === 7) return ['chapter7_meeting'];
-    if (activeChapter === 6) return ['chapter6_meeting'];
-    return [];
-  });
+  const [activeAppId, setActiveAppId] = useState<string | null>(null);
+  const [openAppIds, setOpenAppIds] = useState<string[]>([]);
   
   // Notification States
   const [bannerNotifications, setBannerNotifications] = useState<OSNotification[]>([]);
@@ -243,13 +232,6 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
       return () => clearTimeout(timer);
     }
   }, [bootStep]);
-
-  // Auto-open target simulation app if switching into chapter 9
-  useEffect(() => {
-    if (activeChapter === 9 && activeAppId !== 'executive_roi_boardroom') {
-      handleOpenApp('executive_roi_boardroom');
-    }
-  }, [activeChapter]);
 
   const [isChapter1CompletionOpen, setIsChapter1CompletionOpen] = useState(false);
   const [hasReadBrief, setHasReadBrief] = useState(false);
@@ -1013,18 +995,40 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
       pushNotification({
         id: 'ch9_boardroom_invitation',
         app: 'Teams',
-        title: 'Mark Sterling · Head of HR',
-        subtitle: 'Executive Boardroom Presentation Suite (23:00)',
-        body: 'Jane, the Executive Steering Committee convenes in 15 minutes. Martha verified telemetry showing a 42% appraisal cycle drop and 15,000 man-hours saved. Prepare your ROI model to secure Phase 2 budget!',
+        title: 'Incoming Call · Mark Sterling',
+        subtitle: 'Head of HR · Executive Steering Committee Sponsor',
+        body: 'Jane, join the Executive Briefing call. Martha has the verified post-rollout telemetry from Mumbai & Pune ready for your ROI presentation.',
         timestamp: 'Now',
-        actionText: 'Enter Boardroom',
-        onActionAppId: 'executive_roi_boardroom',
+        actionText: 'Join Call',
+        onActionAppId: 'chapter9_meeting',
         isCall: true,
       });
-      handleUpdateChapter9State({ boardroomRoomOpened: true });
+      handleUpdateChapter9State({ callInitiated: true });
     }, 1000);
     return () => clearTimeout(timer);
   }, [bootStep, activeChapter]);
+
+  // ── Chapter 9 Step 2: Executive Boardroom ROI Dashboard Unlock Notification ──
+  useEffect(() => {
+    if (activeChapter !== 9 || (!chapter9State.meetingCompleted && !chapter9State.callCompleted)) return;
+    if (seenNotifIds.current.has('ch9_boardroom_unlocked')) return;
+
+    const timer = setTimeout(() => {
+      sound.playSystemClearance();
+      pushNotification({
+        id: 'ch9_boardroom_unlocked',
+        app: 'Teams',
+        title: 'Mark Sterling · Head of HR',
+        subtitle: 'Executive Boardroom Suite Ready',
+        body: 'Executive briefing concluded. Complete and review your full Phase 2 ROI validation dashboard and scorecard.',
+        timestamp: 'Now',
+        actionText: 'Open ROI Suite',
+        onActionAppId: 'executive_roi_boardroom',
+      });
+      handleUpdateChapter9State({ boardroomRoomOpened: true });
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [chapter9State.meetingCompleted, chapter9State.callCompleted, activeChapter]);
 
 
 
@@ -1203,6 +1207,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
     incident_studio: { title: 'Incident Response & RCA Studio — Attendance Sync', icon: <Wrench className="w-4 h-4 text-rose-400" /> },
     chapter8_meeting: { title: 'Bank SOC Liaison Channel — Defending Against Credential Stuffing', icon: <span>🛡️</span> },
     release_handover_desk: { title: 'Security Response Console — Project Amigo', icon: <FileCheck2 className="w-4 h-4 text-emerald-400" /> },
+    chapter9_meeting: { title: 'Microsoft Teams — Executive Boardroom Presentation Suite', icon: <span>📹</span> },
     executive_roi_boardroom: { title: 'Executive Boardroom — ROI Validation & Impact Suite', icon: <span>📈</span> },
     brief: { title: 'Preview — Project_Amigo_Internal_Brief.pdf', icon: <span>📄</span> },
     assignment: { title: 'Project Amigo — Initial Planning · Assignment 01', icon: <span>📋</span> },
@@ -1377,6 +1382,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
       {activeChapter === 9 && (
         <Chapter9Banner
           chapter9State={chapter9State}
+          onOpenMeeting={() => handleOpenApp('chapter9_meeting')}
           onOpenBoardroom={() => handleOpenApp('executive_roi_boardroom')}
           onOpenScorecard={() => setIsChapter9ScorecardOpen(true)}
         />
@@ -1531,6 +1537,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
                   chapter9State={chapter9State}
                   onUpdateChapter9State={handleUpdateChapter9State}
                   onOpenExecutiveBoardroom={() => handleOpenApp('executive_roi_boardroom')}
+                  onOpenChapter9Meeting={() => handleOpenApp('chapter9_meeting')}
                   onOpenMailComposer={(to, email, subject, body) => {
                     setEmailComposer({
                       isOpen: true,
@@ -1734,6 +1741,15 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
                 />
               )}
               {/* CHAPTER 9 SIMULATION APPS (ROI VALIDATION) */}
+              {activeAppId === 'chapter9_meeting' && (
+                <Chapter9MeetingApp
+                  chapter9State={chapter9State}
+                  onUpdateState={handleUpdateChapter9State}
+                  onCompleteMeeting={() => handleOpenApp('executive_roi_boardroom')}
+                  onOpenBoardroom={() => handleOpenApp('executive_roi_boardroom')}
+                  onOpenScorecard={() => setIsChapter9ScorecardOpen(true)}
+                />
+              )}
               {activeAppId === 'executive_roi_boardroom' && (
                 <ExecutiveRoiBoardroomApp
                   chapter9State={chapter9State}

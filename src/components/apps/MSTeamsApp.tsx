@@ -49,6 +49,7 @@ interface MSTeamsAppProps {
   chapter9State?: Chapter9State;
   onUpdateChapter9State?: (updater: Partial<Chapter9State> | ((prev: Chapter9State) => Chapter9State)) => void;
   onOpenExecutiveBoardroom?: () => void;
+  onOpenChapter9Meeting?: () => void;
 }
 
 interface ChatContact {
@@ -123,6 +124,7 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
   chapter9State,
   onUpdateChapter9State,
   onOpenExecutiveBoardroom,
+  onOpenChapter9Meeting,
 }) => {
   const isCh9 = activeChapter === 9;
   const isCh8 = activeChapter === 8;
@@ -765,7 +767,15 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
                 </div>
               )}
 
-              <div className="pt-2 flex items-center gap-3">
+              <div className="pt-2 flex flex-wrap items-center gap-3">
+                {onOpenChapter9Meeting && (
+                  <button
+                    onClick={onOpenChapter9Meeting}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-900/40 flex items-center gap-2 cursor-pointer transition-all border border-blue-400/40"
+                  >
+                    <span>📹 Join Executive Briefing Call (23:00)</span>
+                  </button>
+                )}
                 {onOpenExecutiveBoardroom && (
                   <button
                     onClick={onOpenExecutiveBoardroom}

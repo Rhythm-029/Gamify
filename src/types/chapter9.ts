@@ -103,6 +103,9 @@ export interface Chapter9State {
   decisionChosen: Chapter9DecisionChoice | null;
   decisionTimestamp?: string;
   boardroomRoomOpened: boolean;
+  callInitiated?: boolean;
+  meetingCompleted?: boolean;
+  callCompleted?: boolean;
   completed: boolean;
   scorecard: Chapter9Scorecard;
 }
