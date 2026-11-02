@@ -506,16 +506,15 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-                  {/* OPTION 1: SENIOR PM (MONETIZE HOURS) */}
+                  {/* OPTION 1: STRATEGIC FINANCIAL TRANSLATION */}
                   <div
                     onClick={() => handleSelectPlayerDialogue('monetize_hours')}
-                    className="group cursor-pointer rounded-2xl p-5 border border-emerald-500/50 bg-[#0d1829] hover:bg-emerald-950/30 hover:border-emerald-400 transition-all flex flex-col justify-between space-y-4 shadow-[0_0_20px_rgba(16,185,129,0.15)] ring-1 ring-emerald-500/40"
+                    className="group cursor-pointer rounded-2xl p-5 border border-slate-700 bg-[#0d1322] hover:bg-slate-800/60 hover:border-cyan-500/50 transition-all flex flex-col justify-between space-y-4"
                   >
                     <div className="space-y-2.5">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                          Strategic Business Leader (Recommended)
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider text-slate-300 bg-slate-800 border border-slate-700">
+                          Option A
                         </span>
                       </div>
                       <p className="text-white font-semibold text-xs sm:text-sm leading-relaxed">
@@ -527,15 +526,15 @@ export const Chapter9MeetingApp: React.FC<Chapter9MeetingAppProps> = ({
                     </div>
                   </div>
 
-                  {/* OPTION 2: JUNIOR PM (BASIC GRAPHS) */}
+                  {/* OPTION 2: OPERATIONAL METRICS ONLY */}
                   <div
                     onClick={() => handleSelectPlayerDialogue('basic_graphs')}
-                    className="group cursor-pointer rounded-2xl p-5 border border-slate-700 bg-[#0d1322] hover:bg-rose-950/20 hover:border-rose-500/60 transition-all flex flex-col justify-between space-y-4"
+                    className="group cursor-pointer rounded-2xl p-5 border border-slate-700 bg-[#0d1322] hover:bg-slate-800/60 hover:border-cyan-500/50 transition-all flex flex-col justify-between space-y-4"
                   >
                     <div className="space-y-2.5">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-400">
-                          Operational View Only
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider text-slate-300 bg-slate-800 border border-slate-700">
+                          Option B
                         </span>
                       </div>
                       <p className="text-white font-semibold text-xs sm:text-sm leading-relaxed">

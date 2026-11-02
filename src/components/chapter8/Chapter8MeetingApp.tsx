@@ -517,51 +517,34 @@ export const Chapter8MeetingApp: React.FC<Chapter8MeetingAppProps> = ({
                   {/* CHOICE A */}
                   <div
                     onClick={() => handleSelectDecision('choice_a')}
-                    className="group cursor-pointer rounded-2xl p-5 border border-slate-700 bg-[#0d1322] hover:bg-rose-950/20 hover:border-rose-500/60 transition-all flex flex-col justify-between space-y-4"
+                    className="group cursor-pointer rounded-2xl p-5 border border-slate-700 bg-[#0d1322] hover:bg-slate-800/60 hover:border-cyan-500/50 transition-all flex flex-col justify-between space-y-4"
                   >
                     <div className="space-y-2.5">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-rose-400">
-                          {CHAPTER8_DECISIONS.choice_a.label}
-                        </span>
-                        <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-rose-500/10 text-rose-300 border border-rose-500/20">
-                          High Risk
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider text-slate-300 bg-slate-800 border border-slate-700">
+                          Option A
                         </span>
                       </div>
                       <p className="text-white font-semibold text-xs sm:text-sm leading-relaxed">
                         "{CHAPTER8_DECISIONS.choice_a.text}"
                       </p>
                     </div>
-
-                    <div className="pt-3 border-t border-slate-800 text-[11px] font-mono flex items-center justify-between text-rose-400">
-                      <span>Trust & Risk: -50 pts</span>
-                      <span>Governance: -40 pts</span>
-                    </div>
                   </div>
 
                   {/* CHOICE B */}
                   <div
                     onClick={() => handleSelectDecision('choice_b')}
-                    className="group cursor-pointer rounded-2xl p-5 border border-emerald-500/50 bg-[#0d1829] hover:bg-emerald-950/30 hover:border-emerald-400 transition-all flex flex-col justify-between space-y-4 shadow-[0_0_20px_rgba(16,185,129,0.15)] ring-1 ring-emerald-500/40"
+                    className="group cursor-pointer rounded-2xl p-5 border border-slate-700 bg-[#0d1322] hover:bg-slate-800/60 hover:border-cyan-500/50 transition-all flex flex-col justify-between space-y-4"
                   >
                     <div className="space-y-2.5">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                          {CHAPTER8_DECISIONS.choice_b.label}
-                        </span>
-                        <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                          Recommended
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider text-slate-300 bg-slate-800 border border-slate-700">
+                          Option B
                         </span>
                       </div>
                       <p className="text-white font-semibold text-xs sm:text-sm leading-relaxed">
                         "{CHAPTER8_DECISIONS.choice_b.text}"
                       </p>
-                    </div>
-
-                    <div className="pt-3 border-t border-slate-800 text-[11px] font-mono flex items-center justify-between text-emerald-400 font-bold">
-                      <span>Trust & Risk: +30 pts</span>
-                      <span>Governance: +30 pts</span>
                     </div>
                   </div>
                 </div>
@@ -575,25 +558,12 @@ export const Chapter8MeetingApp: React.FC<Chapter8MeetingAppProps> = ({
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -15 }}
-                className={`border rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl relative overflow-hidden ${
-                  selectedDecisionData.id === 'choice_b'
-                    ? 'bg-[#0f1d2a] border-emerald-500/50'
-                    : 'bg-[#1e131d] border-rose-500/60'
-                }`}
+                className="border border-slate-800 rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl relative overflow-hidden bg-[#0e1424]"
               >
                 <div className="flex items-center justify-between border-b pb-3 border-slate-800">
-                  <div className="flex items-center space-x-2 font-mono text-xs font-bold tracking-wider uppercase">
-                    {selectedDecisionData.id === 'choice_b' ? (
-                      <>
-                        <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                        <span className="text-emerald-400">Decision Confirmed · Compliant Defense</span>
-                      </>
-                    ) : (
-                      <>
-                        <AlertTriangle className="w-4 h-4 text-rose-400" />
-                        <span className="text-rose-400">Decision Recorded · Severe Policy Breach</span>
-                      </>
-                    )}
+                  <div className="flex items-center space-x-2 font-mono text-xs font-bold tracking-wider uppercase text-cyan-400">
+                    <ShieldCheck className="w-4 h-4 text-cyan-400" />
+                    <span>Decision Confirmed · Engineering Strategy Recorded</span>
                   </div>
                   <span className="text-[10px] font-mono text-slate-400">
                     {selectedDecisionData.label}
@@ -609,50 +579,12 @@ export const Chapter8MeetingApp: React.FC<Chapter8MeetingAppProps> = ({
                   </p>
                 </div>
 
-                {/* Score Impact Display */}
-                <div className="grid grid-cols-2 gap-3 p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs font-mono">
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Trust & Risk Management:</span>
-                    <span className={`font-bold ${
-                      selectedDecisionData.scoreImpact.riskScore >= 0
-                        ? 'text-emerald-400'
-                        : 'text-rose-400'
-                    }`}>
-                      {selectedDecisionData.scoreImpact.riskScore >= 0 ? '+' : ''}
-                      {selectedDecisionData.scoreImpact.riskScore} pts
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Delivery Governance:</span>
-                    <span className={`font-bold ${
-                      selectedDecisionData.scoreImpact.governanceScore >= 0
-                        ? 'text-emerald-400'
-                        : 'text-rose-400'
-                    }`}>
-                      {selectedDecisionData.scoreImpact.governanceScore >= 0 ? '+' : ''}
-                      {selectedDecisionData.scoreImpact.governanceScore} pts
-                    </span>
-                  </div>
-                </div>
-
                 {/* Action Row */}
                 <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
-                  {selectedDecisionData.id === 'choice_a' ? (
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleSelectDecision('choice_b')}
-                        className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all flex items-center space-x-1.5 cursor-pointer shadow-md"
-                      >
-                        <ShieldCheck className="w-4 h-4" />
-                        <span>Revise to Recommended Approach (Choice B)</span>
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="text-xs text-emerald-300 font-medium flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                      <span>Security Response Console is ready for deployment.</span>
-                    </div>
-                  )}
+                  <div className="text-xs text-slate-400 font-medium flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400" />
+                    <span>Strategy locked. Security Response Console is ready for deployment.</span>
+                  </div>
 
                   <button
                     onClick={handleOpenConsole}

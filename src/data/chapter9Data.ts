@@ -280,11 +280,11 @@ export const BOARDROOM_DIALOGUES: Record<string, BoardroomDialogue[]> = {
 export const CHAPTER9_DECISION_OPTIONS = {
   choice_a: {
     id: 'choice_a' as Chapter9DecisionChoice,
-    title: 'Choice A — Skip Formal ROI Tracking',
-    subtitle: 'Assume leadership already knows the project was successful',
-    riskLabel: 'Poor Decision (Governance & Risk Penalties)',
+    title: 'Option A — Standard Delivery Overview',
+    subtitle: 'Focus on project deployment completion without monetary modeling',
+    riskLabel: 'Strategic Option A',
     description:
-      'Rely on informal word-of-mouth. Present only high-level slides that the system is live in production without showing telemetry, hourly cost conversions, or payback models.',
+      'Present high-level slides indicating the system is live in production without showing hourly cost conversions or payback models.',
     scores: {
       schedule: 0,
       deliveryGovernance: -20,
@@ -296,9 +296,9 @@ export const CHAPTER9_DECISION_OPTIONS = {
   },
   choice_b: {
     id: 'choice_b' as Chapter9DecisionChoice,
-    title: 'Choice B — Deliver Detailed ROI & Business Value Presentation',
-    subtitle: 'Recommended — Present rigorous operational and monetary ROI model',
-    riskLabel: 'Recommended Executive Leadership',
+    title: 'Option B — Detailed Business Value Presentation',
+    subtitle: 'Present operational telemetry translated into monetary ROI and payback models',
+    riskLabel: 'Strategic Option B',
     description:
       'Present the complete executive ROI deck: 42% appraisal cycle drop, 15,000 man-hours converted into ₹97.5 Lakhs savings, +77.3% Net ROI, and 6.8-month capital payback period.',
     scores: {

@@ -92,7 +92,7 @@ export const CHAPTER8_DECISIONS: Record<
 > = {
   choice_a: {
     id: 'choice_a',
-    label: 'Choice A — Incorrect approach',
+    label: 'Option A',
     text: 'Ignore the CISO warning to avoid slowing down user login speeds.',
     isRecommended: false,
     scoreImpact: {
@@ -106,7 +106,7 @@ export const CHAPTER8_DECISIONS: Record<
   },
   choice_b: {
     id: 'choice_b',
-    label: 'Choice B — Recommended approach',
+    label: 'Option B',
     text: 'Immediately implement Web Application Firewall (WAF) bot mitigation rules and enforce strict MFA rate-limiting in compliance with bank security policies.',
     isRecommended: true,
     scoreImpact: {

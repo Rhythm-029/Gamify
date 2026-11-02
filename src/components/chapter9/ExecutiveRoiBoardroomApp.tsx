@@ -596,7 +596,7 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-                {/* Option 1: Recommended Rigorous Move */}
+                {/* Approach A */}
                 <div
                   onClick={() => {
                     sound.playClick();
@@ -604,27 +604,24 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                   }}
                   className={`p-3.5 rounded-xl border flex flex-col justify-between cursor-pointer transition-all ${
                     auditResolution === 'deduct_delhi'
-                      ? 'bg-emerald-500/10 border-emerald-500/60 shadow-md ring-1 ring-emerald-500/40'
+                      ? 'bg-slate-800/90 border-cyan-500/70 shadow-md ring-1 ring-cyan-500/50'
                       : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'
                   }`}
                 >
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-white">Deduct 850 Manual Hours</span>
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                        RECOMMENDED
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                        Approach A
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-300">
-                      Certify an airtight baseline of <span className="text-emerald-400 font-bold">14,150 hours</span>. Transparently disclose the fiber outage and exclude unverified contractor entries.
+                      Certify a baseline of <span className="text-white font-bold">14,150 hours</span>. Disclose the fiber outage and exclude unverified contractor entries from the verified equation.
                     </p>
-                  </div>
-                  <div className="mt-2 text-[10px] text-emerald-400 font-mono">
-                    ✓ CFO & Audit Committee praise transparency. Zero risk of audit failure.
                   </div>
                 </div>
 
-                {/* Option 2: Careless / High Risk */}
+                {/* Approach B */}
                 <div
                   onClick={() => {
                     sound.playClick();
@@ -632,27 +629,24 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                   }}
                   className={`p-3.5 rounded-xl border flex flex-col justify-between cursor-pointer transition-all ${
                     auditResolution === 'keep_all'
-                      ? 'bg-rose-500/10 border-rose-500/60 shadow-md ring-1 ring-rose-500/40'
+                      ? 'bg-slate-800/90 border-cyan-500/70 shadow-md ring-1 ring-cyan-500/50'
                       : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'
                   }`}
                 >
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-white">Include Full 15,000 Hours</span>
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                        HIGH AUDIT RISK
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                        Approach B
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-300">
-                      Count all raw Delhi hours to maximize the headline savings figure for the Board.
+                      Count all raw Delhi hours without adjustment to maintain the maximum headline savings figure for the Board.
                     </p>
-                  </div>
-                  <div className="mt-2 text-[10px] text-rose-400 font-mono">
-                    ⚠ CFO cross-examination will expose the lack of cryptographic proof (-15 Governance).
                   </div>
                 </div>
 
-                {/* Option 3: Overly Conservative */}
+                {/* Approach C */}
                 <div
                   onClick={() => {
                     sound.playClick();
@@ -660,23 +654,20 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                   }}
                   className={`p-3.5 rounded-xl border flex flex-col justify-between cursor-pointer transition-all ${
                     auditResolution === 'discard_delhi'
-                      ? 'bg-amber-500/10 border-amber-500/60 shadow-md ring-1 ring-amber-500/40'
+                      ? 'bg-slate-800/90 border-cyan-500/70 shadow-md ring-1 ring-cyan-500/50'
                       : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'
                   }`}
                 >
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-white">Nullify Delhi NCR (-2,300 hrs)</span>
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                        OVERLY PASSIVE
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                        Approach C
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-300">
-                      Discard all Delhi hours entirely, reducing verified hours to 12,700.
+                      Discard all Delhi hours entirely, reducing verified hours to 12,700 to eliminate any potential data dispute.
                     </p>
-                  </div>
-                  <div className="mt-2 text-[10px] text-amber-400 font-mono">
-                    ⚠ Unnecessarily penalizes pilot impact; lowers Net ROI and payback velocity.
                   </div>
                 </div>
               </div>
@@ -897,7 +888,7 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-                {/* Option 1: CASA Cross-sell */}
+                {/* Strategy A: CASA Cross-sell */}
                 <div
                   onClick={() => {
                     sound.playClick();
@@ -905,27 +896,24 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                   }}
                   className={`p-3.5 rounded-xl border flex flex-col justify-between cursor-pointer transition-all ${
                     reinvestmentStrategy === 'casa_cross_sell'
-                      ? 'bg-emerald-500/10 border-emerald-500/60 shadow-md ring-1 ring-emerald-500/40'
+                      ? 'bg-slate-800/90 border-cyan-500/70 shadow-md ring-1 ring-cyan-500/50'
                       : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'
                   }`}
                 >
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-white">CASA Retail Sales Outreach</span>
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                        RECOMMENDED
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                        Strategy A
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-300">
                       Reallocate 70% of freed hours to customer relationship managers for CASA deposit generation (+14% conversion) and 30% to KYC verification.
                     </p>
                   </div>
-                  <div className="mt-2 text-[10px] text-emerald-400 font-mono">
-                    ✓ Projected top-line yield: +₹68 Lakhs in retail deposits. High CFO approval.
-                  </div>
                 </div>
 
-                {/* Option 2: Contractor Cuts */}
+                {/* Strategy B: Contractor Cuts */}
                 <div
                   onClick={() => {
                     sound.playClick();
@@ -933,27 +921,24 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                   }}
                   className={`p-3.5 rounded-xl border flex flex-col justify-between cursor-pointer transition-all ${
                     reinvestmentStrategy === 'headcount_cut'
-                      ? 'bg-rose-500/10 border-rose-500/60 shadow-md ring-1 ring-rose-500/40'
+                      ? 'bg-slate-800/90 border-cyan-500/70 shadow-md ring-1 ring-cyan-500/50'
                       : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'
                   }`}
                 >
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-white">Contractor Agency Headcount Cut</span>
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                        HIGH FRICTION
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                        Strategy B
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-300">
-                      Directly terminate temporary branch clerk agency contracts to pocket immediate cash OpEx savings.
+                      Directly terminate temporary branch clerk agency contracts to realize immediate cash OpEx savings across regional hubs.
                     </p>
-                  </div>
-                  <div className="mt-2 text-[10px] text-rose-400 font-mono">
-                    ⚠ Immediate cash savings, but causes branch union pushback and teller demoralization.
                   </div>
                 </div>
 
-                {/* Option 3: Compliance Surge */}
+                {/* Strategy C: Compliance Surge */}
                 <div
                   onClick={() => {
                     sound.playClick();
@@ -961,23 +946,20 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                   }}
                   className={`p-3.5 rounded-xl border flex flex-col justify-between cursor-pointer transition-all ${
                     reinvestmentStrategy === 'compliance_surge'
-                      ? 'bg-cyan-500/10 border-cyan-500/60 shadow-md ring-1 ring-cyan-500/40'
+                      ? 'bg-slate-800/90 border-cyan-500/70 shadow-md ring-1 ring-cyan-500/50'
                       : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'
                   }`}
                 >
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-white">Regulatory Compliance Surge</span>
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                        AUDIT FOCUS
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                        Strategy C
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-300">
-                      100% of freed time focused on clearing the RBI Anti-Money Laundering & KYC documentation backlog.
+                      Allocate 100% of freed capacity to clearing the statutory Anti-Money Laundering & KYC branch documentation backlog.
                     </p>
-                  </div>
-                  <div className="mt-2 text-[10px] text-cyan-400 font-mono">
-                    ✓ Mitigates statutory fine exposure, but produces zero direct revenue growth.
                   </div>
                 </div>
               </div>
@@ -1101,23 +1083,20 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                   }}
                   className={`p-3.5 rounded-xl border flex flex-col justify-between cursor-pointer transition-all ${
                     executiveFraming === 'commercial_value'
-                      ? 'bg-purple-500/10 border-purple-500/60 shadow-md ring-1 ring-purple-500/40'
+                      ? 'bg-slate-800/90 border-cyan-500/70 shadow-md ring-1 ring-cyan-500/50'
                       : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'
                   }`}
                 >
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-white">Commercial Value Creation</span>
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                        RECOMMENDED
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                        Framing 1
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-300">
-                      Position Amigo as a commercial enablement engine converting operational drag into ₹42L net value and frontline CASA sales capacity.
+                      Position Amigo as a commercial enablement engine converting operational drag into frontline CASA sales capacity and net value.
                     </p>
-                  </div>
-                  <div className="mt-2 text-[10px] text-emerald-400 font-mono">
-                    ✓ Aligns IT, HR and Finance into a single unified business case.
                   </div>
                 </div>
 
@@ -1129,23 +1108,20 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                   }}
                   className={`p-3.5 rounded-xl border flex flex-col justify-between cursor-pointer transition-all ${
                     executiveFraming === 'technical_latency'
-                      ? 'bg-amber-500/10 border-amber-500/60 shadow-md ring-1 ring-amber-500/40'
+                      ? 'bg-slate-800/90 border-cyan-500/70 shadow-md ring-1 ring-cyan-500/50'
                       : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'
                   }`}
                 >
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-white">Technical Infrastructure</span>
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                        TOO NARROW
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                        Framing 2
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-300">
-                      Focus heavily on sub-200ms latency, Kafka queue tuning, and microservice container uptime.
+                      Lead with sub-200ms transaction latency, Kafka queue telemetry, and microservice container resilience.
                     </p>
-                  </div>
-                  <div className="mt-2 text-[10px] text-amber-400 font-mono">
-                    ⚠ CFO will dismiss this as technical trivia without financial impact.
                   </div>
                 </div>
 
@@ -1157,23 +1133,20 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                   }}
                   className={`p-3.5 rounded-xl border flex flex-col justify-between cursor-pointer transition-all ${
                     executiveFraming === 'headcount_reduction'
-                      ? 'bg-rose-500/10 border-rose-500/60 shadow-md ring-1 ring-rose-500/40'
+                      ? 'bg-slate-800/90 border-cyan-500/70 shadow-md ring-1 ring-cyan-500/50'
                       : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'
                   }`}
                 >
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-white">Aggressive Headcount Slashes</span>
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                        HIGH RISK
+                      <span className="font-bold text-white">Headcount & Agency Cost Cuts</span>
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                        Framing 3
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-300">
-                      Lead with eliminating branch staffing redundancies and replacing human reviewers with automated rules.
+                      Lead with eliminating branch staffing redundancies and replacing manual reviewers with automated validation rules.
                     </p>
-                  </div>
-                  <div className="mt-2 text-[10px] text-rose-400 font-mono">
-                    ⚠ Causes immediate HR pushback from Sophia Bennett and union resistance.
                   </div>
                 </div>
               </div>
@@ -1283,7 +1256,7 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                   }}
                   className={`p-3 rounded-xl border cursor-pointer transition-all ${
                     cfoChallengeAnswer === 'revenue_tied'
-                      ? 'bg-emerald-500/10 border-emerald-500/60 ring-1 ring-emerald-500/40'
+                      ? 'bg-slate-800/90 border-cyan-500/70 shadow-md ring-1 ring-cyan-500/50'
                       : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
                   }`}
                 >
@@ -1291,7 +1264,6 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                   <div className="text-[11px] text-slate-300 mt-1">
                     The {certifiedHours.toLocaleString()} hours are formally reallocated into frontline CASA sales outreach with branch manager incentive tracking.
                   </div>
-                  <div className="mt-1.5 text-[10px] text-emerald-400 font-mono">✓ CFO Accepts Defense</div>
                 </div>
 
                 <div
@@ -1301,7 +1273,7 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                   }}
                   className={`p-3 rounded-xl border cursor-pointer transition-all ${
                     cfoChallengeAnswer === 'strict_timesheets'
-                      ? 'bg-rose-500/10 border-rose-500/60 ring-1 ring-rose-500/40'
+                      ? 'bg-slate-800/90 border-cyan-500/70 shadow-md ring-1 ring-cyan-500/50'
                       : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
                   }`}
                 >
@@ -1309,7 +1281,6 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                   <div className="text-[11px] text-slate-300 mt-1">
                     Enforce hourly check-ins on branch teller desktops to physically monitor active terminal keys.
                   </div>
-                  <div className="mt-1.5 text-[10px] text-rose-400 font-mono">⚠ Toxic Culture Flag</div>
                 </div>
 
                 <div
@@ -1319,7 +1290,7 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                   }}
                   className={`p-3 rounded-xl border cursor-pointer transition-all ${
                     cfoChallengeAnswer === 'unquantified'
-                      ? 'bg-amber-500/10 border-amber-500/60 ring-1 ring-amber-500/40'
+                      ? 'bg-slate-800/90 border-cyan-500/70 shadow-md ring-1 ring-cyan-500/50'
                       : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
                   }`}
                 >
@@ -1327,7 +1298,6 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                   <div className="text-[11px] text-slate-300 mt-1">
                     Argue that employee morale and less stress is self-evident and does not require tracking.
                   </div>
-                  <div className="mt-1.5 text-[10px] text-amber-400 font-mono">⚠ CFO Rejects Defense</div>
                 </div>
               </div>
             </div>
@@ -1352,7 +1322,7 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                   }}
                   className={`p-3 rounded-xl border cursor-pointer transition-all ${
                     cooChallengeAnswer === 'canary_sharding'
-                      ? 'bg-emerald-500/10 border-emerald-500/60 ring-1 ring-emerald-500/40'
+                      ? 'bg-slate-800/90 border-cyan-500/70 shadow-md ring-1 ring-cyan-500/50'
                       : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
                   }`}
                 >
@@ -1360,7 +1330,6 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                   <div className="text-[11px] text-slate-300 mt-1">
                     Scale in 4 regional waves (1,200 branches/wave) with Kafka partition sharding, automated latency breakers, and 24/7 telemetry.
                   </div>
-                  <div className="mt-1.5 text-[10px] text-emerald-400 font-mono">✓ COO & Tech Board Approved</div>
                 </div>
 
                 <div
@@ -1370,7 +1339,7 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                   }}
                   className={`p-3 rounded-xl border cursor-pointer transition-all ${
                     cooChallengeAnswer === 'big_bang'
-                      ? 'bg-rose-500/10 border-rose-500/60 ring-1 ring-rose-500/40'
+                      ? 'bg-slate-800/90 border-cyan-500/70 shadow-md ring-1 ring-cyan-500/50'
                       : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
                   }`}
                 >
@@ -1378,7 +1347,6 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                   <div className="text-[11px] text-slate-300 mt-1">
                     Switch all 4,800 branches live nationwide this weekend to avoid multi-version operational fragmentation.
                   </div>
-                  <div className="mt-1.5 text-[10px] text-rose-400 font-mono">⚠ Extreme Outage Risk</div>
                 </div>
 
                 <div
@@ -1388,7 +1356,7 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                   }}
                   className={`p-3 rounded-xl border cursor-pointer transition-all ${
                     cooChallengeAnswer === 'delay_months'
-                      ? 'bg-amber-500/10 border-amber-500/60 ring-1 ring-amber-500/40'
+                      ? 'bg-slate-800/90 border-cyan-500/70 shadow-md ring-1 ring-cyan-500/50'
                       : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
                   }`}
                 >
@@ -1396,7 +1364,6 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                   <div className="text-[11px] text-slate-300 mt-1">
                     Delay nationwide scale-out by 2 quarters to run further manual stress testing.
                   </div>
-                  <div className="mt-1.5 text-[10px] text-amber-400 font-mono">⚠ Competitor Lag Penalty</div>
                 </div>
               </div>
             </div>
@@ -1422,22 +1389,19 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                   }}
                   className={`p-4 rounded-xl border cursor-pointer transition-all ${
                     selectedDecision === 'choice_b'
-                      ? 'bg-emerald-500/15 border-emerald-500 ring-1 ring-emerald-500/50 shadow-lg'
+                      ? 'bg-slate-800/90 border-cyan-500/70 ring-1 ring-cyan-500/50 shadow-lg'
                       : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-white text-sm">Choice B: Deliver Detailed ROI Presentation</span>
-                    <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                      RECOMMENDED
+                    <span className="font-bold text-white text-sm">Motion B: Deliver Detailed ROI Presentation</span>
+                    <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                      Motion B
                     </span>
                   </div>
                   <p className="text-slate-300 text-xs mt-2 leading-relaxed">
                     Present the certified 14,150 hours, +{financialModel.roiPercentage}% Net ROI, 6.8-month payback, and phased 4-wave rollout. Authorizes ₹1.2 Crore Phase 2 nationwide capital allocation.
                   </p>
-                  <div className="mt-3 text-[10px] text-emerald-400 font-mono">
-                    +15 Schedule · +25 Governance · +20 Trust & Risk
-                  </div>
                 </div>
 
                 {/* Choice A */}
@@ -1448,22 +1412,19 @@ export const ExecutiveRoiBoardroomApp: React.FC<ExecutiveRoiBoardroomAppProps> =
                   }}
                   className={`p-4 rounded-xl border cursor-pointer transition-all ${
                     selectedDecision === 'choice_a'
-                      ? 'bg-rose-500/15 border-rose-500 ring-1 ring-rose-500/50 shadow-lg'
+                      ? 'bg-slate-800/90 border-cyan-500/70 ring-1 ring-cyan-500/50 shadow-lg'
                       : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-white text-sm">Choice A: Skip Formal ROI Tracking</span>
-                    <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                      HIGH RISK
+                    <span className="font-bold text-white text-sm">Motion A: Rely on General Delivery Outcomes</span>
+                    <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                      Motion A
                     </span>
                   </div>
                   <p className="text-slate-300 text-xs mt-2 leading-relaxed">
-                    Assume delivery speaks for itself and present only high-level vanity slides without quantified payback or monetization models.
+                    Present high-level delivery milestones without quantified hourly cost conversions or amortized payback models.
                   </p>
-                  <div className="mt-3 text-[10px] text-rose-400 font-mono">
-                    -20 Governance · -15 Trust & Risk · Budget Freeze
-                  </div>
                 </div>
               </div>
 

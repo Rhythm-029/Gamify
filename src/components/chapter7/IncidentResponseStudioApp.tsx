@@ -822,9 +822,6 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
                       {/* Card Content */}
                       <div className="flex-1 min-w-0 pr-2">
                         <div className="flex items-center gap-2">
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                            Card {card.letter}
-                          </span>
                           <h3 className="text-sm font-bold text-white tracking-tight">
                             {card.title}
                           </h3>
