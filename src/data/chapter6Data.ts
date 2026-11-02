@@ -92,6 +92,9 @@ export const RECOVERY_ACTIONS: RecoveryAction[] = [
 // Reference ideal sequence:
 // 1. Tune Redis caching
 // 2. Optimize DB connection pooling (or vice-versa, both fixes before retest)
+// Reference ideal sequence:
+// 1. Tune Redis caching
+// 2. Optimize DB connection pooling (or vice-versa, both fixes before retest)
 // 3. Run the 30,000-user stress test again
 // 4. Analyse the new performance results
 // 5. Obtain Engineering Lead and CTO signoffs
@@ -104,9 +107,9 @@ export interface SequenceValidationResult {
 export function validateRecoverySequence(sequence: RecoveryActionId[]): SequenceValidationResult {
   if (sequence.length !== 5) {
     return {
-      isValid: false,
-      score: 0,
-      feedback: 'Please order all 5 recovery actions before submitting.',
+      isValid: true,
+      score: 10,
+      feedback: 'Recovery plan submitted with current sequence.',
     };
   }
 
@@ -116,57 +119,42 @@ export function validateRecoverySequence(sequence: RecoveryActionId[]): Sequence
   const idxAnalyse = sequence.indexOf('analyse_metrics');
   const idxApprovals = sequence.indexOf('submit_approvals');
 
+  let score = 30;
+  const issues: string[] = [];
+
   // Check critical dependencies:
-  // 1. Both technical fixes (Redis tuning & DB optimization) must be done BEFORE retesting!
+  // 1. Both technical fixes (Redis tuning & DB optimization) should be done BEFORE retesting
   if (idxRetest < idxRedis || idxRetest < idxDb) {
-    return {
-      isValid: false,
-      score: 10,
-      feedback:
-        'Dependency Error: You cannot re-run the 30,000-user stress test before applying the technical fixes (Redis tuning & DB connection pooling). Retesting without fixes will simply reproduce the 4.2-second failure.',
-    };
+    score -= 12;
+    issues.push('Retesting before technical fixes applied');
   }
 
-  // 2. Retest must be done BEFORE analyzing new metrics!
+  // 2. Retest should be done BEFORE analyzing new metrics
   if (idxAnalyse < idxRetest) {
-    return {
-      isValid: false,
-      score: 12,
-      feedback:
-        'Dependency Error: You cannot analyze new performance results before running the stress test. There is no new retest telemetry to inspect.',
-    };
+    score -= 10;
+    issues.push('Telemetry analysis attempted prior to test execution');
   }
 
-  // 3. Analysis must be done BEFORE submitting for approvals!
+  // 3. Analysis should be done BEFORE submitting for approvals
   if (idxApprovals < idxAnalyse) {
-    return {
-      isValid: false,
-      score: 15,
-      feedback:
-        'Governance Error: Formal approvals require verified performance evidence. You must inspect and analyze the retest metrics before submitting signoff requests to Daniel and Marcus.',
-    };
+    score -= 8;
+    issues.push('Approvals requested prior to telemetry review');
   }
 
-  // If fixes come first, retest 3rd, analysis 4th, approvals 5th:
-  // Whether Redis is first or DB pool is first, both are completely valid!
-  if (
-    (idxRedis === 0 && idxDb === 1) ||
-    (idxDb === 0 && idxRedis === 1)
-  ) {
+  const finalScore = Math.max(5, score);
+
+  if (finalScore === 30) {
     return {
       isValid: true,
       score: 30,
-      feedback:
-        'Optimal Recovery Sequence! You tuned caching and optimized connection pooling before re-running the 30,000-user load test, verified telemetry results, and secured governance signoffs with solid evidence.',
+      feedback: 'Optimal Recovery Sequence recorded. Both technical fixes precede the retest, followed by telemetry analysis and formal governance approvals.',
     };
   }
 
-  // Reasonable alternative where fixes precede retest, but with slightly minor ordering
   return {
     isValid: true,
-    score: 25,
-    feedback:
-      'Valid Recovery Sequence. The core dependencies (Fixes → Retest → Analysis → Approvals) are properly satisfied.',
+    score: finalScore,
+    feedback: `Recovery sequence submitted (${finalScore}/30 pts). Order evaluated with deductions: ${issues.join(', ')}.`,
   };
 }
 
@@ -266,11 +254,14 @@ export function computeChapter6Score(state: Chapter6State): Chapter6Scorecard {
     if (state.diagnosisAttempts <= 1) diagnosisScore = 20;
     else if (state.diagnosisAttempts === 2) diagnosisScore = 15;
     else diagnosisScore = 10;
+  } else if (state.selectedBottleneck) {
+    // Incorrect diagnosis: deducted score (5 pts awarded out of 20, penalty applied)
+    diagnosisScore = 5;
   }
 
   // Activity 2: Recovery Sequence (Max 30 pts)
   let recoveryScore = 0;
-  if (state.sequenceValidated && state.recoverySequence.length === 5) {
+  if (state.recoverySequence && state.recoverySequence.length === 5) {
     const res = validateRecoverySequence(state.recoverySequence);
     recoveryScore = res.score;
   }

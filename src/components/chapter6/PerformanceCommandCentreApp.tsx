@@ -110,18 +110,15 @@ export const PerformanceCommandCentreApp: React.FC<PerformanceCommandCentreAppPr
 
     if (isCorrect) {
       sound.playSystemClearance();
-      onUpdateState({
-        selectedBottleneck,
-        diagnosisConfirmed: true,
-        diagnosisAttempts: attempts,
-      });
     } else {
       sound.playPenaltyPing();
-      onUpdateState({
-        selectedBottleneck,
-        diagnosisAttempts: attempts,
-      });
     }
+
+    onUpdateState({
+      selectedBottleneck,
+      diagnosisConfirmed: true,
+      diagnosisAttempts: attempts,
+    });
   };
 
   // Sequence Rearrangement Handlers
@@ -143,24 +140,18 @@ export const PerformanceCommandCentreApp: React.FC<PerformanceCommandCentreAppPr
     const res = validateRecoverySequence(orderedActions);
     setValidationResult(res);
 
-    if (res.isValid) {
+    if (res.score >= 25) {
       sound.playSystemClearance();
-      onUpdateState({
-        recoverySequence: orderedActions,
-        sequenceValidated: true,
-        sequenceValidationFeedback: res.feedback,
-        sequenceAttemptCount: attempts,
-        activeSection: 'approval',
-      });
     } else {
       sound.playPenaltyPing();
-      onUpdateState({
-        recoverySequence: orderedActions,
-        sequenceValidated: false,
-        sequenceValidationFeedback: res.feedback,
-        sequenceAttemptCount: attempts,
-      });
     }
+
+    onUpdateState({
+      recoverySequence: orderedActions,
+      sequenceValidated: true,
+      sequenceValidationFeedback: res.feedback,
+      sequenceAttemptCount: attempts,
+    });
   };
 
   // Section C: Run Stress Retest Simulation
@@ -714,31 +705,20 @@ ORDER BY a.submitted_at DESC LIMIT 50;`}
                 )}
               </div>
 
-              {/* Explanatory Feedback Box */}
+              {/* Diagnosis Confirmation Box */}
               {showDiagnosticFeedback && currentBottleneckOption && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`p-4 rounded-xl border mt-3 text-xs leading-relaxed ${
-                    currentBottleneckOption.isCorrect
-                      ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-200'
-                      : 'bg-rose-950/40 border-rose-500/50 text-rose-200'
-                  }`}
+                  className="p-4 rounded-xl border mt-3 text-xs leading-relaxed bg-[#121932] border-slate-700 text-slate-200"
                 >
-                  <div className="font-bold flex items-center space-x-2 mb-1">
-                    {currentBottleneckOption.isCorrect ? (
-                      <>
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                        <span>Diagnosis Verified (+20 Points)</span>
-                      </>
-                    ) : (
-                      <>
-                        <AlertTriangle className="w-4 h-4 text-rose-400" />
-                        <span>Incorrect Diagnosis — Review the APM Data</span>
-                      </>
-                    )}
+                  <div className="font-bold flex items-center space-x-2 mb-1 text-cyan-300">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400" />
+                    <span>
+                      Diagnosis Recorded ({currentBottleneckOption.isCorrect ? '+20 Points' : 'Deduction Applied: +5 Points'})
+                    </span>
                   </div>
-                  <div>{currentBottleneckOption.explanation}</div>
+                  <div className="text-slate-300">{currentBottleneckOption.explanation}</div>
                 </motion.div>
               )}
             </div>
@@ -895,26 +875,13 @@ ORDER BY a.submitted_at DESC LIMIT 50;`}
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`p-4 rounded-xl border mt-3 text-xs leading-relaxed ${
-                    validationResult.isValid
-                      ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-200'
-                      : 'bg-rose-950/40 border-rose-500/50 text-rose-200'
-                  }`}
+                  className="p-4 rounded-xl border mt-3 text-xs leading-relaxed bg-[#121932] border-slate-700 text-slate-200"
                 >
-                  <div className="font-bold flex items-center space-x-2 mb-1">
-                    {validationResult.isValid ? (
-                      <>
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                        <span>Valid Recovery Sequence (+{validationResult.score} Points)</span>
-                      </>
-                    ) : (
-                      <>
-                        <AlertTriangle className="w-4 h-4 text-rose-400" />
-                        <span>Dependency Violation — Reorder Sequence</span>
-                      </>
-                    )}
+                  <div className="font-bold flex items-center space-x-2 mb-1 text-cyan-300">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400" />
+                    <span>Recovery Sequence Evaluated (+{validationResult.score} Points)</span>
                   </div>
-                  <div>{validationResult.feedback}</div>
+                  <div className="text-slate-300">{validationResult.feedback}</div>
                 </motion.div>
               )}
             </div>

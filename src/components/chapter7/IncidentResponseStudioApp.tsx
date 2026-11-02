@@ -131,55 +131,28 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
         ? act1Order.indexOf('confirm_recovery')
         : act1Order.indexOf('close_prematurely');
 
-    // Rule 1: Confirm scope must precede hotfix deployment
+    const issues: string[] = [];
     if (scopeIdx > hotfixIdx) {
-      sound.playPenaltyPing();
-      const fb =
-        'Always confirm the affected service, error symptoms, and user blast radius before deploying changes into production.';
-      setAct1Feedback(fb);
-      onUpdateState({
-        activity1Attempts: attempts,
-        activity1Order: act1Order,
-        activity1Feedback: fb,
-        activity1FirstOrder: chapter7State.activity1FirstOrder || act1Order,
-      });
-      return;
+      issues.push('Scope confirmation placed after hotfix deployment');
     }
-
-    // Rule 2: Premature closure trap (Confirm recovery before verification)
     if (confirmIdx < verifyIdx) {
-      sound.playPenaltyPing();
-      const fb =
-        'Deploying a patch does not automatically confirm recovery. The affected service and user access must be verified before the incident can be closed.';
-      setAct1Feedback(fb);
-      onUpdateState({
-        activity1Attempts: attempts,
-        activity1Order: act1Order,
-        activity1Feedback: fb,
-        activity1FirstOrder: chapter7State.activity1FirstOrder || act1Order,
-      });
-      return;
+      issues.push('Closure attempted before verifying service recovery');
     }
-
-    // Rule 3: Hotfix must precede verification
     if (hotfixIdx > verifyIdx) {
-      sound.playPenaltyPing();
-      const fb =
-        'You cannot verify service recovery before the hotfix addressing the memory leak has been deployed.';
-      setAct1Feedback(fb);
-      onUpdateState({
-        activity1Attempts: attempts,
-        activity1Order: act1Order,
-        activity1Feedback: fb,
-        activity1FirstOrder: chapter7State.activity1FirstOrder || act1Order,
-      });
-      return;
+      issues.push('Service recovery verified before hotfix deployed');
     }
 
-    // Correct sequence validated: [confirm_scope, deploy_hotfix, verify_sync, confirm_recovery]
-    sound.playSystemClearance();
-    const fb =
-      'Service recovery sequence validated. You confirmed scope, deployed the hotfix, verified attendance sync, and confirmed recovery before closing the incident.';
+    const isFullyCorrect = issues.length === 0;
+    if (isFullyCorrect) {
+      sound.playSystemClearance();
+    } else {
+      sound.playPenaltyPing();
+    }
+
+    const fb = isFullyCorrect
+      ? 'Service recovery sequence submitted and validated. (30/30 pts)'
+      : `Service recovery sequence submitted with deductions: ${issues.join(', ')}.`;
+
     setAct1Feedback(fb);
 
     onUpdateState((prev) => {
@@ -199,7 +172,7 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
       };
     });
 
-    // Advance to Activity 2 after brief celebration pause
+    // Advance to Activity 2
     setTimeout(() => {
       setActiveTab('rca');
     }, 1200);
@@ -283,53 +256,37 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
 
     if (allCorrect) {
       sound.playSystemClearance();
-      feedbackObj.summary =
-        'RCA validated. The failure, technical root cause, business blast radius, and corrective controls are formally connected. Ready to publish to engineering leads.';
-      setRcaFeedback(feedbackObj);
-      setRcaPublished(true);
-
-      onUpdateState((prev) => {
-        const updated: Chapter7State = {
-          ...prev,
-          activity2Answers: rcaAnswers,
-          activity2Attempts: attempts,
-          activity2Submitted: true,
-          activity2Completed: true,
-          rcaPublished: true,
-          activity2Feedback: feedbackObj,
-          activity2FirstAnswers: prev.activity2FirstAnswers || rcaAnswers,
-          incidentStatus: 'rca_in_progress',
-        };
-        return {
-          ...updated,
-          scorecard: computeChapter7Score(updated),
-        };
-      });
-
-      // Unlock and advance to Activity 3
-      setTimeout(() => {
-        setActiveTab('prevention');
-      }, 1500);
+      feedbackObj.summary = 'RCA completed and verified. (40/40 pts)';
     } else {
       sound.playPenaltyPing();
-      feedbackObj.summary =
-        'Some elements of your RCA need revision. Review the highlighted mismatches and update your findings.';
-      setRcaFeedback(feedbackObj);
-
-      onUpdateState((prev) => {
-        const updated: Chapter7State = {
-          ...prev,
-          activity2Answers: rcaAnswers,
-          activity2Attempts: attempts,
-          activity2Feedback: feedbackObj,
-          activity2FirstAnswers: prev.activity2FirstAnswers || rcaAnswers,
-        };
-        return {
-          ...updated,
-          scorecard: computeChapter7Score(updated),
-        };
-      });
+      feedbackObj.summary = 'RCA published with deductions for inaccurate field selections.';
     }
+
+    setRcaFeedback(feedbackObj);
+    setRcaPublished(true);
+
+    onUpdateState((prev) => {
+      const updated: Chapter7State = {
+        ...prev,
+        activity2Answers: rcaAnswers,
+        activity2Attempts: attempts,
+        activity2Submitted: true,
+        activity2Completed: true,
+        rcaPublished: true,
+        activity2Feedback: feedbackObj,
+        activity2FirstAnswers: prev.activity2FirstAnswers || rcaAnswers,
+        incidentStatus: 'rca_in_progress',
+      };
+      return {
+        ...updated,
+        scorecard: computeChapter7Score(updated),
+      };
+    });
+
+    // Advance to Activity 3
+    setTimeout(() => {
+      setActiveTab('prevention');
+    }, 1200);
   };
 
   // ─────────────────────────────────────────────────────────────
@@ -399,45 +356,25 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
     sound.playClick();
     const attempts = (chapter7State.activity3Attempts || 0) + 1;
 
-    if (selectedPrevention.length !== 4) {
+    if (selectedPrevention.length === 0) {
       sound.playPenaltyPing();
-      setAct3Feedback('Please select exactly 4 appropriate preventive measures to include in the plan.');
+      setAct3Feedback('Please select preventive measures before submitting.');
       return;
     }
 
-    // Check for inappropriate actions (scaling up servers or ignoring monitoring)
-    if (selectedPrevention.includes('increase_number_of_servers')) {
+    const hasInappropriate =
+      selectedPrevention.includes('increase_number_of_servers') ||
+      selectedPrevention.includes('ignore_monitoring_hotfix');
+
+    if (!hasInappropriate && selectedPrevention.length === 4) {
+      sound.playSystemClearance();
+    } else {
       sound.playPenaltyPing();
-      const fb =
-        'Adding servers may temporarily increase capacity, but it does not fix the underlying memory leak.';
-      setAct3Feedback(fb);
-      onUpdateState({
-        activity3Attempts: attempts,
-        activity3Selected: selectedPrevention,
-        activity3PriorityOrder: priorityOrder,
-        activity3Feedback: fb,
-      });
-      return;
     }
 
-    if (selectedPrevention.includes('ignore_monitoring_hotfix')) {
-      sound.playPenaltyPing();
-      const fb =
-        'Assuming the issue is permanently resolved without ongoing monitoring leaves the service vulnerable to regressions.';
-      setAct3Feedback(fb);
-      onUpdateState({
-        activity3Attempts: attempts,
-        activity3Selected: selectedPrevention,
-        activity3PriorityOrder: priorityOrder,
-        activity3Feedback: fb,
-      });
-      return;
-    }
-
-    // All 4 appropriate controls are selected!
-    sound.playSystemClearance();
-    const fb =
-      'Prevention plan validated. Proactive continuous memory monitoring, automated alert thresholds, regression testing, and health checks permanently resolve recurring risks.';
+    const fb = !hasInappropriate && selectedPrevention.length === 4
+      ? 'Prevention plan submitted and validated. (30/30 pts)'
+      : 'Prevention plan submitted with deductions applied for suboptimal controls.';
     setAct3Feedback(fb);
 
     // Compute updated state and full scorecard
@@ -445,7 +382,7 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
       const updated: Chapter7State = {
         ...prev,
         activity3Selected: selectedPrevention,
-        activity3PriorityOrder: priorityOrder,
+        activity3PriorityOrder: priorityOrder.length > 0 ? priorityOrder : selectedPrevention,
         activity3Attempts: attempts,
         activity3Submitted: true,
         activity3Completed: true,
@@ -461,7 +398,7 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
       };
     });
 
-    // Advance to final resolution sequence after brief pause
+    // Advance to final resolution sequence
     setTimeout(() => {
       setActiveTab('resolved');
       triggerResolutionDialogue();
@@ -870,20 +807,12 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
                 <motion.div
                   initial={{ opacity: 0, scale: 0.98 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className={`p-4 rounded-xl border flex items-start space-x-3 text-xs ${
-                    chapter7State.activity1Completed
-                      ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-200'
-                      : 'bg-rose-950/40 border-rose-500/50 text-rose-200'
-                  }`}
+                  className="p-4 rounded-xl border flex items-start space-x-3 text-xs bg-[#170e24] border-slate-700 text-slate-200"
                 >
-                  {chapter7State.activity1Completed ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  ) : (
-                    <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                  )}
+                  <CheckCircle2 className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
                   <div className="leading-relaxed">
                     <span className="font-bold block text-white mb-0.5">
-                      {chapter7State.activity1Completed ? 'Sequence Validated' : 'Sequence Order Feedback'}
+                      Service Restoration Recorded
                     </span>
                     {act1Feedback}
                   </div>
@@ -1013,18 +942,8 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
 
                       {/* Field-level Feedback if submitted */}
                       {fieldFeedback && (
-                        <div
-                          className={`p-2.5 rounded-xl border text-xs leading-relaxed flex items-start space-x-2 ${
-                            fieldFeedback.isCorrect
-                              ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-300'
-                              : 'bg-rose-950/30 border-rose-500/40 text-rose-300'
-                          }`}
-                        >
-                          {fieldFeedback.isCorrect ? (
-                            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                          ) : (
-                            <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                          )}
+                        <div className="p-2.5 rounded-xl border text-xs leading-relaxed flex items-start space-x-2 bg-[#170e24] border-slate-700 text-slate-200">
+                          <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                           <span>{fieldFeedback.message}</span>
                         </div>
                       )}
@@ -1235,18 +1154,8 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
 
               {/* Feedback if any */}
               {act3Feedback && (
-                <div
-                  className={`p-4 rounded-xl border text-xs leading-relaxed flex items-start space-x-3 ${
-                    chapter7State.activity3Completed
-                      ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-200'
-                      : 'bg-rose-950/40 border-rose-500/40 text-rose-200'
-                  }`}
-                >
-                  {chapter7State.activity3Completed ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  ) : (
-                    <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                  )}
+                <div className="p-4 rounded-xl border text-xs leading-relaxed flex items-start space-x-3 bg-[#170e24] border-slate-700 text-slate-200">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                   <div>
                     <span className="font-bold text-white block mb-0.5">Prevention Plan Analysis</span>
                     {act3Feedback}

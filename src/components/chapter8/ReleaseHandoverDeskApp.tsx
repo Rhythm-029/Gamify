@@ -493,16 +493,8 @@ export const ReleaseHandoverDeskApp: React.FC<ReleaseHandoverDeskAppProps> = ({
 
             {/* Validation Feedback Banner */}
             {chapter8State.investigationFeedback && (
-              <div className={`p-4 rounded-xl border text-xs leading-relaxed flex items-start space-x-3 ${
-                chapter8State.investigationValidated
-                  ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-200'
-                  : 'bg-rose-950/30 border-rose-500/40 text-rose-200'
-              }`}>
-                {chapter8State.investigationValidated ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                ) : (
-                  <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                )}
+              <div className="p-4 rounded-xl border text-xs leading-relaxed flex items-start space-x-3 bg-[#0d1526] border-slate-700 text-slate-200">
+                <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
                 <span>{chapter8State.investigationFeedback}</span>
               </div>
             )}
@@ -673,16 +665,8 @@ export const ReleaseHandoverDeskApp: React.FC<ReleaseHandoverDeskAppProps> = ({
 
             {/* Validation Feedback Banner */}
             {chapter8State.controlsFeedback && (
-              <div className={`p-4 rounded-xl border text-xs leading-relaxed flex items-start space-x-3 ${
-                chapter8State.controlsValidated
-                  ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-200'
-                  : 'bg-rose-950/30 border-rose-500/40 text-rose-200'
-              }`}>
-                {chapter8State.controlsValidated ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                ) : (
-                  <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                )}
+              <div className="p-4 rounded-xl border text-xs leading-relaxed flex items-start space-x-3 bg-[#0d1526] border-slate-700 text-slate-200">
+                <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
                 <span>{chapter8State.controlsFeedback}</span>
               </div>
             )}
@@ -764,16 +748,8 @@ export const ReleaseHandoverDeskApp: React.FC<ReleaseHandoverDeskAppProps> = ({
 
             {/* Validation Feedback Banner */}
             {chapter8State.validationFeedback && (
-              <div className={`p-4 rounded-xl border text-xs leading-relaxed flex items-start space-x-3 ${
-                chapter8State.validationCompleted
-                  ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-200'
-                  : 'bg-rose-950/30 border-rose-500/40 text-rose-200'
-              }`}>
-                {chapter8State.validationCompleted ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                ) : (
-                  <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                )}
+              <div className="p-4 rounded-xl border text-xs leading-relaxed flex items-start space-x-3 bg-[#0d1526] border-slate-700 text-slate-200">
+                <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
                 <span>{chapter8State.validationFeedback}</span>
               </div>
             )}

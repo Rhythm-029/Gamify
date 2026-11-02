@@ -319,21 +319,23 @@ export function evaluateThreatInvestigation(
   }
 
   const errors: string[] = [];
-  if (!isThreatCorrect) errors.push('Identify the attack type (credential stuffing vs. standard login errors)');
-  if (!isTargetCorrect) errors.push('Identify the affected target gateway');
-  if (!isSourceCorrect) errors.push('Identify the traffic source (anomalous bot cluster)');
-  if (!isAuthorityCorrect) errors.push('Identify the security authority requiring compliance (Bank CISO)');
+  if (!isThreatCorrect) errors.push('attack type');
+  if (!isTargetCorrect) errors.push('target gateway');
+  if (!isSourceCorrect) errors.push('traffic source');
+  if (!isAuthorityCorrect) errors.push('mandating authority');
+
+  const awardedScore = Math.max(5, Math.round((correctCount / 4) * 20));
 
   return {
-    isComplete: false,
-    score: Math.round((correctCount / 4) * 20),
-    feedback: `Investigation incomplete. Please review: ${errors.join(', ')}.`,
+    isComplete: true,
+    score: awardedScore,
+    feedback: `Investigation classified (+${awardedScore}/25 pts). Deductions applied for: ${errors.join(', ')}.`,
   };
 }
 
 /**
  * Activity 2: Configure Security Response
- * Both controls (WAF bot mitigation AND MFA rate-limiting) are mandatory.
+ * Controls are scored proportionally; both configured yields 50, otherwise marks are deducted.
  */
 export function evaluateSecurityControls(
   wafEnabled: boolean,
@@ -347,48 +349,29 @@ export function evaluateSecurityControls(
 } {
   const wafScore = wafEnabled ? 25 : 0;
   const mfaScore = mfaRateLimitingEnforced ? 25 : 0;
-  const isComplete = wafEnabled && mfaRateLimitingEnforced;
+  const totalScore = wafScore + mfaScore;
 
-  if (isComplete) {
+  if (totalScore === 50) {
     return {
       isComplete: true,
       score: 50,
       wafScore,
       mfaScore,
       feedback:
-        'Both mandatory security controls active: WAF bot mitigation filters automated malicious traffic at the perimeter, and strict MFA rate-limiting prevents automated credential attempts.',
+        'Both security controls deployed: WAF bot mitigation filters malicious requests at the perimeter, and strict MFA rate-limiting secures authentication.',
     };
   }
 
-  if (!wafEnabled && !mfaRateLimitingEnforced) {
-    return {
-      isComplete: false,
-      score: 0,
-      wafScore: 0,
-      mfaScore: 0,
-      feedback:
-        'Neither mandatory control has been enabled. You must enable WAF bot mitigation rules AND enforce strict MFA rate-limiting.',
-    };
-  }
-
-  if (!wafEnabled) {
-    return {
-      isComplete: false,
-      score: 25,
-      wafScore: 0,
-      mfaScore: 25,
-      feedback:
-        'WAF bot mitigation is missing. Perimeter bot filtering is required to protect the gateway before requests hit authentication servers.',
-    };
-  }
+  const missing: string[] = [];
+  if (!wafEnabled) missing.push('WAF bot mitigation disabled');
+  if (!mfaRateLimitingEnforced) missing.push('MFA rate-limiting disabled');
 
   return {
-    isComplete: false,
-    score: 25,
-    wafScore: 25,
-    mfaScore: 0,
-    feedback:
-      'MFA rate-limiting is not enforced. The Bank CISO strictly mandates MFA rate-limiting under bank security policies to prevent portal suspension.',
+    isComplete: true,
+    score: totalScore,
+    wafScore,
+    mfaScore,
+    feedback: `Security controls deployed (+${totalScore}/50 pts). Deductions applied: ${missing.join(', ')}.`,
   };
 }
 
@@ -404,16 +387,6 @@ export function evaluateReadinessValidation(
   score: number; // max 25
   feedback: string;
 } {
-  // If controls weren't configured in Activity 2, validation cannot succeed
-  if (!wafEnabled || !mfaRateLimitingEnforced) {
-    return {
-      isComplete: false,
-      score: 0,
-      feedback:
-        'Cannot validate readiness: One or more mandatory security controls (WAF bot mitigation or MFA rate-limiting) have not been enabled.',
-    };
-  }
-
   const safeChecklist: SecurityReadinessChecklist = checklist || {
     wafMitigationConfirmed: false,
     mfaRateLimitingConfirmed: false,
@@ -428,13 +401,18 @@ export function evaluateReadinessValidation(
     responseDocumentedForCiso,
   } = safeChecklist;
 
-  const allChecked =
-    wafMitigationConfirmed &&
-    mfaRateLimitingConfirmed &&
-    legitimateAccessPreserved &&
-    responseDocumentedForCiso;
+  let checkedCount = 0;
+  if (wafMitigationConfirmed) checkedCount++;
+  if (mfaRateLimitingConfirmed) checkedCount++;
+  if (legitimateAccessPreserved) checkedCount++;
+  if (responseDocumentedForCiso) checkedCount++;
 
-  if (allChecked) {
+  let baseScore = Math.round((checkedCount / 4) * 25);
+  if (!wafEnabled || !mfaRateLimitingEnforced) {
+    baseScore = Math.max(5, baseScore - 10);
+  }
+
+  if (checkedCount === 4 && wafEnabled && mfaRateLimitingEnforced) {
     return {
       isComplete: true,
       score: 25,
@@ -443,17 +421,10 @@ export function evaluateReadinessValidation(
     };
   }
 
-  let checkedCount = 0;
-  if (wafMitigationConfirmed) checkedCount++;
-  if (mfaRateLimitingConfirmed) checkedCount++;
-  if (legitimateAccessPreserved) checkedCount++;
-  if (responseDocumentedForCiso) checkedCount++;
-
   return {
-    isComplete: false,
-    score: Math.round((checkedCount / 4) * 15),
-    feedback:
-      'Readiness checklist incomplete. All 4 verification items must be reviewed and confirmed before submitting to the CISO.',
+    isComplete: true,
+    score: baseScore,
+    feedback: `Compliance transmission completed (+${baseScore}/25 pts). Audit checklist completed with ${checkedCount}/4 verified items.`,
   };
 }
 
