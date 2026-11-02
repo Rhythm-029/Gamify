@@ -452,6 +452,12 @@ export const INITIAL_CHAPTER9_STATE: Chapter9State = {
   meetingCompleted: false,
   callCompleted: false,
   completed: false,
+  auditResolution: 'deduct_delhi',
+  auditedHours: 14150,
+  reinvestmentStrategy: 'casa_cross_sell',
+  executiveFraming: 'commercial_value',
+  cfoChallengeAnswer: 'revenue_tied',
+  cooChallengeAnswer: 'canary_sharding',
   scorecard: {
     shown: false,
     scheduleScore: 70,

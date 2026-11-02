@@ -113,4 +113,10 @@ export interface Chapter9State {
   callCompleted?: boolean;
   completed: boolean;
   scorecard: Chapter9Scorecard;
+  auditResolution?: 'deduct_delhi' | 'keep_all' | 'discard_delhi';
+  auditedHours?: number;
+  reinvestmentStrategy?: 'casa_cross_sell' | 'headcount_cut' | 'compliance_surge';
+  executiveFraming?: 'commercial_value' | 'technical_latency' | 'headcount_reduction';
+  cfoChallengeAnswer?: 'revenue_tied' | 'strict_timesheets' | 'unquantified';
+  cooChallengeAnswer?: 'canary_sharding' | 'big_bang' | 'delay_months';
 }
