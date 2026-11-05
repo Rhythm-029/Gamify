@@ -149,6 +149,18 @@ import { Chapter9MeetingApp } from '../chapter9/Chapter9MeetingApp';
 import { ExecutiveRoiBoardroomApp } from '../chapter9/ExecutiveRoiBoardroomApp';
 import { Chapter9ScorecardModal } from '../chapter9/Chapter9ScorecardModal';
 
+// Chapter 10 Components & Data
+import type { Chapter10State } from '../../types/chapter10';
+import {
+  getChapter10SessionState,
+  setChapter10SessionState,
+  computeChapter10Score,
+} from '../../data/chapter10Data';
+import { Chapter10Banner } from '../chapter10/Chapter10Banner';
+import { Chapter10MeetingApp } from '../chapter10/Chapter10MeetingApp';
+import { EngineeringReleasePortalApp } from '../chapter10/EngineeringReleasePortalApp';
+import { Chapter10ScorecardModal } from '../chapter10/Chapter10ScorecardModal';
+
 interface BrainedOSDesktopProps {
   onOpenEventModal?: () => void;
   playerConfig?: {
@@ -691,6 +703,20 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
     });
   };
 
+  // ── Chapter 10 Interactive Simulation State (Versioning & Technical Documentation) ──
+  const [chapter10State, setChapter10State] = useState<Chapter10State>(() => getChapter10SessionState());
+  const [isChapter10ScorecardOpen, setIsChapter10ScorecardOpen] = useState(false);
+
+  const handleUpdateChapter10State = (
+    updater: Partial<Chapter10State> | ((prev: Chapter10State) => Chapter10State)
+  ) => {
+    setChapter10State((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : { ...prev, ...updater };
+      setChapter10SessionState(next);
+      return next;
+    });
+  };
+
   // ── Chapter 3 Kickoff Notification from Daniel (UAT Prerequisites) ──
   useEffect(() => {
     if (bootStep !== 'ready' || activeChapter !== 3) return;
@@ -1030,6 +1056,51 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
     return () => clearTimeout(timer);
   }, [chapter9State.meetingCompleted, chapter9State.callCompleted, activeChapter]);
 
+  // ── Chapter 10 Step 1: Alex Pre-Brief Call (Hidden Technical Debt) ──
+  useEffect(() => {
+    if (bootStep !== 'ready' || activeChapter !== 10) return;
+    if (seenNotifIds.current.has('ch10_alex_call_incoming')) return;
+
+    const timer = setTimeout(() => {
+      sound.playMessagePing();
+      pushNotification({
+        id: 'ch10_alex_call_incoming',
+        app: 'Teams',
+        title: 'Alex · Lead Architect',
+        subtitle: 'Post-Launch Technical Debt & Spec Lock',
+        body: 'Jane, the ROI is signed off, but our API specs and architecture diagrams are scattered across personal folders and duplicate files. We need release governance before sprint close.',
+        timestamp: 'Now',
+        actionText: 'Join Call',
+        onActionAppId: 'chapter10_meeting',
+        isCall: true,
+      });
+      handleUpdateChapter10State({ callInitiated: true });
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [bootStep, activeChapter]);
+
+  // ── Chapter 10 Step 2: Engineering Developer Portal Challenge Unlock ──
+  useEffect(() => {
+    if (activeChapter !== 10 || (!chapter10State.meetingCompleted && !chapter10State.callCompleted)) return;
+    if (seenNotifIds.current.has('ch10_portal_unlocked')) return;
+
+    const timer = setTimeout(() => {
+      sound.playSystemClearance();
+      pushNotification({
+        id: 'ch10_portal_unlocked',
+        app: 'Teams',
+        title: 'Alex · Lead Architect',
+        subtitle: 'Developer Portal Challenge Ready',
+        body: 'Pre-brief concluded. Access the Internal Developer Portal to audit the repository, determine SemVer v1.0.0, and publish the 6-domain architecture catalog.',
+        timestamp: 'Now',
+        actionText: 'Open Portal',
+        onActionAppId: 'engineering_release_portal',
+      });
+      handleUpdateChapter10State({ portalOpened: true });
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [chapter10State.meetingCompleted, chapter10State.callCompleted, activeChapter]);
+
 
 
   // Register Cera active app checker, external notification handler, and browser open callback
@@ -1209,6 +1280,8 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
     release_handover_desk: { title: 'Security Response Console — Project Amigo', icon: <FileCheck2 className="w-4 h-4 text-emerald-400" /> },
     chapter9_meeting: { title: 'Microsoft Teams — Executive Boardroom Presentation Suite', icon: <span>📹</span> },
     executive_roi_boardroom: { title: 'Executive Boardroom — ROI Validation & Impact Suite', icon: <span>📈</span> },
+    chapter10_meeting: { title: 'Microsoft Teams — Locking Down System Architecture Specs', icon: <span>📹</span> },
+    engineering_release_portal: { title: 'Internal Developer Portal — Release v1.0.0 & Architecture Catalog', icon: <span>📦</span> },
     brief: { title: 'Preview — Project_Amigo_Internal_Brief.pdf', icon: <span>📄</span> },
     assignment: { title: 'Project Amigo — Initial Planning · Assignment 01', icon: <span>📋</span> },
     review: { title: 'Microsoft Teams — Prototype Review · Day 7', icon: <span>📹</span> },
@@ -1388,6 +1461,16 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
         />
       )}
 
+      {/* CHAPTER 10 STATUS BANNER */}
+      {activeChapter === 10 && (
+        <Chapter10Banner
+          state={chapter10State}
+          onOpenMeeting={() => handleOpenApp('chapter10_meeting')}
+          onOpenPortal={() => handleOpenApp('engineering_release_portal')}
+          onOpenScorecard={() => setIsChapter10ScorecardOpen(true)}
+        />
+      )}
+
       {/* DESKTOP CANVAS */}
       <main className="flex-1 relative z-10 pt-16 pb-24 px-8 overflow-hidden flex flex-col justify-between">
         {/* DESKTOP WIDGETS (CLOCK & STREAK) */}
@@ -1538,6 +1621,10 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
                   onUpdateChapter9State={handleUpdateChapter9State}
                   onOpenExecutiveBoardroom={() => handleOpenApp('executive_roi_boardroom')}
                   onOpenChapter9Meeting={() => handleOpenApp('chapter9_meeting')}
+                  chapter10State={chapter10State}
+                  onUpdateChapter10State={handleUpdateChapter10State}
+                  onOpenEngineeringReleasePortal={() => handleOpenApp('engineering_release_portal')}
+                  onOpenChapter10Meeting={() => handleOpenApp('chapter10_meeting')}
                   onOpenMailComposer={(to, email, subject, body) => {
                     setEmailComposer({
                       isOpen: true,
@@ -1758,6 +1845,31 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
                   onNotifyDesktop={(title, body) => {
                     pushNotification({
                       id: `ch9_desktop_notif_${Date.now()}`,
+                      app: 'Teams',
+                      title,
+                      body,
+                      timestamp: 'Now',
+                    });
+                  }}
+                />
+              )}
+              {/* CHAPTER 10 SIMULATION APPS (RELEASE & DOCUMENTATION CHALLENGE) */}
+              {activeAppId === 'chapter10_meeting' && (
+                <Chapter10MeetingApp
+                  chapter10State={chapter10State}
+                  onUpdateState={handleUpdateChapter10State}
+                  onOpenPortal={() => handleOpenApp('engineering_release_portal')}
+                  onOpenScorecard={() => setIsChapter10ScorecardOpen(true)}
+                />
+              )}
+              {activeAppId === 'engineering_release_portal' && (
+                <EngineeringReleasePortalApp
+                  chapter10State={chapter10State}
+                  onUpdateState={handleUpdateChapter10State}
+                  onOpenScorecard={() => setIsChapter10ScorecardOpen(true)}
+                  onNotifyDesktop={(title, body) => {
+                    pushNotification({
+                      id: `ch10_desktop_notif_${Date.now()}`,
                       app: 'Teams',
                       title,
                       body,
@@ -2136,6 +2248,26 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
             setIsChapter9ScorecardOpen(false);
             resetChapterSession(9);
             if (onStartChapter) onStartChapter(9);
+          }}
+        />
+      )}
+
+      {/* CHAPTER 10 SCORECARD MODAL (RELEASE ARCHITECT) */}
+      {isChapter10ScorecardOpen && (
+        <Chapter10ScorecardModal
+          scorecard={chapter10State.scorecard || computeChapter10Score(chapter10State)}
+          onClose={() => setIsChapter10ScorecardOpen(false)}
+          onReset={() => {
+            setIsChapter10ScorecardOpen(false);
+            resetChapterSession(10);
+            setChapter10State(getChapter10SessionState());
+            if (onStartChapter) onStartChapter(10);
+          }}
+          onProceedToNextChapter={() => {
+            setIsChapter10ScorecardOpen(false);
+            localStorage.setItem('brained_just_unlocked_chapter', '11');
+            if (onStartChapter) onStartChapter(11);
+            else if (onReturnToChapterSelect) onReturnToChapterSelect();
           }}
         />
       )}

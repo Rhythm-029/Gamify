@@ -10,6 +10,7 @@ import { resetChapter6SessionState } from './chapter6Data';
 import { resetChapter7SessionState } from './chapter7Data';
 import { resetChapter8SessionState } from './chapter8Data';
 import { resetChapter9SessionState } from './chapter9Data';
+import { resetChapter10SessionState } from './chapter10Data';
 
 export type ChapterStatus = 'locked' | 'unlocked' | 'in_progress' | 'completed';
 
@@ -260,25 +261,26 @@ export const CHAPTERS: Chapter[] = [
   {
     id: 10,
     slug: 'chapter-10',
-    title: 'Measuring Impact',
-    subtitle: 'Proving the Value',
+    title: 'Versioning & Technical Documentation',
+    subtitle: 'Post-Launch Stabilization',
     act: 'IV',
-    actLabel: 'Act IV — Value',
-    day: 'Day 17–18',
-    duration: '~25 mins',
+    actLabel: 'Act IV — Value & Sustainability',
+    day: 'Day 19–20',
+    duration: '25:00–27:00 (~20 mins)',
     difficulty: 'Hard',
-    xpReward: 450,
+    xpReward: 500,
     description:
-      'Post-launch. Now you need to prove it worked. The CFO demands ROI evidence. Adoption rates are lower than projected. Construct your measurement framework and tell the data story.',
+      'The product is live and business ROI is proven, but can engineering maintain and upgrade the system without depending on original developers? Audit the messy repository, enforce Semantic Versioning (v1.0.0), publish enterprise developer portal specs, and lock down release governance.',
     objectives: [
-      { label: 'Build transformation impact dashboard', type: 'analysis' },
-      { label: 'Respond to CFO ROI challenge', type: 'decision' },
-      { label: 'Identify adoption gap remediation plan', type: 'delivery' },
+      { label: 'Audit repository and eliminate duplicate/unverified technical assets', type: 'analysis' },
+      { label: 'Tag official release using Semantic Versioning principles (v1.0.0)', type: 'decision' },
+      { label: 'Publish 6-domain architecture catalog to enterprise developer portal', type: 'delivery' },
+      { label: 'Enforce release governance gate against short-term shortcut pressures', type: 'decision' },
     ],
-    primaryColor: '#0ea5e9',
-    secondaryColor: '#10b981',
-    accentColor: '#38bdf8',
-    backgroundIcon: '📊',
+    primaryColor: '#6366f1',
+    secondaryColor: '#3b82f6',
+    accentColor: '#818cf8',
+    backgroundIcon: '📦',
     status: 'locked',
   },
   {
@@ -389,6 +391,8 @@ export function resetChapterSession(chapterId: number) {
     resetChapter8SessionState();
   } else if (chapterId === 9) {
     resetChapter9SessionState();
+  } else if (chapterId === 10) {
+    resetChapter10SessionState();
   }
 }
 
@@ -403,6 +407,7 @@ export function resetChapterStatuses() {
   resetChapter7SessionState();
   resetChapter8SessionState();
   resetChapter9SessionState();
+  resetChapter10SessionState();
   try {
     localStorage.removeItem('brained_chapter_statuses');
     localStorage.removeItem('brained_just_unlocked_chapter');
@@ -415,6 +420,7 @@ export function resetChapterStatuses() {
     localStorage.removeItem('brained_chapter7_state');
     localStorage.removeItem('brained_chapter8_state');
     localStorage.removeItem('brained_chapter9_state');
+    localStorage.removeItem('brained_chapter10_state');
   } catch {}
 }
 

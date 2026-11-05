@@ -1,31 +1,34 @@
 {
   "id": 10,
   "slug": "chapter-10",
-  "title": "Measuring Impact",
-  "subtitle": "Proving the Value & ROI Frameworks",
+  "title": "Versioning & Technical Documentation",
+  "subtitle": "Post-Launch Stabilization — Engineering Release & Documentation Challenge",
   "act": "IV",
-  "actLabel": "Act IV — Value",
-  "day": "Day 17–18",
-  "duration": "~25 mins",
+  "actLabel": "Act IV — Value & Sustainability",
+  "day": "Day 19–20",
+  "duration": "25:00–27:00 (~20 mins)",
   "difficulty": "Hard",
-  "xpReward": 450,
-  "description": "Post-launch. Now you need to prove it worked. The CFO demands ROI evidence. Adoption rates are lower than projected. Construct your measurement framework and tell the data story.",
+  "xpReward": 500,
+  "description": "The product is live and business ROI is proven, but can engineering maintain, upgrade, and hand over the system without depending on original developers? Audit the messy repository, enforce Semantic Versioning (v1.0.0), publish enterprise developer portal specs, and enforce release governance.",
   "stakeholders": [
-    { "name": "Vikram Malhotra", "role": "Chief Financial Officer", "agenda": "Auditing operational expenditure reductions and labor hours saved." },
-    { "name": "Analytics & Business Intelligence Lead", "role": "Data Governance", "agenda": "Synthesizing usage telemetry and user satisfaction scores." }
+    { "name": "Alex", "role": "Lead Architect & Engineering Lead", "agenda": "Resolving scattered API docs, untracked configs, and establishing a single source of truth before the sprint closes." },
+    { "name": "Marcus Reed", "role": "Chief Technology Officer", "agenda": "Enforcing formal release versioning, backward compatibility contracts, and eliminating single points of human failure." },
+    { "name": "Sophia Bennett", "role": "VP Operations / Executive Sponsor", "agenda": "Ensuring long-term product maintainability across 4,800 branches without vendor or developer dependency." }
   ],
   "objectives": [
-    { "label": "Build comprehensive transformation impact and adoption dashboard", "type": "analysis" },
-    { "label": "Respond to CFO's aggressive financial ROI challenge with hard data", "type": "decision" },
-    { "label": "Identify adoption gap root causes and launch remediation intervention", "type": "delivery" }
+    { "label": "Audit messy engineering repository and eliminate unverified/duplicate technical files", "type": "analysis" },
+    { "label": "Determine correct Semantic Versioning tag (v1.0.0) based on industry release standards", "type": "decision" },
+    { "label": "Publish comprehensive 6-domain architectural knowledge catalog to enterprise developer portal", "type": "delivery" },
+    { "label": "Enforce strict release governance sign-off against short-term feature shortcut pressure", "type": "governance" }
   ],
   "deliverables": [
-    "Transformation ROI Financial Model",
-    "Executive Impact Dashboard & KPI Scorecard",
-    "Regional Adoption Remediation Action Plan"
+    "Repository Audit & Verified Technical Manifest",
+    "Semantic Version Release Tag (v1.0.0)",
+    "Enterprise Developer Portal Architecture Catalog",
+    "Formal Release Governance Decision & Sign-off"
   ],
-  "primaryColor": "#0ea5e9",
-  "secondaryColor": "#10b981",
-  "accentColor": "#38bdf8",
-  "backgroundIcon": "📊"
+  "primaryColor": "#6366f1",
+  "secondaryColor": "#3b82f6",
+  "accentColor": "#818cf8",
+  "backgroundIcon": "📦"
 }

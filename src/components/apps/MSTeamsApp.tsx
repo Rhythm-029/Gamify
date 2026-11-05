@@ -13,6 +13,7 @@ import type { Chapter3State } from '../../types/chapter3';
 import type { Chapter7State } from '../../types/chapter7';
 import type { Chapter8State } from '../../types/chapter8';
 import type { Chapter9State } from '../../types/chapter9';
+import type { Chapter10State } from '../../types/chapter10';
 import { Chapter3ChatWorkspace } from '../chapter3/Chapter3ChatWorkspace';
 
 interface MSTeamsAppProps {
@@ -50,6 +51,10 @@ interface MSTeamsAppProps {
   onUpdateChapter9State?: (updater: Partial<Chapter9State> | ((prev: Chapter9State) => Chapter9State)) => void;
   onOpenExecutiveBoardroom?: () => void;
   onOpenChapter9Meeting?: () => void;
+  chapter10State?: Chapter10State;
+  onUpdateChapter10State?: (updater: Partial<Chapter10State> | ((prev: Chapter10State) => Chapter10State)) => void;
+  onOpenEngineeringReleasePortal?: () => void;
+  onOpenChapter10Meeting?: () => void;
 }
 
 interface ChatContact {
@@ -125,7 +130,12 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
   onUpdateChapter9State,
   onOpenExecutiveBoardroom,
   onOpenChapter9Meeting,
+  chapter10State,
+  onUpdateChapter10State,
+  onOpenEngineeringReleasePortal,
+  onOpenChapter10Meeting,
 }) => {
+  const isCh10 = activeChapter === 10;
   const isCh9 = activeChapter === 9;
   const isCh8 = activeChapter === 8;
   const isCh7 = activeChapter === 7;
@@ -138,7 +148,7 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
     'aarav' | 'marcus' | 'sophia' | 'daniel' | 'amigo-dev-ops' | 'martha' | 'ciso' | 'alex' | 'mark' | 'vikram'
   >(
     (initialChatId as any) ||
-      (isCh9 ? 'sophia' : isCh8 ? 'ciso' : isCh7 ? 'martha' : isCh4 ? 'sophia' : isCh3 ? (chapter3State?.activeChatRecipient || 'daniel') : isPastCh1 ? 'daniel' : 'aarav')
+      (isCh10 ? 'alex' : isCh9 ? 'sophia' : isCh8 ? 'ciso' : isCh7 ? 'martha' : isCh4 ? 'sophia' : isCh3 ? (chapter3State?.activeChatRecipient || 'daniel') : isPastCh1 ? 'daniel' : 'aarav')
   );
   const [messageInput, setMessageInput] = useState('');
   const [customMessages, setCustomMessages] = useState<Record<string, CustomMessage[]>>({});
@@ -186,7 +196,59 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
   const effectiveAssignmentResult = assignmentResult || (isPastCh1 ? CANONICAL_CHAPTER1_RESULT : null);
 
   // Dynamic Contacts List depending on Active Chapter
-  const contactsList: ChatContact[] = isCh9
+  const contactsList: ChatContact[] = isCh10
+    ? [
+        {
+          id: 'alex',
+          name: 'Alex',
+          role: 'Lead Architect & Engineering Lead',
+          avatar: '/character/Daniel_Brooks/DanielDP.png',
+          lastMessage: chapter10State?.decisionChosen
+            ? 'Release v1.0.0 is officially tagged and verified in the Enterprise Wiki!'
+            : 'Jane, our API specs and architecture diagrams are scattered. If a new dev joins, they have to ask us. We need release governance before sprint close.',
+          time: '25:00',
+          unread: !chapter10State?.decisionChosen,
+          online: true,
+        },
+        {
+          id: 'marcus',
+          name: 'Marcus Reed',
+          role: 'Chief Technology Officer (CTO)',
+          avatar: '/character/marcus_reed/MarcusDP.png',
+          lastMessage: chapter10State?.decisionChosen
+            ? 'Strong technical stewardship. Enforcing Semantic Versioning and publishing our architecture specs protects the bank.'
+            : 'No project closes without formal release tagging. We cannot have single points of human failure across 4,800 branches.',
+          time: '25:10',
+          unread: false,
+          online: true,
+        },
+        {
+          id: 'sophia',
+          name: 'Sophia Bennett',
+          role: 'VP Operations · Executive Sponsor',
+          avatar: '/character/Sophia_bennett/SophiaDP.png',
+          lastMessage: chapter10State?.decisionChosen
+            ? 'Thank you for locking down the architecture. Operational teams now have full visibility into Amigo workflows.'
+            : 'The Board is thrilled with the ROI. Now make sure the engineering organization can maintain and upgrade Amigo independently.',
+          time: '25:12',
+          unread: false,
+          online: true,
+        },
+        {
+          id: 'amigo-dev-ops',
+          name: 'Amigo CI/CD & Release Bot',
+          role: 'Deployment Automation Pipeline',
+          avatar: '',
+          isChannel: true,
+          lastMessage: chapter10State?.decisionChosen
+            ? 'PIPELINE SUCCESS: v1.0.0 artifact built, signed, and published to developer catalog.'
+            : 'PIPELINE STANDBY: Awaiting Semantic Version release tag and approved documentation manifest.',
+          time: '25:15',
+          unread: false,
+          online: true,
+        },
+      ]
+    : isCh9
     ? [
         {
           id: 'sophia',
@@ -709,7 +771,214 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
 
         {/* Chat Messages Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {isCh9 && (activeChatId === 'sophia' || activeChatId === 'mark' || activeChatId === 'martha' || activeChatId === 'vikram' || activeChatId === 'marcus') ? (
+          {isCh10 && (activeChatId === 'alex' || activeChatId === 'marcus' || activeChatId === 'sophia' || activeChatId === 'amigo-dev-ops') ? (
+            /* ── CHAPTER 10 ENGINEERING RELEASE & GOVERNANCE CHATS ── */
+            <div className="space-y-4">
+              <div className="flex justify-center">
+                <span className="text-[10px] font-mono text-indigo-400 bg-indigo-500/15 px-3.5 py-1 rounded-full border border-indigo-500/30 flex items-center gap-1.5 font-bold shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                  Today · 25:00 · Engineering Floor · Post-Launch Stabilization & Release Governance
+                </span>
+              </div>
+
+              {/* VIEW 1: ALEX (LEAD ARCHITECT) CHAT */}
+              {activeChatId === 'alex' && (
+                <>
+                  <div className="flex items-start space-x-3 max-w-2xl">
+                    <img
+                      src="/character/Daniel_Brooks/DanielDP.png"
+                      alt="Alex"
+                      className="w-8 h-8 rounded-full object-cover border border-indigo-400/50 shrink-0 mt-1"
+                    />
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-xs text-indigo-300">Alex</span>
+                        <span className="text-[10px] font-mono text-slate-400">Lead Architect · 25:00</span>
+                      </div>
+                      <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#121c24] border border-indigo-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                        <p className="font-bold text-indigo-200">
+                          "Jane, the launch was successful, and the code is stable. But there's something we haven't addressed. Our API documentation is scattered across temporary Markdown files, architecture diagrams are sitting in personal folders, and nobody knows which version of the technical specifications is final."
+                        </p>
+                        <p className="text-slate-300 text-xs">
+                          "If a new developer joins tomorrow, they'll have to ask whoever wrote the code. We've created a dangerous knowledge dependency. We need to clean up the repository, choose our formal release tag (SemVer), and publish the official architecture catalog."
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {chapter10State?.repoAuditCompleted && (
+                    <div className="flex items-start space-x-3 max-w-2xl">
+                      <img
+                        src="/character/Daniel_Brooks/DanielDP.png"
+                        alt="Alex"
+                        className="w-8 h-8 rounded-full object-cover border border-emerald-400/50 shrink-0 mt-1"
+                      />
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-bold text-xs text-emerald-300">Alex</span>
+                          <span className="text-[10px] font-mono text-emerald-400 font-bold px-2 py-0.2 rounded bg-emerald-500/20">
+                            Repo Audit Validated (+5 Bonus)
+                          </span>
+                        </div>
+                        <div className="p-3 rounded-xl bg-slate-950/80 border border-emerald-500/30 text-xs text-slate-200 space-y-1">
+                          <p>
+                            "Great catch filtering out <code className="text-amber-300">API_Spec_final_FINAL.md</code> and <code className="text-amber-300">temp_notes.md</code>! We now have an authoritative single source of truth for the core codebase."
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {chapter10State?.selectedVersion && (
+                    <div className="flex items-start space-x-3 max-w-2xl">
+                      <img
+                        src="/character/Daniel_Brooks/DanielDP.png"
+                        alt="Alex"
+                        className="w-8 h-8 rounded-full object-cover border border-blue-400/50 shrink-0 mt-1"
+                      />
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-bold text-xs text-blue-300">Alex</span>
+                          <span className="text-[10px] font-mono text-blue-400 font-bold px-2 py-0.2 rounded bg-blue-500/20">
+                            Tag: {chapter10State.selectedVersion}
+                          </span>
+                        </div>
+                        <div className="p-3 rounded-xl bg-slate-950/80 border border-blue-500/30 text-xs text-slate-200">
+                          <p>
+                            {chapter10State.selectedVersion === 'v1.0.0'
+                              ? '"Standard Semantic Versioning applied: v1.0.0 marks our initial stable production release. No premature major breaking tags."'
+                              : `"Tag recorded as ${chapter10State.selectedVersion}. Let's make sure our release notes reflect this."`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {chapter10State?.decisionChosen && (
+                    <div className="flex items-start space-x-3 max-w-2xl">
+                      <img
+                        src="/character/Daniel_Brooks/DanielDP.png"
+                        alt="Alex"
+                        className="w-8 h-8 rounded-full object-cover border border-emerald-400/50 shrink-0 mt-1"
+                      />
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-bold text-xs text-emerald-300">Alex</span>
+                          <span className="text-[10px] font-mono text-emerald-400 font-bold px-2 py-0.2 rounded bg-emerald-500/20">
+                            {chapter10State.decisionChosen === 'choice_b' ? 'Release Governance Enforced' : 'Sprint Closed (Short-term shortcut)'}
+                          </span>
+                        </div>
+                        <div className="p-3.5 rounded-2xl bg-[#09181a] border border-emerald-500/40 text-xs text-slate-100 shadow-md">
+                          <p className="font-semibold text-emerald-200">
+                            {chapter10State.decisionChosen === 'choice_b'
+                              ? '"Release v1.0.0 has been tagged and all 6 architectural domains are published to the internal developer portal. Future engineering squads can now onboard and extend the system independently!"'
+                              : '"Understood. We skipped the formal governance to jump straight into feature sprint 2. Technical debt will mount if developers leave, but the team moves fast for now."'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* VIEW 2: MARCUS REED (CTO) CHAT */}
+              {activeChatId === 'marcus' && (
+                <div className="flex items-start space-x-3 max-w-2xl">
+                  <img
+                    src="/character/marcus_reed/MarcusDP.png"
+                    alt="Marcus Reed"
+                    className="w-8 h-8 rounded-full object-cover border border-purple-400/50 shrink-0 mt-1"
+                  />
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-bold text-xs text-purple-300">Marcus Reed</span>
+                      <span className="text-[10px] font-mono text-slate-400">Chief Technology Officer · 25:10</span>
+                    </div>
+                    <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#181126] border border-purple-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                      <p className="font-bold text-purple-200">
+                        "Jane, congratulations on delivering quantifiable ROI to Vikram and the Steering Committee. But as CTO, my mandate is architectural longevity."
+                      </p>
+                      <p className="text-slate-300 text-xs">
+                        "I cannot have 4,800 branch banking workflows dependent on the memory of three individual developers. Every API schema, Kafka message contract, and database relationship must be version-controlled and published to our Backstage developer portal before we declare sprint completion."
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* VIEW 3: SOPHIA BENNETT CHAT */}
+              {activeChatId === 'sophia' && (
+                <div className="flex items-start space-x-3 max-w-2xl">
+                  <img
+                    src="/character/Sophia_bennett/SophiaDP.png"
+                    alt="Sophia Bennett"
+                    className="w-8 h-8 rounded-full object-cover border border-amber-400/50 shrink-0 mt-1"
+                  />
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-bold text-xs text-amber-300">Sophia Bennett</span>
+                      <span className="text-[10px] font-mono text-slate-400">Head of HR Operations · 25:12</span>
+                    </div>
+                    <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#1e170a] border border-amber-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                      <p className="font-bold text-amber-200">
+                        "The Executive Steering Committee is thrilled with the ₹97.5 Lakhs in annual capacity savings! Phase 2 is fully funded."
+                      </p>
+                      <p className="text-slate-300 text-xs">
+                        "Work closely with Alex to lock down system specifications. When we rotate vendors and expand internal engineering pods for Phase 2, clean documentation will be the difference between smooth expansion and chaos."
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* VIEW 4: AMIGO DEVOPS CHANNEL */}
+              {activeChatId === 'amigo-dev-ops' && (
+                <div className="flex items-start space-x-3 max-w-2xl">
+                  <div className="w-8 h-8 rounded-full bg-slate-800 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shrink-0 mt-1">
+                    <Database className="w-4 h-4" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-bold text-xs text-cyan-300">Amigo CI/CD Bot</span>
+                      <span className="text-[10px] font-mono text-slate-400">Pipeline Bot · 25:15</span>
+                    </div>
+                    <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#0c1a24] border border-cyan-500/30 text-xs font-mono text-slate-200 shadow-md leading-relaxed space-y-2">
+                      <p className="text-cyan-300 font-bold">
+                        [PIPELINE STATUS] Build #814 (Release Branch: amigo-release-v1)
+                      </p>
+                      <div className="text-[11px] text-slate-300 space-y-1">
+                        <div>• Microservices Build: PASS (0 errors, 14 warnings)</div>
+                        <div>• Docker Image: amigobank.internal/payroll-core:sha-9f201a</div>
+                        <div>• Semantic Version Tag: {chapter10State?.selectedVersion ? <span className="text-emerald-400 font-bold">{chapter10State.selectedVersion}</span> : <span className="text-amber-400 font-bold">[PENDING DECISION]</span>}</div>
+                        <div>• Developer Portal Sync: {chapter10State?.catalogPublished ? <span className="text-emerald-400 font-bold">PUBLISHED (100% Coverage)</span> : <span className="text-slate-400">UNPUBLISHED</span>}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons for Chapter 10 */}
+              <div className="pt-2 flex flex-wrap items-center gap-3">
+                {onOpenChapter10Meeting && (
+                  <button
+                    onClick={onOpenChapter10Meeting}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-900/40 flex items-center gap-2 cursor-pointer transition-all border border-blue-400/40"
+                  >
+                    <span>📹 Join Alex Pre-Brief Call (25:00)</span>
+                  </button>
+                )}
+                {onOpenEngineeringReleasePortal && (
+                  <button
+                    onClick={onOpenEngineeringReleasePortal}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs shadow-md shadow-indigo-900/40 flex items-center gap-2 cursor-pointer transition-all border border-indigo-400/40"
+                  >
+                    <span>💻 Open Developer Portal (Engineering Challenge)</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : isCh9 && (activeChatId === 'sophia' || activeChatId === 'mark' || activeChatId === 'martha' || activeChatId === 'vikram' || activeChatId === 'marcus') ? (
             /* ── CHAPTER 9 EXECUTIVE STEERING COMMITTEE & TELEMETRY CHATS ── */
             <div className="space-y-4">
               <div className="flex justify-center">
