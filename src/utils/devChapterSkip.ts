@@ -104,6 +104,24 @@ export const DEV_CHAPTERS: DevChapterOption[] = [
     icon: '📈',
     color: '#10b981',
   },
+  {
+    id: 10,
+    label: 'Chapter 10',
+    badge: 'VERSIONING & DOCS',
+    title: 'Engineering Release & Documentation',
+    subtitle: 'Release Portal · Repo Audit · Technical Knowledge Base',
+    icon: '📦',
+    color: '#8b5cf6',
+  },
+  {
+    id: 11,
+    label: 'Chapter 11',
+    badge: 'OPERATIONAL HANDOVER',
+    title: 'Operational Handover',
+    subtitle: 'Operations Transition Console · 14-Day Hypercare · Knowledge Transfer',
+    icon: '🤝',
+    color: '#f97316',
+  },
 ];
 
 /** Resets target chapter state and initiates transition */
