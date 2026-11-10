@@ -161,6 +161,18 @@ import { Chapter10MeetingApp } from '../chapter10/Chapter10MeetingApp';
 import { EngineeringReleasePortalApp } from '../chapter10/EngineeringReleasePortalApp';
 import { Chapter10ScorecardModal } from '../chapter10/Chapter10ScorecardModal';
 
+// Chapter 11 Components & Data
+import type { Chapter11State } from '../../types/chapter11';
+import {
+  getChapter11SessionState,
+  setChapter11SessionState,
+  computeChapter11Score,
+} from '../../data/chapter11Data';
+import { Chapter11Banner } from '../chapter11/Chapter11Banner';
+import { Chapter11MeetingApp } from '../chapter11/Chapter11MeetingApp';
+import { OperationsTransitionConsoleApp } from '../chapter11/OperationsTransitionConsoleApp';
+import { Chapter11ScorecardModal } from '../chapter11/Chapter11ScorecardModal';
+
 interface BrainedOSDesktopProps {
   onOpenEventModal?: () => void;
   playerConfig?: {
@@ -717,6 +729,20 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
     });
   };
 
+  // ── Chapter 11 Interactive Simulation State (Operational Handover) ──
+  const [chapter11State, setChapter11State] = useState<Chapter11State>(() => getChapter11SessionState());
+  const [isChapter11ScorecardOpen, setIsChapter11ScorecardOpen] = useState(false);
+
+  const handleUpdateChapter11State = (
+    updater: Partial<Chapter11State> | ((prev: Chapter11State) => Chapter11State)
+  ) => {
+    setChapter11State((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : { ...prev, ...updater };
+      setChapter11SessionState(next);
+      return next;
+    });
+  };
+
   // ── Chapter 3 Kickoff Notification from Daniel (UAT Prerequisites) ──
   useEffect(() => {
     if (bootStep !== 'ready' || activeChapter !== 3) return;
@@ -1101,6 +1127,51 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
     return () => clearTimeout(timer);
   }, [chapter10State.meetingCompleted, chapter10State.callCompleted, activeChapter]);
 
+  // ── Chapter 11 Step 1: Martha Notification (Marcus Handover Meeting) ──
+  useEffect(() => {
+    if (bootStep !== 'ready' || activeChapter !== 11) return;
+    if (seenNotifIds.current.has('ch11_marcus_handover_call')) return;
+
+    const timer = setTimeout(() => {
+      sound.playMessagePing();
+      pushNotification({
+        id: 'ch11_marcus_handover_call',
+        app: 'Teams',
+        title: 'Martha · Project Coordination',
+        subtitle: 'Formal Handover Meeting Requested',
+        body: "The delivery team is preparing to close the project. But Marcus from IT Operations has requested a formal handover meeting before accepting ownership. Join the call now.",
+        timestamp: 'Now',
+        actionText: 'Join Meeting',
+        onActionAppId: 'chapter11_meeting',
+        isCall: true,
+      });
+      handleUpdateChapter11State({ callInitiated: true });
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [bootStep, activeChapter]);
+
+  // ── Chapter 11 Step 2: Operations Transition Console Challenge Unlock ──
+  useEffect(() => {
+    if (activeChapter !== 11 || (!chapter11State.meetingCompleted && !chapter11State.callCompleted)) return;
+    if (seenNotifIds.current.has('ch11_console_unlocked')) return;
+
+    const timer = setTimeout(() => {
+      sound.playSystemClearance();
+      pushNotification({
+        id: 'ch11_console_unlocked',
+        app: 'Teams',
+        title: 'Marcus · Head of IT Operations',
+        subtitle: 'Operations Transition Console Ready',
+        body: 'Handover meeting concluded. Open the Operations Transition Console to build the runbook package, test incident triage, and schedule the 14-day hypercare window.',
+        timestamp: 'Now',
+        actionText: 'Open Console',
+        onActionAppId: 'operations_transition_console',
+      });
+      handleUpdateChapter11State({ consoleOpened: true });
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [chapter11State.meetingCompleted, chapter11State.callCompleted, activeChapter]);
+
 
 
   // Register Cera active app checker, external notification handler, and browser open callback
@@ -1282,6 +1353,8 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
     executive_roi_boardroom: { title: 'Executive Boardroom — ROI Validation & Impact Suite', icon: <span>📈</span> },
     chapter10_meeting: { title: 'Microsoft Teams — Locking Down System Architecture Specs', icon: <span>📹</span> },
     engineering_release_portal: { title: 'Internal Developer Portal — Release v1.0.0 & Architecture Catalog', icon: <span>📦</span> },
+    chapter11_meeting: { title: 'Microsoft Teams — IT Operations Handover Meeting', icon: <span>📹</span> },
+    operations_transition_console: { title: 'Operations Transition Console — Project Amigo v1.0.0', icon: <span>🖥️</span> },
     brief: { title: 'Preview — Project_Amigo_Internal_Brief.pdf', icon: <span>📄</span> },
     assignment: { title: 'Project Amigo — Initial Planning · Assignment 01', icon: <span>📋</span> },
     review: { title: 'Microsoft Teams — Prototype Review · Day 7', icon: <span>📹</span> },
@@ -1471,6 +1544,16 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
         />
       )}
 
+      {/* CHAPTER 11 STATUS BANNER */}
+      {activeChapter === 11 && (
+        <Chapter11Banner
+          state={chapter11State}
+          onOpenMeeting={() => handleOpenApp('chapter11_meeting')}
+          onOpenConsole={() => handleOpenApp('operations_transition_console')}
+          onOpenScorecard={() => setIsChapter11ScorecardOpen(true)}
+        />
+      )}
+
       {/* DESKTOP CANVAS */}
       <main className="flex-1 relative z-10 pt-16 pb-24 px-8 overflow-hidden flex flex-col justify-between">
         {/* DESKTOP WIDGETS (CLOCK & STREAK) */}
@@ -1625,6 +1708,10 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
                   onUpdateChapter10State={handleUpdateChapter10State}
                   onOpenEngineeringReleasePortal={() => handleOpenApp('engineering_release_portal')}
                   onOpenChapter10Meeting={() => handleOpenApp('chapter10_meeting')}
+                  chapter11State={chapter11State}
+                  onUpdateChapter11State={handleUpdateChapter11State}
+                  onOpenOperationsTransitionConsole={() => handleOpenApp('operations_transition_console')}
+                  onOpenChapter11Meeting={() => handleOpenApp('chapter11_meeting')}
                   onOpenMailComposer={(to, email, subject, body) => {
                     setEmailComposer({
                       isOpen: true,
@@ -1870,6 +1957,31 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
                   onNotifyDesktop={(title, body) => {
                     pushNotification({
                       id: `ch10_desktop_notif_${Date.now()}`,
+                      app: 'Teams',
+                      title,
+                      body,
+                      timestamp: 'Now',
+                    });
+                  }}
+                />
+              )}
+              {/* CHAPTER 11 SIMULATION APPS (OPERATIONAL HANDOVER) */}
+              {activeAppId === 'chapter11_meeting' && (
+                <Chapter11MeetingApp
+                  chapter11State={chapter11State}
+                  onUpdateState={handleUpdateChapter11State}
+                  onOpenConsole={() => handleOpenApp('operations_transition_console')}
+                  onOpenScorecard={() => setIsChapter11ScorecardOpen(true)}
+                />
+              )}
+              {activeAppId === 'operations_transition_console' && (
+                <OperationsTransitionConsoleApp
+                  chapter11State={chapter11State}
+                  onUpdateState={handleUpdateChapter11State}
+                  onOpenScorecard={() => setIsChapter11ScorecardOpen(true)}
+                  onNotifyDesktop={(title, body) => {
+                    pushNotification({
+                      id: `ch11_desktop_notif_${Date.now()}`,
                       app: 'Teams',
                       title,
                       body,
@@ -2267,6 +2379,26 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
             setIsChapter10ScorecardOpen(false);
             localStorage.setItem('brained_just_unlocked_chapter', '11');
             if (onStartChapter) onStartChapter(11);
+            else if (onReturnToChapterSelect) onReturnToChapterSelect();
+          }}
+        />
+      )}
+
+      {/* CHAPTER 11 SCORECARD MODAL (THE TRANSITION LEADER) */}
+      {isChapter11ScorecardOpen && (
+        <Chapter11ScorecardModal
+          scorecard={chapter11State.scorecard || computeChapter11Score(chapter11State)}
+          onClose={() => setIsChapter11ScorecardOpen(false)}
+          onReset={() => {
+            setIsChapter11ScorecardOpen(false);
+            resetChapterSession(11);
+            setChapter11State(getChapter11SessionState());
+            if (onStartChapter) onStartChapter(11);
+          }}
+          onProceedToNextChapter={() => {
+            setIsChapter11ScorecardOpen(false);
+            localStorage.setItem('brained_just_unlocked_chapter', '12');
+            if (onStartChapter) onStartChapter(12);
             else if (onReturnToChapterSelect) onReturnToChapterSelect();
           }}
         />

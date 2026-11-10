@@ -93,10 +93,10 @@ const CHAPTER_VISUALS: Record<number, { title: string; subtitle: string; descrip
     yOffset: 152,
   },
   11: {
-    title: 'The Executive Review',
-    subtitle: 'Act IV · Steering Committee',
-    description: 'Defend transformation outcomes, ROI metrics, and operational readiness before the ICICI Bank Steering Committee.',
-    thumb: 'https://images.unsplash.com/photo-1577495508048-b635879837f1?w=300&auto=format&fit=crop&q=80',
+    title: 'Operational Handover',
+    subtitle: 'Act IV · Operations Transfer',
+    description: 'Deploying a product is not the same as transferring operational ownership. Marcus and IT Operations require verified runbooks, incident validation, and a mandatory 14-day hypercare window.',
+    thumb: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=300&auto=format&fit=crop&q=80',
     yOffset: 172,
   },
   12: {

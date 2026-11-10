@@ -11,6 +11,7 @@ import { resetChapter7SessionState } from './chapter7Data';
 import { resetChapter8SessionState } from './chapter8Data';
 import { resetChapter9SessionState } from './chapter9Data';
 import { resetChapter10SessionState } from './chapter10Data';
+import { resetChapter11SessionState } from './chapter11Data';
 
 export type ChapterStatus = 'locked' | 'unlocked' | 'in_progress' | 'completed';
 
@@ -286,25 +287,26 @@ export const CHAPTERS: Chapter[] = [
   {
     id: 11,
     slug: 'chapter-11',
-    title: 'The Final Presentation',
-    subtitle: 'Board-Level Stakes',
+    title: 'Operational Handover',
+    subtitle: 'From Project Delivery to Operational Ownership',
     act: 'IV',
-    actLabel: 'Act IV — Value',
-    day: 'Day 19',
-    duration: '~30 mins',
+    actLabel: 'Act IV — Value & Sustainability',
+    day: 'Day 21',
+    duration: '27:00–29:00 (~20 mins)',
     difficulty: 'Expert',
-    xpReward: 600,
+    xpReward: 650,
     description:
-      `You present to the Board of Directors. Every stakeholder you've managed, every decision you've made, every signal you've sent — it all comes to the surface here. Deliver the knockout.`,
+      'Deploying a product is not the same as transferring operational ownership. Marcus and IT Operations refuse to accept ownership without verified administrator runbooks, incident response validation, and a mandatory 14-day hypercare window.',
     objectives: [
-      { label: 'Deliver board-level executive presentation', type: 'stakeholder' },
-      { label: 'Handle hostile board member challenge', type: 'decision' },
-      { label: 'Secure mandate for Phase 2', type: 'stakeholder' },
+      { label: 'Build verified operational handover package matching 6 runbooks to requirements', type: 'analysis' },
+      { label: 'Validate incident response sequence for INC-0318 employee login triage', type: 'delivery' },
+      { label: 'Design 14-day progressive hypercare timeline across 3 operational phases', type: 'decision' },
+      { label: 'Authorize formal operational handover protocol with IT Operations sign-off', type: 'decision' },
     ],
-    primaryColor: '#7c3aed',
-    secondaryColor: '#ec4899',
-    accentColor: '#c084fc',
-    backgroundIcon: '👔',
+    primaryColor: '#6366f1',
+    secondaryColor: '#8b5cf6',
+    accentColor: '#a855f7',
+    backgroundIcon: '🔄',
     status: 'locked',
   },
   {
@@ -393,6 +395,8 @@ export function resetChapterSession(chapterId: number) {
     resetChapter9SessionState();
   } else if (chapterId === 10) {
     resetChapter10SessionState();
+  } else if (chapterId === 11) {
+    resetChapter11SessionState();
   }
 }
 
@@ -408,6 +412,7 @@ export function resetChapterStatuses() {
   resetChapter8SessionState();
   resetChapter9SessionState();
   resetChapter10SessionState();
+  resetChapter11SessionState();
   try {
     localStorage.removeItem('brained_chapter_statuses');
     localStorage.removeItem('brained_just_unlocked_chapter');
@@ -421,6 +426,7 @@ export function resetChapterStatuses() {
     localStorage.removeItem('brained_chapter8_state');
     localStorage.removeItem('brained_chapter9_state');
     localStorage.removeItem('brained_chapter10_state');
+    localStorage.removeItem('brained_chapter11_state');
   } catch {}
 }
 

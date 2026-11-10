@@ -14,6 +14,7 @@ import type { Chapter7State } from '../../types/chapter7';
 import type { Chapter8State } from '../../types/chapter8';
 import type { Chapter9State } from '../../types/chapter9';
 import type { Chapter10State } from '../../types/chapter10';
+import type { Chapter11State } from '../../types/chapter11';
 import { Chapter3ChatWorkspace } from '../chapter3/Chapter3ChatWorkspace';
 
 interface MSTeamsAppProps {
@@ -55,6 +56,10 @@ interface MSTeamsAppProps {
   onUpdateChapter10State?: (updater: Partial<Chapter10State> | ((prev: Chapter10State) => Chapter10State)) => void;
   onOpenEngineeringReleasePortal?: () => void;
   onOpenChapter10Meeting?: () => void;
+  chapter11State?: Chapter11State;
+  onUpdateChapter11State?: (updater: Partial<Chapter11State> | ((prev: Chapter11State) => Chapter11State)) => void;
+  onOpenOperationsTransitionConsole?: () => void;
+  onOpenChapter11Meeting?: () => void;
 }
 
 interface ChatContact {
@@ -134,7 +139,12 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
   onUpdateChapter10State,
   onOpenEngineeringReleasePortal,
   onOpenChapter10Meeting,
+  chapter11State,
+  onUpdateChapter11State,
+  onOpenOperationsTransitionConsole,
+  onOpenChapter11Meeting,
 }) => {
+  const isCh11 = activeChapter === 11;
   const isCh10 = activeChapter === 10;
   const isCh9 = activeChapter === 9;
   const isCh8 = activeChapter === 8;
@@ -148,7 +158,7 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
     'aarav' | 'marcus' | 'sophia' | 'daniel' | 'amigo-dev-ops' | 'martha' | 'ciso' | 'alex' | 'mark' | 'vikram'
   >(
     (initialChatId as any) ||
-      (isCh10 ? 'alex' : isCh9 ? 'sophia' : isCh8 ? 'ciso' : isCh7 ? 'martha' : isCh4 ? 'sophia' : isCh3 ? (chapter3State?.activeChatRecipient || 'daniel') : isPastCh1 ? 'daniel' : 'aarav')
+      (isCh11 ? 'martha' : isCh10 ? 'alex' : isCh9 ? 'sophia' : isCh8 ? 'ciso' : isCh7 ? 'martha' : isCh4 ? 'sophia' : isCh3 ? (chapter3State?.activeChatRecipient || 'daniel') : isPastCh1 ? 'daniel' : 'aarav')
   );
   const [messageInput, setMessageInput] = useState('');
   const [customMessages, setCustomMessages] = useState<Record<string, CustomMessage[]>>({});
@@ -196,7 +206,58 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
   const effectiveAssignmentResult = assignmentResult || (isPastCh1 ? CANONICAL_CHAPTER1_RESULT : null);
 
   // Dynamic Contacts List depending on Active Chapter
-  const contactsList: ChatContact[] = isCh10
+  const contactsList: ChatContact[] = isCh11
+    ? [
+        {
+          id: 'martha',
+          name: 'Martha',
+          role: 'Junior PM · Transition Coordination',
+          avatar: '/character/Emma_Carter/EmmaDP.png',
+          lastMessage: chapter11State?.decisionChosen === 'choice_b'
+            ? 'Operational handover is complete! 14 days of hypercare and all 3 workshops are in the calendar.'
+            : 'The delivery team is preparing to close the project. But Marcus from IT Operations has requested a formal handover meeting before accepting ownership.',
+          time: '27:00',
+          unread: !chapter11State?.meetingCompleted,
+          online: true,
+        },
+        {
+          id: 'marcus',
+          name: 'Marcus',
+          role: 'Head of IT Operations',
+          avatar: '/character/marcus_reed/MarcusDP.png',
+          lastMessage: chapter11State?.decisionChosen === 'choice_b'
+            ? 'On behalf of IT Operations, we accept the transition. The runbooks and hypercare model are ratified.'
+            : 'Your dev team built this platform. My team has to support it at 2 AM when something breaks. We need operational runbooks and verified training.',
+          time: '27:10',
+          unread: false,
+          online: true,
+        },
+        {
+          id: 'daniel',
+          name: 'Daniel',
+          role: 'Lead Developer',
+          avatar: '/character/Daniel_Brooks/DanielDP.png',
+          lastMessage: chapter11State?.decisionChosen === 'choice_b'
+            ? 'Huge relief. The engineering team can now focus on the next cycle without being an emergency support desk.'
+            : 'The architecture specs and v1.0.0 release notes are ready. I will lead the admin portal training session.',
+          time: '27:15',
+          unread: false,
+          online: true,
+        },
+        {
+          id: 'aarav',
+          name: 'Aarav Kapoor',
+          role: 'Senior PM · Leadership Mentor',
+          avatar: '/character/AaravDP.png',
+          lastMessage: chapter11State?.decisionChosen === 'choice_b'
+            ? "Good work. You didn't just deliver a product. You made sure the organization is ready to own it."
+            : 'This is where project delivery becomes operational ownership. Don’t just send them files. Make sure they can actually run the system.',
+          time: '27:20',
+          unread: false,
+          online: true,
+        },
+      ]
+    : isCh10
     ? [
         {
           id: 'alex',
@@ -771,7 +832,221 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
 
         {/* Chat Messages Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {isCh10 && (activeChatId === 'alex' || activeChatId === 'marcus' || activeChatId === 'sophia' || activeChatId === 'amigo-dev-ops') ? (
+          {isCh11 && (activeChatId === 'martha' || activeChatId === 'marcus' || activeChatId === 'daniel' || activeChatId === 'aarav') ? (
+            /* ── CHAPTER 11 OPERATIONAL HANDOVER CHATS ── */
+            <div className="space-y-4">
+              <div className="flex justify-center">
+                <span className="text-[10px] font-mono text-indigo-400 bg-indigo-500/15 px-3.5 py-1 rounded-full border border-indigo-500/30 flex items-center gap-1.5 font-bold shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                  Today · 27:00 · Operations Transition Suite · From Delivery to Operational Ownership
+                </span>
+              </div>
+
+              {/* VIEW 1: MARTHA (TRANSITION COORDINATION) CHAT */}
+              {activeChatId === 'martha' && (
+                <>
+                  <div className="flex items-start space-x-3 max-w-2xl">
+                    <img
+                      src="/character/Emma_Carter/EmmaDP.png"
+                      alt="Martha"
+                      className="w-8 h-8 rounded-full object-cover border border-purple-400/50 shrink-0 mt-1"
+                    />
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-xs text-purple-300">Martha</span>
+                        <span className="text-[10px] font-mono text-slate-400">Junior PM · 27:00</span>
+                      </div>
+                      <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#181126] border border-purple-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                        <p className="font-bold text-purple-200">
+                          "The delivery team is preparing to close the project. But Marcus from IT Operations has requested a formal handover meeting before accepting ownership. He's asking for the operational runbooks, escalation structure and administrator training plan."
+                        </p>
+                        <p className="text-slate-300 text-xs">
+                          "We have the technical documents, but Marcus wants to verify whether his support engineers can independently handle production incidents at 2 AM."
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {chapter11State?.matchingCompleted && (
+                    <div className="flex items-start space-x-3 max-w-2xl">
+                      <img
+                        src="/character/Emma_Carter/EmmaDP.png"
+                        alt="Martha"
+                        className="w-8 h-8 rounded-full object-cover border border-emerald-400/50 shrink-0 mt-1"
+                      />
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-bold text-xs text-emerald-300">Martha</span>
+                          <span className="text-[10px] font-mono text-emerald-400 font-bold px-2 py-0.2 rounded bg-emerald-500/20">
+                            Handover Package Verified (+6 Bonus)
+                          </span>
+                        </div>
+                        <div className="p-3 rounded-xl bg-slate-950/80 border border-emerald-500/30 text-xs text-slate-200">
+                          <p>
+                            "All 6 operational runbooks, escalation matrices, and SOPs have been paired and accepted by Marcus!"
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {chapter11State?.workshopsScheduled && (
+                    <div className="flex items-start space-x-3 max-w-2xl">
+                      <img
+                        src="/character/Emma_Carter/EmmaDP.png"
+                        alt="Martha"
+                        className="w-8 h-8 rounded-full object-cover border border-purple-400/50 shrink-0 mt-1"
+                      />
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-bold text-xs text-purple-300">Martha</span>
+                          <span className="text-[10px] font-mono text-purple-400 font-bold px-2 py-0.2 rounded bg-purple-500/20">
+                            Workshops Booked (+4 Bonus)
+                          </span>
+                        </div>
+                        <div className="p-3 rounded-xl bg-slate-950/80 border border-purple-500/30 text-xs text-slate-200">
+                          <p>
+                            "I've added the 3 knowledge-transfer workshops to the transition calendar and set up session recording for the support team."
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {chapter11State?.decisionChosen && (
+                    <div className="flex items-start space-x-3 max-w-2xl">
+                      <img
+                        src="/character/Emma_Carter/EmmaDP.png"
+                        alt="Martha"
+                        className="w-8 h-8 rounded-full object-cover border border-emerald-400/50 shrink-0 mt-1"
+                      />
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-bold text-xs text-emerald-300">Martha</span>
+                          <span className="text-[10px] font-mono text-emerald-400 font-bold px-2 py-0.2 rounded bg-emerald-500/20">
+                            {chapter11State.decisionChosen === 'choice_b' ? 'Transition Complete' : 'Handover Dispute'}
+                          </span>
+                        </div>
+                        <div className="p-3.5 rounded-2xl bg-[#09181a] border border-emerald-500/40 text-xs text-slate-100 shadow-md">
+                          <p className="font-semibold text-emerald-200">
+                            {chapter11State.decisionChosen === 'choice_b'
+                              ? '"Marcus has signed the operational acceptance document. 14 days of hypercare are officially underway, and Aarav is preparing the steering committee for project closure!"'
+                              : '"The operations team reported multiple unhandled tickets. Marcus has escalated the handover failure to executive leadership."'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* VIEW 2: MARCUS (HEAD OF IT OPERATIONS) CHAT */}
+              {activeChatId === 'marcus' && (
+                <div className="flex items-start space-x-3 max-w-2xl">
+                  <img
+                    src="/character/marcus_reed/MarcusDP.png"
+                    alt="Marcus"
+                    className="w-8 h-8 rounded-full object-cover border border-indigo-400/50 shrink-0 mt-1"
+                  />
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-bold text-xs text-indigo-300">Marcus</span>
+                      <span className="text-[10px] font-mono text-slate-400">Head of IT Operations · 27:10</span>
+                    </div>
+                    <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#121c24] border border-indigo-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                      <p className="font-bold text-indigo-200">
+                        "Your development team built this platform. My team has to support it at 2 AM when something breaks. We cannot take ownership just because the project team is ready to move on."
+                      </p>
+                      <p className="text-slate-300 text-xs">
+                        "I need operational runbooks, real knowledge transfer, and a clearly defined escalation matrix. Complete the transition console exercises so my support engineers aren't left in the dark."
+                      </p>
+                      {chapter11State?.decisionChosen === 'choice_b' && (
+                        <div className="mt-2 pt-2 border-t border-emerald-500/30 text-emerald-300 font-semibold">
+                          "On behalf of IT Operations, we accept the transition. The team has the documentation, training, and escalation structure required to take full responsibility."
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* VIEW 3: DANIEL (LEAD DEVELOPER) CHAT */}
+              {activeChatId === 'daniel' && (
+                <div className="flex items-start space-x-3 max-w-2xl">
+                  <img
+                    src="/character/Daniel_Brooks/DanielDP.png"
+                    alt="Daniel"
+                    className="w-8 h-8 rounded-full object-cover border border-blue-400/50 shrink-0 mt-1"
+                  />
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-bold text-xs text-blue-300">Daniel</span>
+                      <span className="text-[10px] font-mono text-slate-400">Lead Developer · 27:15</span>
+                    </div>
+                    <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#0a1826] border border-blue-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                      <p className="font-bold text-blue-200">
+                        "I've prepared the troubleshooting runbooks for the authentication and payroll microservices."
+                      </p>
+                      <p className="text-slate-300 text-xs">
+                        "During Days 1–7 of hypercare, our core engineering team will be on standby for joint triage. Once IT Operations masters the runbooks, we can fully step back and focus on Phase 2 feature work."
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* VIEW 4: AARAV KAPOOR (SENIOR PM MENTOR) CHAT */}
+              {activeChatId === 'aarav' && (
+                <div className="flex items-start space-x-3 max-w-2xl">
+                  <img
+                    src="/character/AaravDP.png"
+                    alt="Aarav Kapoor"
+                    className="w-8 h-8 rounded-full object-cover border border-amber-400/50 shrink-0 mt-1"
+                  />
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-bold text-xs text-amber-300">Aarav Kapoor</span>
+                      <span className="text-[10px] font-mono text-slate-400">Senior PM · Leadership Mentor · 27:20</span>
+                    </div>
+                    <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#1e170a] border border-amber-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                      <p className="font-bold text-amber-200">
+                        "This is where project delivery becomes operational ownership. Don't just send them files. Make sure they can actually run the system."
+                      </p>
+                      <p className="text-slate-300 text-xs">
+                        "A great PM doesn't declare victory when the code is deployed. They ensure the client's operations team can independently maintain and support the product long after the delivery team disbands."
+                      </p>
+                      {chapter11State?.decisionChosen === 'choice_b' && (
+                        <div className="mt-2 pt-2 border-t border-amber-500/30 text-amber-300 font-semibold">
+                          "Outstanding execution. With operations locked down, we are ready for Chapter 12: Project Closure & Executive Sign-Off."
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons for Chapter 11 */}
+              <div className="pt-2 flex flex-wrap items-center gap-3">
+                {onOpenChapter11Meeting && (
+                  <button
+                    onClick={onOpenChapter11Meeting}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-900/40 flex items-center gap-2 cursor-pointer transition-all border border-blue-400/40"
+                  >
+                    <span>📹 Join Handover Meeting (27:00)</span>
+                  </button>
+                )}
+                {onOpenOperationsTransitionConsole && (
+                  <button
+                    onClick={onOpenOperationsTransitionConsole}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs shadow-md shadow-indigo-900/40 flex items-center gap-2 cursor-pointer transition-all border border-indigo-400/40"
+                  >
+                    <span>🖥️ Open Operations Transition Console</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : isCh10 && (activeChatId === 'alex' || activeChatId === 'marcus' || activeChatId === 'sophia' || activeChatId === 'amigo-dev-ops') ? (
             /* ── CHAPTER 10 ENGINEERING RELEASE & GOVERNANCE CHATS ── */
             <div className="space-y-4">
               <div className="flex justify-center">

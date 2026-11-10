@@ -1,32 +1,35 @@
 {
   "id": 11,
   "slug": "chapter-11",
-  "title": "The Final Presentation",
-  "subtitle": "Board-Level Stakes & Strategic Defense",
+  "title": "Operational Handover",
+  "subtitle": "From Project Delivery to Operational Ownership",
   "act": "IV",
-  "actLabel": "Act IV — Value",
-  "day": "Day 19",
-  "duration": "~30 mins",
+  "actLabel": "Act IV — Value & Sustainability",
+  "day": "Day 21",
+  "duration": "27:00–29:00 (~20 mins)",
   "difficulty": "Expert",
-  "xpReward": 600,
-  "description": "You present to the Board of Directors. Every stakeholder you've managed, every decision you've made, every signal you've sent — it all comes to the surface here. Deliver the knockout.",
+  "xpReward": 650,
+  "description": "Deploying a product is not the same as transferring operational ownership. Marcus and IT Operations refuse to accept ownership without verified administrator runbooks, incident response validation, and a mandatory 14-day hypercare window. Ensure the receiving team can independently operate, troubleshoot, and maintain the system.",
   "stakeholders": [
-    { "name": "Chairman of the Board", "role": "ICICI Bank Board of Directors", "agenda": "Evaluating long-term enterprise modernization capability and risk mitigation." },
-    { "name": "Marcus Reed", "role": "CTO · Brained", "agenda": "Co-defending architectural resilience and engineering standards." },
-    { "name": "Sophia Bennett", "role": "Head of HR Operations", "agenda": "Validating user satisfaction and enterprise change adoption success." }
+    { "name": "Marcus", "role": "Head of IT Operations", "agenda": "Enforcing 2 AM operational readiness, step-by-step failure runbooks, and a mandatory 14-day hypercare window before signing off." },
+    { "name": "Aarav Kapoor", "role": "Senior PM · Leadership Mentor", "agenda": "Guiding the transition from project delivery into genuine operational ownership and organizational sustainability." },
+    { "name": "Daniel", "role": "Lead Developer", "agenda": "Transferring technical operational knowledge so the engineering team is unblocked for future development cycles." },
+    { "name": "Martha", "role": "Junior PM · Transition Coordination", "agenda": "Coordinating training workshops and tracking operational handover deliverables in the transition calendar." }
   ],
   "objectives": [
-    { "label": "Deliver an articulate board-level executive transformation defense", "type": "stakeholder" },
-    { "label": "Handle hostile board member challenge on long-term vendor dependency", "type": "decision" },
-    { "label": "Secure unanimous board mandate and investment approval for Phase 2 expansion", "type": "stakeholder" }
+    { "label": "Build verified operational handover package matching 6 runbooks to requirements", "type": "analysis" },
+    { "label": "Validate incident response sequence for INC-0318 employee login triage", "type": "delivery" },
+    { "label": "Design 14-day progressive hypercare timeline across 3 operational phases", "type": "decision" },
+    { "label": "Authorize formal operational handover protocol with IT Operations sign-off", "type": "decision" }
   ],
   "deliverables": [
-    "Board Executive Transformation Dossier",
-    "Long-Term Enterprise Roadmap & Capability Transfer Plan",
-    "Board Resolution on Digital Modernization"
+    "Operational Handover Package & Administrator Runbooks",
+    "Incident Triage SOP & Knowledge Transfer Plan",
+    "14-Day Hypercare Stabilization Model",
+    "Signed Operational Acceptance Certificate"
   ],
-  "primaryColor": "#7c3aed",
-  "secondaryColor": "#ec4899",
-  "accentColor": "#c084fc",
-  "backgroundIcon": "👔"
+  "primaryColor": "#6366f1",
+  "secondaryColor": "#8b5cf6",
+  "accentColor": "#a855f7",
+  "backgroundIcon": "🔄"
 }
