@@ -122,6 +122,15 @@ export const DEV_CHAPTERS: DevChapterOption[] = [
     icon: '🤝',
     color: '#f97316',
   },
+  {
+    id: 12,
+    label: 'Chapter 12',
+    badge: 'PHASE 2 EVOLUTION',
+    title: 'The Next Evolution',
+    subtitle: 'Evolution Control Center · Feature Flags · Blue-Green Staging',
+    icon: '⚡',
+    color: '#3b82f6',
+  },
 ];
 
 /** Resets target chapter state and initiates transition */

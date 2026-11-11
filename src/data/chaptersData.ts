@@ -12,6 +12,7 @@ import { resetChapter8SessionState } from './chapter8Data';
 import { resetChapter9SessionState } from './chapter9Data';
 import { resetChapter10SessionState } from './chapter10Data';
 import { resetChapter11SessionState } from './chapter11Data';
+import { resetChapter12SessionState } from './chapter12Data';
 
 export type ChapterStatus = 'locked' | 'unlocked' | 'in_progress' | 'completed';
 
@@ -312,25 +313,26 @@ export const CHAPTERS: Chapter[] = [
   {
     id: 12,
     slug: 'chapter-12',
-    title: 'The Reckoning',
-    subtitle: 'Your Legacy Score',
+    title: 'The Next Evolution',
+    subtitle: 'CR Upgrade & Phase 2 Evolution',
     act: 'IV',
     actLabel: 'Act IV — Value',
     day: 'Day 20',
-    duration: '~20 mins',
+    duration: '~2 mins',
     difficulty: 'Expert',
-    xpReward: 750,
+    xpReward: 800,
     description:
-      'The simulation ends. Every choice evaluated. Every signal scored. Your transformation legacy is calculated. Your certificate generated. How did you do?',
+      'Phase 1 is running smoothly in production. The Steering Committee requests the reactivation of deferred Phase 2 modules along with a core framework security upgrade. Architect the release strategy with feature flags and blue-green staging to earn your ultimate transformation legacy.',
     objectives: [
-      { label: 'Review your complete decision history', type: 'analysis' },
-      { label: 'Receive your Transformation Score', type: 'analysis' },
-      { label: 'Earn your Brained Certification', type: 'delivery' },
+      { label: 'Categorize Phase 2 modules and isolate platform upgrade', type: 'analysis' },
+      { label: 'Configure progressive feature-flag rollout strategy', type: 'delivery' },
+      { label: 'Execute blue-green zero-downtime deployment sequence', type: 'delivery' },
+      { label: 'Authorize formal CR-Upgrade pipeline with Steering Committee', type: 'decision' },
     ],
-    primaryColor: '#f59e0b',
-    secondaryColor: '#dc2626',
-    accentColor: '#fcd34d',
-    backgroundIcon: '🏆',
+    primaryColor: '#3b82f6',
+    secondaryColor: '#10b981',
+    accentColor: '#38bdf8',
+    backgroundIcon: '⚡',
     status: 'locked',
   },
 ];
@@ -397,6 +399,8 @@ export function resetChapterSession(chapterId: number) {
     resetChapter10SessionState();
   } else if (chapterId === 11) {
     resetChapter11SessionState();
+  } else if (chapterId === 12) {
+    resetChapter12SessionState();
   }
 }
 
@@ -413,6 +417,7 @@ export function resetChapterStatuses() {
   resetChapter9SessionState();
   resetChapter10SessionState();
   resetChapter11SessionState();
+  resetChapter12SessionState();
   try {
     localStorage.removeItem('brained_chapter_statuses');
     localStorage.removeItem('brained_just_unlocked_chapter');
@@ -427,6 +432,7 @@ export function resetChapterStatuses() {
     localStorage.removeItem('brained_chapter9_state');
     localStorage.removeItem('brained_chapter10_state');
     localStorage.removeItem('brained_chapter11_state');
+    localStorage.removeItem('brained_chapter12_state');
   } catch {}
 }
 
