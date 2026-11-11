@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useSyncExternalStore } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Folder, Code2, Bell, Sparkles, FileCheck2, Activity } from 'lucide-react';
+import { Folder, Code2, Bell, Sparkles, FileCheck2, Activity, Layers, ArrowLeft } from 'lucide-react';
 import { BrainedMenuBar } from './BrainedMenuBar';
 import { BrainedDock } from './BrainedDock';
 import { BrainedWindow } from './BrainedWindow';
@@ -24,7 +24,7 @@ import { TitanKickoffMeeting } from '../apps/TitanKickoffMeeting';
 import { ReadMeAIApp } from '../apps/ReadMeAIApp';
 import { ProjectAmigoScopeAssignment, type ScopeAssignmentResult } from '../apps/ProjectAmigoScopeAssignment';
 import { ProjectAmigoInternalBriefViewer } from '../apps/ProjectAmigoInternalBriefViewer';
-import { getSessionAssignmentResult, setSessionAssignmentResult, resetChapterSession } from '../../data/chaptersData';
+import { getSessionAssignmentResult, setSessionAssignmentResult, resetChapterSession, updateChapterStatus } from '../../data/chaptersData';
 import { Chapter1CompletionModal } from '../apps/Chapter1CompletionModal';
 import { CeraIDEApp } from '../apps/CeraIDEApp';
 import { IdeateImpactApp } from '../apps/IdeateImpactApp';
@@ -172,6 +172,20 @@ import { Chapter11Banner } from '../chapter11/Chapter11Banner';
 import { Chapter11MeetingApp } from '../chapter11/Chapter11MeetingApp';
 import { OperationsTransitionConsoleApp } from '../chapter11/OperationsTransitionConsoleApp';
 import { Chapter11ScorecardModal } from '../chapter11/Chapter11ScorecardModal';
+
+// Chapter 12 Components & Data (The Next Evolution — Final Chapter)
+import type { Chapter12State } from '../../types/chapter12';
+import {
+  getChapter12SessionState,
+  setChapter12SessionState,
+  computeChapter12Score,
+} from '../../data/chapter12Data';
+import { Chapter12StatusUpdateModal } from '../chapter12/Chapter12StatusUpdateModal';
+import { Chapter12Banner } from '../chapter12/Chapter12Banner';
+import { Chapter12MeetingApp } from '../chapter12/Chapter12MeetingApp';
+import { EvolutionControlCenterApp } from '../chapter12/EvolutionControlCenterApp';
+import { Chapter12CinematicModal } from '../chapter12/Chapter12CinematicModal';
+import { FinalTransformationReportModal } from '../chapter12/FinalTransformationReportModal';
 
 interface BrainedOSDesktopProps {
   onOpenEventModal?: () => void;
@@ -743,6 +757,22 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
     });
   };
 
+  // ── Chapter 12 Interactive Simulation State (The Next Evolution — Final Chapter) ──
+  const [chapter12State, setChapter12State] = useState<Chapter12State>(() => getChapter12SessionState());
+  const [isChapter12StatusModalOpen, setIsChapter12StatusModalOpen] = useState(false);
+  const [isChapter12ReportOpen, setIsChapter12ReportOpen] = useState(false);
+  const [isChapter12CinematicOpen, setIsChapter12CinematicOpen] = useState(false);
+
+  const handleUpdateChapter12State = (
+    updater: Partial<Chapter12State> | ((prev: Chapter12State) => Chapter12State)
+  ) => {
+    setChapter12State((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : { ...prev, ...updater };
+      setChapter12SessionState(next);
+      return next;
+    });
+  };
+
   // ── Chapter 3 Kickoff Notification from Daniel (UAT Prerequisites) ──
   useEffect(() => {
     if (bootStep !== 'ready' || activeChapter !== 3) return;
@@ -1172,6 +1202,60 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
     return () => clearTimeout(timer);
   }, [chapter11State.meetingCompleted, chapter11State.callCompleted, activeChapter]);
 
+  // ── Chapter 12 Step 1: Project Amigo Status Telemetry Modal & Review Call ──
+  useEffect(() => {
+    if (bootStep !== 'ready' || activeChapter !== 12) return;
+    if (!chapter12State.statusModalSeen) {
+      setIsChapter12StatusModalOpen(true);
+    }
+  }, [bootStep, activeChapter, chapter12State.statusModalSeen]);
+
+  // ── Chapter 12 Step 2: Marcus Urgent Meeting Invitation (Teams) ──
+  useEffect(() => {
+    if (bootStep !== 'ready' || activeChapter !== 12) return;
+    if (!chapter12State.statusModalSeen) return;
+    if (seenNotifIds.current.has('ch12_marcus_review_call')) return;
+
+    const timer = setTimeout(() => {
+      sound.playMessagePing();
+      pushNotification({
+        id: 'ch12_marcus_review_call',
+        app: 'Teams',
+        title: 'Marcus · Head of IT Operations',
+        subtitle: 'Urgent: Phase 2 Upgrade Roadmap Review',
+        body: 'Phase 1 is running smoothly. The board wants us to revisit the deferred Phase 2 capabilities and discuss the next upgrade roadmap. Please join the review.',
+        timestamp: 'Now',
+        actionText: 'Join Meeting',
+        onActionAppId: 'chapter12_meeting',
+        isCall: true,
+      });
+      handleUpdateChapter12State({ meetingInitiated: true });
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [bootStep, activeChapter, chapter12State.statusModalSeen]);
+
+  // ── Chapter 12 Step 3: Evolution Control Center Unlock Notification ──
+  useEffect(() => {
+    if (activeChapter !== 12 || !chapter12State.meetingIntroCompleted) return;
+    if (seenNotifIds.current.has('ch12_control_center_unlocked')) return;
+
+    const timer = setTimeout(() => {
+      sound.playSystemClearance();
+      pushNotification({
+        id: 'ch12_control_center_unlocked',
+        app: 'Teams',
+        title: 'Aarav Kapoor · Senior PM',
+        subtitle: 'NEW APPLICATION AVAILABLE: EVOLUTION CONTROL CENTER',
+        body: 'Take ownership of the release plan. Decide how Phase 2 features should be introduced, validate the new environment, and protect the production system.',
+        timestamp: 'Now',
+        actionText: 'Open Control Center',
+        onActionAppId: 'evolution_control_center',
+      });
+      handleUpdateChapter12State({ controlCenterOpened: true });
+    }, 700);
+    return () => clearTimeout(timer);
+  }, [chapter12State.meetingIntroCompleted, activeChapter]);
+
 
 
   // Register Cera active app checker, external notification handler, and browser open callback
@@ -1265,14 +1349,42 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
   }, [gameState.pendingNotifications]); // eslint-disable-line
 
   const handleOpenApp = (appId: string | null) => {
-    if (appId && !openAppIds.includes(appId)) {
-      setOpenAppIds((prev) => [...prev, appId]);
+    let resolvedId = appId;
+    if (appId === 'teams' && activeChapter === 12) {
+      resolvedId = 'chapter12_meeting';
+    }
+    if (resolvedId === 'chapter12_meeting') {
+      sound.stopTeamsRingtone();
+      seenNotifIds.current.add('ch12_marcus_review_call');
+      setBannerNotifications((prev) => prev.filter((n) => n.id !== 'ch12_marcus_review_call'));
+      setHistoryNotifications((prev) =>
+        prev.map((n) => (n.id === 'ch12_marcus_review_call' ? { ...n, read: true } : n))
+      );
+    } else if (resolvedId === 'evolution_control_center') {
+      sound.stopTeamsRingtone();
+      seenNotifIds.current.add('ch12_control_center_unlocked');
+      seenNotifIds.current.add('ch12_marcus_review_call');
+      setBannerNotifications((prev) =>
+        prev.filter(
+          (n) => n.id !== 'ch12_control_center_unlocked' && n.id !== 'ch12_marcus_review_call'
+        )
+      );
+      setHistoryNotifications((prev) =>
+        prev.map((n) =>
+          n.id === 'ch12_control_center_unlocked' || n.id === 'ch12_marcus_review_call'
+            ? { ...n, read: true }
+            : n
+        )
+      );
+    }
+    if (resolvedId && !openAppIds.includes(resolvedId)) {
+      setOpenAppIds((prev) => [...prev, resolvedId]);
       // Score: opening Ideate & Impact Studio for the first time
-      if (appId === 'ideate') {
+      if (resolvedId === 'ideate') {
         addSignal('delivery_management', 'Opened Ideate & Impact Studio workspace', 5);
       }
     }
-    setActiveAppId(appId);
+    setActiveAppId(resolvedId);
   };
 
   const handleCloseApp = (appId: string) => {
@@ -1355,6 +1467,8 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
     engineering_release_portal: { title: 'Internal Developer Portal — Release v1.0.0 & Architecture Catalog', icon: <span>📦</span> },
     chapter11_meeting: { title: 'Microsoft Teams — IT Operations Handover Meeting', icon: <span>📹</span> },
     operations_transition_console: { title: 'Operations Transition Console — Project Amigo v1.0.0', icon: <span>🖥️</span> },
+    chapter12_meeting: { title: 'Microsoft Teams — Steering Committee Review', icon: <span>📹</span> },
+    evolution_control_center: { title: 'Evolution Control Center — Phase 2 Release Management', icon: <Layers className="w-4 h-4 text-sky-400" /> },
     brief: { title: 'Preview — Project_Amigo_Internal_Brief.pdf', icon: <span>📄</span> },
     assignment: { title: 'Project Amigo — Initial Planning · Assignment 01', icon: <span>📋</span> },
     review: { title: 'Microsoft Teams — Prototype Review · Day 7', icon: <span>📹</span> },
@@ -1554,6 +1668,16 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
         />
       )}
 
+      {/* CHAPTER 12 STATUS BANNER */}
+      {activeChapter === 12 && (
+        <Chapter12Banner
+          state={chapter12State}
+          onOpenMeeting={() => handleOpenApp('chapter12_meeting')}
+          onOpenControlCenter={() => handleOpenApp('evolution_control_center')}
+          onOpenReport={() => setIsChapter12ReportOpen(true)}
+        />
+      )}
+
       {/* DESKTOP CANVAS */}
       <main className="flex-1 relative z-10 pt-16 pb-24 px-8 overflow-hidden flex flex-col justify-between">
         {/* DESKTOP WIDGETS (CLOCK & STREAK) */}
@@ -1578,6 +1702,44 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
                 Project Solution
               </span>
             </motion.button>
+          </div>
+        )}
+
+        {/* CHAPTER 12 DESKTOP SHORTCUT: EVOLUTION CONTROL CENTER */}
+        {activeChapter === 12 && (chapter12State.controlCenterOpened || chapter12State.meetingIntroCompleted) && (
+          <div
+            className={`absolute top-72 ${
+              gameState.prototypeBuilt ? 'left-36' : 'left-8'
+            } z-10 flex items-center gap-2 pointer-events-auto`}
+          >
+            <motion.button
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              onClick={() => handleOpenApp('evolution_control_center')}
+              className="flex flex-col items-center p-2 rounded-2xl hover:bg-white/10 group transition-all cursor-pointer w-24 relative"
+              title="Open Evolution Control Center"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-600 via-indigo-600 to-blue-700 p-3 shadow-2xl border border-sky-400/50 group-hover:scale-105 transition-transform flex items-center justify-center relative shadow-sky-500/20">
+                <Layers className="w-8 h-8 text-white" />
+                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-slate-900 animate-pulse" />
+              </div>
+              <span className="text-[11px] font-bold text-white mt-1 text-center drop-shadow-lg group-hover:text-sky-300">
+                Evolution Control
+              </span>
+            </motion.button>
+
+            {!chapter12State.deploymentCompleted && activeAppId !== 'evolution_control_center' && (
+              <motion.div
+                initial={{ opacity: 0, x: 8 }}
+                animate={{ opacity: 1, x: [0, -5, 0] }}
+                transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-600/90 border border-sky-300/60 text-white text-[10px] font-bold shadow-lg pointer-events-none"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+                <span>Click to Launch</span>
+              </motion.div>
+            )}
           </div>
         )}
 
@@ -1982,6 +2144,52 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
                   onNotifyDesktop={(title, body) => {
                     pushNotification({
                       id: `ch11_desktop_notif_${Date.now()}`,
+                      app: 'Teams',
+                      title,
+                      body,
+                      timestamp: 'Now',
+                    });
+                  }}
+                />
+              )}
+              {/* CHAPTER 12 SIMULATION APPS (THE NEXT EVOLUTION — FINAL CHAPTER) */}
+              {activeAppId === 'chapter12_meeting' && (
+                <Chapter12MeetingApp
+                  chapter12State={chapter12State}
+                  onUpdateState={handleUpdateChapter12State}
+                  onOpenControlCenter={() => handleOpenApp('evolution_control_center')}
+                  onWatchCinematic={() => {
+                    sound.stopTeamsRingtone();
+                    setBannerNotifications((prev) =>
+                      prev.filter(
+                        (n) =>
+                          n.id !== 'ch12_control_center_unlocked' &&
+                          n.id !== 'ch12_marcus_review_call'
+                      )
+                    );
+                    setIsChapter12CinematicOpen(true);
+                  }}
+                  onOpenReport={() => {
+                    sound.stopTeamsRingtone();
+                    setBannerNotifications((prev) =>
+                      prev.filter(
+                        (n) =>
+                          n.id !== 'ch12_control_center_unlocked' &&
+                          n.id !== 'ch12_marcus_review_call'
+                      )
+                    );
+                    setIsChapter12ReportOpen(true);
+                  }}
+                />
+              )}
+              {activeAppId === 'evolution_control_center' && (
+                <EvolutionControlCenterApp
+                  chapter12State={chapter12State}
+                  onUpdateState={handleUpdateChapter12State}
+                  onReturnToMeeting={() => handleOpenApp('chapter12_meeting')}
+                  onNotifyDesktop={(title, body) => {
+                    pushNotification({
+                      id: `ch12_desktop_notif_${Date.now()}`,
                       app: 'Teams',
                       title,
                       body,
@@ -2400,6 +2608,49 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
             localStorage.setItem('brained_just_unlocked_chapter', '12');
             if (onStartChapter) onStartChapter(12);
             else if (onReturnToChapterSelect) onReturnToChapterSelect();
+          }}
+        />
+      )}
+
+      {/* CHAPTER 12 STATUS UPDATE MODAL (SCENE 12.1 TELEMETRY BRIEFING) */}
+      {isChapter12StatusModalOpen && (
+        <Chapter12StatusUpdateModal
+          isOpen={isChapter12StatusModalOpen}
+          onAcknowledge={() => {
+            setIsChapter12StatusModalOpen(false);
+            handleUpdateChapter12State({ statusModalSeen: true });
+          }}
+        />
+      )}
+
+      {/* CHAPTER 12 CINEMATIC MONTAGE MODAL (PART 5) */}
+      {isChapter12CinematicOpen && (
+        <Chapter12CinematicModal
+          scorecard={chapter12State.scorecard || computeChapter12Score(chapter12State)}
+          onProceedToReport={() => {
+            setIsChapter12CinematicOpen(false);
+            setIsChapter12ReportOpen(true);
+            handleUpdateChapter12State({
+              currentStage: 'transformation_report',
+              reportOpened: true,
+              completed: true,
+            });
+            updateChapterStatus(12, 'completed');
+          }}
+        />
+      )}
+
+      {/* CHAPTER 12 FINAL TRANSFORMATION REPORT (PART 6 — S+ SUMMARY) */}
+      {isChapter12ReportOpen && (
+        <FinalTransformationReportModal
+          scorecard={chapter12State.scorecard || computeChapter12Score(chapter12State)}
+          onReturnToDesktop={() => {
+            setIsChapter12ReportOpen(false);
+            handleUpdateChapter12State({
+              currentStage: 'complete',
+              completed: true,
+            });
+            updateChapterStatus(12, 'completed');
           }}
         />
       )}

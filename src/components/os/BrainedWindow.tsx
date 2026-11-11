@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Minus, X, Maximize2, Minimize2 } from 'lucide-react';
 
@@ -12,9 +12,11 @@ interface BrainedWindowProps {
   onMinimize?: () => void;
   onFocus: () => void;
   children: React.ReactNode;
+  defaultMaximized?: boolean;
 }
 
 export const BrainedWindow: React.FC<BrainedWindowProps> = ({
+  id,
   title,
   icon,
   isOpen,
@@ -23,10 +25,31 @@ export const BrainedWindow: React.FC<BrainedWindowProps> = ({
   onMinimize,
   onFocus,
   children,
+  defaultMaximized,
 }) => {
-  const [isMaximized, setIsMaximized] = useState(false);
+  const isChapter12App = id === 'evolution_control_center' || id === 'chapter12_meeting';
+  const [isMaximized, setIsMaximized] = useState(() => {
+    if (defaultMaximized !== undefined) return defaultMaximized;
+    return isChapter12App;
+  });
+
+  useEffect(() => {
+    if (defaultMaximized !== undefined) {
+      setIsMaximized(defaultMaximized);
+    } else {
+      setIsMaximized(id === 'evolution_control_center' || id === 'chapter12_meeting');
+    }
+  }, [id, defaultMaximized]);
 
   if (!isOpen) return null;
+
+  const windowPositionClass = isChapter12App
+    ? isMaximized
+      ? 'top-11 bottom-[104px] left-2 right-2 md:left-3 md:right-3 z-40 rounded-2xl border-white/25 shadow-2xl'
+      : 'top-12 bottom-[104px] left-3 right-3 md:left-6 md:right-6 lg:left-8 lg:right-8 z-30 rounded-2xl'
+    : isMaximized
+      ? 'top-11 bottom-20 left-2 right-2 md:left-4 md:right-4 z-40 rounded-2xl border-white/25 shadow-2xl'
+      : 'top-14 bottom-24 left-4 right-4 md:left-16 md:right-16 lg:left-24 lg:right-24 z-30 rounded-2xl';
 
   return (
     <motion.div
@@ -35,11 +58,7 @@ export const BrainedWindow: React.FC<BrainedWindowProps> = ({
       exit={{ opacity: 0, scale: 0.94, y: 15 }}
       transition={{ type: "spring", damping: 25, stiffness: 320 }}
       onClick={onFocus}
-      className={`absolute transition-all duration-200 apple-glass border flex flex-col overflow-hidden apple-window-shadow ${
-        isMaximized 
-          ? 'top-11 bottom-20 left-2 right-2 md:left-4 md:right-4 z-40 rounded-2xl border-white/25 shadow-2xl' 
-          : 'top-14 bottom-24 left-4 right-4 md:left-16 md:right-16 lg:left-24 lg:right-24 z-30 rounded-2xl'
-      } ${
+      className={`absolute transition-all duration-200 apple-glass border flex flex-col overflow-hidden apple-window-shadow ${windowPositionClass} ${
         isFocused 
           ? 'border-white/20 ring-1 ring-white/15 shadow-2xl' 
           : 'border-white/10 opacity-95'

@@ -100,9 +100,9 @@ const CHAPTER_VISUALS: Record<number, { title: string; subtitle: string; descrip
     yOffset: 172,
   },
   12: {
-    title: 'The Transformation Verdict',
-    subtitle: 'Act IV · Board Decision',
-    description: 'The final presentation to the Board of Directors. Earn your Brained Executive Certification and transformation verdict.',
+    title: 'The Next Evolution',
+    subtitle: 'Act IV · CR Upgrade & Phase 2 Evolution',
+    description: 'Phase 1 is running smoothly in production. The Steering Committee requests deferred Phase 2 modules and a core framework security upgrade. Architect the release strategy with feature flags and blue-green staging to earn your ultimate transformation legacy.',
     thumb: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=300&auto=format&fit=crop&q=80',
     yOffset: 195,
   },
