@@ -5,15 +5,14 @@ import {
   MicOff,
   Video,
   VideoOff,
-  PhoneOff,
   Users,
   Wifi,
-  ChevronLeft,
-  ChevronRight,
   ArrowRight,
   Radio,
-  FileCode,
+  CheckCircle2,
   Terminal,
+  FastForward,
+  RotateCcw,
 } from 'lucide-react';
 import type { Chapter10State } from '../../types/chapter10';
 import { sound } from '../onboarding/SoundEngine';
@@ -36,6 +35,7 @@ interface CharacterMeta {
   rate: number;
 }
 
+// Only topic-related engineering personnel for Chapter 10 (No Marcus!)
 const CHARACTERS: Record<string, CharacterMeta> = {
   alex: {
     id: 'alex',
@@ -55,16 +55,6 @@ const CHARACTERS: Record<string, CharacterMeta> = {
     dp: '/character/Daniel_Brooks/DanielDP.png',
     color: '#f97316',
     pitch: 1.0,
-    rate: 1.0,
-  },
-  marcus: {
-    id: 'marcus',
-    name: 'Marcus Reed',
-    role: 'Chief Technology Officer · Brained',
-    badge: 'Enterprise Architecture',
-    dp: '/character/marcus_reed/MarcusDP.png',
-    color: '#38bdf8',
-    pitch: 0.9,
     rate: 1.0,
   },
   aarav: {
@@ -91,8 +81,9 @@ const CHARACTERS: Record<string, CharacterMeta> = {
 
 interface MeetingDialogueLine {
   id: string;
-  speaker: 'alex' | 'player' | 'daniel' | 'marcus' | 'aarav';
+  speaker: 'alex' | 'player' | 'daniel' | 'aarav';
   text: string;
+  durationMs: number;
 }
 
 const MEETING_DIALOGUES: MeetingDialogueLine[] = [
@@ -100,31 +91,37 @@ const MEETING_DIALOGUES: MeetingDialogueLine[] = [
     id: 'line_1_alex',
     speaker: 'alex',
     text: "The launch was successful, and the code is stable across our pilot clusters. But our API documentation is scattered across temporary Markdown files, architecture diagrams have no version numbers, and nobody knows which version of the technical specifications is final.",
+    durationMs: 7500,
   },
   {
     id: 'line_2_player',
     speaker: 'player',
     text: "Wait, Alex. So if a new developer joins tomorrow, how will they understand the system architecture or know which API specifications are actually approved?",
+    durationMs: 5500,
   },
   {
     id: 'line_3_alex',
     speaker: 'alex',
     text: "Honestly? They'll have to ask the developers who built it. We never established a proper documentation and release management process.",
+    durationMs: 6000,
   },
   {
     id: 'line_4_daniel',
     speaker: 'daniel',
     text: "We've been focusing on delivery speed. But leaving technical debt like this means any future handover will be a nightmare.",
+    durationMs: 5500,
   },
   {
     id: 'line_5_aarav',
     speaker: 'aarav',
     text: "We cannot let the entire system depend on tribal knowledge. Before we close this sprint, I want a properly versioned release and a centralized technical knowledge base.",
+    durationMs: 6500,
   },
   {
     id: 'line_6_alex',
     speaker: 'alex',
     text: "I've unlocked the engineering repository. Let's audit the messy files, finalize the SemVer release, and publish the documentation portal.",
+    durationMs: 6000,
   },
 ];
 
@@ -134,6 +131,10 @@ export const Chapter10MeetingApp: React.FC<Chapter10MeetingAppProps> = ({
   onOpenPortal,
   onOpenScorecard,
 }) => {
+  const [stage, setStage] = useState<'permission' | 'in_call'>(() => {
+    return chapter10State.meetingCompleted ? 'in_call' : 'permission';
+  });
+
   const [currentLineIndex, setCurrentLineIndex] = useState<number>(() => {
     return chapter10State.meetingCompleted ? MEETING_DIALOGUES.length - 1 : 0;
   });
@@ -141,23 +142,42 @@ export const Chapter10MeetingApp: React.FC<Chapter10MeetingAppProps> = ({
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [isMicOn, setIsMicOn] = useState(true);
   const [captionsEnabled, setCaptionsEnabled] = useState(true);
-  const [elapsedSeconds, setElapsedSeconds] = useState(24);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [joinedParticipants, setJoinedParticipants] = useState<Set<string>>(new Set(['alex', 'player']));
+  const [joinToast, setJoinToast] = useState<{ name: string; dp: string } | null>(null);
+  const [isDialogueFinished, setIsDialogueFinished] = useState<boolean>(() => {
+    return Boolean(chapter10State.meetingCompleted);
+  });
 
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Live timer
+  // Live call timer
   useEffect(() => {
+    if (stage !== 'in_call') return;
     const timer = setInterval(() => {
       setElapsedSeconds((s) => s + 1);
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [stage]);
 
   const mm = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
   const ss = String(elapsedSeconds % 60).padStart(2, '0');
   const meetingTimerStr = `${mm}:${ss}`;
 
   // Webcam request / teardown
+  const enableCameraAndJoin = useCallback(async () => {
+    sound.playClick();
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      streamRef.current = stream;
+      setIsCameraOn(true);
+      setStage('in_call');
+    } catch {
+      setIsCameraOn(false);
+      setStage('in_call');
+    }
+  }, []);
+
   const toggleCamera = useCallback(async () => {
     sound.playClick();
     if (isCameraOn) {
@@ -192,8 +212,34 @@ export const Chapter10MeetingApp: React.FC<Chapter10MeetingAppProps> = ({
     }
   }, []);
 
-  // Speech synthesis for talking immersion
-  const speakCurrentLine = (line: MeetingDialogueLine) => {
+  // Timed participant joining simulation
+  useEffect(() => {
+    if (stage !== 'in_call') return;
+
+    setJoinedParticipants(new Set(['alex', 'player']));
+
+    const tDaniel = setTimeout(() => {
+      setJoinedParticipants((prev) => new Set([...prev, 'daniel']));
+      setJoinToast({ name: CHARACTERS.daniel.name, dp: CHARACTERS.daniel.dp });
+      sound.playTeamsJoin();
+      setTimeout(() => setJoinToast(null), 2500);
+    }, 1800);
+
+    const tAarav = setTimeout(() => {
+      setJoinedParticipants((prev) => new Set([...prev, 'aarav']));
+      setJoinToast({ name: CHARACTERS.aarav.name, dp: CHARACTERS.aarav.dp });
+      sound.playTeamsJoin();
+      setTimeout(() => setJoinToast(null), 2500);
+    }, 3800);
+
+    return () => {
+      clearTimeout(tDaniel);
+      clearTimeout(tAarav);
+    };
+  }, [stage]);
+
+  // Speech synthesis
+  const speakLine = useCallback((line: MeetingDialogueLine) => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       try {
         window.speechSynthesis.cancel();
@@ -202,34 +248,32 @@ export const Chapter10MeetingApp: React.FC<Chapter10MeetingAppProps> = ({
         utterance.rate = char.rate || 1.0;
         utterance.pitch = char.pitch || 1.0;
         window.speechSynthesis.speak(utterance);
-      } catch {
-        // ignore synthesis errors
-      }
+      } catch {}
     }
-  };
+  }, []);
+
+  // Automatic realistic dialogue progression
+  useEffect(() => {
+    if (stage !== 'in_call') return;
+    const current = MEETING_DIALOGUES[currentLineIndex];
+    if (!current) return;
+
+    speakLine(current);
+
+    const timer = setTimeout(() => {
+      if (currentLineIndex + 1 < MEETING_DIALOGUES.length) {
+        setCurrentLineIndex((i) => i + 1);
+      } else {
+        setIsDialogueFinished(true);
+      }
+    }, current.durationMs);
+
+    return () => clearTimeout(timer);
+  }, [stage, currentLineIndex, speakLine]);
 
   const currentLine = MEETING_DIALOGUES[currentLineIndex] || MEETING_DIALOGUES[0];
   const activeSpeaker = currentLine.speaker;
   const currentSpeakerMeta = CHARACTERS[activeSpeaker] || CHARACTERS.alex;
-
-  // Trigger speech when line changes
-  useEffect(() => {
-    speakCurrentLine(currentLine);
-  }, [currentLineIndex]);
-
-  const handleNext = () => {
-    sound.playClick();
-    if (currentLineIndex < MEETING_DIALOGUES.length - 1) {
-      setCurrentLineIndex((i) => i + 1);
-    }
-  };
-
-  const handlePrev = () => {
-    sound.playClick();
-    if (currentLineIndex > 0) {
-      setCurrentLineIndex((i) => i - 1);
-    }
-  };
 
   const handleLaunchPortal = () => {
     sound.playSystemClearance();
@@ -246,8 +290,108 @@ export const Chapter10MeetingApp: React.FC<Chapter10MeetingAppProps> = ({
     if (onOpenPortal) onOpenPortal();
   };
 
-  const isAtLastLine = currentLineIndex === MEETING_DIALOGUES.length - 1;
+  const handleFastForward = () => {
+    sound.playClick();
+    setCurrentLineIndex(MEETING_DIALOGUES.length - 1);
+    setIsDialogueFinished(true);
+  };
 
+  const handleReplay = () => {
+    sound.playClick();
+    setCurrentLineIndex(0);
+    setIsDialogueFinished(false);
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // STAGE 1: PRE-JOIN LOBBY & CAMERA PERMISSION SCREEN
+  // ─────────────────────────────────────────────────────────────────────────────
+  if (stage === 'permission') {
+    return (
+      <div className="flex-1 flex flex-col h-full bg-[#0c0f1d] text-white font-sans select-none overflow-hidden">
+        {/* Teams Header */}
+        <div className="h-11 bg-[#1a1f36] px-5 flex items-center justify-between text-xs font-semibold select-none border-b border-white/10 shrink-0">
+          <div className="flex items-center space-x-2.5">
+            <Video className="w-4 h-4 text-sky-400" />
+            <span className="font-bold text-white tracking-wide">
+              Microsoft Teams · Engineering Release Standup
+            </span>
+          </div>
+          <div className="flex items-center space-x-1.5 font-mono text-[10px] bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 px-2.5 py-0.5 rounded-full">
+            <Radio className="w-3 h-3 text-emerald-400 animate-pulse" />
+            <span>SESSION READY</span>
+          </div>
+        </div>
+
+        {/* Pre-Join Dialog Card */}
+        <div className="flex-1 flex items-center justify-center p-6 bg-gradient-to-br from-[#070914] via-[#0d1224] to-[#070914]">
+          <div className="w-full max-w-lg bg-slate-900/95 backdrop-blur-2xl rounded-3xl border border-white/15 shadow-2xl overflow-hidden">
+            <div className="bg-gradient-to-r from-cyan-950/70 via-indigo-950/70 to-slate-950/70 px-6 py-4 border-b border-white/10 flex items-center space-x-3.5">
+              <img
+                src={CHARACTERS.alex.dp}
+                alt="Alex"
+                className="w-10 h-10 rounded-full border border-cyan-400/50 object-cover"
+              />
+              <div>
+                <p className="text-sm font-bold text-white">Engineering Architecture Standup</p>
+                <p className="text-[11px] text-cyan-300">Alex Chen (Dev Lead) waiting to start</p>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-5">
+              <p className="text-xs text-slate-300 leading-relaxed">
+                You are joining the engineering standup to inspect post-launch repository debt, resolve documentation dependencies, and mandate a formal versioned release.
+              </p>
+
+              {/* Camera Preview */}
+              <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-950 border border-white/10 flex items-center justify-center">
+                {isCameraOn && streamRef.current ? (
+                  <video
+                    ref={videoElementRef}
+                    autoPlay
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover scale-x-[-1]"
+                  />
+                ) : (
+                  <div className="text-center space-y-2">
+                    <div className="w-12 h-12 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center mx-auto text-slate-500">
+                      <VideoOff className="w-6 h-6" />
+                    </div>
+                    <div className="text-[11px] text-slate-400 font-mono">Camera Off Preview</div>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-2 pt-1">
+                <button
+                  onClick={enableCameraAndJoin}
+                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center space-x-2 shadow-lg cursor-pointer transition-all border border-cyan-400/30"
+                >
+                  <Video className="w-4 h-4" />
+                  <span>Enable Camera &amp; Join Meeting</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setIsCameraOn(false);
+                    setStage('in_call');
+                  }}
+                  className="w-full py-2.5 rounded-xl text-slate-400 hover:text-white text-xs cursor-pointer transition-colors"
+                >
+                  Join without camera
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // STAGE 2: IN LIVE CALL (AUTHENTIC 4-TILE BALANCED ENGINEERING GRID)
+  // ─────────────────────────────────────────────────────────────────────────────
   return (
     <div className="flex-1 flex flex-col h-full bg-[#0b0e17] text-white overflow-hidden relative select-none font-sans">
       {/* ── TOP WINDOW HEADER ── */}
@@ -257,7 +401,7 @@ export const Chapter10MeetingApp: React.FC<Chapter10MeetingAppProps> = ({
           <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
           <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
           <span className="text-[11px] text-slate-300 font-medium ml-2">
-            Microsoft Teams — Engineering Release Sync
+            Microsoft Teams — Locking Down System Architecture Specs
           </span>
         </div>
         <div className="flex items-center space-x-1.5 text-[10px] text-emerald-400 font-mono">
@@ -275,8 +419,8 @@ export const Chapter10MeetingApp: React.FC<Chapter10MeetingAppProps> = ({
           <span className="text-white/20">|</span>
           <span className="text-[11px] text-slate-400">Post-Launch Stabilization</span>
           <div className="flex items-center space-x-1.5 text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-slate-300">
-            <Users className="w-3 h-3 text-sky-400" />
-            <span>5 / 5 In Call</span>
+            <Users className="w-3 h-3 text-cyan-400" />
+            <span>{joinedParticipants.size} / 4 In Call</span>
           </div>
         </div>
 
@@ -293,10 +437,30 @@ export const Chapter10MeetingApp: React.FC<Chapter10MeetingAppProps> = ({
         </div>
       </div>
 
-      {/* ── MAIN 5-TILE VIDEO GALLERY GRID ── */}
-      <div className="flex-1 p-3 overflow-hidden flex flex-col justify-between relative">
-        <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-3 auto-rows-fr max-h-[calc(100%-80px)]">
-          {/* Tile 1: ALEX CHEN (DEV LEAD) */}
+      {/* ── MAIN 4-TILE VIDEO GALLERY GRID ── */}
+      <div className="flex-1 p-3.5 overflow-hidden flex flex-col justify-between relative">
+        {/* Teams Join Toast Notification */}
+        <AnimatePresence>
+          {joinToast && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              className="absolute top-4 left-1/2 -translate-x-1/2 z-40 flex items-center space-x-2.5 px-4 py-2 rounded-2xl bg-slate-900/95 border border-cyan-400/40 text-white shadow-2xl backdrop-blur-xl pointer-events-none"
+            >
+              <div className="w-6 h-6 rounded-full overflow-hidden border border-cyan-400/50 bg-slate-800 shrink-0">
+                <img src={joinToast.dp} alt={joinToast.name} className="w-full h-full object-cover" />
+              </div>
+              <div className="flex items-center space-x-1.5 text-xs">
+                <span className="font-bold text-cyan-300">{joinToast.name}</span>
+                <span className="text-slate-300">joined the meeting</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="flex-1 grid grid-cols-2 gap-3.5 auto-rows-fr max-h-[calc(100%-80px)]">
+          {/* Tile 1: ALEX CHEN (DEV LEAD / ARCHITECT) */}
           <div
             className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
               activeSpeaker === 'alex'
@@ -336,123 +500,112 @@ export const Chapter10MeetingApp: React.FC<Chapter10MeetingAppProps> = ({
           </div>
 
           {/* Tile 2: DANIEL BROOKS (PROGRAM MANAGER / TECH ARCH) */}
-          <div
-            className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
-              activeSpeaker === 'daniel'
-                ? 'border-[#f97316] shadow-[0_0_25px_rgba(249,115,22,0.35)]'
-                : 'border-white/10'
-            }`}
-          >
-            <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-orange-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
-                <img
-                  src={CHARACTERS.daniel.dp}
-                  alt={CHARACTERS.daniel.name}
-                  className="w-full h-full object-cover object-top"
-                />
-              </div>
-              <span className="text-[10px] font-mono text-slate-500 mt-2">Tech Architecture</span>
-            </div>
-
-            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
-              <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-orange-400" />
-                <span>Daniel Brooks (PM)</span>
-              </div>
-              {activeSpeaker === 'daniel' && (
-                <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
-                  {[1, 2, 3, 4].map((i) => (
-                    <motion.div
-                      key={i}
-                      className="w-1 rounded-full bg-orange-400"
-                      animate={{ height: [4, 14, 4] }}
-                      transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
-                    />
-                  ))}
+          {joinedParticipants.has('daniel') ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
+                activeSpeaker === 'daniel'
+                  ? 'border-[#f97316] shadow-[0_0_25px_rgba(249,115,22,0.35)]'
+                  : 'border-white/10'
+              }`}
+            >
+              <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-orange-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
+                  <img
+                    src={CHARACTERS.daniel.dp}
+                    alt={CHARACTERS.daniel.name}
+                    className="w-full h-full object-cover object-top"
+                  />
                 </div>
-              )}
-            </div>
-          </div>
-
-          {/* Tile 3: MARCUS REED (CTO) */}
-          <div
-            className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
-              activeSpeaker === 'marcus'
-                ? 'border-[#38bdf8] shadow-[0_0_25px_rgba(56,189,248,0.35)]'
-                : 'border-white/10'
-            }`}
-          >
-            <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-sky-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
-                <img
-                  src={CHARACTERS.marcus.dp}
-                  alt={CHARACTERS.marcus.name}
-                  className="w-full h-full object-cover object-top"
-                />
+                <span className="text-[10px] font-mono text-slate-500 mt-2">Tech Architecture</span>
               </div>
-              <span className="text-[10px] font-mono text-slate-500 mt-2">Camera Off</span>
-            </div>
 
-            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
-              <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
-                <span>Marcus Reed (CTO)</span>
-              </div>
-              {activeSpeaker === 'marcus' && (
-                <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
-                  {[1, 2, 3, 4].map((i) => (
-                    <motion.div
-                      key={i}
-                      className="w-1 rounded-full bg-sky-400"
-                      animate={{ height: [4, 14, 4] }}
-                      transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
-                    />
-                  ))}
+              <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+                <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                  <span>Daniel Brooks (PM)</span>
                 </div>
-              )}
-            </div>
-          </div>
-
-          {/* Tile 4: AARAV KAPOOR (SENIOR CONSULTANT / MENTOR) */}
-          <div
-            className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
-              activeSpeaker === 'aarav'
-                ? 'border-[#eab308] shadow-[0_0_25px_rgba(234,179,8,0.35)]'
-                : 'border-white/10'
-            }`}
-          >
-            <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-amber-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
-                <img
-                  src={CHARACTERS.aarav.dp}
-                  alt={CHARACTERS.aarav.name}
-                  className="w-full h-full object-cover object-top"
-                />
+                {activeSpeaker === 'daniel' && (
+                  <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
+                    {[1, 2, 3, 4].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="w-1 rounded-full bg-orange-400"
+                        animate={{ height: [4, 14, 4] }}
+                        transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
-              <span className="text-[10px] font-mono text-slate-500 mt-2">Lead Strategist</span>
-            </div>
-
-            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
-              <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                <span>Aarav Kapoor (Senior Consultant)</span>
+            </motion.div>
+          ) : (
+            <div className="relative rounded-2xl overflow-hidden bg-slate-950/60 border border-dashed border-white/10 flex flex-col items-center justify-center p-3">
+              <div className="w-14 h-14 rounded-full overflow-hidden border border-white/10 bg-slate-800/80 opacity-40 grayscale">
+                <img src={CHARACTERS.daniel.dp} alt="Daniel" className="w-full h-full object-cover" />
               </div>
-              {activeSpeaker === 'aarav' && (
-                <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
-                  {[1, 2, 3, 4].map((i) => (
-                    <motion.div
-                      key={i}
-                      className="w-1 rounded-full bg-amber-400"
-                      animate={{ height: [4, 14, 4] }}
-                      transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
-                    />
-                  ))}
+              <div className="flex items-center space-x-1.5 mt-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-orange-400/60 animate-ping" />
+                <span className="text-[11px] font-mono text-slate-400">Daniel connecting...</span>
+              </div>
+            </div>
+          )}
+
+          {/* Tile 3: AARAV KAPOOR (SENIOR PM / MENTOR) */}
+          {joinedParticipants.has('aarav') ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
+                activeSpeaker === 'aarav'
+                  ? 'border-[#eab308] shadow-[0_0_25px_rgba(234,179,8,0.35)]'
+                  : 'border-white/10'
+              }`}
+            >
+              <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-amber-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
+                  <img
+                    src={CHARACTERS.aarav.dp}
+                    alt={CHARACTERS.aarav.name}
+                    className="w-full h-full object-cover object-top"
+                  />
                 </div>
-              )}
-            </div>
-          </div>
+                <span className="text-[10px] font-mono text-slate-500 mt-2">Lead Strategist</span>
+              </div>
 
-          {/* Tile 5: PLAYER (YOU / DT LEAD) */}
+              <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+                <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                  <span>Aarav Kapoor (Senior PM)</span>
+                </div>
+                {activeSpeaker === 'aarav' && (
+                  <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
+                    {[1, 2, 3, 4].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="w-1 rounded-full bg-amber-400"
+                        animate={{ height: [4, 14, 4] }}
+                        transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          ) : (
+            <div className="relative rounded-2xl overflow-hidden bg-slate-950/60 border border-dashed border-white/10 flex flex-col items-center justify-center p-3">
+              <div className="w-14 h-14 rounded-full overflow-hidden border border-white/10 bg-slate-800/80 opacity-40 grayscale">
+                <img src={CHARACTERS.aarav.dp} alt="Aarav" className="w-full h-full object-cover" />
+              </div>
+              <div className="flex items-center space-x-1.5 mt-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400/60 animate-ping" />
+                <span className="text-[11px] font-mono text-slate-400">Aarav connecting...</span>
+              </div>
+            </div>
+          )}
+
+          {/* Tile 4: PLAYER (YOU / DT LEAD) */}
           <div
             className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
               activeSpeaker === 'player'
@@ -570,28 +723,24 @@ export const Chapter10MeetingApp: React.FC<Chapter10MeetingAppProps> = ({
           </button>
         </div>
 
-        {/* Right Navigation & App Launch Actions */}
+        {/* Right Action: Replay / Fast-Forward / Launch Portal */}
         <div className="flex items-center space-x-2.5">
           <button
-            onClick={handlePrev}
-            disabled={currentLineIndex === 0}
-            className="p-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-white transition-all cursor-pointer"
-            title="Previous line"
+            onClick={handleReplay}
+            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 text-xs flex items-center space-x-1 cursor-pointer transition-colors"
+            title="Replay dialogue"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <RotateCcw className="w-3.5 h-3.5" />
           </button>
 
-          <span className="text-[11px] font-mono text-slate-400 px-1">
-            {currentLineIndex + 1} / {MEETING_DIALOGUES.length}
-          </span>
-
-          {!isAtLastLine ? (
+          {!isDialogueFinished ? (
             <button
-              onClick={handleNext}
-              className="px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs flex items-center space-x-1.5 shadow-md cursor-pointer transition-all"
+              onClick={handleFastForward}
+              className="px-3 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-xs font-mono flex items-center space-x-1 cursor-pointer transition-all"
+              title="Skip to end of standup"
             >
-              <span>Next</span>
-              <ChevronRight className="w-3.5 h-3.5" />
+              <FastForward className="w-3.5 h-3.5" />
+              <span>Skip Dialogue</span>
             </button>
           ) : (
             <button
