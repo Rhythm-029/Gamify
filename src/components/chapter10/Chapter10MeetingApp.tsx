@@ -1,30 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Mic,
   MicOff,
   Video,
   VideoOff,
+  PhoneOff,
+  Users,
+  Wifi,
+  ChevronLeft,
+  ChevronRight,
   ArrowRight,
-  Clock,
-  CheckCircle2,
-  FolderGit2,
+  Radio,
   FileCode,
-  GitBranch,
-  Layers,
-  ShieldCheck,
-  Volume2,
-  Sparkles,
-  MessageSquare,
-  BookOpen,
   Terminal,
 } from 'lucide-react';
 import type { Chapter10State } from '../../types/chapter10';
-import {
-  CHAPTER10_LOCATION,
-  CHAPTER10_PROJECT_NAME,
-  CHAPTER10_CHARACTERS,
-} from '../../data/chapter10Data';
 import { sound } from '../onboarding/SoundEngine';
 
 interface Chapter10MeetingAppProps {
@@ -34,80 +25,217 @@ interface Chapter10MeetingAppProps {
   onOpenScorecard?: () => void;
 }
 
+interface CharacterMeta {
+  id: string;
+  name: string;
+  role: string;
+  badge: string;
+  dp: string;
+  color: string;
+  pitch: number;
+  rate: number;
+}
+
+const CHARACTERS: Record<string, CharacterMeta> = {
+  alex: {
+    id: 'alex',
+    name: 'Alex Chen',
+    role: 'Lead Architect & Dev Lead',
+    badge: 'Engineering Lead',
+    dp: '/character/Daniel_Brooks/DanielDP.png',
+    color: '#06b6d4',
+    pitch: 1.05,
+    rate: 1.0,
+  },
+  daniel: {
+    id: 'daniel',
+    name: 'Daniel Brooks',
+    role: 'Program Manager · Brained',
+    badge: 'Tech Architecture',
+    dp: '/character/Daniel_Brooks/DanielDP.png',
+    color: '#f97316',
+    pitch: 1.0,
+    rate: 1.0,
+  },
+  marcus: {
+    id: 'marcus',
+    name: 'Marcus Reed',
+    role: 'Chief Technology Officer · Brained',
+    badge: 'Enterprise Architecture',
+    dp: '/character/marcus_reed/MarcusDP.png',
+    color: '#38bdf8',
+    pitch: 0.9,
+    rate: 1.0,
+  },
+  aarav: {
+    id: 'aarav',
+    name: 'Aarav Kapoor',
+    role: 'Senior PM · Leadership Mentor',
+    badge: 'Lead Strategist',
+    dp: '/character/AaravDP.png',
+    color: '#eab308',
+    pitch: 0.95,
+    rate: 0.98,
+  },
+  player: {
+    id: 'player',
+    name: 'You (Lead PM)',
+    role: 'Project Manager · Project Amigo',
+    badge: 'DT Lead',
+    dp: '',
+    color: '#34d399',
+    pitch: 1.0,
+    rate: 1.0,
+  },
+};
+
+interface MeetingDialogueLine {
+  id: string;
+  speaker: 'alex' | 'player' | 'daniel' | 'marcus' | 'aarav';
+  text: string;
+}
+
+const MEETING_DIALOGUES: MeetingDialogueLine[] = [
+  {
+    id: 'line_1_alex',
+    speaker: 'alex',
+    text: "The launch was successful, and the code is stable across our pilot clusters. But our API documentation is scattered across temporary Markdown files, architecture diagrams have no version numbers, and nobody knows which version of the technical specifications is final.",
+  },
+  {
+    id: 'line_2_player',
+    speaker: 'player',
+    text: "Wait, Alex. So if a new developer joins tomorrow, how will they understand the system architecture or know which API specifications are actually approved?",
+  },
+  {
+    id: 'line_3_alex',
+    speaker: 'alex',
+    text: "Honestly? They'll have to ask the developers who built it. We never established a proper documentation and release management process.",
+  },
+  {
+    id: 'line_4_daniel',
+    speaker: 'daniel',
+    text: "We've been focusing on delivery speed. But leaving technical debt like this means any future handover will be a nightmare.",
+  },
+  {
+    id: 'line_5_aarav',
+    speaker: 'aarav',
+    text: "We cannot let the entire system depend on tribal knowledge. Before we close this sprint, I want a properly versioned release and a centralized technical knowledge base.",
+  },
+  {
+    id: 'line_6_alex',
+    speaker: 'alex',
+    text: "I've unlocked the engineering repository. Let's audit the messy files, finalize the SemVer release, and publish the documentation portal.",
+  },
+];
+
 export const Chapter10MeetingApp: React.FC<Chapter10MeetingAppProps> = ({
   chapter10State,
   onUpdateState,
   onOpenPortal,
   onOpenScorecard,
 }) => {
-  // Conversational meeting stages:
-  // 1. 'alex_reality': Alex explains that although the launch succeeded, docs are scattered & unversioned.
-  // 2. 'player_inquiry': Player asks about developer onboarding & knowledge dependency.
-  // 3. 'alex_repo_reveal': Alex shows the messy repository (temp files, duplicates, unversioned diagrams).
-  // 4. 'player_mandate': Player establishes the release governance mandate.
-  // 5. 'handoff_to_portal': Handoff to the Engineering Release Portal workspace.
-  const [meetingStage, setMeetingStage] = useState<
-    'alex_reality' | 'player_inquiry' | 'alex_repo_reveal' | 'player_mandate' | 'handoff_to_portal'
-  >(() => {
-    if (chapter10State.meetingCompleted || chapter10State.portalOpened) return 'handoff_to_portal';
-    return 'alex_reality';
+  const [currentLineIndex, setCurrentLineIndex] = useState<number>(() => {
+    return chapter10State.meetingCompleted ? MEETING_DIALOGUES.length - 1 : 0;
   });
 
-  const [micMuted, setMicMuted] = useState(false);
-  const [cameraOff, setCameraOff] = useState(false);
-  const [activeSpeaker, setActiveSpeaker] = useState<'alex' | 'player'>('alex');
+  const [isCameraOn, setIsCameraOn] = useState(false);
+  const [isMicOn, setIsMicOn] = useState(true);
+  const [captionsEnabled, setCaptionsEnabled] = useState(true);
+  const [elapsedSeconds, setElapsedSeconds] = useState(24);
 
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Request or stop webcam video if available
+  // Live timer
   useEffect(() => {
-    if (!cameraOff) {
-      navigator.mediaDevices
-        ?.getUserMedia({ video: true, audio: false })
-        .then((stream) => {
-          streamRef.current = stream;
-        })
-        .catch(() => {
-          setCameraOff(true);
-        });
-    } else {
+    const timer = setInterval(() => {
+      setElapsedSeconds((s) => s + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const mm = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
+  const ss = String(elapsedSeconds % 60).padStart(2, '0');
+  const meetingTimerStr = `${mm}:${ss}`;
+
+  // Webcam request / teardown
+  const toggleCamera = useCallback(async () => {
+    sound.playClick();
+    if (isCameraOn) {
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current.getTracks().forEach((t) => t.stop());
         streamRef.current = null;
       }
-    }
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
+      setIsCameraOn(false);
+    } else {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        streamRef.current = stream;
+        setIsCameraOn(true);
+      } catch {
+        setIsCameraOn(false);
       }
-    };
-  }, [cameraOff]);
+    }
+  }, [isCameraOn]);
 
   useEffect(() => {
-    if (meetingStage === 'alex_reality' || meetingStage === 'alex_repo_reveal') {
-      setActiveSpeaker('alex');
-    } else {
-      setActiveSpeaker('player');
-    }
-  }, [meetingStage]);
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop());
+      }
+    };
+  }, []);
 
-  const speakDialogue = (text: string) => {
+  const videoElementRef = useCallback((node: HTMLVideoElement | null) => {
+    if (node && streamRef.current) {
+      node.srcObject = streamRef.current;
+      node.play().catch(() => {});
+    }
+  }, []);
+
+  // Speech synthesis for talking immersion
+  const speakCurrentLine = (line: MeetingDialogueLine) => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.05;
-      utterance.pitch = 1.0;
-      window.speechSynthesis.speak(utterance);
+      try {
+        window.speechSynthesis.cancel();
+        const char = CHARACTERS[line.speaker];
+        const utterance = new SpeechSynthesisUtterance(line.text);
+        utterance.rate = char.rate || 1.0;
+        utterance.pitch = char.pitch || 1.0;
+        window.speechSynthesis.speak(utterance);
+      } catch {
+        // ignore synthesis errors
+      }
     }
   };
 
-  const handleNextStage = (nextStage: typeof meetingStage) => {
-    sound.playMessagePing();
-    setMeetingStage(nextStage);
+  const currentLine = MEETING_DIALOGUES[currentLineIndex] || MEETING_DIALOGUES[0];
+  const activeSpeaker = currentLine.speaker;
+  const currentSpeakerMeta = CHARACTERS[activeSpeaker] || CHARACTERS.alex;
+
+  // Trigger speech when line changes
+  useEffect(() => {
+    speakCurrentLine(currentLine);
+  }, [currentLineIndex]);
+
+  const handleNext = () => {
+    sound.playClick();
+    if (currentLineIndex < MEETING_DIALOGUES.length - 1) {
+      setCurrentLineIndex((i) => i + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    sound.playClick();
+    if (currentLineIndex > 0) {
+      setCurrentLineIndex((i) => i - 1);
+    }
   };
 
   const handleLaunchPortal = () => {
     sound.playSystemClearance();
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
     onUpdateState({
       meetingCompleted: true,
       callCompleted: true,
@@ -115,505 +243,376 @@ export const Chapter10MeetingApp: React.FC<Chapter10MeetingAppProps> = ({
       currentStage: 'release_challenge',
       timelineTimestamp: '25:20',
     });
-
-    if (onOpenPortal) {
-      onOpenPortal();
-    }
+    if (onOpenPortal) onOpenPortal();
   };
 
+  const isAtLastLine = currentLineIndex === MEETING_DIALOGUES.length - 1;
+
   return (
-    <div className="h-full flex flex-col bg-[#070b14] text-slate-100 font-sans select-none overflow-hidden">
-      {/* ── TOP HEADER (TEAMS BRIEFING BAR) ── */}
-      <header className="px-5 py-3 border-b border-slate-800 bg-[#0c1220]/90 backdrop-blur flex items-center justify-between shrink-0 z-20">
+    <div className="flex-1 flex flex-col h-full bg-[#0b0e17] text-white overflow-hidden relative select-none font-sans">
+      {/* ── TOP WINDOW HEADER ── */}
+      <div className="h-9 bg-[#171c2f] border-b border-white/10 px-4 flex items-center justify-between shrink-0 z-20">
+        <div className="flex items-center space-x-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
+          <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
+          <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
+          <span className="text-[11px] text-slate-300 font-medium ml-2">
+            Microsoft Teams — Engineering Release Sync
+          </span>
+        </div>
+        <div className="flex items-center space-x-1.5 text-[10px] text-emerald-400 font-mono">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span>Active App</span>
+        </div>
+      </div>
+
+      {/* ── SUBHEADER CALL HUD ── */}
+      <div className="h-10 bg-[#121626]/95 border-b border-white/10 px-5 flex items-center justify-between shrink-0 z-20">
         <div className="flex items-center space-x-3">
-          <div className="relative">
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-inner">
-              <FolderGit2 className="w-5 h-5 text-cyan-400" />
-            </div>
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
-          </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <span className="text-[10px] font-mono tracking-widest uppercase text-cyan-400 font-bold">
-                POST-LAUNCH STABILIZATION · SCENE 10.1
-              </span>
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-mono">
-                ENGINEERING STANDUP
-              </span>
-            </div>
-            <h1 className="text-sm font-bold text-white flex items-center gap-2">
-              <span>{CHAPTER10_LOCATION}</span>
-              <span className="text-slate-400 text-xs font-normal">
-                · {CHAPTER10_PROJECT_NAME} Release Governance Sync
-              </span>
-            </h1>
+          <span className="font-bold text-white text-xs tracking-wide">
+            Project Amigo · Engineering Standup
+          </span>
+          <span className="text-white/20">|</span>
+          <span className="text-[11px] text-slate-400">Post-Launch Stabilization</span>
+          <div className="flex items-center space-x-1.5 text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-slate-300">
+            <Users className="w-3 h-3 text-sky-400" />
+            <span>5 / 5 In Call</span>
           </div>
         </div>
 
-        {/* Status Pills & Action Button */}
-        <div className="flex items-center space-x-3 text-xs">
-          <div className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300">
-            <Clock className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="font-mono text-[11px]">25:00–25:20 Release Readiness Sync</span>
+        <div className="flex items-center space-x-3 text-xs font-mono">
+          <div className="flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-red-500/10 border border-red-500/30 text-red-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+            <span className="font-bold">REC</span>
+            <span>{meetingTimerStr}</span>
+          </div>
+          <div className="flex items-center space-x-1 text-slate-400">
+            <Wifi className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="text-[10px]">HD 1080p</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── MAIN 5-TILE VIDEO GALLERY GRID ── */}
+      <div className="flex-1 p-3 overflow-hidden flex flex-col justify-between relative">
+        <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-3 auto-rows-fr max-h-[calc(100%-80px)]">
+          {/* Tile 1: ALEX CHEN (DEV LEAD) */}
+          <div
+            className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
+              activeSpeaker === 'alex'
+                ? 'border-[#06b6d4] shadow-[0_0_25px_rgba(6,182,212,0.35)]'
+                : 'border-white/10'
+            }`}
+          >
+            <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-cyan-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
+                <img
+                  src={CHARACTERS.alex.dp}
+                  alt={CHARACTERS.alex.name}
+                  className="w-full h-full object-cover object-top"
+                />
+              </div>
+              <span className="text-[10px] font-mono text-slate-500 mt-2">Engineering Lead</span>
+            </div>
+
+            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+              <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                <span>Alex Chen (Dev Lead)</span>
+              </div>
+              {activeSpeaker === 'alex' && (
+                <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
+                  {[1, 2, 3, 4].map((i) => (
+                    <motion.div
+                      key={i}
+                      className="w-1 rounded-full bg-cyan-400"
+                      animate={{ height: [4, 14, 4] }}
+                      transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-cyan-950/40 border border-cyan-500/30 text-cyan-300">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-            <span className="font-mono text-[11px] font-bold">DEV LEAD CALL ACTIVE</span>
+          {/* Tile 2: DANIEL BROOKS (PROGRAM MANAGER / TECH ARCH) */}
+          <div
+            className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
+              activeSpeaker === 'daniel'
+                ? 'border-[#f97316] shadow-[0_0_25px_rgba(249,115,22,0.35)]'
+                : 'border-white/10'
+            }`}
+          >
+            <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-orange-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
+                <img
+                  src={CHARACTERS.daniel.dp}
+                  alt={CHARACTERS.daniel.name}
+                  className="w-full h-full object-cover object-top"
+                />
+              </div>
+              <span className="text-[10px] font-mono text-slate-500 mt-2">Tech Architecture</span>
+            </div>
+
+            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+              <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                <span>Daniel Brooks (PM)</span>
+              </div>
+              {activeSpeaker === 'daniel' && (
+                <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
+                  {[1, 2, 3, 4].map((i) => (
+                    <motion.div
+                      key={i}
+                      className="w-1 rounded-full bg-orange-400"
+                      animate={{ height: [4, 14, 4] }}
+                      transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          {onOpenPortal && (chapter10State.meetingCompleted || meetingStage === 'handoff_to_portal') && (
+          {/* Tile 3: MARCUS REED (CTO) */}
+          <div
+            className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
+              activeSpeaker === 'marcus'
+                ? 'border-[#38bdf8] shadow-[0_0_25px_rgba(56,189,248,0.35)]'
+                : 'border-white/10'
+            }`}
+          >
+            <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-sky-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
+                <img
+                  src={CHARACTERS.marcus.dp}
+                  alt={CHARACTERS.marcus.name}
+                  className="w-full h-full object-cover object-top"
+                />
+              </div>
+              <span className="text-[10px] font-mono text-slate-500 mt-2">Camera Off</span>
+            </div>
+
+            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+              <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
+                <span>Marcus Reed (CTO)</span>
+              </div>
+              {activeSpeaker === 'marcus' && (
+                <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
+                  {[1, 2, 3, 4].map((i) => (
+                    <motion.div
+                      key={i}
+                      className="w-1 rounded-full bg-sky-400"
+                      animate={{ height: [4, 14, 4] }}
+                      transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Tile 4: AARAV KAPOOR (SENIOR CONSULTANT / MENTOR) */}
+          <div
+            className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
+              activeSpeaker === 'aarav'
+                ? 'border-[#eab308] shadow-[0_0_25px_rgba(234,179,8,0.35)]'
+                : 'border-white/10'
+            }`}
+          >
+            <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-amber-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
+                <img
+                  src={CHARACTERS.aarav.dp}
+                  alt={CHARACTERS.aarav.name}
+                  className="w-full h-full object-cover object-top"
+                />
+              </div>
+              <span className="text-[10px] font-mono text-slate-500 mt-2">Lead Strategist</span>
+            </div>
+
+            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+              <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                <span>Aarav Kapoor (Senior Consultant)</span>
+              </div>
+              {activeSpeaker === 'aarav' && (
+                <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
+                  {[1, 2, 3, 4].map((i) => (
+                    <motion.div
+                      key={i}
+                      className="w-1 rounded-full bg-amber-400"
+                      animate={{ height: [4, 14, 4] }}
+                      transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Tile 5: PLAYER (YOU / DT LEAD) */}
+          <div
+            className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
+              activeSpeaker === 'player'
+                ? 'border-emerald-400 shadow-[0_0_25px_rgba(52,211,153,0.35)]'
+                : 'border-white/10'
+            }`}
+          >
+            {isCameraOn && streamRef.current ? (
+              <video
+                ref={videoElementRef}
+                autoPlay
+                muted
+                playsInline
+                className="w-full h-full object-cover scale-x-[-1]"
+              />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-emerald-950 border-2 border-emerald-500/40 flex items-center justify-center text-emerald-300 font-bold text-xl shadow-xl">
+                  DT
+                </div>
+                <span className="text-[10px] font-mono text-slate-500 mt-2">You (Camera Off)</span>
+              </div>
+            )}
+
+            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+              <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span>You (DT Lead)</span>
+              </div>
+              {activeSpeaker === 'player' && (
+                <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
+                  {[1, 2, 3, 4].map((i) => (
+                    <motion.div
+                      key={i}
+                      className="w-1 rounded-full bg-emerald-400"
+                      animate={{ height: [4, 14, 4] }}
+                      transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ── LIVE CLOSED CAPTIONS & SUBTITLES BAR ── */}
+        {captionsEnabled && (
+          <div className="mt-2.5 px-4 py-3 rounded-2xl bg-black/90 backdrop-blur-md border border-white/15 flex items-start sm:items-center space-x-3 shrink-0 shadow-xl">
+            <div
+              className="text-xs font-black uppercase font-mono px-2.5 py-1 rounded-lg border shrink-0"
+              style={{
+                color: currentSpeakerMeta.color,
+                borderColor: `${currentSpeakerMeta.color}40`,
+                background: `${currentSpeakerMeta.color}15`,
+              }}
+            >
+              {currentSpeakerMeta.name}
+            </div>
+            <p className="text-sm sm:text-[15px] text-white font-medium leading-relaxed flex-1">
+              "{currentLine.text}"
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* ── BOTTOM TEAMS CONTROL DOCK ── */}
+      <div className="h-16 bg-[#121626]/95 border-t border-white/10 px-6 flex items-center justify-between shrink-0 z-20">
+        <div className="flex items-center space-x-2 text-xs font-mono text-slate-400">
+          <Radio className="w-3.5 h-3.5 text-red-400 animate-pulse" />
+          <span>PROJECT AMIGO · STANDUP</span>
+        </div>
+
+        {/* Center Meeting Controls */}
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => {
+              sound.playClick();
+              setIsMicOn(!isMicOn);
+            }}
+            className={`p-3 rounded-xl border transition-all cursor-pointer ${
+              !isMicOn
+                ? 'bg-rose-500/20 border-rose-500/40 text-rose-400'
+                : 'bg-white/5 border-white/10 hover:bg-white/10 text-white'
+            }`}
+            title={isMicOn ? 'Mute' : 'Unmute'}
+          >
+            {isMicOn ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
+          </button>
+
+          <button
+            onClick={toggleCamera}
+            className={`p-3 rounded-xl border transition-all cursor-pointer ${
+              isCameraOn
+                ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
+                : 'bg-white/5 border-white/10 hover:bg-white/10 text-slate-400'
+            }`}
+            title={isCameraOn ? 'Turn Camera Off' : 'Turn Camera On'}
+          >
+            {isCameraOn ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
+          </button>
+
+          <button
+            onClick={() => {
+              sound.playClick();
+              setCaptionsEnabled(!captionsEnabled);
+            }}
+            className={`px-3 py-2.5 rounded-xl border text-xs font-mono font-bold transition-all cursor-pointer ${
+              captionsEnabled
+                ? 'bg-sky-500/20 border-sky-500/40 text-sky-400'
+                : 'bg-white/5 border-white/10 text-slate-500'
+            }`}
+            title="Closed Captions"
+          >
+            CC
+          </button>
+        </div>
+
+        {/* Right Navigation & App Launch Actions */}
+        <div className="flex items-center space-x-2.5">
+          <button
+            onClick={handlePrev}
+            disabled={currentLineIndex === 0}
+            className="p-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-white transition-all cursor-pointer"
+            title="Previous line"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          <span className="text-[11px] font-mono text-slate-400 px-1">
+            {currentLineIndex + 1} / {MEETING_DIALOGUES.length}
+          </span>
+
+          {!isAtLastLine ? (
+            <button
+              onClick={handleNext}
+              className="px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs flex items-center space-x-1.5 shadow-md cursor-pointer transition-all"
+            >
+              <span>Next</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          ) : (
             <button
               onClick={handleLaunchPortal}
-              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-xs shadow-md shadow-cyan-950 flex items-center space-x-1.5 cursor-pointer border border-cyan-400/40 transition-all"
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-extrabold text-xs flex items-center space-x-2 shadow-[0_0_20px_rgba(6,182,212,0.4)] border border-cyan-400/40 cursor-pointer transition-all animate-pulse"
             >
-              <Terminal className="w-3.5 h-3.5" />
-              <span>Open Release Portal</span>
+              <Terminal className="w-4 h-4" />
+              <span>Open Engineering Release Portal</span>
+              <ArrowRight className="w-4 h-4" />
             </button>
           )}
 
-          {onOpenScorecard && chapter10State.completed && (
+          {chapter10State.completed && onOpenScorecard && (
             <button
               onClick={onOpenScorecard}
-              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center space-x-1.5 cursor-pointer border border-slate-700 transition-all"
+              className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold cursor-pointer border border-slate-700"
             >
-              <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Scorecard</span>
+              Scorecard
             </button>
           )}
         </div>
-      </header>
-
-      {/* ── MAIN CONTENT AREA ── */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 flex flex-col justify-between max-w-5xl mx-auto w-full">
-        {/* ── PARTICIPANTS GALLERY (ALEX & PLAYER) ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 shrink-0">
-          {/* Alex (Dev Lead) */}
-          <div
-            className={`p-3.5 rounded-2xl border transition-all ${
-              activeSpeaker === 'alex'
-                ? 'bg-[#121c2d] border-cyan-500/60 shadow-[0_0_20px_rgba(6,182,212,0.15)] ring-1 ring-cyan-500/50'
-                : 'bg-[#0f172a]/70 border-slate-800'
-            }`}
-          >
-            <div className="flex items-center space-x-3">
-              <div className="relative">
-                <img
-                  src={CHAPTER10_CHARACTERS.alex.avatar}
-                  alt={CHAPTER10_CHARACTERS.alex.name}
-                  className="w-12 h-12 rounded-xl object-cover border border-cyan-500/50 shadow"
-                />
-                <span className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-slate-950" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-white truncate">
-                    {CHAPTER10_CHARACTERS.alex.name}
-                  </span>
-                  {activeSpeaker === 'alex' && (
-                    <span className="text-cyan-400 text-[10px] font-mono flex items-center gap-1 font-bold">
-                      <Volume2 className="w-3 h-3 animate-pulse" /> Speaking
-                    </span>
-                  )}
-                </div>
-                <div className="text-[10px] text-cyan-300/80 font-mono uppercase tracking-wider">
-                  Developer · Engineering Lead
-                </div>
-                <div className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  <span>Repository Maintainer</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Player Feed */}
-          <div
-            className={`p-3.5 rounded-2xl border transition-all ${
-              activeSpeaker === 'player'
-                ? 'bg-[#181a30] border-indigo-500/60 shadow-[0_0_20px_rgba(99,102,241,0.15)] ring-1 ring-indigo-500/50'
-                : 'bg-[#0f172a]/70 border-slate-800'
-            }`}
-          >
-            <div className="flex items-center space-x-3">
-              <div className="relative">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-cyan-500 flex items-center justify-center font-bold text-white text-sm shadow-md border border-indigo-400/40 font-mono">
-                  YOU
-                </div>
-                <span className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-slate-950" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-white truncate">
-                    Player (You)
-                  </span>
-                  {activeSpeaker === 'player' && (
-                    <span className="text-indigo-400 text-[10px] font-mono flex items-center gap-1 font-bold">
-                      <Volume2 className="w-3 h-3 animate-pulse" /> Speaking
-                    </span>
-                  )}
-                </div>
-                <div className="text-[10px] text-indigo-300/80 font-mono uppercase tracking-wider">
-                  Lead Project Manager (You)
-                </div>
-                <div className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  <span>Brained Consulting · Delivery Lead</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ── CONVERSATIONAL CENTER STAGE ── */}
-        <div className="flex-1 flex flex-col justify-center">
-          <AnimatePresence mode="wait">
-            {/* ── STAGE 1: Alex's Post-Launch Reality ── */}
-            {meetingStage === 'alex_reality' && (
-              <motion.div
-                key="stage_alex_reality"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                className="bg-[#101726] border border-cyan-500/40 rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl relative overflow-hidden"
-              >
-                <div className="flex items-center justify-between border-b border-cyan-500/20 pb-3">
-                  <div className="flex items-center space-x-2 text-cyan-400 font-mono text-xs font-bold tracking-wider uppercase">
-                    <Sparkles className="w-4 h-4 text-cyan-400" />
-                    <span>25:00 · Post-Launch Reality on the Engineering Floor</span>
-                  </div>
-                  <span className="text-[10px] font-mono text-slate-400">
-                    EXECUTIVE STEERING COMMITTEE ROI APPROVED
-                  </span>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-[#132032] border border-cyan-500/40 relative space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2.5">
-                      <img
-                        src={CHAPTER10_CHARACTERS.alex.avatar}
-                        alt="Alex"
-                        className="w-9 h-9 rounded-xl object-cover border border-cyan-500/50"
-                      />
-                      <span className="font-bold text-cyan-300 text-sm">Alex (Dev Lead):</span>
-                    </div>
-                    <button
-                      onClick={() =>
-                        speakDialogue(
-                          "The launch was successful and the code is stable. But there's something we haven't addressed. Our API documentation is scattered across temporary Markdown files, architecture diagrams are sitting in individual folders, and nobody knows which version of the technical specifications is final."
-                        )
-                      }
-                      className="text-slate-400 hover:text-white p-1 rounded"
-                    >
-                      <Volume2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <p className="text-white text-sm sm:text-base font-medium leading-relaxed italic">
-                    "The launch was successful, and the code is stable across our pilot clusters. But there's something we haven't addressed: our API documentation is scattered across temporary Markdown files, architecture diagrams are sitting in individual folders, and nobody knows which version of the technical specifications is final."
-                  </p>
-                </div>
-
-                <div className="pt-2 flex justify-end">
-                  <button
-                    onClick={() => handleNextStage('player_inquiry')}
-                    className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-cyan-600/30 transition-all cursor-pointer border border-cyan-400/40"
-                  >
-                    <span>Ask Alex About New Developer Onboarding</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
-            {/* ── STAGE 2: Player Inquiry on Onboarding & Dependency ── */}
-            {meetingStage === 'player_inquiry' && (
-              <motion.div
-                key="stage_player_inquiry"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                className="bg-[#101726] border border-indigo-500/40 rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl relative overflow-hidden"
-              >
-                <div className="flex items-center justify-between border-b border-indigo-500/20 pb-3">
-                  <div className="flex items-center space-x-2 text-indigo-400 font-mono text-xs font-bold tracking-wider uppercase">
-                    <MessageSquare className="w-4 h-4 text-indigo-400" />
-                    <span>25:10 · The Knowledge Dependency Threat</span>
-                  </div>
-                  <span className="text-[10px] font-mono text-slate-400">
-                    MAINTAINABILITY RISK IDENTIFIED
-                  </span>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-[#181a30] border border-indigo-500/40 relative space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2.5">
-                      <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white font-bold flex items-center justify-center font-mono text-xs">
-                        YOU
-                      </div>
-                      <span className="font-bold text-indigo-300 text-sm">Player (Lead PM):</span>
-                    </div>
-                    <button
-                      onClick={() =>
-                        speakDialogue(
-                          "Wait, Alex. So if a new developer joins tomorrow, how will they understand the system architecture or know which API specifications are actually approved?"
-                        )
-                      }
-                      className="text-slate-400 hover:text-white p-1 rounded"
-                    >
-                      <Volume2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <p className="text-white text-sm sm:text-base font-medium leading-relaxed italic">
-                    "Wait, Alex. So if a new developer joins tomorrow, how will they understand the system architecture or know which API specifications are actually approved?"
-                  </p>
-                </div>
-
-                <div className="pt-2 flex justify-end">
-                  <button
-                    onClick={() => handleNextStage('alex_repo_reveal')}
-                    className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 transition-all cursor-pointer border border-cyan-400/40"
-                  >
-                    <span>Hear Alex's Answer & View Repository State</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
-            {/* ── STAGE 3: Alex Reveals the Hidden Technical Debt ── */}
-            {meetingStage === 'alex_repo_reveal' && (
-              <motion.div
-                key="stage_alex_reveal"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                className="bg-[#101726] border border-amber-500/40 rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl relative overflow-hidden"
-              >
-                <div className="flex items-center justify-between border-b border-amber-500/20 pb-3">
-                  <div className="flex items-center space-x-2 text-amber-400 font-mono text-xs font-bold tracking-wider uppercase">
-                    <FileCode className="w-4 h-4 text-amber-400" />
-                    <span>25:20 · The Hidden Technical Debt</span>
-                  </div>
-                  <span className="text-[10px] font-mono text-slate-400">
-                    TRIBAL KNOWLEDGE IS NOT DOCUMENTATION
-                  </span>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-[#1c1b26] border border-amber-500/40 relative space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2.5">
-                      <img
-                        src={CHAPTER10_CHARACTERS.alex.avatar}
-                        alt="Alex"
-                        className="w-9 h-9 rounded-xl object-cover border border-amber-500/50"
-                      />
-                      <span className="font-bold text-amber-300 text-sm">Alex (Dev Lead):</span>
-                    </div>
-                    <button
-                      onClick={() =>
-                        speakDialogue(
-                          "Honestly? They'll have to ask the developers who built it. We've been focusing on getting the product delivered. We never established a proper documentation and release management process."
-                        )
-                      }
-                      className="text-slate-400 hover:text-white p-1 rounded"
-                    >
-                      <Volume2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <p className="text-white text-sm sm:text-base font-medium leading-relaxed italic">
-                    "Honestly? They'll have to ask the developers who built it. We've been focusing 100% on delivery deadlines. We have multiple versions of API documentation, unversioned diagrams, untracked changes, and no centralized developer portal."
-                  </p>
-                </div>
-
-                <div className="pt-2 flex justify-end">
-                  <button
-                    onClick={() => handleNextStage('player_mandate')}
-                    className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold text-xs shadow-lg shadow-amber-600/30 transition-all cursor-pointer border border-amber-400/40"
-                  >
-                    <span>Issue Senior PM Governance Mandate</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
-            {/* ── STAGE 4: Player Mandate (Release Governance) ── */}
-            {meetingStage === 'player_mandate' && (
-              <motion.div
-                key="stage_player_mandate"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                className="bg-[#0f1d2a] border border-cyan-500/50 rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl relative overflow-hidden"
-              >
-                <div className="flex items-center justify-between border-b border-cyan-500/20 pb-3">
-                  <div className="flex items-center space-x-2 text-cyan-400 font-mono text-xs font-bold tracking-wider uppercase">
-                    <ShieldCheck className="w-4 h-4 text-cyan-400" />
-                    <span>25:35 · Senior PM Release Governance Mandate</span>
-                  </div>
-                  <span className="text-[10px] font-mono text-slate-400">
-                    PROTECTING INSTITUTIONAL KNOWLEDGE
-                  </span>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-[#112435] border border-cyan-500/40 relative space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2.5">
-                      <div className="w-8 h-8 rounded-lg bg-cyan-600 text-white font-bold flex items-center justify-center font-mono text-xs">
-                        YOU
-                      </div>
-                      <span className="font-bold text-cyan-300 text-sm">Player (Lead PM):</span>
-                    </div>
-                    <button
-                      onClick={() =>
-                        speakDialogue(
-                          "We cannot let the entire system depend on individual developers remembering how everything works. Before we close this sprint, I want a properly versioned release and a centralized technical knowledge base."
-                        )
-                      }
-                      className="text-slate-400 hover:text-white p-1 rounded"
-                    >
-                      <Volume2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <p className="text-white text-sm sm:text-base font-medium leading-relaxed italic">
-                    "We cannot let the entire bank HRMS depend on individual developers remembering how everything works. Before we close this sprint, I want an audited repository, a formally tagged release, and a centralized Internal Developer Portal."
-                  </p>
-                </div>
-
-                <div className="pt-2 flex justify-end">
-                  <button
-                    onClick={() => handleNextStage('handoff_to_portal')}
-                    className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-cyan-600/30 transition-all cursor-pointer border border-cyan-400/40"
-                  >
-                    <span>Receive Engineering Release Challenge</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
-            {/* ── STAGE 5: Handoff to Portal Workspace ── */}
-            {meetingStage === 'handoff_to_portal' && (
-              <motion.div
-                key="stage_handoff_portal"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                className="bg-[#0f1d2a] border border-emerald-500/50 rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl relative overflow-hidden"
-              >
-                <div className="flex items-center justify-between border-b border-emerald-500/20 pb-3">
-                  <div className="flex items-center space-x-2 text-emerald-400 font-mono text-xs font-bold tracking-wider uppercase">
-                    <BookOpen className="w-4 h-4 text-emerald-400" />
-                    <span>25:45 · Engineering Release Challenge Initiated</span>
-                  </div>
-                  <span className="text-[10px] font-mono text-slate-400">
-                    INTERNAL DEVELOPER PORTAL
-                  </span>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-[#13282b] border border-emerald-500/40 space-y-3">
-                  <div className="flex items-center space-x-2.5">
-                    <img
-                      src={CHAPTER10_CHARACTERS.alex.avatar}
-                      alt="Alex"
-                      className="w-9 h-9 rounded-xl object-cover border border-emerald-400/50"
-                    />
-                    <div>
-                      <span className="font-bold text-emerald-300 text-sm">Alex (Dev Lead):</span>
-                      <div className="text-[11px] text-slate-400">Engineering Repository Workspace Ready</div>
-                    </div>
-                  </div>
-                  <p className="text-white text-sm sm:text-base font-medium leading-relaxed italic">
-                    "Okay, let's do it right. I've opened the repository audit suite on Brained OS. We have three governance tasks to complete: clean up the repository files, approve our semantic release tag, and publish the official documentation package to the enterprise wiki before our final release gate."
-                  </p>
-                </div>
-
-                {/* 3 Core Tasks Overview */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-                  <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
-                    <div className="font-bold text-cyan-300 flex items-center gap-1.5">
-                      <FileCode className="w-3.5 h-3.5" />
-                      <span>Task 1 · Repo Audit</span>
-                    </div>
-                    <p className="text-slate-400 text-[11px] leading-relaxed">
-                      Identify authoritative documents and purge duplicate/scratch files (+5 bonus).
-                    </p>
-                  </div>
-
-                  <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
-                    <div className="font-bold text-purple-300 flex items-center gap-1.5">
-                      <GitBranch className="w-3.5 h-3.5" />
-                      <span>Task 2 · SemVer Tag</span>
-                    </div>
-                    <p className="text-slate-400 text-[11px] leading-relaxed">
-                      Choose between v0.9.9, v1.0.0, and v2.0.0 for initial production release (+5 bonus).
-                    </p>
-                  </div>
-
-                  <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
-                    <div className="font-bold text-emerald-300 flex items-center gap-1.5">
-                      <Layers className="w-3.5 h-3.5" />
-                      <span>Task 3 · Wiki Catalog</span>
-                    </div>
-                    <p className="text-slate-400 text-[11px] leading-relaxed">
-                      Publish complete Internal Developer Portal package to hit 100% coverage (+5 bonus).
-                    </p>
-                  </div>
-                </div>
-
-                <div className="pt-2 flex flex-wrap items-center justify-between gap-3">
-                  <div className="text-xs text-emerald-300 font-medium flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    <span>Briefing concluded. Engineering Portal unlocked on Brained OS.</span>
-                  </div>
-
-                  <button
-                    onClick={handleLaunchPortal}
-                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 via-teal-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-slate-950 font-black text-xs transition-all flex items-center space-x-2 cursor-pointer shadow-[0_0_20px_rgba(6,182,212,0.3)]"
-                  >
-                    <Terminal className="w-4 h-4 text-slate-950" />
-                    <span>Enter Engineering Release Portal</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* ── CONTROLS FOOTER ── */}
-        <footer className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400 shrink-0">
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => setMicMuted((prev) => !prev)}
-              className={`p-2 rounded-xl border flex items-center space-x-1.5 transition-colors cursor-pointer ${
-                micMuted
-                  ? 'bg-rose-500/20 border-rose-500/40 text-rose-300'
-                  : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'
-              }`}
-            >
-              {micMuted ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5 text-cyan-400" />}
-              <span className="text-[11px] font-mono">{micMuted ? 'Muted' : 'Mic Live'}</span>
-            </button>
-
-            <button
-              onClick={() => setCameraOff((prev) => !prev)}
-              className={`p-2 rounded-xl border flex items-center space-x-1.5 transition-colors cursor-pointer ${
-                cameraOff
-                  ? 'bg-rose-500/20 border-rose-500/40 text-rose-300'
-                  : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'
-              }`}
-            >
-              {cameraOff ? <VideoOff className="w-3.5 h-3.5" /> : <Video className="w-3.5 h-3.5 text-cyan-400" />}
-              <span className="text-[11px] font-mono">{cameraOff ? 'Cam Off' : 'Cam Feed'}</span>
-            </button>
-          </div>
-
-          <div className="text-[11px] font-mono text-slate-400 flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Microsoft Teams · Engineering Architecture Standup · TLS 1.3 Encrypted</span>
-          </div>
-        </footer>
       </div>
     </div>
   );

@@ -22,6 +22,16 @@ import {
   UserCheck,
   AlertCircle,
   FileCheck2,
+  Link2,
+  Unlink2,
+  ListOrdered,
+  GraduationCap,
+  BarChart3,
+  XCircle,
+  TrendingUp,
+  Zap,
+  Users,
+  Network,
 } from 'lucide-react';
 import type {
   Chapter11State,
@@ -50,6 +60,41 @@ interface OperationsTransitionConsoleAppProps {
   onOpenScorecard: () => void;
   onNotifyDesktop?: (title: string, body: string) => void;
 }
+
+// Map resource icon names to lucide components
+const RESOURCE_ICONS: Record<string, React.FC<{ className?: string }>> = {
+  BookOpen,
+  GitBranch,
+  ShieldCheck,
+  Activity,
+  FileText,
+  Wrench,
+};
+
+// Phase color themes for Gantt-style view
+const PHASE_THEMES: Record<string, { bg: string; border: string; badge: string; accent: string; dot: string }> = {
+  phase_intensive: {
+    bg: 'bg-rose-950/30',
+    border: 'border-rose-500/40',
+    badge: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
+    accent: 'text-rose-300',
+    dot: 'bg-rose-400',
+  },
+  phase_shared: {
+    bg: 'bg-amber-950/30',
+    border: 'border-amber-500/40',
+    badge: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+    accent: 'text-amber-300',
+    dot: 'bg-amber-400',
+  },
+  phase_ops_led: {
+    bg: 'bg-emerald-950/30',
+    border: 'border-emerald-500/40',
+    badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+    accent: 'text-emerald-300',
+    dot: 'bg-emerald-400',
+  },
+};
 
 export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsoleAppProps> = ({
   chapter11State,
@@ -288,52 +333,59 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
     (c) => phaseAssignments[c.id] === c.correctPhaseId
   ).length;
 
+  // Tab config
+  const tabs: { id: Chapter11PortalTab; label: string; shortLabel: string; icon: React.FC<{ className?: string }>; done: boolean }[] = [
+    { id: 'readiness', label: 'Operational Readiness', shortLabel: 'Readiness', icon: ShieldCheck, done: matchingSubmitted },
+    { id: 'knowledge_transfer', label: 'Knowledge Transfer & Incident Sim', shortLabel: 'Knowledge Transfer', icon: GraduationCap, done: workshopsScheduled },
+    { id: 'hypercare', label: '14-Day Hypercare Window', shortLabel: 'Hypercare', icon: Activity, done: hypercareSubmitted },
+    { id: 'governance_gate', label: 'Operational Acceptance', shortLabel: 'Acceptance', icon: FileCheck2, done: decisionCommitted },
+  ];
+
   return (
-    <div className="flex flex-col h-full w-full bg-slate-950 text-slate-100 select-none overflow-hidden font-sans">
-      {/* Top Console Navigation & Metrics Ribbon */}
-      <div className="bg-slate-900/90 border-b border-indigo-500/20 px-4 py-3 shrink-0 flex flex-wrap items-center justify-between gap-3">
-        {/* Left: App Title & Operational Meta */}
+    <div className="flex flex-col h-full w-full bg-[#0d1117] text-slate-100 select-none overflow-hidden font-sans">
+
+      {/* ── TOP HEADER BAR ── */}
+      <div className="bg-[#161b22] border-b border-[#30363d] px-5 py-3 shrink-0 flex flex-wrap items-center justify-between gap-3">
+        {/* Left: Brand */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shadow-inner">
-            <Server className="w-5 h-5 text-indigo-400" />
+          <div className="w-9 h-9 rounded-lg bg-indigo-600/15 border border-indigo-500/25 flex items-center justify-center">
+            <Server className="w-4 h-4 text-indigo-400" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">
                 Operations Transition Console
               </span>
-              <span className="text-[11px] font-mono text-emerald-400 font-bold flex items-center gap-1">
+              <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-400">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                HRMS Production v1.0.0
+                HRMS v1.0.0 · LIVE
               </span>
             </div>
-            <h1 className="text-sm font-bold text-white flex items-center gap-2">
-              {CHAPTER11_TITLE}
-              <span className="text-xs text-slate-400 font-normal hidden sm:inline">
-                | {CHAPTER11_SUBTITLE}
+            <h1 className="text-[13px] font-bold text-white leading-tight">
+              {CHAPTER11_TITLE}{' '}
+              <span className="text-slate-400 font-normal text-xs hidden sm:inline">
+                — {CHAPTER11_SUBTITLE}
               </span>
             </h1>
           </div>
         </div>
 
-        {/* Right: Operational Telemetry Metrics */}
-        <div className="flex items-center gap-2 sm:gap-4 text-xs">
-          <div className="px-3 py-1.5 rounded-lg bg-black/40 border border-slate-800 flex items-center gap-2">
-            <Clock className="w-3.5 h-3.5 text-indigo-400" />
-            <span className="text-slate-400 text-[11px]">Hypercare:</span>
+        {/* Right: Telemetry Badges */}
+        <div className="flex items-center gap-2 text-[11px]">
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#0d1117] border border-[#30363d]">
+            <Clock className="w-3 h-3 text-indigo-400" />
+            <span className="text-slate-400">Hypercare:</span>
             <span className="font-bold text-indigo-300">14 Days</span>
           </div>
-
-          <div className="px-3 py-1.5 rounded-lg bg-black/40 border border-slate-800 flex items-center gap-2">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="text-slate-400 text-[11px]">Support:</span>
-            <span className="font-bold text-emerald-300">24/7 Enabled</span>
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#0d1117] border border-[#30363d]">
+            <ShieldCheck className="w-3 h-3 text-emerald-400" />
+            <span className="text-slate-400">Support:</span>
+            <span className="font-bold text-emerald-300">24/7</span>
           </div>
-
-          <div className="px-3 py-1.5 rounded-lg bg-black/40 border border-slate-800 flex items-center gap-2">
-            <Layers className="w-3.5 h-3.5 text-purple-400" />
-            <span className="text-slate-400 text-[11px]">Status:</span>
-            <span className="font-bold text-amber-300">
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#0d1117] border border-[#30363d]">
+            <Layers className="w-3 h-3 text-purple-400" />
+            <span className="text-slate-400">Status:</span>
+            <span className={`font-bold ${decisionCommitted ? (selectedDecision === 'choice_b' ? 'text-emerald-300' : 'text-rose-300') : 'text-amber-300'}`}>
               {decisionCommitted
                 ? selectedDecision === 'choice_b'
                   ? 'Handover Accepted'
@@ -344,341 +396,387 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
         </div>
       </div>
 
-      {/* Tabs Navigation */}
-      <div className="bg-slate-900/60 border-b border-slate-800 px-4 flex items-center gap-2 overflow-x-auto shrink-0">
-        <button
-          onClick={() => {
-            sound.playClick();
-            setActiveTab('readiness');
-          }}
-          className={`py-2.5 px-3.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'readiness'
-              ? 'border-indigo-400 text-indigo-300 bg-indigo-500/10'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          <span className="w-4 h-4 rounded-full bg-indigo-950 border border-indigo-400/40 text-[10px] flex items-center justify-center font-bold">
-            01
-          </span>
-          <span>Operational Readiness</span>
-          {matchingSubmitted && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
-        </button>
-
-        <button
-          onClick={() => {
-            sound.playClick();
-            setActiveTab('knowledge_transfer');
-          }}
-          className={`py-2.5 px-3.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'knowledge_transfer'
-              ? 'border-indigo-400 text-indigo-300 bg-indigo-500/10'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          <span className="w-4 h-4 rounded-full bg-indigo-950 border border-indigo-400/40 text-[10px] flex items-center justify-center font-bold">
-            02
-          </span>
-          <span>Knowledge Transfer & Incident Sim</span>
-          {workshopsScheduled && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
-        </button>
-
-        <button
-          onClick={() => {
-            sound.playClick();
-            setActiveTab('hypercare');
-          }}
-          className={`py-2.5 px-3.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'hypercare'
-              ? 'border-indigo-400 text-indigo-300 bg-indigo-500/10'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          <span className="w-4 h-4 rounded-full bg-indigo-950 border border-indigo-400/40 text-[10px] flex items-center justify-center font-bold">
-            03
-          </span>
-          <span>14-Day Hypercare Window</span>
-          {hypercareSubmitted && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
-        </button>
-
-        <button
-          onClick={() => {
-            sound.playClick();
-            setActiveTab('governance_gate');
-          }}
-          className={`py-2.5 px-3.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'governance_gate'
-              ? 'border-indigo-400 text-indigo-300 bg-indigo-500/10'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          <span className="w-4 h-4 rounded-full bg-indigo-950 border border-indigo-400/40 text-[10px] flex items-center justify-center font-bold">
-            04
-          </span>
-          <span>Operational Acceptance</span>
-          {decisionCommitted && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
-        </button>
+      {/* ── TAB NAVIGATION ── */}
+      <div className="bg-[#161b22] border-b border-[#30363d] px-4 flex items-stretch gap-0 overflow-x-auto shrink-0">
+        {tabs.map((tab, idx) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          const isDone = tab.done;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => { sound.playClick(); setActiveTab(tab.id); }}
+              className={`relative flex items-center gap-2 px-4 py-3 text-xs font-semibold transition-all cursor-pointer whitespace-nowrap border-b-2 ${
+                isActive
+                  ? 'border-indigo-400 text-white bg-indigo-500/8'
+                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-white/4'
+              }`}
+            >
+              {/* Step pill */}
+              <span className={`w-5 h-5 rounded flex items-center justify-center text-[9px] font-black shrink-0 ${
+                isDone
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                  : isActive
+                  ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
+                  : 'bg-[#21262d] text-slate-500 border border-[#30363d]'
+              }`}>
+                {isDone ? <CheckCircle2 className="w-3 h-3" /> : `0${idx + 1}`}
+              </span>
+              <Icon className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="sm:hidden">{tab.shortLabel}</span>
+              {isActive && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-400 rounded-t" />
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Main Tab Content Canvas */}
-      <div className="flex-1 p-4 sm:p-6 overflow-y-auto">
-        <div className="max-w-6xl mx-auto space-y-6">
-          {/* ──────────────── TAB 1: OPERATIONAL READINESS MATCHING ──────────────── */}
+      {/* ── MAIN CONTENT ── */}
+      <div className="flex-1 overflow-y-auto bg-[#0d1117]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 space-y-5">
+
+          {/* ════════════════════════════════════════════════════════════
+              TAB 1: OPERATIONAL READINESS — MAPPING UI
+          ════════════════════════════════════════════════════════════ */}
           {activeTab === 'readiness' && (
             <div className="space-y-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-4 rounded-xl bg-slate-900 border border-slate-800">
+              {/* Stage header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-[#161b22] border border-[#30363d]">
                 <div>
-                  <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-indigo-400" />
-                    Stage 1 · Build the Operational Handover Package
-                  </h2>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    Match each operational requirement on the left to its authoritative runbook or resource on the right.
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-400 border border-indigo-500/25">
+                      Stage 01
+                    </span>
+                    <span className="text-[10px] text-slate-500">Resource Mapping</span>
+                  </div>
+                  <h2 className="text-sm font-bold text-white">Build the Operational Handover Package</h2>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Select a requirement on the left, then click its matching runbook on the right to establish the connection.
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-mono font-bold text-indigo-300 bg-indigo-950/60 border border-indigo-500/30 px-3 py-1 rounded-lg">
-                    {correctMatchesCount} / 6 Matched
-                  </span>
+                <div className="flex items-center gap-3 shrink-0">
+                  <div className="text-center px-4 py-2 rounded-lg bg-[#0d1117] border border-[#30363d]">
+                    <div className="text-lg font-black text-indigo-300 leading-none">{correctMatchesCount}<span className="text-slate-500 text-xs font-normal">/6</span></div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">Matched</div>
+                  </div>
                 </div>
               </div>
 
-              {matchingError && (
-                <div className="p-3 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2 animate-shake">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{matchingError}</span>
-                </div>
-              )}
+              {/* Error banner */}
+              <AnimatePresence>
+                {matchingError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2"
+                  >
+                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                    <span>{matchingError}</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-              {/* Two Column Matching Layout */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Left Column: Requirements */}
-                <div className="space-y-2.5">
-                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">
-                    Operational Requirements
+              {/* ── MAPPING LAYOUT ── */}
+              <div className="grid grid-cols-1 md:grid-cols-[1fr_48px_1fr] gap-0 md:gap-0 items-start">
+
+                {/* LEFT: Requirements */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 px-1 pb-2 border-b border-[#21262d]">
+                    <div className="w-1 h-4 rounded-full bg-indigo-500" />
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Operational Requirements</span>
                   </div>
                   {OPERATIONAL_REQUIREMENTS.map((req) => {
                     const isMatched = Boolean(matchedPairs[req.id]);
-                    const matchedResource = AVAILABLE_RESOURCES.find(
-                      (r) => r.id === matchedPairs[req.id]
-                    );
+                    const matchedResource = AVAILABLE_RESOURCES.find((r) => r.id === matchedPairs[req.id]);
                     const isSelected = selectedReqId === req.id;
 
                     return (
                       <div
                         key={req.id}
                         onClick={() => handleSelectRequirement(req.id)}
-                        className={`p-3.5 rounded-xl border transition-all cursor-pointer ${
+                        className={`group relative p-3.5 rounded-lg border transition-all cursor-pointer ${
                           isMatched
-                            ? 'bg-emerald-950/20 border-emerald-500/40'
+                            ? 'bg-emerald-950/20 border-emerald-500/35 opacity-80'
                             : isSelected
-                            ? 'bg-indigo-950/40 border-indigo-400 ring-2 ring-indigo-400/30'
-                            : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'
+                            ? 'bg-indigo-950/40 border-indigo-400/70 shadow-[0_0_0_2px_rgba(99,102,241,0.2)]'
+                            : 'bg-[#161b22] border-[#30363d] hover:border-indigo-500/40 hover:bg-[#1c2129]'
                         }`}
                       >
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                            {req.category}
-                          </span>
-                          {isMatched ? (
-                            <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-1">
-                              <CheckCircle2 className="w-3 h-3" /> Matched
-                            </span>
-                          ) : (
-                            <span className="text-[10px] text-slate-500 font-mono">
-                              {isSelected ? 'Select resource →' : 'Click to pair'}
-                            </span>
-                          )}
-                        </div>
+                        <div className="flex items-start gap-2.5">
+                          {/* Status indicator */}
+                          <div className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${
+                            isMatched ? 'bg-emerald-400' : isSelected ? 'bg-indigo-400 animate-pulse' : 'bg-[#30363d]'
+                          }`} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${
+                                isMatched
+                                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
+                                  : 'bg-[#21262d] text-slate-500 border-[#30363d]'
+                              }`}>
+                                {req.category}
+                              </span>
+                            </div>
+                            <div className="text-xs font-semibold text-slate-200">{req.requirement}</div>
 
-                        <div className="text-xs font-semibold text-slate-200 mt-1">
-                          {req.requirement}
-                        </div>
+                            {/* Matched resource pill */}
+                            {isMatched && matchedResource && (
+                              <div className="mt-2 flex items-center justify-between">
+                                <div className="flex items-center gap-1.5 text-[10px] text-emerald-300 font-mono">
+                                  <Link2 className="w-3 h-3" />
+                                  <span>{matchedResource.name}</span>
+                                </div>
+                                {!matchingSubmitted && (
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); handleUnpair(req.id); }}
+                                    className="text-[10px] text-slate-500 hover:text-rose-400 flex items-center gap-0.5 transition-colors"
+                                  >
+                                    <Unlink2 className="w-2.5 h-2.5" />
+                                    Unlink
+                                  </button>
+                                )}
+                              </div>
+                            )}
 
-                        {/* Matched Pill */}
-                        {isMatched && matchedResource && (
-                          <div className="mt-2.5 pt-2 border-t border-emerald-500/20 flex items-center justify-between text-[11px] text-emerald-300">
-                            <span className="font-mono font-medium">↳ {matchedResource.name}</span>
-                            {!matchingSubmitted && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleUnpair(req.id);
-                                }}
-                                className="text-[10px] text-slate-400 hover:text-rose-400 underline ml-2"
-                              >
-                                Disconnect
-                              </button>
+                            {/* Interaction hint */}
+                            {!isMatched && (
+                              <div className={`mt-1 text-[10px] font-mono ${isSelected ? 'text-indigo-400' : 'text-slate-600'}`}>
+                                {isSelected ? '→ Now select a resource on the right' : 'Click to select'}
+                              </div>
                             )}
                           </div>
-                        )}
+                          {isMatched && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />}
+                        </div>
                       </div>
                     );
                   })}
                 </div>
 
-                {/* Right Column: Available Resources */}
-                <div className="space-y-2.5">
-                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">
-                    Available Runbooks & Handover Resources
+                {/* CENTER: Connector column */}
+                <div className="hidden md:flex flex-col items-center pt-10 gap-[18px] px-2">
+                  {OPERATIONAL_REQUIREMENTS.map((req) => {
+                    const isMatched = Boolean(matchedPairs[req.id]);
+                    return (
+                      <div key={req.id} className="h-[66px] flex items-center justify-center">
+                        <div className={`w-6 h-px transition-all ${isMatched ? 'bg-emerald-500/50' : 'bg-[#30363d]'}`} />
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* RIGHT: Resources */}
+                <div className="space-y-2 mt-4 md:mt-0">
+                  <div className="flex items-center gap-2 px-1 pb-2 border-b border-[#21262d]">
+                    <div className="w-1 h-4 rounded-full bg-purple-500" />
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Available Runbooks & Resources</span>
                   </div>
                   {AVAILABLE_RESOURCES.map((res) => {
                     const isAlreadyPaired = Object.values(matchedPairs).includes(res.id);
+                    const ResIcon = RESOURCE_ICONS[res.iconName] || FileText;
+                    const isClickable = !!selectedReqId && !isAlreadyPaired && !matchingSubmitted;
 
                     return (
                       <div
                         key={res.id}
                         onClick={() => handleSelectResource(res.id)}
-                        className={`p-3.5 rounded-xl border transition-all cursor-pointer ${
+                        className={`p-3.5 rounded-lg border transition-all ${
                           isAlreadyPaired
-                            ? 'bg-slate-900/40 border-slate-800/80 opacity-60'
-                            : selectedReqId
-                            ? 'bg-slate-900 border-indigo-500/50 hover:bg-indigo-950/30 ring-1 ring-indigo-500/30'
-                            : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'
+                            ? 'bg-[#161b22] border-[#21262d] opacity-45 cursor-default'
+                            : isClickable
+                            ? 'bg-indigo-950/30 border-indigo-500/50 cursor-pointer hover:bg-indigo-950/50 shadow-[0_0_0_1px_rgba(99,102,241,0.2)]'
+                            : 'bg-[#161b22] border-[#30363d] cursor-default hover:border-[#444d56]'
                         }`}
                       >
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-indigo-300 flex items-center gap-1.5">
-                            <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
-                            {res.name}
-                          </span>
-                          <span className="text-[10px] font-mono text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">
-                            {res.docFormat}
-                          </span>
+                        <div className="flex items-start gap-2.5">
+                          <div className={`mt-0.5 w-7 h-7 rounded-md flex items-center justify-center shrink-0 border ${
+                            isAlreadyPaired
+                              ? 'bg-[#21262d] border-[#30363d] text-slate-600'
+                              : isClickable
+                              ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-400'
+                              : 'bg-[#21262d] border-[#30363d] text-slate-500'
+                          }`}>
+                            <ResIcon className="w-3.5 h-3.5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-xs font-bold text-slate-200">{res.name}</span>
+                              {isAlreadyPaired && <CheckCircle2 className="w-3 h-3 text-emerald-400" />}
+                            </div>
+                            <div className="text-[10px] font-mono text-slate-500 mt-0.5">{res.docFormat}</div>
+                            <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">{res.description}</p>
+                          </div>
                         </div>
-                        <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
-                          {res.description}
-                        </p>
                       </div>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Action submission bar */}
-              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+              {/* Submit bar */}
+              <div className="p-4 rounded-xl bg-[#161b22] border border-[#30363d] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="text-xs text-slate-400">
                   {correctMatchesCount === 6 ? (
-                    <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                      <CheckCircle2 className="w-4 h-4" /> All 6 operational resources paired accurately.
+                    <span className="text-emerald-400 font-semibold flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4" />
+                      All 6 operational resources paired accurately — handover package complete.
                     </span>
                   ) : (
-                    <span>Pair all 6 operational requirements to validate the handover package.</span>
+                    <span>Pair all <strong className="text-slate-200">6</strong> operational requirements to validate the handover package.</span>
                   )}
                 </div>
-
                 <button
                   disabled={correctMatchesCount < 6 || matchingSubmitted}
                   onClick={handleSubmitMatching}
-                  className={`px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+                  className={`px-5 py-2.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
                     correctMatchesCount === 6 && !matchingSubmitted
                       ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/30 cursor-pointer active:scale-95'
-                      : 'bg-slate-800 text-slate-500 border border-slate-700/60 cursor-not-allowed'
+                      : 'bg-[#21262d] text-slate-500 border border-[#30363d] cursor-not-allowed'
                   }`}
                 >
-                  <span>{matchingSubmitted ? 'Handover Package Ratified' : 'Lock Handover Package & Continue'}</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <span>{matchingSubmitted ? 'Handover Package Ratified ✓' : 'Lock Handover Package & Continue'}</span>
+                  {!matchingSubmitted && <ArrowRight className="w-3.5 h-3.5" />}
                 </button>
               </div>
             </div>
           )}
 
-          {/* ──────────────── TAB 2: KNOWLEDGE TRANSFER & INCIDENT SIMULATION ──────────────── */}
+          {/* ════════════════════════════════════════════════════════════
+              TAB 2: KNOWLEDGE TRANSFER — WORKFLOW BUILDER
+          ════════════════════════════════════════════════════════════ */}
           {activeTab === 'knowledge_transfer' && (
             <div className="space-y-6">
-              {/* Top: Live Incident Alert Header */}
-              <div className="p-4 sm:p-5 rounded-xl bg-gradient-to-r from-rose-950/40 via-slate-900 to-slate-900 border border-rose-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 flex items-center gap-1 font-mono">
+
+              {/* Live incident alert */}
+              <div className="p-4 rounded-xl bg-[#1a0f0f] border border-rose-500/30 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 flex items-center gap-1.5 font-mono">
                       <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
                       {SIMULATED_INCIDENT.status}
                     </span>
-                    <span className="text-xs font-mono font-bold text-slate-300">
-                      {SIMULATED_INCIDENT.ticketId}
+                    <span className="text-xs font-mono font-bold text-slate-200">{SIMULATED_INCIDENT.ticketId}</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                      ⚠ Priority: {SIMULATED_INCIDENT.priority}
                     </span>
-                    <span className="text-[11px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                      Priority: {SIMULATED_INCIDENT.priority}
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 font-mono border border-rose-500/20">
+                      {SIMULATED_INCIDENT.usersAffected} users affected
                     </span>
                   </div>
-                  <h3 className="text-sm font-bold text-white">
-                    {SIMULATED_INCIDENT.title} ({SIMULATED_INCIDENT.usersAffected} Users Affected)
-                  </h3>
-                  <p className="text-xs text-slate-300 max-w-2xl">
-                    {SIMULATED_INCIDENT.description}
-                  </p>
+                  <h3 className="text-sm font-bold text-white">{SIMULATED_INCIDENT.title}</h3>
+                  <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">{SIMULATED_INCIDENT.description}</p>
+                  <div className="text-[10px] text-slate-500 font-mono">{SIMULATED_INCIDENT.system}</div>
                 </div>
-                <div className="shrink-0 text-xs text-slate-400 bg-slate-950 p-2.5 rounded-lg border border-slate-800">
-                  <div className="font-semibold text-slate-200">Marcus's Challenge:</div>
-                  <div className="text-[11px]">"If this strikes at 2 AM, who handles what?"</div>
+                <div className="shrink-0 p-3 rounded-lg bg-[#0d1117] border border-[#30363d] text-xs min-w-[180px]">
+                  <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Marcus's Challenge</div>
+                  <div className="text-slate-200 font-medium leading-relaxed italic">"If this strikes at 2 AM, who handles what?"</div>
                 </div>
               </div>
 
-              {/* Three Horizontal Steps Assembly Builder */}
+              {/* ── WORKFLOW BUILDER ── */}
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs uppercase font-extrabold tracking-wider text-slate-400">
-                    Construct the 3-Step Incident Triage Sequence
-                  </span>
-                  <span className="text-xs text-slate-500">
-                    Click an action card below to place it into the open slot.
+                <div className="flex items-center justify-between pb-2 border-b border-[#21262d]">
+                  <div className="flex items-center gap-2">
+                    <ListOrdered className="w-3.5 h-3.5 text-indigo-400" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                      Incident Triage Workflow Builder
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-slate-500">
+                    {incidentValidated ? (
+                      <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Sequence Verified
+                      </span>
+                    ) : 'Click an action card below to place it in a step slot'}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {/* Step slots — workflow-style with arrows */}
+                <div className="flex flex-col md:flex-row items-stretch gap-0">
                   {[0, 1, 2].map((slotIdx) => {
                     const assignedStepId = incidentSlots[slotIdx];
                     const stepItem = INCIDENT_RESPONSE_STEPS.find((s) => s.id === assignedStepId);
+                    const isLast = slotIdx === 2;
 
                     return (
-                      <div
-                        key={slotIdx}
-                        className={`p-4 rounded-xl border flex flex-col justify-between min-h-[140px] transition-all ${
+                      <React.Fragment key={slotIdx}>
+                        <div className={`flex-1 p-4 rounded-xl border flex flex-col min-h-[160px] transition-all ${
                           stepItem
-                            ? 'bg-slate-900 border-indigo-500/40 shadow-md'
-                            : 'bg-slate-950/60 border-dashed border-slate-800'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300">
-                            STEP 0{slotIdx + 1}
-                          </span>
-                          {stepItem && !incidentValidated && (
-                            <button
-                              onClick={() => handleClearIncidentSlot(slotIdx)}
-                              className="text-[10px] text-slate-400 hover:text-rose-400 underline"
-                            >
-                              Clear
-                            </button>
+                            ? incidentValidated
+                              ? 'bg-emerald-950/20 border-emerald-500/35'
+                              : 'bg-[#161b22] border-indigo-500/40'
+                            : 'bg-[#0d1117] border-dashed border-[#30363d]'
+                        }`}>
+                          {/* Step header */}
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-black border ${
+                                stepItem
+                                  ? incidentValidated
+                                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                    : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
+                                  : 'bg-[#21262d] text-slate-500 border-[#30363d]'
+                              }`}>
+                                {slotIdx + 1}
+                              </span>
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                Step {String(slotIdx + 1).padStart(2, '0')}
+                              </span>
+                            </div>
+                            {stepItem && !incidentValidated && (
+                              <button
+                                onClick={() => handleClearIncidentSlot(slotIdx)}
+                                className="text-[10px] text-slate-500 hover:text-rose-400 flex items-center gap-0.5 transition-colors"
+                              >
+                                <XCircle className="w-3 h-3" />
+                                Clear
+                              </button>
+                            )}
+                            {incidentValidated && stepItem && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                          </div>
+
+                          {/* Content */}
+                          {stepItem ? (
+                            <div className="flex-1 space-y-2">
+                              <div className="text-xs font-bold text-white">{stepItem.title}</div>
+                              <div className="text-[11px] text-slate-300 leading-relaxed">{stepItem.actionText}</div>
+                              <div className="flex items-center gap-1.5 mt-auto pt-2 border-t border-[#21262d]">
+                                <Users className="w-3 h-3 text-indigo-400 shrink-0" />
+                                <span className="text-[10px] text-indigo-300 font-mono font-semibold">{stepItem.role}</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex-1 flex flex-col items-center justify-center text-center gap-2">
+                              <div className="w-8 h-8 rounded-lg bg-[#161b22] border border-dashed border-[#30363d] flex items-center justify-center">
+                                <span className="text-slate-600 text-lg">+</span>
+                              </div>
+                              <span className="text-[11px] text-slate-600">Drop action here</span>
+                            </div>
                           )}
                         </div>
 
-                        {stepItem ? (
-                          <div className="space-y-1 my-auto">
-                            <div className="text-xs font-bold text-white">{stepItem.title}</div>
-                            <div className="text-[11px] text-slate-300">{stepItem.actionText}</div>
-                            <div className="text-[10px] text-indigo-400 font-mono mt-1 font-semibold">
-                              Owner: {stepItem.role}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="text-center text-xs text-slate-500 my-auto">
-                            Slot empty · Click an action below
+                        {/* Arrow connector between steps */}
+                        {!isLast && (
+                          <div className="hidden md:flex items-center justify-center w-8 shrink-0">
+                            <ChevronRight className="w-4 h-4 text-[#30363d]" />
                           </div>
                         )}
-                      </div>
+                      </React.Fragment>
                     );
                   })}
                 </div>
 
-                {/* Available Action Cards Pool */}
+                {/* Action card pool */}
                 <div className="pt-2">
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
-                    Available Incident Response Actions
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2 flex items-center gap-1.5">
+                    <Zap className="w-3 h-3" />
+                    Available Response Actions — click to assign to next open slot
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     {INCIDENT_RESPONSE_STEPS.map((stepItem) => {
                       const isPlaced = incidentSlots.includes(stepItem.id);
-
                       return (
                         <button
                           key={stepItem.id}
@@ -689,167 +787,254 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                               handleAssignIncidentSlot(stepItem.id, firstEmptySlot);
                             }
                           }}
-                          className={`p-3 rounded-xl border text-left transition-all ${
+                          className={`p-3 rounded-lg border text-left transition-all ${
                             isPlaced
-                              ? 'bg-slate-900/30 border-slate-800/60 opacity-50 cursor-not-allowed'
-                              : 'bg-slate-900 border-slate-700/80 hover:border-indigo-400 cursor-pointer active:scale-98'
+                              ? 'bg-[#0d1117] border-[#21262d] opacity-40 cursor-not-allowed'
+                              : incidentValidated
+                              ? 'bg-[#161b22] border-[#30363d] opacity-60 cursor-not-allowed'
+                              : 'bg-[#161b22] border-[#30363d] hover:border-indigo-400/50 hover:bg-[#1c2129] cursor-pointer active:scale-98'
                           }`}
                         >
-                          <div className="text-xs font-semibold text-slate-200">
-                            {stepItem.title}
+                          <div className="flex items-start gap-2">
+                            <div className={`w-6 h-6 rounded flex items-center justify-center shrink-0 border mt-0.5 ${
+                              isPlaced
+                                ? 'bg-[#21262d] border-[#30363d] text-slate-600'
+                                : 'bg-indigo-500/15 border-indigo-500/30 text-indigo-400'
+                            }`}>
+                              <ListOrdered className="w-3 h-3" />
+                            </div>
+                            <div>
+                              <div className="text-xs font-semibold text-slate-200">{stepItem.title}</div>
+                              <div className="text-[10px] text-slate-500 mt-0.5">
+                                {stepItem.resourceName} · <span className="text-indigo-400">{stepItem.role}</span>
+                              </div>
+                            </div>
                           </div>
-                          <div className="text-[10px] text-slate-400 mt-1">
-                            {stepItem.resourceName} · <span className="text-indigo-400">{stepItem.role}</span>
-                          </div>
+                          {isPlaced && (
+                            <div className="mt-1.5 text-[10px] text-emerald-500 font-mono flex items-center gap-1">
+                              <CheckCircle2 className="w-2.5 h-2.5" /> Placed in workflow
+                            </div>
+                          )}
                         </button>
                       );
                     })}
                   </div>
                 </div>
 
-                {/* Sequence Validation Bar */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-900 border border-slate-800">
-                  <div className="text-xs text-slate-300">
+                {/* Validation bar */}
+                <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl border ${
+                  incidentValidated
+                    ? 'bg-emerald-950/20 border-emerald-500/35'
+                    : incidentValidationFeedback
+                    ? 'bg-amber-950/20 border-amber-500/30'
+                    : 'bg-[#161b22] border-[#30363d]'
+                }`}>
+                  <div className="text-xs">
                     {incidentValidationFeedback ? (
-                      <span className={incidentValidated ? 'text-emerald-400 font-semibold' : 'text-amber-400'}>
+                      <span className={`flex items-start gap-2 ${incidentValidated ? 'text-emerald-300' : 'text-amber-300'}`}>
+                        {incidentValidated
+                          ? <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                          : <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />}
                         {incidentValidationFeedback}
                       </span>
                     ) : (
-                      <span>Arrange the 3 steps in logical escalation order to validate with Marcus.</span>
+                      <span className="text-slate-400">Arrange the 3 steps in correct escalation order (L1 → L2 → L3), then validate with Marcus.</span>
                     )}
                   </div>
                   <button
                     disabled={incidentSlots.some((s) => s === null) || incidentValidated}
                     onClick={handleValidateIncidentSequence}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0 ${
                       !incidentSlots.some((s) => s === null) && !incidentValidated
                         ? 'bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer active:scale-95'
-                        : 'bg-slate-800 text-slate-500 border border-slate-700/50 cursor-not-allowed'
+                        : 'bg-[#21262d] text-slate-500 border border-[#30363d] cursor-not-allowed'
                     }`}
                   >
-                    <span>{incidentValidated ? 'Sequence Verified' : 'Validate Response Sequence'}</span>
+                    {incidentValidated ? '✓ Sequence Verified' : 'Validate Response Sequence'}
                   </button>
                 </div>
               </div>
 
-              {/* Bottom: Mandatory Training Workshops Planner */}
-              <div className="pt-3 border-t border-slate-800/80 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs uppercase font-extrabold tracking-wider text-slate-400 flex items-center gap-1.5">
+              {/* ── WORKSHOPS SCHEDULE TABLE ── */}
+              <div className="border-t border-[#21262d] pt-5 space-y-3">
+                <div className="flex items-center justify-between pb-2">
+                  <div className="flex items-center gap-2">
                     <Calendar className="w-3.5 h-3.5 text-purple-400" />
-                    Mandatory Operational Training Workshops
-                  </span>
-                  <span className="text-xs text-purple-300 font-mono">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-300">Mandatory Operational Training Workshops</span>
+                  </div>
+                  <span className="text-[11px] text-purple-300 font-mono bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded">
                     3 Sessions Prepared
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {TRAINING_WORKSHOPS.map((ws) => (
-                    <div
-                      key={ws.id}
-                      className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-2"
-                    >
-                      <div className="flex items-center justify-between text-[10px] text-slate-400">
-                        <span className="font-mono text-indigo-400">{ws.duration}</span>
-                        <span className="px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                          Recorded
-                        </span>
-                      </div>
-                      <div className="text-xs font-bold text-white">{ws.title}</div>
-                      <div className="text-[11px] text-slate-400 pt-1 border-t border-slate-800">
-                        Session Leader: <strong className="text-slate-200">{ws.owner}</strong> ({ws.ownerRole})
-                      </div>
-                    </div>
-                  ))}
+                {/* Workshop table */}
+                <div className="rounded-xl border border-[#30363d] overflow-hidden">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="bg-[#161b22] border-b border-[#30363d]">
+                        <th className="text-left px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">Session</th>
+                        <th className="text-left px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">Session Leader</th>
+                        <th className="text-left px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">Role</th>
+                        <th className="text-left px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">Duration</th>
+                        <th className="text-center px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {TRAINING_WORKSHOPS.map((ws, i) => (
+                        <tr
+                          key={ws.id}
+                          className={`border-b border-[#21262d] last:border-0 ${i % 2 === 0 ? 'bg-[#0d1117]' : 'bg-[#161b22]/40'}`}
+                        >
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-5 h-5 rounded bg-purple-500/15 border border-purple-500/25 flex items-center justify-center text-[9px] text-purple-400 font-bold shrink-0">
+                                {i + 1}
+                              </div>
+                              <span className="font-semibold text-slate-200">{ws.title}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-slate-300 font-medium">{ws.owner}</td>
+                          <td className="px-4 py-3 text-slate-500">{ws.ownerRole}</td>
+                          <td className="px-4 py-3 font-mono text-indigo-300">{ws.duration}</td>
+                          <td className="px-4 py-3 text-center">
+                            <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                              workshopsScheduled
+                                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                                : 'bg-purple-500/15 text-purple-300 border-purple-500/30'
+                            }`}>
+                              {workshopsScheduled ? <CheckCircle2 className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+                              {workshopsScheduled ? 'Confirmed' : 'Prepared'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
 
-                <div className="flex justify-end pt-2">
+                <div className="flex justify-end pt-1">
                   <button
                     disabled={!incidentValidated || workshopsScheduled}
                     onClick={handleScheduleWorkshops}
-                    className={`px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+                    className={`px-5 py-2.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${
                       incidentValidated && !workshopsScheduled
-                        ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg cursor-pointer active:scale-95'
-                        : 'bg-slate-800 text-slate-500 border border-slate-700/50 cursor-not-allowed'
+                        ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-indigo-900/30 cursor-pointer active:scale-95'
+                        : 'bg-[#21262d] text-slate-500 border border-[#30363d] cursor-not-allowed'
                     }`}
                   >
-                    <span>{workshopsScheduled ? 'Workshops Scheduled & Confirmed' : 'Confirm Workshops & Advance to Hypercare'}</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <CheckSquare className="w-3.5 h-3.5" />
+                    <span>{workshopsScheduled ? 'Workshops Scheduled & Confirmed ✓' : 'Confirm Workshops & Advance to Hypercare'}</span>
+                    {!workshopsScheduled && <ArrowRight className="w-3.5 h-3.5" />}
                   </button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* ──────────────── TAB 3: HYPERCARE & OWNERSHIP TIMELINE ──────────────── */}
+          {/* ════════════════════════════════════════════════════════════
+              TAB 3: HYPERCARE — GANTT-STYLE PHASE VIEW
+          ════════════════════════════════════════════════════════════ */}
           {activeTab === 'hypercare' && (
-            <div className="space-y-6">
-              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-5">
+              {/* Stage header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-[#161b22] border border-[#30363d]">
                 <div>
-                  <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-indigo-400" />
-                    Stage 3 · 14-Day Stabilization Timeline & Progressive Ownership
-                  </h2>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    Assign the 4 operational responsibility cards into their appropriate hypercare period.
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-400 border border-indigo-500/25">Stage 03</span>
+                    <span className="text-[10px] text-slate-500">Progressive Ownership Transfer</span>
+                  </div>
+                  <h2 className="text-sm font-bold text-white">14-Day Stabilization Timeline & Progressive Ownership</h2>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Select a responsibility card below, then click the phase column to assign it. Build the progressive ownership model.
                   </p>
                 </div>
-                <div className="text-xs font-mono font-bold text-indigo-300 bg-indigo-950/60 border border-indigo-500/30 px-3 py-1 rounded-lg">
-                  {hypercareCorrectCount} / 4 Assigned Accurately
+                <div className="flex items-center gap-3 shrink-0">
+                  <div className="text-center px-4 py-2 rounded-lg bg-[#0d1117] border border-[#30363d]">
+                    <div className="text-lg font-black text-indigo-300 leading-none">{hypercareCorrectCount}<span className="text-slate-500 text-xs font-normal">/4</span></div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">Assigned</div>
+                  </div>
                 </div>
               </div>
 
-              {/* Three Hypercare Phases (Columns) */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* ── GANTT-STYLE PHASE COLUMNS ── */}
+              {/* Timeline bar */}
+              <div className="relative">
+                <div className="flex items-center gap-0 mb-1">
+                  <div className="text-[9px] text-slate-600 uppercase tracking-widest mr-2 w-16 shrink-0">Days</div>
+                  <div className="flex flex-1 gap-1">
+                    {HYPERCARE_PHASES.map((phase, i) => {
+                      const theme = PHASE_THEMES[phase.id];
+                      const widths = ['w-[14%]', 'w-[36%]', 'w-[50%]'];
+                      return (
+                        <div key={phase.id} className={`${widths[i]} flex items-center gap-1`}>
+                          <div className={`h-1.5 rounded-full flex-1 ${
+                            i === 0 ? 'bg-rose-500/50' : i === 1 ? 'bg-amber-500/50' : 'bg-emerald-500/50'
+                          }`} />
+                          <span className={`text-[9px] font-mono font-bold whitespace-nowrap ${theme.accent}`}>{phase.daysRange}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {HYPERCARE_PHASES.map((phase) => {
-                  const assignedCards = HYPERCARE_CARDS.filter(
-                    (c) => phaseAssignments[c.id] === phase.id
-                  );
+                  const theme = PHASE_THEMES[phase.id];
+                  const assignedCards = HYPERCARE_CARDS.filter((c) => phaseAssignments[c.id] === phase.id);
+                  const isDropTarget = !!selectedCardId && !hypercareSubmitted;
 
                   return (
                     <div
                       key={phase.id}
                       onClick={() => handleAssignCardToPhase(phase.id)}
-                      className={`p-4 rounded-xl border flex flex-col justify-between min-h-[220px] transition-all ${
-                        selectedCardId && !hypercareSubmitted
-                          ? 'border-indigo-400 bg-indigo-950/20 ring-2 ring-indigo-400/20 cursor-pointer'
-                          : 'border-slate-800 bg-slate-900/80'
+                      className={`rounded-xl border flex flex-col transition-all ${theme.bg} ${
+                        isDropTarget
+                          ? `${theme.border} shadow-[0_0_0_2px_rgba(99,102,241,0.15)] cursor-pointer scale-[1.01]`
+                          : `${theme.border}`
                       }`}
                     >
-                      <div>
-                        <div className="flex items-center justify-between text-[10px] text-slate-400">
-                          <span className="font-bold text-indigo-300 px-2 py-0.5 rounded bg-indigo-500/20 border border-indigo-500/30">
-                            {phase.daysRange}
-                          </span>
-                          <span className="text-slate-400 font-mono">{phase.ownershipModel}</span>
+                      {/* Phase header */}
+                      <div className={`px-4 py-3 border-b ${theme.border} flex items-start gap-3`}>
+                        <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${theme.dot}`} />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${theme.badge}`}>
+                              {phase.daysRange}
+                            </span>
+                            <span className="text-[10px] text-slate-500 font-mono">{phase.ownershipModel}</span>
+                          </div>
+                          <h3 className="text-xs font-bold text-white mt-1">{phase.label}</h3>
+                          <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">{phase.focus}</p>
                         </div>
-
-                        <h3 className="text-xs font-bold text-white mt-2">{phase.label}</h3>
-                        <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
-                          {phase.focus}
-                        </p>
                       </div>
 
-                      {/* Assigned Cards in this phase */}
-                      <div className="mt-4 pt-3 border-t border-slate-800/80 space-y-2">
+                      {/* Assigned cards */}
+                      <div className="p-3 flex-1 space-y-2 min-h-[100px]">
                         {assignedCards.length > 0 ? (
                           assignedCards.map((card) => (
                             <div
                               key={card.id}
-                              className="p-2.5 rounded-lg bg-slate-950 border border-indigo-500/30 text-xs text-slate-200"
+                              className="p-2.5 rounded-lg bg-[#0d1117]/60 border border-[#30363d] text-xs"
                             >
-                              <div className="font-semibold text-white flex items-center justify-between">
+                              <div className="font-semibold text-white flex items-center gap-1.5">
+                                <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
                                 <span>{card.title}</span>
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                               </div>
                             </div>
                           ))
                         ) : (
-                          <div className="text-center text-[11px] text-slate-500 py-3">
-                            {selectedCardId
-                              ? 'Click this phase to assign selected card'
-                              : 'No responsibilities assigned yet'}
+                          <div className={`flex flex-col items-center justify-center h-full py-4 text-center transition-all rounded-lg border border-dashed ${
+                            isDropTarget ? `${theme.border} bg-white/5` : 'border-[#30363d]'
+                          }`}>
+                            {isDropTarget ? (
+                              <>
+                                <span className="text-xs font-bold text-indigo-300">Click to assign</span>
+                                <span className="text-[10px] text-slate-500 mt-0.5">selected card → this phase</span>
+                              </>
+                            ) : (
+                              <span className="text-[11px] text-slate-600">No responsibilities assigned</span>
+                            )}
                           </div>
                         )}
                       </div>
@@ -858,16 +1043,21 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                 })}
               </div>
 
-              {/* Responsibility Cards Tray */}
+              {/* ── RESPONSIBILITY CARD TRAY ── */}
               <div className="space-y-2.5">
-                <div className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Responsibility Cards (Select a card, then click target phase)
+                <div className="flex items-center gap-2 pb-2 border-b border-[#21262d]">
+                  <Network className="w-3.5 h-3.5 text-indigo-400" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                    Responsibility Cards — Select a card, then click a phase above
+                  </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                   {HYPERCARE_CARDS.map((card) => {
                     const assignedPhaseId = phaseAssignments[card.id];
                     const isSelected = selectedCardId === card.id;
+                    const assignedPhase = HYPERCARE_PHASES.find((p) => p.id === assignedPhaseId);
+                    const phaseTheme = assignedPhaseId ? PHASE_THEMES[assignedPhaseId] : null;
 
                     return (
                       <div
@@ -879,156 +1069,222 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                         }}
                         className={`p-3 rounded-xl border transition-all cursor-pointer ${
                           isSelected
-                            ? 'bg-indigo-950 border-indigo-400 ring-2 ring-indigo-400/40'
+                            ? 'bg-indigo-950/50 border-indigo-400/70 shadow-[0_0_0_2px_rgba(99,102,241,0.2)]'
                             : assignedPhaseId
-                            ? 'bg-slate-900/50 border-slate-800'
-                            : 'bg-slate-900 border-slate-700/80 hover:border-slate-500'
+                            ? `bg-[#161b22]/60 border-[#30363d] opacity-70`
+                            : 'bg-[#161b22] border-[#30363d] hover:border-indigo-400/40 hover:bg-[#1c2129]'
                         }`}
                       >
-                        <div className="text-xs font-bold text-white">{card.title}</div>
-                        <div className="text-[10px] text-slate-400 mt-1 leading-relaxed">
-                          {card.description}
-                        </div>
-                        {assignedPhaseId && (
-                          <div className="text-[10px] text-emerald-400 font-mono font-semibold mt-2 pt-1.5 border-t border-slate-800">
-                            Assigned: {HYPERCARE_PHASES.find((p) => p.id === assignedPhaseId)?.daysRange}
+                        <div className="flex items-start gap-2">
+                          <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
+                            isSelected ? 'bg-indigo-400 animate-pulse' : assignedPhaseId ? 'bg-emerald-400' : 'bg-[#444d56]'
+                          }`} />
+                          <div>
+                            <div className="text-[11px] font-bold text-white leading-tight">{card.title}</div>
+                            <div className="text-[10px] text-slate-500 mt-1 leading-relaxed">{card.description}</div>
+                            {assignedPhase && phaseTheme && (
+                              <div className={`mt-2 text-[10px] font-mono font-semibold flex items-center gap-1 ${phaseTheme.accent}`}>
+                                <CheckCircle2 className="w-2.5 h-2.5" />
+                                {assignedPhase.daysRange}
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>
                       </div>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Submit Hypercare Button */}
-              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
-                <div className="text-xs text-slate-300">
+              {/* Submit bar */}
+              <div className="p-4 rounded-xl bg-[#161b22] border border-[#30363d] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="text-xs text-slate-400">
                   {hypercareCorrectCount === 4 ? (
-                    <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                      <CheckCircle2 className="w-4 h-4" /> 14-day transition model aligned with Marcus and IT Operations.
+                    <span className="text-emerald-400 font-semibold flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4" />
+                      14-day transition model aligned with Marcus and IT Operations.
                     </span>
                   ) : (
-                    <span>Assign all 4 responsibility cards into the timeline.</span>
+                    <span>Assign all <strong className="text-slate-200">4</strong> responsibility cards into the correct timeline phases.</span>
                   )}
                 </div>
-
                 <button
                   disabled={hypercareCorrectCount < 4 || hypercareSubmitted}
                   onClick={handleSubmitHypercare}
-                  className={`px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+                  className={`px-5 py-2.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
                     hypercareCorrectCount === 4 && !hypercareSubmitted
-                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg cursor-pointer active:scale-95'
-                      : 'bg-slate-800 text-slate-500 border border-slate-700/50 cursor-not-allowed'
+                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/30 cursor-pointer active:scale-95'
+                      : 'bg-[#21262d] text-slate-500 border border-[#30363d] cursor-not-allowed'
                   }`}
                 >
-                  <span>{hypercareSubmitted ? 'Hypercare Plan Approved' : 'Lock Hypercare & Proceed to Acceptance'}</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <span>{hypercareSubmitted ? 'Hypercare Plan Approved ✓' : 'Lock Hypercare & Proceed to Acceptance'}</span>
+                  {!hypercareSubmitted && <ArrowRight className="w-3.5 h-3.5" />}
                 </button>
               </div>
             </div>
           )}
 
-          {/* ──────────────── TAB 4: OPERATIONAL ACCEPTANCE GATE (SCENE 11.2) ──────────────── */}
+          {/* ════════════════════════════════════════════════════════════
+              TAB 4: GOVERNANCE GATE — DECISION CARDS
+          ════════════════════════════════════════════════════════════ */}
           {activeTab === 'governance_gate' && (
             <div className="space-y-6">
-              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              {/* Gate header */}
+              <div className="p-4 rounded-xl bg-[#161b22] border border-[#30363d]">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-400 border border-indigo-500/25">
                     Scene 11.2 · Formal Operational Handover Decision
                   </span>
-                  <span className="text-xs text-slate-400 font-mono">28:40 – 29:00</span>
+                  <span className="text-[11px] text-slate-500 font-mono">28:40 – 29:00</span>
                 </div>
-                <h2 className="text-base font-bold text-white mt-1">
-                  Operational Handover Approval Gate
-                </h2>
-                <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                  The delivery team is preparing to close the project. Marcus and Aarav Kapoor await your leadership authorization.
+                <h2 className="text-base font-bold text-white">Operational Handover Approval Gate</h2>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed max-w-2xl">
+                  The delivery team is preparing to close the project. Marcus and Aarav Kapoor await your leadership authorization. Choose your handover approach.
                 </p>
               </div>
 
-              {/* Two Decision Cards (Neutral presentation without spoiling point values) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Choice A */}
+              {/* ── DECISION CARDS ── */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                {/* Choice A — Incomplete Transition */}
                 <div
-                  onClick={() => {
-                    if (decisionCommitted) return;
-                    sound.playClick();
-                    setSelectedDecision('choice_a');
-                  }}
-                  className={`p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
+                  onClick={() => { if (decisionCommitted) return; sound.playClick(); setSelectedDecision('choice_a'); }}
+                  className={`group relative rounded-2xl border-2 transition-all cursor-pointer overflow-hidden ${
+                    decisionCommitted
+                      ? 'cursor-default'
+                      : 'cursor-pointer'
+                  } ${
                     selectedDecision === 'choice_a'
-                      ? 'bg-slate-900 border-indigo-400 ring-2 ring-indigo-400/40 shadow-xl'
-                      : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
+                      ? 'border-rose-500/60 bg-rose-950/20 shadow-[0_0_30px_rgba(239,68,68,0.08)]'
+                      : 'border-[#30363d] bg-[#161b22] hover:border-[#444d56] hover:bg-[#1c2129]'
                   }`}
                 >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
-                        {CHAPTER11_DECISION_OPTIONS.choice_a.title}
-                      </span>
-                      {selectedDecision === 'choice_a' && (
-                        <CheckCircle2 className="w-4 h-4 text-indigo-400" />
+                  {/* Top accent stripe */}
+                  <div className={`h-1 w-full ${selectedDecision === 'choice_a' ? 'bg-rose-500' : 'bg-[#30363d]'}`} />
+
+                  <div className="p-6 space-y-4">
+                    {/* Header */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center">
+                            <XCircle className="w-4 h-4 text-rose-400" />
+                          </span>
+                          <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                            {CHAPTER11_DECISION_OPTIONS.choice_a.title}
+                          </span>
+                        </div>
+                        <h3 className="text-sm font-bold text-white leading-snug">
+                          {CHAPTER11_DECISION_OPTIONS.choice_a.subtitle}
+                        </h3>
+                      </div>
+                      {selectedDecision === 'choice_a' && !decisionCommitted && (
+                        <div className="w-5 h-5 rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center shrink-0 mt-1">
+                          <div className="w-2 h-2 rounded-full bg-rose-400" />
+                        </div>
                       )}
                     </div>
-                    <h3 className="text-sm font-bold text-white">
-                      {CHAPTER11_DECISION_OPTIONS.choice_a.subtitle}
-                    </h3>
-                    <p className="text-xs text-slate-300 italic border-l-2 border-slate-700 pl-3">
-                      {CHAPTER11_DECISION_OPTIONS.choice_a.quote}
-                    </p>
-                  </div>
 
-                  <div className="mt-4 pt-3 border-t border-slate-800 text-[11px] text-slate-400">
-                    Bypasses structured runbooks and 14-day hypercare window.
+                    {/* Quote */}
+                    <div className="p-3 rounded-lg bg-[#0d1117] border-l-2 border-rose-500/40 border border-[#21262d]">
+                      <p className="text-xs text-slate-300 italic leading-relaxed">
+                        {CHAPTER11_DECISION_OPTIONS.choice_a.quote}
+                      </p>
+                    </div>
+
+                    {/* Warning tags */}
+                    <div className="flex flex-wrap gap-1.5">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20">⚠ No Runbooks</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20">⚠ No Training</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20">⚠ No Hypercare</span>
+                    </div>
+
+                    {/* Footer note */}
+                    <div className="pt-3 border-t border-[#21262d] text-[11px] text-slate-500">
+                      Bypasses structured runbooks and 14-day hypercare window.
+                    </div>
                   </div>
                 </div>
 
-                {/* Choice B */}
+                {/* Choice B — Formal Handover */}
                 <div
-                  onClick={() => {
-                    if (decisionCommitted) return;
-                    sound.playClick();
-                    setSelectedDecision('choice_b');
-                  }}
-                  className={`p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
+                  onClick={() => { if (decisionCommitted) return; sound.playClick(); setSelectedDecision('choice_b'); }}
+                  className={`group relative rounded-2xl border-2 transition-all overflow-hidden ${
+                    decisionCommitted
+                      ? 'cursor-default'
+                      : 'cursor-pointer'
+                  } ${
                     selectedDecision === 'choice_b'
-                      ? 'bg-slate-900 border-indigo-400 ring-2 ring-indigo-400/40 shadow-xl'
-                      : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
+                      ? 'border-emerald-500/60 bg-emerald-950/15 shadow-[0_0_30px_rgba(16,185,129,0.06)]'
+                      : 'border-[#30363d] bg-[#161b22] hover:border-indigo-400/40 hover:bg-[#1c2129]'
                   }`}
                 >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-indigo-300">
-                        {CHAPTER11_DECISION_OPTIONS.choice_b.title}
-                      </span>
-                      {selectedDecision === 'choice_b' && (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                      )}
-                    </div>
-                    <h3 className="text-sm font-bold text-white">
-                      {CHAPTER11_DECISION_OPTIONS.choice_b.subtitle}
-                    </h3>
-                    <p className="text-xs text-slate-300 italic border-l-2 border-indigo-500/50 pl-3">
-                      {CHAPTER11_DECISION_OPTIONS.choice_b.quote}
-                    </p>
+                  {/* Top accent stripe */}
+                  <div className={`h-1 w-full ${selectedDecision === 'choice_b' ? 'bg-emerald-500' : 'bg-[#30363d]'}`} />
+
+                  {/* Recommended badge */}
+                  <div className="absolute top-4 right-4">
+                    <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                      <Sparkles className="w-2.5 h-2.5" />
+                      Recommended
+                    </span>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-slate-800 text-[11px] text-slate-400">
-                    Includes 6 operational runbooks, incident response verification, and 14-day hypercare support.
+                  <div className="p-6 space-y-4">
+                    {/* Header */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
+                            <Award className="w-4 h-4 text-emerald-400" />
+                          </span>
+                          <span className="text-[10px] font-black uppercase tracking-wider text-indigo-400">
+                            {CHAPTER11_DECISION_OPTIONS.choice_b.title}
+                          </span>
+                        </div>
+                        <h3 className="text-sm font-bold text-white leading-snug pr-20">
+                          {CHAPTER11_DECISION_OPTIONS.choice_b.subtitle}
+                        </h3>
+                      </div>
+                      {selectedDecision === 'choice_b' && !decisionCommitted && (
+                        <div className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0 mt-1">
+                          <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Quote */}
+                    <div className="p-3 rounded-lg bg-[#0d1117] border-l-2 border-emerald-500/40 border border-[#21262d]">
+                      <p className="text-xs text-slate-300 italic leading-relaxed">
+                        {CHAPTER11_DECISION_OPTIONS.choice_b.quote}
+                      </p>
+                    </div>
+
+                    {/* Feature tags */}
+                    <div className="flex flex-wrap gap-1.5">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">✓ 6 Runbooks</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">✓ Training Sessions</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">✓ 14-Day Hypercare</span>
+                    </div>
+
+                    {/* Footer note */}
+                    <div className="pt-3 border-t border-[#21262d] text-[11px] text-slate-500">
+                      Includes 6 operational runbooks, incident response verification, and 14-day hypercare support.
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Commit Decision Button */}
+              {/* Commit button */}
               {!decisionCommitted ? (
-                <div className="flex justify-end pt-2">
+                <div className="flex justify-end pt-1">
                   <button
                     disabled={!selectedDecision}
                     onClick={handleCommitDecision}
-                    className={`px-6 py-3 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+                    className={`px-7 py-3 rounded-xl text-sm font-bold flex items-center gap-2.5 transition-all ${
                       selectedDecision
-                        ? 'bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 hover:from-indigo-500 hover:to-blue-500 text-white shadow-lg shadow-indigo-600/30 cursor-pointer active:scale-95'
-                        : 'bg-slate-800 text-slate-500 border border-slate-700/50 cursor-not-allowed'
+                        ? 'bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 hover:from-indigo-500 hover:to-blue-500 text-white shadow-xl shadow-indigo-900/40 cursor-pointer active:scale-95'
+                        : 'bg-[#21262d] text-slate-500 border border-[#30363d] cursor-not-allowed'
                     }`}
                   >
                     <FileCheck2 className="w-4 h-4" />
@@ -1036,64 +1292,76 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                   </button>
                 </div>
               ) : (
-                /* Post-Decision Live Consequence Dashboard */
-                <div className="space-y-4 pt-2">
-                  <div
-                    className={`p-5 rounded-2xl border ${
-                      selectedDecision === 'choice_b'
-                        ? 'bg-slate-900 border-emerald-500/40'
-                        : 'bg-rose-950/30 border-rose-500/40'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <Award className={`w-5 h-5 ${selectedDecision === 'choice_b' ? 'text-emerald-400' : 'text-rose-400'}`} />
-                        <span className="text-xs font-extrabold uppercase tracking-wider text-slate-300">
-                          {selectedDecision === 'choice_b' ? 'Operational Acceptance Ratified' : 'Handover Dispute Incurred'}
-                        </span>
+                /* ── POST-DECISION CONSEQUENCE PANEL ── */
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-4"
+                >
+                  <div className={`p-5 rounded-2xl border ${
+                    selectedDecision === 'choice_b'
+                      ? 'bg-emerald-950/20 border-emerald-500/40'
+                      : 'bg-rose-950/20 border-rose-500/40'
+                  }`}>
+                    {/* Outcome header */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center border ${
+                          selectedDecision === 'choice_b'
+                            ? 'bg-emerald-500/15 border-emerald-500/30'
+                            : 'bg-rose-500/15 border-rose-500/30'
+                        }`}>
+                          <Award className={`w-5 h-5 ${selectedDecision === 'choice_b' ? 'text-emerald-400' : 'text-rose-400'}`} />
+                        </div>
+                        <div>
+                          <div className="text-xs font-extrabold uppercase tracking-wider text-slate-200">
+                            {selectedDecision === 'choice_b' ? 'Operational Acceptance Ratified' : 'Handover Dispute Incurred'}
+                          </div>
+                          <div className={`text-[10px] font-mono ${selectedDecision === 'choice_b' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {selectedDecision === 'choice_b' ? 'Approved by IT Operations' : 'Handover Rejected'}
+                          </div>
+                        </div>
                       </div>
-                      <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${selectedDecision === 'choice_b' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}>
-                        {selectedDecision === 'choice_b' ? 'Approved by IT Operations' : 'Handover Rejected'}
+                      <span className={`text-[10px] font-bold px-3 py-1 rounded-full border ${
+                        selectedDecision === 'choice_b'
+                          ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                          : 'bg-rose-500/15 text-rose-300 border-rose-500/30'
+                      }`}>
+                        {selectedDecision === 'choice_b' ? '✓ ACCEPTED' : '✕ REJECTED'}
                       </span>
                     </div>
 
+                    {/* Consequence text */}
                     <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">
                       {selectedDecision === 'choice_b'
                         ? CHAPTER11_DECISION_OPTIONS.choice_b.consequence
                         : CHAPTER11_DECISION_OPTIONS.choice_a.consequence}
                     </p>
 
-                    {/* Operational Certificate on Choice B */}
+                    {/* Certificate grid (Choice B) */}
                     {selectedDecision === 'choice_b' && (
-                      <div className="mt-4 p-4 rounded-xl bg-slate-950 border border-emerald-500/30 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                        <div>
-                          <div className="text-[10px] text-slate-400">Receiving Team</div>
-                          <div className="font-bold text-white mt-0.5">IT Operations</div>
-                        </div>
-                        <div>
-                          <div className="text-[10px] text-slate-400">Hypercare Duration</div>
-                          <div className="font-bold text-indigo-300 mt-0.5">14 Days Window</div>
-                        </div>
-                        <div>
-                          <div className="text-[10px] text-slate-400">Release Version</div>
-                          <div className="font-bold text-white mt-0.5">HRMS v1.0.0</div>
-                        </div>
-                        <div>
-                          <div className="text-[10px] text-slate-400">Sign-Off Status</div>
-                          <div className="font-bold text-emerald-400 mt-0.5">Transition Approved</div>
-                        </div>
+                      <div className="mt-5 p-4 rounded-xl bg-[#0d1117] border border-emerald-500/25 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        {[
+                          { label: 'Receiving Team', value: 'IT Operations', color: 'text-white' },
+                          { label: 'Hypercare Duration', value: '14 Days Window', color: 'text-indigo-300' },
+                          { label: 'Release Version', value: 'HRMS v1.0.0', color: 'text-white' },
+                          { label: 'Sign-Off Status', value: 'Transition Approved', color: 'text-emerald-400' },
+                        ].map((item) => (
+                          <div key={item.label}>
+                            <div className="text-[10px] text-slate-500 uppercase tracking-wider">{item.label}</div>
+                            <div className={`text-xs font-bold mt-0.5 ${item.color}`}>{item.value}</div>
+                          </div>
+                        ))}
                       </div>
                     )}
 
-                    <div className="mt-4 pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
-                      <div className="text-xs text-slate-400">
-                        {selectedDecision === 'choice_b' ? (
-                          <span>Aarav Kapoor: "You didn't just deliver a product. You made sure the organization is ready to own it."</span>
-                        ) : (
-                          <span className="text-rose-300">Marcus: "We cannot accept responsibility for an unmaintainable system."</span>
-                        )}
+                    {/* Footer */}
+                    <div className="mt-4 pt-4 border-t border-[#21262d] flex flex-wrap items-center justify-between gap-3">
+                      <div className="text-xs text-slate-400 italic max-w-md">
+                        {selectedDecision === 'choice_b'
+                          ? 'Aarav Kapoor: "You didn\'t just deliver a product. You made sure the organization is ready to own it."'
+                          : <span className="text-rose-300">Marcus: "We cannot accept responsibility for an unmaintainable system."</span>}
                       </div>
-
                       <button
                         onClick={onOpenScorecard}
                         className="px-5 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-1.5 shadow-md shadow-emerald-900/30 transition-all cursor-pointer"
@@ -1103,10 +1371,11 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                       </button>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               )}
             </div>
           )}
+
         </div>
       </div>
     </div>

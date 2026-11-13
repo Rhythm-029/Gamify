@@ -58,6 +58,27 @@ interface EngineeringReleasePortalAppProps {
   onNotifyDesktop?: (title: string, body: string) => void;
 }
 
+// ── File icon helper ──────────────────────────────────────────────────────────
+function FileIcon({ category, className = 'w-4 h-4' }: { category: string; className?: string }) {
+  const map: Record<string, React.ReactNode> = {
+    api: <Code2 className={`${className} text-blue-400`} />,
+    architecture: <Server className={`${className} text-purple-400`} />,
+    database: <Database className={`${className} text-orange-400`} />,
+    ops: <Terminal className={`${className} text-emerald-400`} />,
+    scratchpad: <FileText className={`${className} text-slate-400`} />,
+  };
+  return <>{map[category] ?? <FileText className={`${className} text-slate-400`} />}</>;
+}
+
+// ── Status badge helper ───────────────────────────────────────────────────────
+const STATUS_STYLES: Record<string, string> = {
+  duplicate_candidate: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+  obsolete_candidate: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+  unverified: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
+  needs_review: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
+  needs_versioning: 'bg-teal-500/15 text-teal-300 border-teal-500/30',
+};
+
 export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppProps> = ({
   chapter10State,
   onUpdateState,
@@ -232,45 +253,108 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
     onOpenScorecard();
   };
 
+  // ── Tab definitions ──────────────────────────────────────────────────────────
+  const tabs: Array<{
+    id: Chapter10PortalTab;
+    label: string;
+    shortLabel: string;
+    icon: React.ReactNode;
+    done: boolean;
+    accent: string;
+    activeBg: string;
+    activeBorder: string;
+    activeText: string;
+  }> = [
+    {
+      id: 'repo_audit',
+      label: '1. Repository Audit',
+      shortLabel: 'Repo Audit',
+      icon: <FolderGit2 className="w-4 h-4" />,
+      done: auditSubmitted,
+      accent: 'cyan',
+      activeBg: 'bg-cyan-500/10',
+      activeBorder: 'border-b-2 border-cyan-400',
+      activeText: 'text-cyan-300',
+    },
+    {
+      id: 'versioning',
+      label: '2. Semantic Versioning',
+      shortLabel: 'Versioning',
+      icon: <GitBranch className="w-4 h-4" />,
+      done: versionConfirmed,
+      accent: 'purple',
+      activeBg: 'bg-purple-500/10',
+      activeBorder: 'border-b-2 border-purple-400',
+      activeText: 'text-purple-300',
+    },
+    {
+      id: 'catalog',
+      label: '3. Developer Portal',
+      shortLabel: 'Catalog',
+      icon: <BookOpen className="w-4 h-4" />,
+      done: catalogPublished,
+      accent: 'teal',
+      activeBg: 'bg-teal-500/10',
+      activeBorder: 'border-b-2 border-teal-400',
+      activeText: 'text-teal-300',
+    },
+    {
+      id: 'governance',
+      label: '4. Release Governance',
+      shortLabel: 'Governance',
+      icon: <ShieldCheck className="w-4 h-4" />,
+      done: decisionCommitted,
+      accent: 'amber',
+      activeBg: 'bg-amber-500/10',
+      activeBorder: 'border-b-2 border-amber-400',
+      activeText: 'text-amber-300',
+    },
+  ];
+
+  const activeTabDef = tabs.find((t) => t.id === activeTab)!;
+
   return (
-    <div className="h-full flex flex-col bg-[#090d16] text-slate-100 font-sans select-none overflow-hidden">
-      {/* ── TOP HEADER / PORTAL NAVIGATION BAR ── */}
-      <header className="px-5 py-3 border-b border-slate-800 bg-[#0d1424]/90 backdrop-blur flex items-center justify-between shrink-0 z-20">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-600 via-teal-600 to-emerald-600 flex items-center justify-center text-white shadow-lg border border-cyan-400/40">
-            <Terminal className="w-5 h-5" />
+    <div className="h-full flex flex-col bg-[#07090f] text-slate-100 font-sans select-none overflow-hidden">
+
+      {/* ── TOP HEADER ───────────────────────────────────────────────────────── */}
+      <header className="shrink-0 px-5 py-2.5 bg-[#0c1120] border-b border-slate-800 flex items-center justify-between z-20">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-[#1a2540] border border-slate-700 flex items-center justify-center">
+            <Terminal className="w-4 h-4 text-slate-300" />
           </div>
           <div>
-            <div className="flex items-center space-x-2">
-              <span className="text-[10px] font-mono tracking-widest uppercase text-cyan-400 font-bold">
-                INTERNAL DEVELOPER PORTAL · BACKSTAGE CATALOG
-              </span>
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-mono">
-                {chosenVersion || 'v1.0.0'}
-              </span>
+            <div className="text-[10px] font-mono tracking-widest uppercase text-slate-500">
+              Internal Developer Portal · Backstage Catalog
             </div>
-            <h1 className="text-sm font-bold text-white flex items-center gap-2">
-              <span>{CHAPTER10_PROJECT_NAME} — Engineering Release & Documentation Suite</span>
+            <h1 className="text-sm font-semibold text-white leading-tight">
+              {CHAPTER10_PROJECT_NAME} — Engineering Release &amp; Documentation Suite
             </h1>
           </div>
         </div>
 
-        {/* Global Progress & Actions */}
-        <div className="flex items-center space-x-3 text-xs">
-          <div className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300">
-            <Clock className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="font-mono text-[11px]">25:00–27:00 Post-Launch Stabilization</span>
+        <div className="flex items-center gap-2 text-xs">
+          {/* Version badge */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#111b2e] border border-slate-700 font-mono text-slate-300 text-[11px]">
+            <Tag className="w-3 h-3 text-slate-400" />
+            <span>{chosenVersion || 'untagged'}</span>
           </div>
 
-          <div className="flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-950/40 border border-cyan-500/30 text-cyan-300 font-mono text-[11px]">
-            <Layers className="w-3.5 h-3.5" />
+          {/* Timeline */}
+          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#111b2e] border border-slate-700 text-slate-400 text-[11px] font-mono">
+            <Clock className="w-3 h-3" />
+            <span>25:00–27:00</span>
+          </div>
+
+          {/* Coverage */}
+          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#111b2e] border border-slate-700 text-slate-400 text-[11px] font-mono">
+            <Layers className="w-3 h-3 text-teal-400" />
             <span>Coverage: {docCoveragePct}%</span>
           </div>
 
           {chapter10State.completed && (
             <button
               onClick={onOpenScorecard}
-              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-950 flex items-center space-x-1.5 cursor-pointer border border-emerald-400/40 transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-colors cursor-pointer"
             >
               <Award className="w-3.5 h-3.5" />
               <span>Scorecard</span>
@@ -279,253 +363,228 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
         </div>
       </header>
 
-      {/* ── SUB-HEADER TABS (INSPIRED BY HARNESS DEVELOPER PORTAL) ── */}
-      <div className="bg-[#0b101c] border-b border-slate-800/80 px-6 py-2 flex items-center justify-between shrink-0">
-        <div className="flex items-center space-x-1 sm:space-x-2">
-          <button
-            onClick={() => handleTabChange('repo_audit')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 cursor-pointer ${
-              activeTab === 'repo_audit'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-            }`}
-          >
-            <FolderGit2 className="w-3.5 h-3.5" />
-            <span>1. Repository Audit</span>
-            {auditSubmitted && <CheckCircle2 className="w-3 h-3 text-emerald-400 ml-1" />}
-          </button>
-
-          <button
-            onClick={() => handleTabChange('versioning')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 cursor-pointer ${
-              activeTab === 'versioning'
-                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-            }`}
-          >
-            <GitBranch className="w-3.5 h-3.5" />
-            <span>2. Semantic Versioning</span>
-            {versionConfirmed && <CheckCircle2 className="w-3 h-3 text-emerald-400 ml-1" />}
-          </button>
-
-          <button
-            onClick={() => handleTabChange('catalog')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 cursor-pointer ${
-              activeTab === 'catalog'
-                ? 'bg-teal-500/20 text-teal-300 border border-teal-500/40 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-            }`}
-          >
-            <BookOpen className="w-3.5 h-3.5" />
-            <span>3. Developer Portal Catalog</span>
-            {catalogPublished && <CheckCircle2 className="w-3 h-3 text-emerald-400 ml-1" />}
-          </button>
-
-          <button
-            onClick={() => handleTabChange('governance')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 cursor-pointer ${
-              activeTab === 'governance'
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-            }`}
-          >
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>4. Release Governance Gate</span>
-            {decisionCommitted && <CheckCircle2 className="w-3 h-3 text-emerald-400 ml-1" />}
-          </button>
+      {/* ── TAB NAVIGATION ───────────────────────────────────────────────────── */}
+      <div className="shrink-0 bg-[#0a0e1a] border-b border-slate-800 flex items-stretch justify-between">
+        <div className="flex">
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => handleTabChange(tab.id)}
+                className={`
+                  relative flex items-center gap-2 px-4 py-3 text-xs font-medium transition-all cursor-pointer border-b-2
+                  ${isActive
+                    ? `${tab.activeText} border-current bg-[#0d1526]`
+                    : 'text-slate-500 border-transparent hover:text-slate-300 hover:bg-slate-800/40'
+                  }
+                `}
+              >
+                <span className={isActive ? 'opacity-100' : 'opacity-60'}>{tab.icon}</span>
+                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="sm:hidden">{tab.shortLabel}</span>
+                {tab.done && (
+                  <span className="ml-0.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
-        <div className="hidden md:flex items-center space-x-2 text-[11px] font-mono text-slate-400">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+        {/* Right status pill */}
+        <div className="hidden md:flex items-center px-4 gap-1.5 text-[11px] font-mono text-slate-500">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
           <span>Single Source of Truth Mandate</span>
         </div>
       </div>
 
-      {/* ── MAIN CONTENT WORKSPACE ── */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 max-w-7xl mx-auto w-full">
-        {/* ══════════════════════════════════════════════════════════════════ */}
-        {/* TAB 1: REPOSITORY AUDIT & CLEANUP                                  */}
-        {/* ══════════════════════════════════════════════════════════════════ */}
+      {/* ── MAIN CONTENT ─────────────────────────────────────────────────────── */}
+      <div className="flex-1 overflow-y-auto">
+
+        {/* ════════════════════════════════════════════════════════════════════ */}
+        {/* TAB 1: REPOSITORY AUDIT                                             */}
+        {/* ════════════════════════════════════════════════════════════════════ */}
         {activeTab === 'repo_audit' && (
-          <div className="space-y-6">
-            {/* Context Card */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#111927] to-[#142337] border border-cyan-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center space-x-2">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 uppercase">
-                    ASSIGNMENT 1 · REPOSITORY AUDIT (+5 BONUS)
+          <div className="h-full flex flex-col">
+            {/* Assignment banner */}
+            <div className="shrink-0 px-5 py-3 bg-[#0c1526] border-b border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/25 uppercase tracking-wide">
+                    Assignment 1 · Repository Audit
                   </span>
-                  <span className="text-xs text-slate-400">Task 1 · Identify Documentation Gaps</span>
+                  <span className="text-[11px] text-slate-500 font-mono">+5 Bonus</span>
                 </div>
-                <h2 className="text-base font-bold text-white">
-                  Audit the Engineering Repository & Isolate Authoritative Documentation
+                <h2 className="text-sm font-semibold text-white">
+                  Audit the Engineering Repository &amp; Isolate Authoritative Documentation
                 </h2>
-                <p className="text-xs text-slate-300 max-w-3xl leading-relaxed">
-                  Alex's team rushed to meet release deadlines, creating duplicate specs, unversioned diagrams, and scratchpad notes. Review each file below, inspect the content snippets, and select which files must be retained as the single source of truth vs. deprecated.
+                <p className="text-xs text-slate-400 max-w-2xl leading-relaxed">
+                  Review each file, inspect the content snippets, and select which must be retained as the single source of truth vs. deprecated.
                 </p>
               </div>
-
-              <div className="flex items-center gap-3 shrink-0">
-                <button
-                  onClick={handleSubmitAudit}
-                  className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 cursor-pointer shadow-lg ${
-                    auditSubmitted
-                      ? 'bg-emerald-600/30 border border-emerald-500/50 text-emerald-200'
-                      : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white border border-cyan-400/40 shadow-cyan-900/40'
-                  }`}
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>{auditSubmitted ? 'Audit Re-verified (+5 Bonus)' : 'Submit Repository Audit'}</span>
-                </button>
-              </div>
+              <button
+                onClick={handleSubmitAudit}
+                className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded text-xs font-semibold transition-all cursor-pointer border ${
+                  auditSubmitted
+                    ? 'bg-emerald-900/30 border-emerald-700/50 text-emerald-300'
+                    : 'bg-cyan-600 hover:bg-cyan-500 border-cyan-500 text-white shadow-sm'
+                }`}
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>{auditSubmitted ? 'Audit Submitted (+5 Bonus)' : 'Submit Repository Audit'}</span>
+              </button>
             </div>
 
-            {/* Split View: Left File List / Right File Content Preview */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-              {/* Left Column: Repository File Table */}
-              <div className="lg:col-span-6 space-y-2.5">
-                <div className="flex items-center justify-between px-2">
-                  <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">
-                    Repository Files ({REPO_FILES_MANIFEST.length} items)
-                  </span>
-                  <span className="text-xs text-slate-400">
-                    Selected: <strong className="text-cyan-400 font-mono">{selectedFilesToRetain.length}</strong> / 8
+            {/* Split: file list + preview */}
+            <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-slate-800">
+
+              {/* LEFT: file tree */}
+              <div className="overflow-y-auto">
+                {/* Tree header */}
+                <div className="sticky top-0 z-10 px-4 py-2 bg-[#0a0e1a] border-b border-slate-800 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-[11px] font-mono text-slate-400">
+                    <FolderGit2 className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>project-amigo / docs</span>
+                  </div>
+                  <span className="text-[11px] font-mono text-slate-500">
+                    {selectedFilesToRetain.length}/{REPO_FILES_MANIFEST.length} retained
                   </span>
                 </div>
 
-                <div className="space-y-2">
-                  {REPO_FILES_MANIFEST.map((file) => {
+                {/* File rows */}
+                <div className="py-1">
+                  {REPO_FILES_MANIFEST.map((file, idx) => {
                     const isSelected = selectedFilesToRetain.includes(file.id);
                     const isPreviewed = selectedFileForPreview.id === file.id;
+                    const statusStyle = STATUS_STYLES[file.status] ?? 'bg-slate-700/40 text-slate-400 border-slate-700';
 
                     return (
                       <div
                         key={file.id}
                         onClick={() => setSelectedFileForPreview(file)}
-                        className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
+                        className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer border-l-2 transition-all group ${
                           isPreviewed
-                            ? 'bg-[#152238] border-cyan-400/70 shadow-md ring-1 ring-cyan-500/40'
-                            : 'bg-[#0e1626]/80 border-slate-800 hover:border-slate-700'
+                            ? 'bg-[#0f1d35] border-cyan-400'
+                            : 'border-transparent hover:bg-slate-800/40'
                         }`}
                       >
-                        <div className="flex items-center space-x-3 min-w-0">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleToggleFileRetention(file.id);
-                            }}
-                            className="p-1 text-slate-400 hover:text-white cursor-pointer"
-                          >
-                            {isSelected ? (
-                              <CheckSquare className="w-4 h-4 text-cyan-400" />
-                            ) : (
-                              <Square className="w-4 h-4 text-slate-500" />
-                            )}
-                          </button>
+                        {/* Retain checkbox */}
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); handleToggleFileRetention(file.id); }}
+                          className="shrink-0 cursor-pointer"
+                          title={isSelected ? 'Remove from release' : 'Include in release'}
+                        >
+                          {isSelected
+                            ? <CheckSquare className="w-4 h-4 text-cyan-400" />
+                            : <Square className="w-4 h-4 text-slate-600 group-hover:text-slate-400" />
+                          }
+                        </button>
 
-                          <div className="min-w-0">
-                            <div className="flex items-center space-x-2">
-                              <span className="text-xs font-bold text-white font-mono truncate">
-                                {file.name}
-                              </span>
-                              <span
-                                className={`px-1.5 py-0.2 rounded text-[9px] font-mono font-bold uppercase ${
-                                  file.status === 'duplicate_candidate'
-                                    ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                                    : file.status === 'obsolete_candidate'
-                                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                                    : file.status === 'unverified'
-                                    ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                                    : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                                }`}
-                              >
-                                {file.status.replace('_', ' ')}
-                              </span>
-                            </div>
-                            <div className="text-[11px] text-slate-400 truncate mt-0.5">
-                              {file.summary}
-                            </div>
+                        {/* File icon */}
+                        <div className="shrink-0">
+                          <FileIcon category={file.category} className="w-4 h-4" />
+                        </div>
+
+                        {/* Name + path */}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`text-xs font-mono font-medium truncate ${isPreviewed ? 'text-white' : 'text-slate-200'}`}>
+                              {file.name}
+                            </span>
+                            {/* Warning badge for problem files */}
+                            {(file.status === 'duplicate_candidate' || file.status === 'obsolete_candidate' || file.status === 'unverified') && (
+                              <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0" />
+                            )}
+                            <span className={`px-1.5 py-px rounded text-[9px] font-mono font-semibold uppercase border ${statusStyle}`}>
+                              {file.status.replace(/_/g, ' ')}
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-slate-500 font-mono truncate mt-0.5">
+                            {file.path}
                           </div>
                         </div>
 
-                        <div className="text-right pl-3 shrink-0 text-[10px] font-mono text-slate-400">
+                        {/* Meta */}
+                        <div className="shrink-0 text-right text-[10px] font-mono text-slate-500 hidden sm:block">
                           <div>{file.size}</div>
-                          <div className="text-slate-500">{file.lastModified}</div>
+                          <div>{file.lastModified}</div>
                         </div>
+
+                        <ChevronRight className={`shrink-0 w-3.5 h-3.5 transition-colors ${isPreviewed ? 'text-cyan-400' : 'text-slate-700 group-hover:text-slate-500'}`} />
                       </div>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Right Column: Interactive File Content & Audit Inspector */}
-              <div className="lg:col-span-6 space-y-4">
-                <div className="p-5 rounded-2xl bg-[#0f1728] border border-cyan-500/30 space-y-4 shadow-xl">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                    <div className="flex items-center space-x-2">
-                      <FileCode className="w-4 h-4 text-cyan-400" />
-                      <span className="font-mono text-xs font-bold text-white">
-                        {selectedFileForPreview.path}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-xs">
-                      <button
-                        onClick={() => handleToggleFileRetention(selectedFileForPreview.id)}
-                        className={`px-3 py-1 rounded-xl text-[11px] font-bold transition-all cursor-pointer border ${
-                          selectedFilesToRetain.includes(selectedFileForPreview.id)
-                            ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50'
-                            : 'bg-slate-800 text-slate-300 border-slate-700 hover:text-white'
-                        }`}
-                      >
-                        {selectedFilesToRetain.includes(selectedFileForPreview.id)
-                          ? '✓ Included in Release'
-                          : '+ Include in Release'}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Metadata Bar */}
-                  <div className="grid grid-cols-3 gap-2 text-[11px] font-mono">
-                    <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
-                      <span className="text-slate-400 text-[10px]">Author:</span>
-                      <div className="text-slate-200 font-bold truncate">@{selectedFileForPreview.author}</div>
-                    </div>
-                    <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
-                      <span className="text-slate-400 text-[10px]">Action Guidance:</span>
-                      <div
-                        className={`font-bold capitalize ${
-                          selectedFileForPreview.recommendedAction === 'retain'
-                            ? 'text-emerald-400'
-                            : 'text-amber-400'
-                        }`}
-                      >
-                        {selectedFileForPreview.recommendedAction}
-                      </div>
-                    </div>
-                    <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
-                      <span className="text-slate-400 text-[10px]">Category:</span>
-                      <div className="text-cyan-300 font-bold uppercase text-[10px]">{selectedFileForPreview.category}</div>
-                    </div>
-                  </div>
-
-                  {/* Content Snippet */}
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] font-mono text-slate-400 uppercase">
-                      File Inspection Snippet
+              {/* RIGHT: file inspector */}
+              <div className="overflow-y-auto bg-[#09111f]">
+                {/* Inspector header */}
+                <div className="sticky top-0 z-10 px-4 py-2.5 bg-[#0a0e1a] border-b border-slate-800 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FileIcon category={selectedFileForPreview.category} className="w-4 h-4 shrink-0" />
+                    <span className="font-mono text-xs text-slate-300 truncate">
+                      {selectedFileForPreview.path}
                     </span>
-                    <pre className="p-4 rounded-xl bg-slate-950 border border-slate-800/80 text-xs font-mono text-slate-200 whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto shadow-inner">
-                      {selectedFileForPreview.contentSnippet}
-                    </pre>
                   </div>
+                  <button
+                    onClick={() => handleToggleFileRetention(selectedFileForPreview.id)}
+                    className={`shrink-0 flex items-center gap-1.5 px-3 py-1 rounded text-[11px] font-semibold transition-all cursor-pointer border ${
+                      selectedFilesToRetain.includes(selectedFileForPreview.id)
+                        ? 'bg-cyan-900/30 text-cyan-300 border-cyan-700/50 hover:bg-cyan-900/50'
+                        : 'bg-slate-800 text-slate-300 border-slate-700 hover:text-white'
+                    }`}
+                  >
+                    {selectedFilesToRetain.includes(selectedFileForPreview.id)
+                      ? <><CheckCircle2 className="w-3.5 h-3.5" /><span>Included</span></>
+                      : <><span>+ Include in Release</span></>
+                    }
+                  </button>
+                </div>
 
-                  {/* Senior PM Insight */}
-                  <div className="p-3.5 rounded-xl bg-cyan-950/20 border border-cyan-500/30 text-xs text-slate-300 leading-relaxed flex items-start gap-2.5">
-                    <Sparkles className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-                    <div>
-                      <strong className="text-cyan-300 font-mono text-[11px]">Senior PM Governance Rule:</strong>{' '}
-                      A filename alone cannot establish which document is authoritative. Review duplicates before deletion, merge valid deltas, and archive scratchpad tokens to prevent security leaks.
+                {/* Metadata */}
+                <div className="px-4 py-3 border-b border-slate-800/60 grid grid-cols-3 gap-3">
+                  {[
+                    { label: 'Author', value: `@${selectedFileForPreview.author}`, cls: 'text-slate-200' },
+                    {
+                      label: 'Recommended',
+                      value: selectedFileForPreview.recommendedAction,
+                      cls: selectedFileForPreview.recommendedAction === 'retain' ? 'text-emerald-400' : 'text-amber-400',
+                    },
+                    { label: 'Category', value: selectedFileForPreview.category.toUpperCase(), cls: 'text-sky-300' },
+                  ].map(({ label, value, cls }) => (
+                    <div key={label} className="p-2.5 rounded bg-[#0d1526] border border-slate-800">
+                      <div className="text-[10px] font-mono text-slate-500 mb-1">{label}</div>
+                      <div className={`text-xs font-semibold font-mono capitalize ${cls}`}>{value}</div>
                     </div>
+                  ))}
+                </div>
+
+                {/* Summary */}
+                <div className="px-4 py-3 border-b border-slate-800/60">
+                  <div className="text-[10px] font-mono text-slate-500 uppercase mb-1.5">Summary</div>
+                  <p className="text-xs text-slate-300 leading-relaxed">{selectedFileForPreview.summary}</p>
+                </div>
+
+                {/* Code snippet */}
+                <div className="px-4 py-3 border-b border-slate-800/60">
+                  <div className="text-[10px] font-mono text-slate-500 uppercase mb-1.5">File Inspection Snippet</div>
+                  <pre className="p-3.5 rounded bg-[#060a14] border border-slate-800 text-[11px] font-mono text-slate-300 whitespace-pre-wrap leading-relaxed max-h-52 overflow-y-auto">
+                    {selectedFileForPreview.contentSnippet}
+                  </pre>
+                </div>
+
+                {/* Insight */}
+                <div className="px-4 py-3">
+                  <div className="p-3 rounded bg-cyan-950/20 border border-cyan-800/30 flex items-start gap-2.5">
+                    <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5" />
+                    <p className="text-[11px] text-slate-300 leading-relaxed">
+                      <span className="text-cyan-300 font-semibold">PM Governance Rule: </span>
+                      A filename alone cannot establish which document is authoritative. Review duplicates before deletion, merge valid deltas, and archive scratchpad tokens to prevent security leaks.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -533,44 +592,41 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
           </div>
         )}
 
-        {/* ══════════════════════════════════════════════════════════════════ */}
-        {/* TAB 2: SEMANTIC VERSIONING CONSOLE                                */}
-        {/* ══════════════════════════════════════════════════════════════════ */}
+        {/* ════════════════════════════════════════════════════════════════════ */}
+        {/* TAB 2: SEMANTIC VERSIONING                                          */}
+        {/* ════════════════════════════════════════════════════════════════════ */}
         {activeTab === 'versioning' && (
-          <div className="space-y-6">
-            {/* Context Card */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#161226] to-[#1f1938] border border-purple-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="p-5 sm:p-6 space-y-5 max-w-5xl mx-auto w-full">
+            {/* Assignment banner */}
+            <div className="p-4 rounded-lg bg-[#120e22] border border-purple-800/40 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1">
-                <div className="flex items-center space-x-2">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase">
-                    ASSIGNMENT 2 · VERSION CONTROL DECISION (+5 BONUS)
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-500/15 text-purple-300 border border-purple-500/25 uppercase tracking-wide">
+                    Assignment 2 · Semantic Versioning
                   </span>
-                  <span className="text-xs text-slate-400">Task 2 · Semantic Versioning Tag</span>
+                  <span className="text-[11px] text-slate-500 font-mono">+5 Bonus</span>
                 </div>
-                <h2 className="text-base font-bold text-white">
+                <h2 className="text-sm font-semibold text-white">
                   Establish the Official Release Tag: v0.9.9, v1.0.0, or v2.0.0?
                 </h2>
-                <p className="text-xs text-slate-300 max-w-3xl leading-relaxed">
-                  Alex asks: <span className="italic">"We need to tag the repository before closing this sprint. Should we release it as v0.9.9, v1.0.0, or v2.0.0?"</span> Software release numbers carry legal, contractual, and technical meaning across enterprise organizations.
+                <p className="text-xs text-slate-400 leading-relaxed max-w-2xl">
+                  Alex asks: <em>"We need to tag the repository before closing this sprint. Should we release as v0.9.9, v1.0.0, or v2.0.0?"</em> Software release numbers carry legal, contractual, and technical meaning.
                 </p>
               </div>
-
-              <div className="flex items-center gap-3 shrink-0">
-                <button
-                  onClick={handleConfirmVersion}
-                  className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 cursor-pointer shadow-lg ${
-                    versionConfirmed
-                      ? 'bg-emerald-600/30 border border-emerald-500/50 text-emerald-200'
-                      : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white border border-purple-400/40 shadow-purple-900/40'
-                  }`}
-                >
-                  <Tag className="w-4 h-4" />
-                  <span>{versionConfirmed ? 'Release Version Confirmed (+5 Bonus)' : 'Confirm Release Version'}</span>
-                </button>
-              </div>
+              <button
+                onClick={handleConfirmVersion}
+                className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded text-xs font-semibold transition-all cursor-pointer border ${
+                  versionConfirmed
+                    ? 'bg-emerald-900/30 border-emerald-700/50 text-emerald-300'
+                    : 'bg-purple-600 hover:bg-purple-500 border-purple-500 text-white shadow-sm'
+                }`}
+              >
+                <Tag className="w-4 h-4" />
+                <span>{versionConfirmed ? 'Version Confirmed (+5 Bonus)' : 'Confirm Release Version'}</span>
+              </button>
             </div>
 
-            {/* 3 Selectable Version Cards */}
+            {/* Version picker cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {(Object.keys(SEMVER_OPTIONS) as SemVerChoice[]).map((key) => {
                 const opt = SEMVER_OPTIONS[key];
@@ -579,42 +635,39 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
                 return (
                   <div
                     key={key}
-                    onClick={() => {
-                      sound.playClick();
-                      setChosenVersion(key);
-                      onUpdateState({ selectedVersion: key });
-                    }}
-                    className={`p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between space-y-4 ${
+                    onClick={() => { sound.playClick(); setChosenVersion(key); onUpdateState({ selectedVersion: key }); }}
+                    className={`relative p-5 rounded-lg border cursor-pointer transition-all flex flex-col gap-3 ${
                       isSelected
-                        ? 'bg-[#1b1733] border-purple-400 shadow-xl ring-2 ring-purple-500/50'
-                        : 'bg-[#0e1220]/80 border-slate-800 hover:border-slate-700'
+                        ? 'bg-[#160f2a] border-purple-500 shadow-lg shadow-purple-950/40'
+                        : 'bg-[#0d1120] border-slate-800 hover:border-slate-700'
                     }`}
                   >
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xl font-black text-white font-mono">
-                          {opt.version}
-                        </span>
-                        <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${
-                            isSelected
-                              ? 'bg-purple-500 text-white'
-                              : 'bg-slate-800 text-slate-400 border border-slate-700'
-                          }`}
-                        >
-                          {opt.type}
-                        </span>
+                    {/* Selection radio indicator */}
+                    <div className="absolute top-4 right-4">
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-purple-400' : 'border-slate-700'}`}>
+                        {isSelected && <div className="w-2 h-2 rounded-full bg-purple-400" />}
                       </div>
-                      <p className="text-xs text-slate-300 leading-relaxed">
-                        {opt.description}
-                      </p>
                     </div>
 
+                    <div className="space-y-1 pr-5">
+                      <div className="text-2xl font-black text-white font-mono">{opt.version}</div>
+                      <div className={`text-[10px] font-mono font-semibold uppercase tracking-wide ${isSelected ? 'text-purple-300' : 'text-slate-500'}`}>
+                        {opt.type}
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-slate-400 leading-relaxed">
+                      {opt.description}
+                    </p>
+
                     {isSelected && (
-                      <div className="pt-2 border-t border-purple-500/30 text-[11px] font-medium leading-relaxed">
-                        <span className={opt.isCorrect ? 'text-emerald-300' : 'text-amber-300'}>
-                          {opt.critique}
-                        </span>
+                      <div className={`pt-3 border-t ${opt.isCorrect ? 'border-emerald-800/50' : 'border-amber-800/50'}`}>
+                        <p className={`text-[11px] leading-relaxed ${opt.isCorrect ? 'text-emerald-300' : 'text-amber-300'}`}>
+                          {opt.isCorrect
+                            ? <><CheckCircle2 className="inline w-3.5 h-3.5 mr-1" />{opt.critique}</>
+                            : <><AlertTriangle className="inline w-3.5 h-3.5 mr-1" />{opt.critique}</>
+                          }
+                        </p>
                       </div>
                     )}
                   </div>
@@ -622,299 +675,277 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
               })}
             </div>
 
-            {/* Semantic Versioning Principles Deep-Dive Card */}
-            <div className="p-5 rounded-2xl bg-[#0e1424] border border-slate-800 space-y-4">
-              <div className="flex items-center space-x-2">
+            {/* SemVer reference card */}
+            <div className="p-4 rounded-lg bg-[#0d1120] border border-slate-800">
+              <div className="flex items-center gap-2 mb-3">
                 <BookOpen className="w-4 h-4 text-purple-400" />
-                <h3 className="text-xs font-mono font-bold text-white uppercase tracking-wider">
-                  The Semantic Versioning (SemVer) Framework: MAJOR . MINOR . PATCH
-                </h3>
+                <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">
+                  SemVer Framework: MAJOR . MINOR . PATCH
+                </span>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-                <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
-                  <div className="flex items-center justify-between text-purple-300 font-bold font-mono">
-                    <span>MAJOR (X.0.0)</span>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-500/20">Breaking</span>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {[
+                  { label: 'MAJOR (X.0.0)', badge: 'Breaking', color: 'purple', desc: 'Incompatible API changes. Clients must refactor integration code to upgrade.' },
+                  { label: 'MINOR (1.X.0)', badge: 'Feature', color: 'sky', desc: 'Backward-compatible new functionality added (e.g. Phase 2 Bonus Calculator).' },
+                  { label: 'PATCH (1.0.X)', badge: 'Bug Fix', color: 'emerald', desc: 'Backward-compatible bug fixes and security hotfixes.' },
+                ].map(({ label, badge, color, desc }) => (
+                  <div key={label} className="p-3 rounded bg-[#070b17] border border-slate-800">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`text-xs font-mono font-bold text-${color}-300`}>{label}</span>
+                      <span className={`px-1.5 py-px rounded text-[9px] font-mono bg-${color}-500/15 text-${color}-300 border border-${color}-500/20`}>
+                        {badge}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">{desc}</p>
                   </div>
-                  <p className="text-slate-400 text-[11px] leading-relaxed">
-                    Incompatible API changes. Clients must refactor integration code to upgrade.
-                  </p>
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
-                  <div className="flex items-center justify-between text-cyan-300 font-bold font-mono">
-                    <span>MINOR (1.X.0)</span>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-cyan-500/20">Feature</span>
-                  </div>
-                  <p className="text-slate-400 text-[11px] leading-relaxed">
-                    Backward-compatible new functionality added (e.g. Phase 2 Bonus Calculator).
-                  </p>
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
-                  <div className="flex items-center justify-between text-emerald-300 font-bold font-mono">
-                    <span>PATCH (1.0.X)</span>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20">Bug Fix</span>
-                  </div>
-                  <p className="text-slate-400 text-[11px] leading-relaxed">
-                    Backward-compatible bug fixes and security hotfixes (e.g. Chapter 7 memory leak patch).
-                  </p>
-                </div>
+                ))}
               </div>
             </div>
           </div>
         )}
 
-        {/* ══════════════════════════════════════════════════════════════════ */}
-        {/* TAB 3: ENTERPRISE DEVELOPER PORTAL (WIKI CATALOG)                 */}
-        {/* ══════════════════════════════════════════════════════════════════ */}
+        {/* ════════════════════════════════════════════════════════════════════ */}
+        {/* TAB 3: DEVELOPER PORTAL CATALOG                                     */}
+        {/* ════════════════════════════════════════════════════════════════════ */}
         {activeTab === 'catalog' && (
-          <div className="space-y-6">
-            {/* Context Card */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#0d1f1f] to-[#122e2b] border border-teal-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="p-5 sm:p-6 space-y-5 max-w-5xl mx-auto w-full">
+            {/* Assignment banner */}
+            <div className="p-4 rounded-lg bg-[#0b1a1a] border border-teal-800/40 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1">
-                <div className="flex items-center space-x-2">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30 uppercase">
-                    ASSIGNMENT 3 · KNOWLEDGE MANAGEMENT (+5 BONUS)
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-teal-500/15 text-teal-300 border border-teal-500/25 uppercase tracking-wide">
+                    Assignment 3 · Knowledge Management
                   </span>
-                  <span className="text-xs text-slate-400">Task 3 · Centralized Catalog Publication</span>
+                  <span className="text-[11px] text-slate-500 font-mono">+5 Bonus</span>
                 </div>
-                <h2 className="text-base font-bold text-white">
+                <h2 className="text-sm font-semibold text-white">
                   Assemble the Enterprise Internal Developer Portal Package
                 </h2>
-                <p className="text-xs text-slate-300 max-w-3xl leading-relaxed">
-                  Alex asks: <span className="italic">"Jane, what exactly should we publish? Do we just upload the API specifications, or should we include the complete system documentation?"</span> Build a complete catalog that enables any developer to maintain the system independently.
+                <p className="text-xs text-slate-400 leading-relaxed max-w-2xl">
+                  Alex asks: <em>"What exactly should we publish? Just the API specs, or the complete documentation?"</em> Build a catalog that enables any developer to maintain the system independently.
                 </p>
               </div>
+              <button
+                onClick={handlePublishCatalog}
+                className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded text-xs font-semibold transition-all cursor-pointer border ${
+                  catalogPublished
+                    ? 'bg-emerald-900/30 border-emerald-700/50 text-emerald-300'
+                    : 'bg-teal-600 hover:bg-teal-500 border-teal-500 text-white shadow-sm'
+                }`}
+              >
+                <BookOpen className="w-4 h-4" />
+                <span>{catalogPublished ? 'Catalog Published (+5 Bonus)' : 'Publish Documentation Package'}</span>
+              </button>
+            </div>
 
-              <div className="flex items-center gap-3 shrink-0">
-                <button
-                  onClick={handlePublishCatalog}
-                  className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 cursor-pointer shadow-lg ${
-                    catalogPublished
-                      ? 'bg-emerald-600/30 border border-emerald-500/50 text-emerald-200'
-                      : 'bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white border border-teal-400/40 shadow-teal-900/40'
-                  }`}
-                >
-                  <BookOpen className="w-4 h-4" />
-                  <span>{catalogPublished ? 'Documentation Package Live (+5 Bonus)' : 'Publish Documentation Package'}</span>
-                </button>
+            {/* Coverage meter */}
+            <div className="p-4 rounded-lg bg-[#0d1120] border border-slate-800 flex items-center gap-4">
+              <div className="relative w-12 h-12 shrink-0 flex items-center justify-center rounded-full border-2 border-teal-600/50 bg-teal-950/30">
+                <span className="text-sm font-black text-teal-300 font-mono leading-none">{docCoveragePct}%</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-semibold text-white">Enterprise Documentation Coverage</span>
+                  <span className="text-[11px] font-mono text-slate-500">{selectedDocSections.length}/{ENTERPRISE_CATALOG_SECTIONS.length} domains</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 transition-all duration-500"
+                    style={{ width: `${docCoveragePct}%` }}
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Coverage Meter Banner */}
-            <div className="p-4 rounded-2xl bg-[#0e1624] border border-slate-800 flex items-center justify-between gap-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-500/40 flex items-center justify-center font-bold text-teal-300 font-mono text-sm">
-                  {docCoveragePct}%
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-white">Enterprise Documentation Coverage</div>
-                  <div className="text-[11px] text-slate-400">
-                    {selectedDocSections.length} of {ENTERPRISE_CATALOG_SECTIONS.length} essential knowledge domains selected
-                  </div>
-                </div>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="w-48 bg-slate-800 h-2.5 rounded-full overflow-hidden">
-                <div
-                  className="bg-gradient-to-r from-teal-400 to-emerald-400 h-full transition-all duration-500"
-                  style={{ width: `${docCoveragePct}%` }}
-                />
-              </div>
-            </div>
-
-            {/* 6 Catalog Sections Checklist */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Catalog section checklist — two columns */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {ENTERPRISE_CATALOG_SECTIONS.map((sec) => {
                 const isChecked = selectedDocSections.includes(sec.id);
-
                 return (
                   <div
                     key={sec.id}
                     onClick={() => handleToggleDocSection(sec.id)}
-                    className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start space-x-3.5 ${
+                    className={`flex items-start gap-3 p-4 rounded-lg border cursor-pointer transition-all ${
                       isChecked
-                        ? 'bg-[#102426] border-teal-500/60 shadow-md ring-1 ring-teal-500/40'
-                        : 'bg-[#0e1626]/80 border-slate-800 hover:border-slate-700'
+                        ? 'bg-[#0a1f1e] border-teal-700/60 shadow-sm'
+                        : 'bg-[#0d1120] border-slate-800 hover:border-slate-700'
                     }`}
                   >
-                    <div className="mt-0.5">
-                      {isChecked ? (
-                        <CheckSquare className="w-5 h-5 text-teal-400" />
-                      ) : (
-                        <Square className="w-5 h-5 text-slate-500" />
-                      )}
+                    {/* Checkbox */}
+                    <div className="mt-0.5 shrink-0">
+                      {isChecked
+                        ? <CheckSquare className="w-4.5 h-4.5 text-teal-400" style={{ width: 18, height: 18 }} />
+                        : <Square className="w-4.5 h-4.5 text-slate-600" style={{ width: 18, height: 18 }} />
+                      }
                     </div>
-                    <div className="space-y-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-white leading-snug">
+
+                    {/* Content */}
+                    <div className="min-w-0 space-y-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <span className={`text-xs font-semibold leading-snug ${isChecked ? 'text-white' : 'text-slate-300'}`}>
                           {sec.title}
                         </span>
-                        <span className="px-1.5 py-0.2 rounded text-[9px] font-mono text-teal-300 bg-teal-950/60 border border-teal-500/30 uppercase shrink-0 ml-2">
-                          {sec.docFormat}
+                        <span className={`shrink-0 px-1.5 py-px rounded text-[9px] font-mono border ${
+                          isChecked
+                            ? 'bg-teal-900/40 text-teal-300 border-teal-700/40'
+                            : 'bg-slate-800 text-slate-500 border-slate-700'
+                        }`}>
+                          {sec.category}
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                      <p className="text-[11px] text-slate-500 leading-relaxed">
                         {sec.description}
                       </p>
+                      <div className="text-[10px] font-mono text-slate-600">{sec.docFormat}</div>
                     </div>
                   </div>
                 );
               })}
             </div>
 
-            {/* Learning Note */}
-            <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 text-xs text-slate-300 leading-relaxed flex items-start gap-2.5">
-              <Sparkles className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" />
-              <div>
-                <strong className="text-teal-300 font-mono text-[11px]">Senior PM Leadership Insight:</strong>{' '}
-                Technical documentation is not merely API endpoints. It must preserve the architecture diagrams, DDL schemas, deployment runbooks, and Architecture Decision Records (ADRs) required to operate and maintain the system beyond the original delivery team.
-              </div>
+            {/* Learning note */}
+            <div className="p-3.5 rounded-lg bg-[#0d1120] border border-slate-800 flex items-start gap-2.5">
+              <Sparkles className="w-3.5 h-3.5 text-teal-400 shrink-0 mt-0.5" />
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                <span className="text-teal-300 font-semibold">Senior PM Leadership Insight: </span>
+                Technical documentation is not merely API endpoints. It must preserve architecture diagrams, DDL schemas, deployment runbooks, and Architecture Decision Records required to operate the system beyond the original delivery team.
+              </p>
             </div>
           </div>
         )}
 
-        {/* ══════════════════════════════════════════════════════════════════ */}
-        {/* TAB 4: FINAL RELEASE GOVERNANCE DECISION (SCENE 10.2)             */}
-        {/* ══════════════════════════════════════════════════════════════════ */}
+        {/* ════════════════════════════════════════════════════════════════════ */}
+        {/* TAB 4: RELEASE GOVERNANCE GATE                                      */}
+        {/* ════════════════════════════════════════════════════════════════════ */}
         {activeTab === 'governance' && (
-          <div className="space-y-6">
-            {/* Context Card */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#211b15] to-[#2d2218] border border-amber-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="p-5 sm:p-6 space-y-5 max-w-5xl mx-auto w-full">
+            {/* Assignment banner */}
+            <div className="p-4 rounded-lg bg-[#191208] border border-amber-800/40 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1">
-                <div className="flex items-center space-x-2">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">
-                    SCENE 10.2 · RELEASE GOVERNANCE GATE
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/25 uppercase tracking-wide">
+                    Scene 10.2 · Release Governance Gate
                   </span>
-                  <span className="text-xs text-slate-400">Final Leadership Decision</span>
+                  <span className="text-[11px] text-slate-500 font-mono">Final Decision</span>
                 </div>
-                <h2 className="text-base font-bold text-white">
+                <h2 className="text-sm font-semibold text-white">
                   Alex's Final Dilemma: Shortcut or Formal Release Governance?
                 </h2>
-                <p className="text-xs text-slate-300 max-w-3xl leading-relaxed">
-                  Alex raises one final concern: <span className="italic">"Jane, the documentation is almost ready. But publishing it and tagging the repository will take additional time. We could skip the formal process and move directly to the next feature sprint."</span>
+                <p className="text-xs text-slate-400 leading-relaxed max-w-2xl">
+                  Alex raises one final concern: <em>"Jane, publishing documentation and tagging the repository will take additional time. We could skip the formal process and move directly to the next feature sprint."</em>
                 </p>
               </div>
-
-              <div className="flex items-center gap-3 shrink-0">
-                <button
-                  onClick={handleCommitFinalDecision}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-black text-xs transition-all flex items-center space-x-2 cursor-pointer shadow-lg shadow-emerald-950 border border-emerald-400/40"
-                >
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>Finalize Release & View Scorecard</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
+              <button
+                onClick={handleCommitFinalDecision}
+                className="shrink-0 flex items-center gap-2 px-5 py-2.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors cursor-pointer shadow-sm border border-emerald-500"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span>Finalize Release &amp; View Scorecard</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
             </div>
 
-            {/* 2 Strategic Choices */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Decision cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Choice A */}
               <div
-                onClick={() => {
-                  sound.playClick();
-                  setSelectedDecision('choice_a');
-                }}
-                className={`p-6 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between space-y-4 ${
+                onClick={() => { sound.playClick(); setSelectedDecision('choice_a'); }}
+                className={`relative p-5 rounded-lg border cursor-pointer transition-all flex flex-col gap-4 ${
                   selectedDecision === 'choice_a'
-                    ? 'bg-[#1f1618] border-rose-500/70 shadow-xl ring-2 ring-rose-500/50'
-                    : 'bg-[#0f1422]/80 border-slate-800 hover:border-slate-700'
+                    ? 'bg-[#1a0e10] border-rose-600/70 shadow-lg shadow-rose-950/30'
+                    : 'bg-[#0d1120] border-slate-800 hover:border-slate-700'
                 }`}
               >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700 uppercase">
-                      Option A · Feature Shortcut
-                    </span>
-                    <span className="text-xs font-mono font-bold text-rose-400">
-                      Gov: -30 · Vel: -10
-                    </span>
+                {/* Radio */}
+                <div className="absolute top-4 right-4">
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${selectedDecision === 'choice_a' ? 'border-rose-400' : 'border-slate-700'}`}>
+                    {selectedDecision === 'choice_a' && <div className="w-2 h-2 rounded-full bg-rose-400" />}
                   </div>
-
-                  <h3 className="text-sm font-bold text-white">
-                    {CHAPTER10_DECISION_OPTIONS.choice_a.title}
-                  </h3>
-
-                  <p className="text-xs text-slate-300 leading-relaxed italic border-l-2 border-rose-500 pl-3">
-                    {CHAPTER10_DECISION_OPTIONS.choice_a.quote}
-                  </p>
-
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    Prioritizes immediate sprint velocity over long-term maintainability. Skips version tagging and leaves documentation scattered across scratchpads.
-                  </p>
                 </div>
 
-                <div className="pt-3 border-t border-slate-800 text-[11px] text-rose-300/90 leading-relaxed">
-                  <strong>Consequence:</strong> Knowledge silos form. Future onboarding takes weeks, and original devs are interrupted constantly to explain undocumented code.
+                <div className="space-y-1 pr-6">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-slate-800 text-slate-400 border border-slate-700 uppercase">
+                      Option A
+                    </span>
+                    <span className="text-[11px] font-mono text-rose-400">Gov: −30 · Vel: −10</span>
+                  </div>
+                  <h3 className="text-sm font-semibold text-white">{CHAPTER10_DECISION_OPTIONS.choice_a.title}</h3>
+                </div>
+
+                <blockquote className="pl-3 border-l-2 border-rose-600 text-xs text-slate-300 italic leading-relaxed">
+                  {CHAPTER10_DECISION_OPTIONS.choice_a.quote}
+                </blockquote>
+
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Prioritizes immediate sprint velocity over long-term maintainability. Skips version tagging and leaves documentation scattered across scratchpads.
+                </p>
+
+                <div className="pt-3 border-t border-slate-800 text-[11px] text-rose-300/80 leading-relaxed">
+                  <span className="font-semibold text-rose-300">Consequence: </span>
+                  Knowledge silos form. Future onboarding takes weeks, and original devs are interrupted constantly to explain undocumented code.
                 </div>
               </div>
 
               {/* Choice B */}
               <div
-                onClick={() => {
-                  sound.playClick();
-                  setSelectedDecision('choice_b');
-                }}
-                className={`p-6 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between space-y-4 ${
+                onClick={() => { sound.playClick(); setSelectedDecision('choice_b'); }}
+                className={`relative p-5 rounded-lg border cursor-pointer transition-all flex flex-col gap-4 ${
                   selectedDecision === 'choice_b'
-                    ? 'bg-[#102422] border-emerald-500/70 shadow-xl ring-2 ring-emerald-500/50'
-                    : 'bg-[#0f1422]/80 border-slate-800 hover:border-slate-700'
+                    ? 'bg-[#081a14] border-emerald-600/70 shadow-lg shadow-emerald-950/30'
+                    : 'bg-[#0d1120] border-slate-800 hover:border-slate-700'
                 }`}
               >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase">
-                      Option B · Release Governance (Recommended)
-                    </span>
-                    <span className="text-xs font-mono font-bold text-emerald-400">
-                      Gov: +30 · Risk: +20
-                    </span>
+                {/* Radio */}
+                <div className="absolute top-4 right-4">
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${selectedDecision === 'choice_b' ? 'border-emerald-400' : 'border-slate-700'}`}>
+                    {selectedDecision === 'choice_b' && <div className="w-2 h-2 rounded-full bg-emerald-400" />}
                   </div>
-
-                  <h3 className="text-sm font-bold text-white">
-                    {CHAPTER10_DECISION_OPTIONS.choice_b.title}
-                  </h3>
-
-                  <p className="text-xs text-slate-300 leading-relaxed italic border-l-2 border-emerald-500 pl-3">
-                    {CHAPTER10_DECISION_OPTIONS.choice_b.quote}
-                  </p>
-
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    Tags release as v1.0.0, establishes authoritative single source of truth, and publishes a complete developer portal catalog to ensure product outlasts original team.
-                  </p>
                 </div>
 
-                <div className="pt-3 border-t border-slate-800 text-[11px] text-emerald-300/90 leading-relaxed">
-                  <strong>Consequence:</strong> Release v1.0.0 is officially tagged. Future teams onboard seamlessly, and institutional knowledge is permanently secured.
+                <div className="space-y-1 pr-6">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-900/40 text-emerald-300 border border-emerald-700/40 uppercase">
+                      Option B · Recommended
+                    </span>
+                    <span className="text-[11px] font-mono text-emerald-400">Gov: +30 · Risk: +20</span>
+                  </div>
+                  <h3 className="text-sm font-semibold text-white">{CHAPTER10_DECISION_OPTIONS.choice_b.title}</h3>
+                </div>
+
+                <blockquote className="pl-3 border-l-2 border-emerald-600 text-xs text-slate-300 italic leading-relaxed">
+                  {CHAPTER10_DECISION_OPTIONS.choice_b.quote}
+                </blockquote>
+
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Tags release as v1.0.0, establishes authoritative single source of truth, and publishes a complete developer portal catalog to ensure product outlasts original team.
+                </p>
+
+                <div className="pt-3 border-t border-slate-800 text-[11px] text-emerald-300/80 leading-relaxed">
+                  <span className="font-semibold text-emerald-300">Consequence: </span>
+                  Release v1.0.0 is officially tagged. Future teams onboard seamlessly, and institutional knowledge is permanently secured.
                 </div>
               </div>
             </div>
 
-            {/* Achievement Preview Banner */}
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-teal-950/30 to-slate-900 border border-emerald-500/40 flex items-center justify-between gap-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-300 shadow">
-                  <Award className="w-5 h-5 text-emerald-400 animate-pulse" />
+            {/* Achievement preview */}
+            <div className="p-4 rounded-lg bg-[#0d1120] border border-slate-800 flex items-center gap-4">
+              <div className="w-10 h-10 rounded-lg bg-emerald-950/60 border border-emerald-800/50 flex items-center justify-center shrink-0">
+                <Award className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="text-xs font-semibold text-white">Unlockable Achievement: Release Architect</span>
+                  <span className="px-1.5 py-px rounded text-[9px] font-mono bg-emerald-900/40 text-emerald-300 border border-emerald-700/40">+15 Bonus Available</span>
                 </div>
-                <div>
-                  <div className="text-xs font-bold text-white flex items-center gap-2">
-                    <span>Unlockable Achievement: Release Architect</span>
-                    <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                      +15 Bonus Available
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-slate-300 mt-0.5">
-                    Awarded for establishing formal v1.0.0 release tagging, 100% developer portal coverage, and single-source-of-truth repo audit.
-                  </div>
-                </div>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  Awarded for establishing formal v1.0.0 release tagging, 100% developer portal coverage, and single-source-of-truth repo audit.
+                </p>
               </div>
             </div>
           </div>
         )}
+
       </div>
     </div>
   );
