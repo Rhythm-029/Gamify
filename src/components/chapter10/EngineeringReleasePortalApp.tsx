@@ -46,6 +46,8 @@ import {
   SCRATCH_DUPLICATE_FILE_IDS,
   SEMVER_OPTIONS,
   ENTERPRISE_CATALOG_SECTIONS,
+  AUTHORITATIVE_CATALOG_SECTION_IDS,
+  DISALLOWED_CATALOG_SECTION_IDS,
   CHAPTER10_DECISION_OPTIONS,
   computeChapter10Score,
 } from '../../data/chapter10Data';
@@ -124,9 +126,12 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
     Boolean(chapter10State.completed)
   );
 
-  // Calculation of Doc Coverage
+  // Calculation of Doc Coverage (measured against the 6 authoritative domains)
+  const validSelectedCount = selectedDocSections.filter((id) =>
+    AUTHORITATIVE_CATALOG_SECTION_IDS.includes(id)
+  ).length;
   const docCoveragePct = Math.round(
-    (selectedDocSections.length / ENTERPRISE_CATALOG_SECTIONS.length) * 100
+    (validSelectedCount / AUTHORITATIVE_CATALOG_SECTION_IDS.length) * 100
   );
 
   // Handle Tab Change
@@ -194,9 +199,11 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
       const next = prev.includes(sectionId)
         ? prev.filter((id) => id !== sectionId)
         : [...prev, sectionId];
+      const validCount = next.filter((id) => AUTHORITATIVE_CATALOG_SECTION_IDS.includes(id)).length;
+      const coverage = Math.round((validCount / AUTHORITATIVE_CATALOG_SECTION_IDS.length) * 100);
       onUpdateState({
         selectedDocSections: next,
-        documentationCoveragePct: Math.round((next.length / ENTERPRISE_CATALOG_SECTIONS.length) * 100),
+        documentationCoveragePct: coverage,
       });
       return next;
     });
@@ -749,7 +756,7 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
                   Assemble the Enterprise Internal Developer Portal Package
                 </h2>
                 <p className="text-xs text-slate-400 leading-relaxed max-w-2xl">
-                  Daniel asks: <em>"What exactly should we publish? Just the API specs, or the complete documentation?"</em> Build a catalog that enables any developer to maintain the system independently.
+                  Daniel asks: <em>"What should we publish to the developer portal? Should we bundle everything, or carefully curate only verified production artifacts and exclude sensitive credentials and unapproved draft proposals?"</em>
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -784,7 +791,7 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-xs font-semibold text-white">Enterprise Documentation Coverage</span>
-                  <span className="text-[11px] font-mono text-slate-500">{selectedDocSections.length}/{ENTERPRISE_CATALOG_SECTIONS.length} domains</span>
+                  <span className="text-[11px] font-mono text-slate-500">{validSelectedCount}/6 authoritative domains</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-slate-800 overflow-hidden">
                   <div
@@ -846,7 +853,7 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
               <Sparkles className="w-3.5 h-3.5 text-teal-400 shrink-0 mt-0.5" />
               <p className="text-[11px] text-slate-400 leading-relaxed">
                 <span className="text-teal-300 font-semibold">Senior PM Leadership Insight: </span>
-                Technical documentation is not merely API endpoints. It must preserve architecture diagrams, DDL schemas, deployment runbooks, and Architecture Decision Records required to operate the system beyond the original delivery team.
+                Curating an enterprise developer portal is about quality and security governance. Published domains must give developers full technical clarity (APIs, Architecture, DB, Runbooks, ADRs), while strictly excluding unvetted Phase 2 drafts and plaintext production credentials.
               </p>
             </div>
           </div>

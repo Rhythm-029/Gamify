@@ -240,6 +240,20 @@ export const SEMVER_OPTIONS = {
 };
 
 // ── ENTERPRISE DEVELOPER PORTAL (WIKI) CATALOG SECTIONS FOR ASSIGNMENT 3 ──
+export const AUTHORITATIVE_CATALOG_SECTION_IDS = [
+  'api_specs',
+  'system_architecture',
+  'database_schema',
+  'deployment_guide',
+  'release_notes',
+  'adrs',
+];
+
+export const DISALLOWED_CATALOG_SECTION_IDS = [
+  'plaintext_secrets',
+  'unapproved_phase2_drafts',
+];
+
 export const ENTERPRISE_CATALOG_SECTIONS: DocumentationSectionItem[] = [
   {
     id: 'api_specs',
@@ -258,6 +272,14 @@ export const ENTERPRISE_CATALOG_SECTIONS: DocumentationSectionItem[] = [
     docFormat: 'C4 Model / Mermaid / Vector Diagram',
   },
   {
+    id: 'plaintext_secrets',
+    title: 'Production environment passwords and root KMS encryption keys',
+    description: 'Raw database superuser connection strings, unencrypted production Vault KMS root tokens, and private SSL certs for direct debugging access.',
+    category: 'Security Risk',
+    required: false,
+    docFormat: 'Plaintext .env & Key Vault Dump',
+  },
+  {
     id: 'database_schema',
     title: 'Database schema and data relationships',
     description: 'Documents PostgreSQL table relationships, foreign keys, partition keys for 4,800 branches, and indexing strategy.',
@@ -272,6 +294,14 @@ export const ENTERPRISE_CATALOG_SECTIONS: DocumentationSectionItem[] = [
     category: 'SRE & DevOps',
     required: true,
     docFormat: 'Runbook & Infrastructure as Code',
+  },
+  {
+    id: 'unapproved_phase2_drafts',
+    title: 'Unapproved Phase 2 speculative drafts and debug endpoints',
+    description: 'Draft contractor specifications for unapproved bonus calculation algorithms and debug dump routes (/temp/debug/branch-dump) pending CR-017 approval.',
+    category: 'Unverified WIP',
+    required: false,
+    docFormat: 'WIP Draft Proposal (CR-017)',
   },
   {
     id: 'release_notes',
@@ -342,7 +372,10 @@ export function computeChapter10Score(
 
   let catalogPublishBonus = 0;
   if (state.catalogPublished) {
-    catalogPublishBonus = state.selectedDocSections.length >= 6 ? 5 : 3;
+    const selected = new Set(state.selectedDocSections);
+    const hasAllAuth = AUTHORITATIVE_CATALOG_SECTION_IDS.every((id) => selected.has(id));
+    const hasNoDisallowed = DISALLOWED_CATALOG_SECTION_IDS.every((id) => !selected.has(id));
+    catalogPublishBonus = hasAllAuth && hasNoDisallowed ? 5 : (hasAllAuth ? 3 : 2);
   }
 
   const totalBonus = repoAuditBonus + versioningBonus + catalogPublishBonus;
@@ -391,7 +424,7 @@ export function computeChapter10Score(
   }
 
   const whatYouDidWell = isChoiceB
-    ? 'Audited repository files into a single source of truth; enforced SemVer v1.0.0 initial release standard; published a 100% complete developer wiki catalog; protected institutional knowledge against developer turnover.'
+    ? 'Audited repository files into a single source of truth; enforced SemVer v1.0.0 initial release standard; curated a complete developer portal catalog while safely excluding sensitive credentials and unapproved draft specs; protected institutional knowledge against developer turnover.'
     : 'Maintained initial code delivery and identified basic repository files.';
 
   const whatToImprove = isChoiceB
