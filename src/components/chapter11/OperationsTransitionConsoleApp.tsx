@@ -85,6 +85,19 @@ const DISPLAY_RESOURCES = SCRAMBLED_RESOURCE_IDS.map(
   (id) => AVAILABLE_RESOURCES.find((r) => r.id === id)!
 );
 
+// Scramble incident triage steps so they are not in 1:1 sequential order
+const SCRAMBLED_INCIDENT_STEP_IDS = [
+  'step_runbook_restart',
+  'step_direct_patch',
+  'step_access_check',
+  'step_db_restart',
+  'step_escalation_route',
+];
+
+const DISPLAY_INCIDENT_STEPS = SCRAMBLED_INCIDENT_STEP_IDS.map(
+  (id) => INCIDENT_RESPONSE_STEPS.find((s) => s.id === id)!
+);
+
 // Phase color themes for Gantt-style view
 const PHASE_THEMES: Record<string, { bg: string; border: string; badge: string; accent: string; dot: string }> = {
   phase_intensive: {
@@ -207,6 +220,12 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
   const [workshopsScheduled, setWorkshopsScheduled] = useState<boolean>(
     Boolean(chapter11State.workshopsScheduled)
   );
+  const [selectedWorkshops, setSelectedWorkshops] = useState<string[]>(() => {
+    return (
+      chapter11State.selectedWorkshops ||
+      (chapter11State.workshopsScheduled ? ['ws_admin', 'ws_troubleshoot', 'ws_monitoring'] : [])
+    );
+  });
 
   // ── STAGE 3: HYPERCARE ASSIGNMENTS STATE ──
   const [phaseAssignments, setPhaseAssignments] = useState<Record<string, string>>(
@@ -319,18 +338,33 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
     onUpdateState({ incidentValidated: true });
   };
 
+  const handleToggleWorkshop = (workshopId: string) => {
+    if (workshopsScheduled) return;
+    sound.playClick();
+    let updated: string[];
+    if (selectedWorkshops.includes(workshopId)) {
+      updated = selectedWorkshops.filter((id) => id !== workshopId);
+    } else {
+      if (selectedWorkshops.length >= 3) return;
+      updated = [...selectedWorkshops, workshopId];
+    }
+    setSelectedWorkshops(updated);
+    onUpdateState({ selectedWorkshops: updated });
+  };
+
   const handleScheduleWorkshops = () => {
     sound.playSystemClearance();
     setWorkshopsScheduled(true);
     onUpdateState({
       workshopsScheduled: true,
+      selectedWorkshops,
       selectedTab: 'hypercare',
     });
     setActiveTab('hypercare');
     if (onNotifyDesktop) {
       onNotifyDesktop(
         'Training Workshops Scheduled',
-        'Martha booked 3 knowledge transfer sessions with IT Operations in transition calendar.'
+        '3 knowledge transfer sessions booked with IT Operations.'
       );
     }
   };
@@ -555,7 +589,7 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                         onClick={() => handleSelectRequirement(req.id)}
                         className={`group relative p-3.5 rounded-xl border transition-all cursor-pointer overflow-visible ${
                           isMatched
-                            ? 'bg-emerald-950/20 border-emerald-500/35 opacity-90'
+                            ? 'bg-[#131b2e] border-indigo-500/40 opacity-90'
                             : isSelected
                             ? 'bg-indigo-950/40 border-indigo-400/70 shadow-[0_0_0_2px_rgba(99,102,241,0.25)]'
                             : 'bg-[#161b22] border-[#30363d] hover:border-indigo-500/40 hover:bg-[#1c2129]'
@@ -566,7 +600,7 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                           id={`port-req-${req.id}`}
                           className={`absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all z-20 ${
                             isMatched
-                              ? 'bg-emerald-500 border-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.7)]'
+                              ? 'bg-indigo-500 border-indigo-300 shadow-[0_0_8px_rgba(99,102,241,0.6)]'
                               : isSelected
                               ? 'bg-indigo-500 border-indigo-200 animate-pulse shadow-[0_0_12px_rgba(99,102,241,0.8)] scale-110'
                               : 'bg-[#161b22] border-[#30363d] group-hover:border-indigo-400'
@@ -578,13 +612,13 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                         <div className="flex items-start gap-2.5">
                           {/* Status indicator */}
                           <div className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${
-                            isMatched ? 'bg-emerald-400' : isSelected ? 'bg-indigo-400 animate-pulse' : 'bg-[#30363d]'
+                            isMatched ? 'bg-indigo-400' : isSelected ? 'bg-indigo-400 animate-pulse' : 'bg-[#30363d]'
                           }`} />
                           <div className="flex-1 min-w-0 pr-2">
                             <div className="flex items-center gap-1.5 mb-1">
                               <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${
                                 isMatched
-                                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
+                                  ? 'bg-indigo-500/15 text-indigo-300 border-indigo-500/25'
                                   : 'bg-[#21262d] text-slate-500 border-[#30363d]'
                               }`}>
                                 {req.category}
@@ -595,14 +629,14 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                             {/* Matched resource pill */}
                             {isMatched && matchedResource && (
                               <div className="mt-2 flex items-center justify-between">
-                                <div className="flex items-center gap-1.5 text-[10px] text-emerald-300 font-mono">
+                                <div className="flex items-center gap-1.5 text-[10px] text-indigo-300 font-mono">
                                   <Link2 className="w-3 h-3" />
                                   <span>{matchedResource.name}</span>
                                 </div>
                                 {!matchingSubmitted && (
                                   <button
                                     onClick={(e) => { e.stopPropagation(); handleUnpair(req.id); }}
-                                    className="text-[10px] text-slate-500 hover:text-rose-400 flex items-center gap-0.5 transition-colors"
+                                    className="text-[10px] text-slate-500 hover:text-rose-400 flex items-center gap-0.5 transition-colors cursor-pointer"
                                   >
                                     <Unlink2 className="w-2.5 h-2.5" />
                                     Unlink
@@ -618,7 +652,6 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                               </div>
                             )}
                           </div>
-                          {isMatched && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />}
                         </div>
                       </div>
                     );
@@ -644,7 +677,6 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                   {DISPLAY_RESOURCES.map((res) => {
                     const isAlreadyPaired = Object.values(matchedPairs).includes(res.id);
                     const ResIcon = RESOURCE_ICONS[res.iconName] || FileText;
-                    const isClickable = !matchingSubmitted;
 
                     return (
                       <div
@@ -652,7 +684,7 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                         onClick={() => handleSelectResource(res.id)}
                         className={`group relative p-3.5 rounded-xl border transition-all overflow-visible ${
                           isAlreadyPaired
-                            ? 'bg-emerald-950/15 border-emerald-500/35 cursor-pointer hover:border-emerald-500/50'
+                            ? 'bg-[#131b2e] border-indigo-500/40 cursor-pointer hover:border-indigo-500/60'
                             : selectedReqId
                             ? 'bg-indigo-950/30 border-indigo-500/50 cursor-pointer hover:bg-indigo-950/50 shadow-[0_0_0_1px_rgba(99,102,241,0.2)]'
                             : 'bg-[#161b22] border-[#30363d] cursor-pointer hover:border-[#444d56]'
@@ -663,7 +695,7 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                           id={`port-res-${res.id}`}
                           className={`absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all z-20 ${
                             isAlreadyPaired
-                              ? 'bg-emerald-500 border-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.7)]'
+                              ? 'bg-indigo-500 border-indigo-300 shadow-[0_0_8px_rgba(99,102,241,0.6)]'
                               : selectedReqId
                               ? 'bg-indigo-950 border-indigo-400 group-hover:scale-110 shadow-[0_0_8px_rgba(99,102,241,0.4)]'
                               : 'bg-[#161b22] border-[#30363d]'
@@ -675,7 +707,7 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                         <div className="flex items-start gap-2.5 pl-2">
                           <div className={`mt-0.5 w-7 h-7 rounded-md flex items-center justify-center shrink-0 border ${
                             isAlreadyPaired
-                              ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400'
+                              ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300'
                               : selectedReqId
                               ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-400'
                               : 'bg-[#21262d] border-[#30363d] text-slate-500'
@@ -685,7 +717,6 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="text-xs font-bold text-slate-200">{res.name}</span>
-                              {isAlreadyPaired && <CheckCircle2 className="w-3 h-3 text-emerald-400" />}
                             </div>
                             <div className="text-[10px] font-mono text-slate-500 mt-0.5">{res.docFormat}</div>
                             <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">{res.description}</p>
@@ -801,15 +832,11 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                   <div className="flex items-center gap-2">
                     <ListOrdered className="w-3.5 h-3.5 text-indigo-400" />
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
-                      Incident Triage Workflow Builder
+                      Construct Incident Triage &amp; Escalation Workflow (Select &amp; Sequence 3 of 5 Actions)
                     </span>
                   </div>
-                  <span className="text-[11px] text-slate-500">
-                    {incidentValidated ? (
-                      <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Sequence Verified
-                      </span>
-                    ) : 'Click an action card below to place it in a step slot'}
+                  <span className="text-[11px] text-slate-500 font-mono">
+                    {incidentSlots.filter(Boolean).length}/3 Steps Assigned
                   </span>
                 </div>
 
@@ -824,9 +851,7 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                       <React.Fragment key={slotIdx}>
                         <div className={`flex-1 p-4 rounded-xl border flex flex-col min-h-[160px] transition-all ${
                           stepItem
-                            ? incidentValidated
-                              ? 'bg-emerald-950/20 border-emerald-500/35'
-                              : 'bg-[#161b22] border-indigo-500/40'
+                            ? 'bg-[#131b2e] border-indigo-500/50'
                             : 'bg-[#0d1117] border-dashed border-[#30363d]'
                         }`}>
                           {/* Step header */}
@@ -834,27 +859,24 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                             <div className="flex items-center gap-2">
                               <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-black border ${
                                 stepItem
-                                  ? incidentValidated
-                                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                                    : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
+                                  ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
                                   : 'bg-[#21262d] text-slate-500 border-[#30363d]'
                               }`}>
                                 {slotIdx + 1}
                               </span>
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                                 Step {String(slotIdx + 1).padStart(2, '0')}
                               </span>
                             </div>
                             {stepItem && !incidentValidated && (
                               <button
                                 onClick={() => handleClearIncidentSlot(slotIdx)}
-                                className="text-[10px] text-slate-500 hover:text-rose-400 flex items-center gap-0.5 transition-colors"
+                                className="text-[10px] text-slate-500 hover:text-rose-400 flex items-center gap-0.5 transition-colors cursor-pointer"
                               >
                                 <XCircle className="w-3 h-3" />
                                 Clear
                               </button>
                             )}
-                            {incidentValidated && stepItem && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
                           </div>
 
                           {/* Content */}
@@ -872,7 +894,7 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                               <div className="w-8 h-8 rounded-lg bg-[#161b22] border border-dashed border-[#30363d] flex items-center justify-center">
                                 <span className="text-slate-600 text-lg">+</span>
                               </div>
-                              <span className="text-[11px] text-slate-600">Drop action here</span>
+                              <span className="text-[11px] text-slate-600">Assign action from pool</span>
                             </div>
                           )}
                         </div>
@@ -888,15 +910,16 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                   })}
                 </div>
 
-                {/* Action card pool */}
+                {/* Action card pool (5 items in scrambled order) */}
                 <div className="pt-2">
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2 flex items-center gap-1.5">
-                    <Zap className="w-3 h-3" />
-                    Available Response Actions — click to assign to next open slot
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-1.5">
+                    <Zap className="w-3 h-3 text-indigo-400" />
+                    Available Triage Actions Pool — select 3 actions and place them in proper escalation sequence
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    {INCIDENT_RESPONSE_STEPS.map((stepItem) => {
-                      const isPlaced = incidentSlots.includes(stepItem.id);
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                    {DISPLAY_INCIDENT_STEPS.map((stepItem) => {
+                      const placedIndex = incidentSlots.indexOf(stepItem.id);
+                      const isPlaced = placedIndex !== -1;
                       return (
                         <button
                           key={stepItem.id}
@@ -923,16 +946,17 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                             }`}>
                               <ListOrdered className="w-3 h-3" />
                             </div>
-                            <div>
-                              <div className="text-xs font-semibold text-slate-200">{stepItem.title}</div>
-                              <div className="text-[10px] text-slate-500 mt-0.5">
-                                {stepItem.resourceName} · <span className="text-indigo-400">{stepItem.role}</span>
+                            <div className="min-w-0">
+                              <div className="text-xs font-semibold text-slate-200 leading-tight">{stepItem.title}</div>
+                              <div className="text-[10px] text-slate-400 mt-1 leading-relaxed line-clamp-2">{stepItem.actionText}</div>
+                              <div className="text-[10px] text-indigo-400 font-mono mt-1.5">
+                                {stepItem.role}
                               </div>
                             </div>
                           </div>
                           {isPlaced && (
-                            <div className="mt-1.5 text-[10px] text-emerald-500 font-mono flex items-center gap-1">
-                              <CheckCircle2 className="w-2.5 h-2.5" /> Placed in workflow
+                            <div className="mt-1.5 text-[10px] text-indigo-300 font-mono flex items-center gap-1">
+                              <span>Placed in Step 0{placedIndex + 1}</span>
                             </div>
                           )}
                         </button>
@@ -942,23 +966,14 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                 </div>
 
                 {/* Validation bar */}
-                <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl border ${
-                  incidentValidated
-                    ? 'bg-emerald-950/20 border-emerald-500/35'
-                    : incidentValidationFeedback
-                    ? 'bg-amber-950/20 border-amber-500/30'
-                    : 'bg-[#161b22] border-[#30363d]'
-                }`}>
-                  <div className="text-xs">
-                    {incidentValidationFeedback ? (
-                      <span className={`flex items-start gap-2 ${incidentValidated ? 'text-emerald-300' : 'text-amber-300'}`}>
-                        {incidentValidated
-                          ? <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
-                          : <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />}
-                        {incidentValidationFeedback}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl border bg-[#161b22] border-[#30363d]">
+                  <div className="text-xs text-slate-400">
+                    {incidentSlots.every((s) => s !== null) ? (
+                      <span className="text-indigo-300 font-semibold">
+                        3 triage procedures assigned to the workflow. Ready to lock sequence.
                       </span>
                     ) : (
-                      <span className="text-slate-400">Arrange the 3 steps in correct escalation order (L1 → L2 → L3), then validate with Marcus.</span>
+                      <span>Select and arrange 3 actions into Step 01, Step 02, and Step 03 above.</span>
                     )}
                   </div>
                   <button
@@ -966,78 +981,75 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                     onClick={handleValidateIncidentSequence}
                     className={`px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0 ${
                       !incidentSlots.some((s) => s === null) && !incidentValidated
-                        ? 'bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer active:scale-95'
+                        ? 'bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer active:scale-95 shadow-md shadow-indigo-900/30'
                         : 'bg-[#21262d] text-slate-500 border border-[#30363d] cursor-not-allowed'
                     }`}
                   >
-                    {incidentValidated ? '✓ Sequence Verified' : 'Validate Response Sequence'}
+                    {incidentValidated ? 'Workflow Sequence Locked ✓' : 'Lock Incident Triage Workflow'}
                   </button>
                 </div>
               </div>
 
-              {/* ── WORKSHOPS SCHEDULE TABLE ── */}
+              {/* ── WORKSHOPS SCHEDULE CURATION (INTERACTIVE) ── */}
               <div className="border-t border-[#21262d] pt-5 space-y-3">
                 <div className="flex items-center justify-between pb-2">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-3.5 h-3.5 text-purple-400" />
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-300">Mandatory Operational Training Workshops</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                      Curate Operational Knowledge Transfer Schedule (Select 3 of 5 Proposed Sessions)
+                    </span>
                   </div>
                   <span className="text-[11px] text-purple-300 font-mono bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded">
-                    3 Sessions Prepared
+                    {selectedWorkshops.length}/3 Scheduled
                   </span>
                 </div>
 
-                {/* Workshop table */}
-                <div className="rounded-xl border border-[#30363d] overflow-hidden">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="bg-[#161b22] border-b border-[#30363d]">
-                        <th className="text-left px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">Session</th>
-                        <th className="text-left px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">Session Leader</th>
-                        <th className="text-left px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">Role</th>
-                        <th className="text-left px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">Duration</th>
-                        <th className="text-center px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {TRAINING_WORKSHOPS.map((ws, i) => (
-                        <tr
-                          key={ws.id}
-                          className={`border-b border-[#21262d] last:border-0 ${i % 2 === 0 ? 'bg-[#0d1117]' : 'bg-[#161b22]/40'}`}
-                        >
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <div className="w-5 h-5 rounded bg-purple-500/15 border border-purple-500/25 flex items-center justify-center text-[9px] text-purple-400 font-bold shrink-0">
-                                {i + 1}
-                              </div>
-                              <span className="font-semibold text-slate-200">{ws.title}</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-slate-300 font-medium">{ws.owner}</td>
-                          <td className="px-4 py-3 text-slate-500">{ws.ownerRole}</td>
-                          <td className="px-4 py-3 font-mono text-indigo-300">{ws.duration}</td>
-                          <td className="px-4 py-3 text-center">
-                            <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                              workshopsScheduled
-                                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-                                : 'bg-purple-500/15 text-purple-300 border-purple-500/30'
-                            }`}>
-                              {workshopsScheduled ? <CheckCircle2 className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
-                              {workshopsScheduled ? 'Confirmed' : 'Prepared'}
+                {/* Workshop cards grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {TRAINING_WORKSHOPS.map((ws, i) => {
+                    const isSelected = selectedWorkshops.includes(ws.id);
+                    return (
+                      <div
+                        key={ws.id}
+                        onClick={() => handleToggleWorkshop(ws.id)}
+                        className={`p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-3 ${
+                          isSelected
+                            ? 'bg-[#131b2e] border-indigo-500/70 shadow-[0_0_0_1px_rgba(99,102,241,0.25)]'
+                            : 'bg-[#161b22] border-[#30363d] hover:border-slate-600 hover:bg-[#1a202c]'
+                        }`}
+                      >
+                        <div className="space-y-1.5">
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="text-xs font-bold text-white leading-snug">{ws.title}</span>
+                            <span className="shrink-0 text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/25">
+                              {ws.duration}
                             </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                          </div>
+                          <p className="text-[11px] text-slate-400 leading-relaxed">{ws.description}</p>
+                        </div>
+
+                        <div className="flex items-center justify-between text-[10px] text-slate-500 border-t border-[#21262d] pt-2">
+                          <span>Lead: <strong className="text-slate-300 font-medium">{ws.owner}</strong></span>
+                          <span className="font-mono text-indigo-300">{ws.ownerRole}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
 
-                <div className="flex justify-end pt-1">
+                <div className="flex justify-between items-center pt-2">
+                  <div className="text-xs text-slate-400">
+                    {selectedWorkshops.length === 3 ? (
+                      <span className="text-indigo-300 font-semibold">3 operational workshops curated for IT Operations.</span>
+                    ) : (
+                      <span>Select exactly 3 sessions relevant to operational support handover.</span>
+                    )}
+                  </div>
                   <button
-                    disabled={!incidentValidated || workshopsScheduled}
+                    disabled={selectedWorkshops.length < 3 || workshopsScheduled}
                     onClick={handleScheduleWorkshops}
-                    className={`px-5 py-2.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${
-                      incidentValidated && !workshopsScheduled
+                    className={`px-5 py-2.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
+                      selectedWorkshops.length === 3 && !workshopsScheduled
                         ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-indigo-900/30 cursor-pointer active:scale-95'
                         : 'bg-[#21262d] text-slate-500 border border-[#30363d] cursor-not-allowed'
                     }`}
@@ -1135,12 +1147,27 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                           assignedCards.map((card) => (
                             <div
                               key={card.id}
-                              className="p-2.5 rounded-lg bg-[#0d1117]/60 border border-[#30363d] text-xs"
+                              className="p-2.5 rounded-lg bg-[#0d1117]/70 border border-[#30363d] text-xs flex items-center justify-between gap-2"
                             >
-                              <div className="font-semibold text-white flex items-center gap-1.5">
-                                <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
-                                <span>{card.title}</span>
+                              <div className="font-semibold text-white flex items-center gap-1.5 min-w-0">
+                                <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${theme.dot}`} />
+                                <span className="truncate">{card.title}</span>
                               </div>
+                              {!hypercareSubmitted && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    sound.playClick();
+                                    const updated = { ...phaseAssignments };
+                                    delete updated[card.id];
+                                    setPhaseAssignments(updated);
+                                    onUpdateState({ phaseAssignments: updated });
+                                  }}
+                                  className="text-[10px] text-slate-500 hover:text-rose-400 shrink-0 cursor-pointer"
+                                >
+                                  ×
+                                </button>
+                              )}
                             </div>
                           ))
                         ) : (
@@ -1163,16 +1190,16 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                 })}
               </div>
 
-              {/* ── RESPONSIBILITY CARD TRAY ── */}
+              {/* ── RESPONSIBILITY CARD TRAY (6 Cards) ── */}
               <div className="space-y-2.5">
                 <div className="flex items-center gap-2 pb-2 border-b border-[#21262d]">
                   <Network className="w-3.5 h-3.5 text-indigo-400" />
                   <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                    Responsibility Cards — Select a card, then click a phase above
+                    Responsibility Cards Pool (Allocate 4 of 6 legitimate operational responsibilities into phases above)
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                   {HYPERCARE_CARDS.map((card) => {
                     const assignedPhaseId = phaseAssignments[card.id];
                     const isSelected = selectedCardId === card.id;
@@ -1191,21 +1218,20 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                           isSelected
                             ? 'bg-indigo-950/50 border-indigo-400/70 shadow-[0_0_0_2px_rgba(99,102,241,0.2)]'
                             : assignedPhaseId
-                            ? `bg-[#161b22]/60 border-[#30363d] opacity-70`
+                            ? `bg-[#131b2e] border-indigo-500/40 opacity-80`
                             : 'bg-[#161b22] border-[#30363d] hover:border-indigo-400/40 hover:bg-[#1c2129]'
                         }`}
                       >
                         <div className="flex items-start gap-2">
                           <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
-                            isSelected ? 'bg-indigo-400 animate-pulse' : assignedPhaseId ? 'bg-emerald-400' : 'bg-[#444d56]'
+                            isSelected ? 'bg-indigo-400 animate-pulse' : assignedPhaseId ? 'bg-indigo-400' : 'bg-[#444d56]'
                           }`} />
-                          <div>
+                          <div className="flex-1 min-w-0">
                             <div className="text-[11px] font-bold text-white leading-tight">{card.title}</div>
                             <div className="text-[10px] text-slate-500 mt-1 leading-relaxed">{card.description}</div>
                             {assignedPhase && phaseTheme && (
                               <div className={`mt-2 text-[10px] font-mono font-semibold flex items-center gap-1 ${phaseTheme.accent}`}>
-                                <CheckCircle2 className="w-2.5 h-2.5" />
-                                {assignedPhase.daysRange}
+                                <span>Phase: {assignedPhase.daysRange}</span>
                               </div>
                             )}
                           </div>
@@ -1220,12 +1246,11 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
               <div className="p-4 rounded-xl bg-[#161b22] border border-[#30363d] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="text-xs text-slate-400">
                   {hypercareAssignedCount === 4 ? (
-                    <span className="text-emerald-400 font-semibold flex items-center gap-1.5">
-                      <CheckCircle2 className="w-4 h-4" />
-                      All 4 transition responsibilities allocated across the 14-day timeline.
+                    <span className="text-indigo-300 font-semibold flex items-center gap-1.5">
+                      4 transition responsibilities allocated across the 14-day timeline. Ready to lock.
                     </span>
                   ) : (
-                    <span>Assign all <strong className="text-slate-200">4</strong> responsibility cards into the timeline phases.</span>
+                    <span>Assign 4 operational responsibilities into the timeline phases above ({hypercareAssignedCount}/4 allocated).</span>
                   )}
                 </div>
                 <button
@@ -1237,7 +1262,7 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                       : 'bg-[#21262d] text-slate-500 border border-[#30363d] cursor-not-allowed'
                   }`}
                 >
-                  <span>{hypercareSubmitted ? 'Hypercare Plan Approved ✓' : 'Lock Hypercare & Proceed to Acceptance'}</span>
+                  <span>{hypercareSubmitted ? 'Hypercare Plan Locked ✓' : 'Lock Hypercare & Proceed to Acceptance'}</span>
                   {!hypercareSubmitted && <ArrowRight className="w-3.5 h-3.5" />}
                 </button>
               </div>

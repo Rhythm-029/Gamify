@@ -40,6 +40,7 @@ export interface TrainingWorkshopItem {
   owner: string;
   ownerRole: string;
   duration: string;
+  description: string;
   scheduled: boolean;
 }
 
@@ -114,6 +115,7 @@ export interface Chapter11State {
   incidentSlots: (string | null)[]; // 3 step slot array
   incidentValidated: boolean;
   workshopsScheduled: boolean;
+  selectedWorkshops?: string[];
 
   // Stage 3: Hypercare Timeline
   phaseAssignments: Record<string, string>; // cardId -> phaseId
