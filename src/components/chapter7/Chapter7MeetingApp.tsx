@@ -169,9 +169,6 @@ export const Chapter7MeetingApp: React.FC<Chapter7MeetingAppProps> = ({
   const [selectedDecision, setSelectedDecision] = useState<Chapter7DecisionChoice | null>(
     chapter7State.decisionChoice || null
   );
-  const [decisionFeedback, setDecisionFeedback] = useState<string | null>(
-    chapter7State.decisionFeedback || null
-  );
 
   const streamRef = useRef<MediaStream | null>(null);
 
@@ -310,13 +307,6 @@ export const Chapter7MeetingApp: React.FC<Chapter7MeetingAppProps> = ({
     sound.playClick();
     setSelectedDecision(choice);
     const def = CHAPTER7_DECISION_CHOICES[choice];
-    setDecisionFeedback(def.feedback);
-
-    if (choice === 'choice_b') {
-      sound.playSystemClearance();
-    } else {
-      sound.playClick();
-    }
 
     onUpdateState((prev) => {
       const updated: Chapter7State = {
@@ -751,20 +741,6 @@ export const Chapter7MeetingApp: React.FC<Chapter7MeetingAppProps> = ({
                 </p>
               </button>
             </div>
-
-            {decisionFeedback && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className={`mt-2.5 p-2.5 rounded-xl text-xs leading-relaxed border ${
-                  selectedDecision === 'choice_b'
-                    ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-200'
-                    : 'bg-rose-950/30 border-rose-500/40 text-rose-200'
-                }`}
-              >
-                {decisionFeedback}
-              </motion.div>
-            )}
           </motion.div>
         ) : (
           captionsEnabled &&
