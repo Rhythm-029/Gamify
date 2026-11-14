@@ -126,12 +126,11 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
     Boolean(chapter10State.completed)
   );
 
-  // Calculation of Doc Coverage (measured against the 6 authoritative domains)
-  const validSelectedCount = selectedDocSections.filter((id) =>
-    AUTHORITATIVE_CATALOG_SECTION_IDS.includes(id)
-  ).length;
-  const docCoveragePct = Math.round(
-    (validSelectedCount / AUTHORITATIVE_CATALOG_SECTION_IDS.length) * 100
+  // Calculation of Doc Coverage (fills for any selected domains up to 6)
+  const selectedCount = selectedDocSections.length;
+  const docCoveragePct = Math.min(
+    100,
+    Math.round((selectedCount / 6) * 100)
   );
 
   // Handle Tab Change
@@ -192,15 +191,20 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
     }, 450);
   };
 
-  // Toggle Doc Section
+  // Toggle Doc Section (Select up to 6 of 8)
   const handleToggleDocSection = (sectionId: string) => {
     sound.playClick();
     setSelectedDocSections((prev) => {
-      const next = prev.includes(sectionId)
-        ? prev.filter((id) => id !== sectionId)
-        : [...prev, sectionId];
-      const validCount = next.filter((id) => AUTHORITATIVE_CATALOG_SECTION_IDS.includes(id)).length;
-      const coverage = Math.round((validCount / AUTHORITATIVE_CATALOG_SECTION_IDS.length) * 100);
+      let next: string[];
+      if (prev.includes(sectionId)) {
+        next = prev.filter((id) => id !== sectionId);
+      } else {
+        if (prev.length >= 6) {
+          return prev;
+        }
+        next = [...prev, sectionId];
+      }
+      const coverage = Math.min(100, Math.round((next.length / 6) * 100));
       onUpdateState({
         selectedDocSections: next,
         documentationCoveragePct: coverage,
@@ -753,10 +757,10 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
                   <span className="text-[11px] text-slate-500 font-mono">+5 Bonus</span>
                 </div>
                 <h2 className="text-sm font-semibold text-white">
-                  Assemble the Enterprise Internal Developer Portal Package
+                  Assemble the Enterprise Developer Portal Package (Select 6 of 8 Options)
                 </h2>
                 <p className="text-xs text-slate-400 leading-relaxed max-w-2xl">
-                  Daniel asks: <em>"What should we publish to the developer portal? Should we bundle everything, or carefully curate only verified production artifacts and exclude sensitive credentials and unapproved draft proposals?"</em>
+                  Daniel asks: <em>"We have 8 documentation candidates across the repository. Select 6 authoritative domains to publish to our internal developer portal, leaving out unvetted drafts and sensitive security credentials."</em>
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -791,7 +795,7 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-xs font-semibold text-white">Enterprise Documentation Coverage</span>
-                  <span className="text-[11px] font-mono text-slate-500">{validSelectedCount}/6 authoritative domains</span>
+                  <span className="text-[11px] font-mono text-slate-500">{selectedCount}/6 domains selected</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-slate-800 overflow-hidden">
                   <div
