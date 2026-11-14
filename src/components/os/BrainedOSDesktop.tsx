@@ -2315,6 +2315,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
 
       {/* BOTTOM BRAINED OS DOCK */}
       <BrainedDock
+        activeChapter={activeChapter}
         activeAppId={activeAppId}
         openAppIds={openAppIds}
         onOpenApp={handleOpenApp}

@@ -2,41 +2,154 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { 
   Folder, Mail, MessageSquare, Calendar, FileText, 
-  Kanban, Globe, Terminal, Award, Trophy, Settings, Trash2, Video, Code2, Sparkles, FileCheck2, Activity, Wrench, ShieldCheck, TrendingUp
+  Trash2, Video, Code2, Sparkles, FileCheck2, Activity, Wrench, ShieldCheck, TrendingUp, Layers
 } from 'lucide-react';
 
+interface DockAppItem {
+  id: string;
+  name: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+  badge?: number;
+}
+
 interface BrainedDockProps {
+  activeChapter?: number;
   activeAppId: string | null;
   openAppIds: string[];
   onOpenApp: (appId: string | null) => void;
   badges: Record<string, number>;
 }
 
+function getChapterSpecificApps(chapter: number): DockAppItem[] {
+  switch (chapter) {
+    case 1:
+      return [
+        {
+          id: 'assignment',
+          name: 'Scope Assignment Workspace',
+          icon: Sparkles,
+          color: 'bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-600',
+        },
+      ];
+    case 2:
+      return [
+        {
+          id: 'workspace_amigo',
+          name: 'Project Amigo Workspace',
+          icon: Layers,
+          color: 'bg-gradient-to-tr from-indigo-600 via-purple-600 to-blue-600',
+        },
+      ];
+    case 3:
+      // Chapter 3 focuses directly on Teams (Daniel/Sophia chats) & Mail
+      return [];
+    case 4:
+      return [
+        {
+          id: 'ideate_studio',
+          name: 'Ideate & Impact Studio',
+          icon: Sparkles,
+          color: 'bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-600',
+        },
+      ];
+    case 5:
+      return [
+        {
+          id: 'release_readiness',
+          name: 'Release Readiness Board',
+          icon: FileCheck2,
+          color: 'bg-gradient-to-tr from-emerald-600 via-teal-600 to-cyan-600',
+        },
+      ];
+    case 6:
+      return [
+        {
+          id: 'performance_command_centre',
+          name: 'Performance Command Centre',
+          icon: Activity,
+          color: 'bg-gradient-to-tr from-cyan-600 via-blue-600 to-indigo-600',
+        },
+      ];
+    case 7:
+      return [
+        {
+          id: 'incident_studio',
+          name: 'Incident Response & RCA Studio',
+          icon: Wrench,
+          color: 'bg-gradient-to-tr from-rose-600 via-orange-600 to-amber-600',
+        },
+      ];
+    case 8:
+      return [
+        {
+          id: 'release_handover_desk',
+          name: 'Security & Governance Portal',
+          icon: ShieldCheck,
+          color: 'bg-gradient-to-tr from-emerald-600 via-teal-600 to-cyan-600',
+        },
+      ];
+    case 9:
+      return [
+        {
+          id: 'executive_roi_boardroom',
+          name: 'Executive Boardroom (ROI)',
+          icon: TrendingUp,
+          color: 'bg-gradient-to-tr from-emerald-600 via-teal-600 to-green-500',
+        },
+      ];
+    case 10:
+      return [
+        {
+          id: 'engineering_release_portal',
+          name: 'Release & Docs Portal',
+          icon: Code2,
+          color: 'bg-gradient-to-tr from-indigo-600 via-blue-600 to-cyan-600',
+        },
+      ];
+    case 11:
+      return [
+        {
+          id: 'operations_transition_console',
+          name: 'Operations Transition Console',
+          icon: ShieldCheck,
+          color: 'bg-gradient-to-tr from-violet-600 via-indigo-600 to-blue-600',
+        },
+      ];
+    case 12:
+      return [
+        {
+          id: 'evolution_control_center',
+          name: 'Evolution Control Center',
+          icon: Sparkles,
+          color: 'bg-gradient-to-tr from-amber-500 via-orange-600 to-rose-600',
+        },
+      ];
+    default:
+      return [];
+  }
+}
+
 export const BrainedDock: React.FC<BrainedDockProps> = ({
+  activeChapter = 1,
   activeAppId,
   openAppIds,
   onOpenApp,
   badges,
 }) => {
-  const dockApps = [
-    { id: 'executive_roi_boardroom', name: 'Executive Boardroom (ROI)', icon: TrendingUp, color: 'bg-gradient-to-tr from-emerald-600 via-teal-600 to-green-500' },
-    { id: 'release_handover_desk', name: 'Security Response Console', icon: ShieldCheck, color: 'bg-gradient-to-tr from-emerald-600 via-teal-600 to-cyan-600' },
-    { id: 'incident_studio', name: 'Incident Response & RCA Studio', icon: Wrench, color: 'bg-gradient-to-tr from-rose-600 via-orange-600 to-amber-600' },
-    { id: 'performance_command_centre', name: 'Performance Command Centre', icon: Activity, color: 'bg-gradient-to-tr from-cyan-600 via-blue-600 to-indigo-600' },
-    { id: 'release_readiness', name: 'Release Readiness Board', icon: FileCheck2, color: 'bg-gradient-to-tr from-emerald-600 via-teal-600 to-cyan-600' },
-    { id: 'ideate', name: 'Ideate & Impact Studio', icon: Sparkles, color: 'bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-600' },
+  const chapterApps = getChapterSpecificApps(activeChapter);
+
+  // Standard PM communication tools & OS filler apps
+  const commonApps: DockAppItem[] = [
     { id: 'finder', name: 'Finder', icon: Folder, color: 'bg-gradient-to-tr from-[#1D70B8] to-[#428BCA]' },
     { id: 'inbox', name: 'Mail', icon: Mail, color: 'bg-gradient-to-tr from-[#007AFF] to-[#58A6FF]', badge: badges.inbox },
     { id: 'teams', name: 'Microsoft Teams', icon: Video, color: 'bg-gradient-to-tr from-[#464EB8] to-[#6264A7]', badge: badges.teams },
     { id: 'slack', name: 'Slack HQ', icon: MessageSquare, color: 'bg-gradient-to-tr from-[#4A154B] to-[#611B65]', badge: badges.slack },
     { id: 'notes', name: 'Apple Notes', icon: FileText, color: 'bg-gradient-to-tr from-[#FFCC02] to-[#E5B800]', badge: badges.notes },
     { id: 'calendar', name: 'Calendar', icon: Calendar, color: 'bg-gradient-to-tr from-[#FF3B30] to-[#FF453A]', badge: badges.calendar },
-    { id: 'documents', name: 'Documents', icon: Folder, color: 'bg-gradient-to-tr from-[#E09B3D] to-[#C88126]' },
-    { id: 'tasks', name: 'Jira / Linear', icon: Kanban, color: 'bg-gradient-to-tr from-[#5E6AD2] to-[#4C58C0]' },
-    { id: 'browser', name: 'Arc Browser', icon: Globe, color: 'bg-gradient-to-tr from-[#8A2BE2] to-[#4A90E2]' },
-    { id: 'terminal', name: 'Terminal', icon: Terminal, color: 'bg-gradient-to-tr from-[#1E1E1E] to-[#2C2C2E]' },
-    { id: 'settings', name: 'System Settings', icon: Settings, color: 'bg-gradient-to-tr from-[#8E8E93] to-[#636366]' },
   ];
+
+  const dockApps: DockAppItem[] = [...chapterApps, ...commonApps];
 
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 select-none">
@@ -54,7 +167,7 @@ export const BrainedDock: React.FC<BrainedDockProps> = ({
                 {app.name}
               </div>
 
-              {/* App Dock Icon (Enlarged w-12.5 h-12.5) */}
+              {/* App Dock Icon */}
               <motion.button
                 whileHover={{ scale: 1.25, y: -10 }}
                 whileTap={{ scale: 0.95 }}
