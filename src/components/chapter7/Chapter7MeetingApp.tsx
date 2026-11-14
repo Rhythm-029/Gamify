@@ -1,25 +1,23 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Mic,
   MicOff,
   Video,
   VideoOff,
-  ArrowRight,
-  Clock,
-  CheckCircle2,
-  Volume2,
-  AlertCircle,
-  AlertTriangle,
   Users,
+  Wifi,
+  ArrowRight,
+  Radio,
+  CheckCircle2,
+  AlertTriangle,
+  RotateCcw,
+  FastForward,
+  Wrench,
   Activity,
   Layers,
   Sparkles,
-  Shield,
-  Zap,
-  Wrench,
-  Check,
-  ChevronRight,
+  PhoneOff,
 } from 'lucide-react';
 import type { Chapter7State, Chapter7DecisionChoice } from '../../types/chapter7';
 import {
@@ -37,8 +35,108 @@ interface Chapter7MeetingAppProps {
   chapter7State: Chapter7State;
   onUpdateState: (updater: Partial<Chapter7State> | ((prev: Chapter7State) => Chapter7State)) => void;
   onOpenStudio: () => void;
-  onOpenScorecard: () => void;
+  onOpenScorecard?: () => void;
 }
+
+interface CharacterMeta {
+  id: string;
+  name: string;
+  role: string;
+  badge: string;
+  dp: string;
+  color: string;
+  pitch: number;
+  rate: number;
+}
+
+const CHARACTERS: Record<string, CharacterMeta> = {
+  martha: {
+    id: 'martha',
+    name: 'Martha Vance',
+    role: 'Regional Branch Operations & Monitoring',
+    badge: 'Monitoring / Ops',
+    dp: '/character/Emma_Carter/EmmaDP.png',
+    color: '#f43f5e',
+    pitch: 1.1,
+    rate: 1.02,
+  },
+  daniel: {
+    id: 'daniel',
+    name: 'Daniel Brooks',
+    role: 'Lead Developer · Brained Core Engineering',
+    badge: 'Lead Developer',
+    dp: '/character/Daniel_Brooks/DanielDP.png',
+    color: '#38bdf8',
+    pitch: 1.0,
+    rate: 1.0,
+  },
+  aarav: {
+    id: 'aarav',
+    name: 'Aarav Kapoor',
+    role: 'Senior PM Mentor · ICICI Project',
+    badge: 'Senior PM Mentor',
+    dp: '/character/AaravDP.png',
+    color: '#eab308',
+    pitch: 0.95,
+    rate: 0.98,
+  },
+  player: {
+    id: 'player',
+    name: 'You (Project Manager)',
+    role: 'Project Manager · Project Amigo',
+    badge: 'PM Lead',
+    dp: '',
+    color: '#a855f7',
+    pitch: 1.0,
+    rate: 1.0,
+  },
+};
+
+interface MeetingDialogueLine {
+  id: string;
+  speaker: 'martha' | 'daniel' | 'aarav' | 'player';
+  text: string;
+  durationMs: number;
+}
+
+const MEETING_DIALOGUES: MeetingDialogueLine[] = [
+  {
+    id: 'line_1_martha',
+    speaker: 'martha',
+    text: "Alert triggered on Grafana APM! We're observing intermittent 504 Gateway Timeouts on the Attendance Sync microservice. Twelve regional branch officers reported locked-out rosters during morning rush login.",
+    durationMs: 7500,
+  },
+  {
+    id: 'line_2_daniel',
+    speaker: 'daniel',
+    text: "I inspected container metrics. An unclosed database connection pool in the sync worker is causing a heap memory leak under concurrent peak load. I have a hotfix script ready—should I push it straight to production right now to stop the errors?",
+    durationMs: 8000,
+  },
+  {
+    id: 'line_3_aarav',
+    speaker: 'aarav',
+    text: "Hold on, Daniel. Pushing a silent patch into production while branch rosters are active is a massive risk. If the worker crashes or corrupts session state, all branches go dark. What is our triage directive, PM?",
+    durationMs: 8500,
+  },
+  {
+    id: 'line_4_player',
+    speaker: 'player',
+    text: "We cannot cut corners during a SEV-2 incident. We need a disciplined response: test the hotfix in staging, produce a formal Root Cause Analysis (RCA), and configure automated alerts before signing off.",
+    durationMs: 8500,
+  },
+  {
+    id: 'line_5_daniel',
+    speaker: 'daniel',
+    text: "Understood. That makes complete sense. I'll stage the connection pool fix and prepare the diff for review.",
+    durationMs: 5500,
+  },
+  {
+    id: 'line_6_martha',
+    speaker: 'martha',
+    text: "Agreed. APM telemetry is armed. We need the Project Manager to formalize the triage strategy and launch the Incident Response Studio.",
+    durationMs: 6500,
+  },
+];
 
 export const Chapter7MeetingApp: React.FC<Chapter7MeetingAppProps> = ({
   chapter7State,
@@ -46,20 +144,26 @@ export const Chapter7MeetingApp: React.FC<Chapter7MeetingAppProps> = ({
   onOpenStudio,
   onOpenScorecard,
 }) => {
-  // Stage flow:
-  // 'alert_martha' (19:00–19:40) -> 'alex_hotfix_jane_response' (19:40–20:20) -> 'decision_screen' (20:20–21:00) -> 'decision_confirmed' -> 'resolution_summary'
-  const [stage, setStage] = useState<
-    | 'connecting'
-    | 'alert_martha'
-    | 'alex_hotfix_jane_response'
-    | 'decision_screen'
-    | 'decision_confirmed'
-    | 'resolution_summary'
-  >(() => {
-    if (chapter7State.completed || chapter7State.incidentStatus === 'resolved') return 'resolution_summary';
-    if (chapter7State.decisionChoice === 'choice_b' && chapter7State.studioUnlocked) return 'decision_confirmed';
-    if (chapter7State.decisionChoice) return 'decision_screen';
-    return 'connecting';
+  const [stage, setStage] = useState<'permission' | 'in_call'>(() => {
+    return chapter7State.meetingCompleted || chapter7State.callCompleted ? 'in_call' : 'permission';
+  });
+
+  const [currentLineIndex, setCurrentLineIndex] = useState<number>(() => {
+    return chapter7State.meetingCompleted || chapter7State.decisionSubmitted
+      ? MEETING_DIALOGUES.length - 1
+      : 0;
+  });
+
+  const [isCameraOn, setIsCameraOn] = useState(false);
+  const [isMicOn, setIsMicOn] = useState(true);
+  const [captionsEnabled, setCaptionsEnabled] = useState(true);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [joinedParticipants, setJoinedParticipants] = useState<Set<string>>(
+    new Set(['martha', 'daniel', 'player'])
+  );
+  const [joinToast, setJoinToast] = useState<{ name: string; dp: string } | null>(null);
+  const [isDialogueFinished, setIsDialogueFinished] = useState<boolean>(() => {
+    return Boolean(chapter7State.meetingCompleted || chapter7State.decisionSubmitted);
   });
 
   const [selectedDecision, setSelectedDecision] = useState<Chapter7DecisionChoice | null>(
@@ -69,119 +173,137 @@ export const Chapter7MeetingApp: React.FC<Chapter7MeetingAppProps> = ({
     chapter7State.decisionFeedback || null
   );
 
-  const [micMuted, setMicMuted] = useState(false);
-  const [cameraOff, setCameraOff] = useState(false);
-  const [activeSpeaker, setActiveSpeaker] = useState<'martha' | 'alex' | 'jane' | null>('martha');
-  const [subtitleText, setSubtitleText] = useState<string>('');
-  const [isSpeaking, setIsSpeaking] = useState(false);
-
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Stop camera stream on unmount
+  // Live call timer
   useEffect(() => {
-    if (!cameraOff) {
-      navigator.mediaDevices?.getUserMedia({ video: true, audio: false })
-        .then((stream) => {
-          streamRef.current = stream;
-        })
-        .catch(() => {
-          setCameraOff(true);
-        });
-    } else {
+    if (stage !== 'in_call') return;
+    const timer = setInterval(() => {
+      setElapsedSeconds((s) => s + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [stage]);
+
+  const mm = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
+  const ss = String(elapsedSeconds % 60).padStart(2, '0');
+  const meetingTimerStr = `${mm}:${ss}`;
+
+  // Webcam request / teardown
+  const enableCameraAndJoin = useCallback(async () => {
+    sound.playClick();
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      streamRef.current = stream;
+      setIsCameraOn(true);
+      setStage('in_call');
+    } catch {
+      setIsCameraOn(false);
+      setStage('in_call');
+    }
+  }, []);
+
+  const toggleCamera = useCallback(async () => {
+    sound.playClick();
+    if (isCameraOn) {
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current.getTracks().forEach((t) => t.stop());
         streamRef.current = null;
       }
+      setIsCameraOn(false);
+    } else {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        streamRef.current = stream;
+        setIsCameraOn(true);
+      } catch {
+        setIsCameraOn(false);
+      }
     }
+  }, [isCameraOn]);
+
+  useEffect(() => {
     return () => {
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current.getTracks().forEach((t) => t.stop());
       }
     };
-  }, [cameraOff]);
+  }, []);
 
-  // Sync if chapter completes
+  const videoElementRef = useCallback((node: HTMLVideoElement | null) => {
+    if (node && streamRef.current) {
+      node.srcObject = streamRef.current;
+      node.play().catch(() => {});
+    }
+  }, []);
+
+  // Timed participant joining simulation
   useEffect(() => {
-    if (chapter7State.completed || chapter7State.incidentStatus === 'resolved') {
-      setStage('resolution_summary');
-    }
-  }, [chapter7State.completed, chapter7State.incidentStatus]);
+    if (stage !== 'in_call') return;
 
-  // Speech synthesis helper
-  const speakDialogue = (text: string) => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      try {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 1.05;
-        utterance.pitch = 1.0;
-        utterance.onstart = () => setIsSpeaking(true);
-        utterance.onend = () => setIsSpeaking(false);
-        utterance.onerror = () => setIsSpeaking(false);
-        window.speechSynthesis.speak(utterance);
-      } catch {
-        // ignore speech error
-      }
-    }
-  };
+    setJoinedParticipants(new Set(['martha', 'daniel', 'player']));
 
-  // Progression logic
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-
-    if (stage === 'connecting') {
-      sound.playMessagePing();
-      timer = setTimeout(() => {
-        setStage('alert_martha');
-        setActiveSpeaker('martha');
-        const text =
-          'Jane! A minor memory leak in the attendance sync microservice caused intermittent 504 gateway timeouts for 12 branch officers during morning login.';
-        setSubtitleText(text);
-        speakDialogue(text);
-      }, 1400);
-    } else if (stage === 'alert_martha') {
-      timer = setTimeout(() => {
-        setStage('alex_hotfix_jane_response');
-        setActiveSpeaker('alex');
-        sound.playClick();
-        const text =
-          "Alex: I'm drafting a quick hotfix patch for the memory leak in the Attendance Sync microservice. I can push it straight to production to stop the timeouts.\n\nJane: Don't just push the patch quietly. We need a formal Root Cause Analysis (RCA) document to show why the memory leak occurred and how we prevent it from repeating.";
-        setSubtitleText(text);
-        speakDialogue(
-          "Jane: Don't just push the patch quietly. We need a formal Root Cause Analysis (RCA) document to show why the memory leak occurred and how we prevent it from repeating."
-        );
-      }, 8000);
-    } else if (stage === 'alex_hotfix_jane_response') {
-      timer = setTimeout(() => {
-        setStage('decision_screen');
-        setActiveSpeaker(null);
-        sound.playMessagePing();
-      }, 9500);
-    }
+    const tAarav = setTimeout(() => {
+      setJoinedParticipants((prev) => new Set([...prev, 'aarav']));
+      setJoinToast({ name: CHARACTERS.aarav.name, dp: CHARACTERS.aarav.dp });
+      sound.playTeamsJoin();
+      setTimeout(() => setJoinToast(null), 2500);
+    }, 2000);
 
     return () => {
-      clearTimeout(timer);
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
+      clearTimeout(tAarav);
     };
   }, [stage]);
 
-  const handleManualNext = () => {
-    sound.playClick();
-    if (stage === 'connecting' || stage === 'alert_martha') {
-      setStage('alex_hotfix_jane_response');
-      setActiveSpeaker('alex');
-      const text =
-        "Alex: I'm drafting a quick hotfix patch for the memory leak in the Attendance Sync microservice. I can push it straight to production to stop the timeouts.\n\nJane: Don't just push the patch quietly. We need a formal Root Cause Analysis (RCA) document to show why the memory leak occurred and how we prevent it from repeating.";
-      setSubtitleText(text);
-      speakDialogue(
-        "Jane: Don't just push the patch quietly. We need a formal Root Cause Analysis (RCA) document to show why the memory leak occurred and how we prevent it from repeating."
-      );
-    } else if (stage === 'alex_hotfix_jane_response') {
-      setStage('decision_screen');
-      setActiveSpeaker(null);
+  // Speech synthesis
+  const speakLine = useCallback((line: MeetingDialogueLine) => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+        const char = CHARACTERS[line.speaker];
+        const utterance = new SpeechSynthesisUtterance(line.text);
+        utterance.rate = char.rate || 1.0;
+        utterance.pitch = char.pitch || 1.0;
+        window.speechSynthesis.speak(utterance);
+      } catch {}
     }
+  }, []);
+
+  // Automatic realistic dialogue progression
+  useEffect(() => {
+    if (stage !== 'in_call' || isDialogueFinished) return;
+    const current = MEETING_DIALOGUES[currentLineIndex];
+    if (!current) return;
+
+    speakLine(current);
+
+    const timer = setTimeout(() => {
+      if (currentLineIndex + 1 < MEETING_DIALOGUES.length) {
+        setCurrentLineIndex((i) => i + 1);
+      } else {
+        setIsDialogueFinished(true);
+      }
+    }, current.durationMs);
+
+    return () => clearTimeout(timer);
+  }, [stage, currentLineIndex, isDialogueFinished, speakLine]);
+
+  const currentLine = MEETING_DIALOGUES[currentLineIndex] || MEETING_DIALOGUES[0];
+  const activeSpeaker = isDialogueFinished ? null : currentLine.speaker;
+  const currentSpeakerMeta = activeSpeaker ? CHARACTERS[activeSpeaker] : null;
+
+  const handleFastForward = () => {
+    sound.playClick();
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    setCurrentLineIndex(MEETING_DIALOGUES.length - 1);
+    setIsDialogueFinished(true);
+  };
+
+  const handleReplay = () => {
+    sound.playClick();
+    setCurrentLineIndex(0);
+    setIsDialogueFinished(false);
   };
 
   const handleSelectDecision = (choice: Chapter7DecisionChoice) => {
@@ -189,7 +311,12 @@ export const Chapter7MeetingApp: React.FC<Chapter7MeetingAppProps> = ({
     setSelectedDecision(choice);
     const def = CHAPTER7_DECISION_CHOICES[choice];
     setDecisionFeedback(def.feedback);
-    sound.playClick();
+
+    if (choice === 'choice_b') {
+      sound.playSystemClearance();
+    } else {
+      sound.playClick();
+    }
 
     onUpdateState((prev) => {
       const updated: Chapter7State = {
@@ -208,11 +335,13 @@ export const Chapter7MeetingApp: React.FC<Chapter7MeetingAppProps> = ({
         scorecard: updatedScorecard,
       };
     });
-    setStage('decision_confirmed');
   };
 
   const handleLaunchStudio = () => {
     sound.playSystemClearance();
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
     onUpdateState((prev) => {
       const updated: Chapter7State = {
         ...prev,
@@ -230,460 +359,533 @@ export const Chapter7MeetingApp: React.FC<Chapter7MeetingAppProps> = ({
     onOpenStudio();
   };
 
-  return (
-    <div className="flex flex-col h-full bg-[#0b0713] text-slate-100 select-none overflow-hidden font-sans">
-      {/* ── TOP WAR ROOM BAR ── */}
-      <div className="h-12 bg-[#150d21] border-b border-rose-900/60 px-4 flex items-center justify-between shrink-0 z-20">
-        <div className="flex items-center space-x-3">
-          <div className="w-7 h-7 rounded-lg bg-rose-600/30 border border-rose-500/50 flex items-center justify-center text-rose-400 font-bold text-xs shadow">
-            🚨
+  // ─────────────────────────────────────────────────────────────────────────────
+  // STAGE 1: PRE-JOIN LOBBY & CAMERA PERMISSION SCREEN
+  // ─────────────────────────────────────────────────────────────────────────────
+  if (stage === 'permission') {
+    return (
+      <div className="flex-1 flex flex-col h-full bg-[#0c0f1d] text-white font-sans select-none overflow-hidden">
+        {/* Teams Header */}
+        <div className="h-11 bg-[#1a1f36] px-5 flex items-center justify-between text-xs font-semibold select-none border-b border-white/10 shrink-0">
+          <div className="flex items-center space-x-2.5">
+            <Video className="w-4 h-4 text-rose-400" />
+            <span className="font-bold text-white tracking-wide">
+              Microsoft Teams · Emergency Incident War Room
+            </span>
           </div>
-          <div>
-            <div className="text-xs font-bold text-white flex items-center gap-2">
-              <span>Emergency Incident War Room · {INCIDENT_SERVICE} Outage</span>
-              <span className="px-1.5 py-0.2 rounded text-[9px] font-mono bg-rose-500/20 text-rose-300 border border-rose-500/40 font-bold">
-                {INCIDENT_SEVERITY}
-              </span>
-              <span className="text-[10px] text-slate-400 font-mono">19:00–21:00</span>
-            </div>
-            <div className="text-[10px] text-slate-400 font-mono">
-              Jane (PM / Player) · Martha (Monitoring / Ops) · Alex (Developer)
-            </div>
+          <div className="flex items-center space-x-1.5 font-mono text-[10px] bg-rose-500/20 border border-rose-500/40 text-rose-300 px-2.5 py-0.5 rounded-full">
+            <Radio className="w-3 h-3 text-rose-400 animate-pulse" />
+            <span>SEV-2 ACTIVE INCIDENT</span>
           </div>
         </div>
 
-        {/* Action Button */}
-        <div className="flex items-center space-x-2">
-          {stage === 'resolution_summary' ? (
-            <button
-              onClick={onOpenScorecard}
-              className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs flex items-center space-x-1.5 shadow transition-all cursor-pointer"
-            >
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>View RCA & Incident Scorecard</span>
-            </button>
-          ) : chapter7State.decisionChoice === 'choice_b' ? (
-            <button
-              onClick={handleLaunchStudio}
-              className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-rose-600 via-orange-600 to-amber-600 hover:opacity-95 text-white font-extrabold text-xs flex items-center space-x-1.5 shadow-[0_0_15px_rgba(244,63,94,0.4)] transition-all cursor-pointer border border-rose-400/40"
-            >
-              <Wrench className="w-3.5 h-3.5 text-rose-200" />
-              <span>Open Incident Response Studio</span>
-              <ArrowRight className="w-3 h-3 text-rose-200" />
-            </button>
-          ) : (
-            <div className="text-[11px] font-mono text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded">
-              Decision Required
+        {/* Pre-Join Dialog Card */}
+        <div className="flex-1 flex items-center justify-center p-6 bg-gradient-to-br from-[#070914] via-[#150e24] to-[#070914]">
+          <div className="w-full max-w-lg bg-slate-900/95 backdrop-blur-2xl rounded-3xl border border-white/15 shadow-2xl overflow-hidden">
+            <div className="bg-gradient-to-r from-rose-950/70 via-purple-950/70 to-slate-950/70 px-6 py-4 border-b border-white/10 flex items-center space-x-3.5">
+              <img
+                src={CHARACTERS.martha.dp}
+                alt="Martha"
+                className="w-10 h-10 rounded-full border border-rose-400/50 object-cover"
+              />
+              <div>
+                <p className="text-sm font-bold text-white">Emergency Incident Bridge · INC-0241</p>
+                <p className="text-[11px] text-rose-300">
+                  Martha Vance &amp; Daniel Brooks waiting on the line
+                </p>
+              </div>
             </div>
-          )}
+
+            <div className="p-6 space-y-5">
+              <p className="text-xs text-slate-300 leading-relaxed">
+                You are joining the emergency response call to triage the <span className="text-rose-300 font-semibold">{INCIDENT_SERVICE}</span> degradation. Twelve branch officers have reported 504 timeouts during morning shift roster logins.
+              </p>
+
+              {/* Camera Preview */}
+              <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-950 border border-white/10 flex items-center justify-center">
+                {isCameraOn && streamRef.current ? (
+                  <video
+                    ref={videoElementRef}
+                    autoPlay
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover scale-x-[-1]"
+                  />
+                ) : (
+                  <div className="text-center space-y-2">
+                    <div className="w-12 h-12 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center mx-auto text-slate-500">
+                      <VideoOff className="w-6 h-6" />
+                    </div>
+                    <div className="text-[11px] text-slate-400 font-mono">Camera Off Preview</div>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-2 pt-1">
+                <button
+                  onClick={enableCameraAndJoin}
+                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-rose-600 via-purple-600 to-indigo-600 hover:opacity-95 text-white font-bold text-xs flex items-center justify-center space-x-2 shadow-lg cursor-pointer transition-all border border-rose-400/30"
+                >
+                  <Video className="w-4 h-4" />
+                  <span>Enable Camera &amp; Join Incident Bridge</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setIsCameraOn(false);
+                    setStage('in_call');
+                  }}
+                  className="w-full py-2.5 rounded-xl text-slate-400 hover:text-white text-xs cursor-pointer transition-colors"
+                >
+                  Join without camera
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // STAGE 2: IN LIVE CALL (4-TILE TEAMS VIDEO CONFERENCE GRID)
+  // ─────────────────────────────────────────────────────────────────────────────
+  return (
+    <div className="flex-1 flex flex-col h-full bg-[#090b14] text-white overflow-hidden relative select-none font-sans">
+      {/* ── TOP WINDOW HEADER ── */}
+      <div className="h-9 bg-[#151928] border-b border-white/10 px-4 flex items-center justify-between shrink-0 z-20">
+        <div className="flex items-center space-x-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
+          <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
+          <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
+          <span className="text-[11px] text-slate-300 font-medium ml-2">
+            Microsoft Teams — Incident Response War Room · {INCIDENT_ID}
+          </span>
+        </div>
+        <div className="flex items-center space-x-1.5 text-[10px] text-emerald-400 font-mono">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span>Active App</span>
+        </div>
+      </div>
+
+      {/* ── SUBHEADER CALL HUD ── */}
+      <div className="h-10 bg-[#101320]/95 border-b border-white/10 px-5 flex items-center justify-between shrink-0 z-20">
+        <div className="flex items-center space-x-3">
+          <span className="font-bold text-white text-xs tracking-wide">
+            Project Amigo · Emergency Incident Bridge
+          </span>
+          <span className="text-white/20">|</span>
+          <span className="text-[11px] text-rose-300 font-medium">{INCIDENT_SERVICE} Degradation</span>
+          <div className="flex items-center space-x-1.5 text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-slate-300">
+            <Users className="w-3 h-3 text-cyan-400" />
+            <span>{joinedParticipants.size} / 4 In Call</span>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-3 text-xs font-mono">
+          <div className="flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-red-500/10 border border-red-500/30 text-red-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+            <span className="font-bold">REC</span>
+            <span>{meetingTimerStr}</span>
+          </div>
+          <div className="flex items-center space-x-1 text-slate-400">
+            <Wifi className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="text-[10px]">HD 1080p</span>
+          </div>
         </div>
       </div>
 
       {/* ── MAIN CONTENT AREA ── */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-        {/* LEFT / CENTER: TELEMETRY DASHBOARD & STAGE SCREEN */}
-        <div className="flex-1 p-4 overflow-y-auto flex flex-col space-y-3.5">
-          {/* Live Incident Telemetry Banner */}
-          <div className="bg-[#12081d] border border-rose-500/40 rounded-2xl p-3.5 shadow-lg relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-32 bg-rose-600/10 rounded-full blur-2xl pointer-events-none" />
-            <div className="flex items-center justify-between border-b border-rose-900/40 pb-2 mb-3">
-              <div className="flex items-center space-x-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
-                <span className="text-xs font-mono font-bold text-rose-300 uppercase tracking-wide">
-                  Automated Monitoring Dashboard · Active Alert
-                </span>
+      <div className="flex-1 p-3.5 overflow-hidden flex flex-col justify-between relative">
+        {/* Teams Join Toast Notification */}
+        <AnimatePresence>
+          {joinToast && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              className="absolute top-4 left-1/2 -translate-x-1/2 z-40 flex items-center space-x-2.5 px-4 py-2 rounded-2xl bg-slate-900/95 border border-amber-400/40 text-white shadow-2xl backdrop-blur-xl pointer-events-none"
+            >
+              <div className="w-6 h-6 rounded-full overflow-hidden border border-amber-400/50 bg-slate-800 shrink-0">
+                <img src={joinToast.dp} alt={joinToast.name} className="w-full h-full object-cover" />
               </div>
-              <span className="text-[10px] font-mono text-slate-400">Source: Grafana / APM Cluster</span>
+              <div className="flex items-center space-x-1.5 text-xs">
+                <span className="font-bold text-amber-300">{joinToast.name}</span>
+                <span className="text-slate-300">joined the bridge</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* 4-Tile Grid */}
+        <div className="flex-1 grid grid-cols-2 gap-3.5 auto-rows-fr max-h-[calc(100%-80px)]">
+          {/* Tile 1: MARTHA VANCE (MONITORING / OPS) */}
+          <div
+            className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
+              activeSpeaker === 'martha'
+                ? 'border-[#f43f5e] shadow-[0_0_25px_rgba(244,63,94,0.35)]'
+                : 'border-white/10'
+            }`}
+          >
+            <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-rose-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
+                <img
+                  src={CHARACTERS.martha.dp}
+                  alt={CHARACTERS.martha.name}
+                  className="w-full h-full object-cover object-top"
+                />
+              </div>
+              <span className="text-[10px] font-mono text-slate-500 mt-2">Monitoring / Operations</span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs font-mono">
-              <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800">
-                <div className="text-[10px] text-slate-400 uppercase font-sans">Affected Service</div>
-                <div className="font-bold text-sky-300 text-[13px] mt-0.5">{INCIDENT_SERVICE}</div>
+            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+              <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                <span>Martha Vance (Ops)</span>
               </div>
-              <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800">
-                <div className="text-[10px] text-slate-400 uppercase font-sans">Observed Error</div>
-                <div className="font-bold text-rose-400 text-[13px] mt-0.5">{INCIDENT_ERROR}</div>
-              </div>
-              <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800">
-                <div className="text-[10px] text-slate-400 uppercase font-sans">Technical Root</div>
-                <div className="font-bold text-amber-300 text-[13px] mt-0.5">Heap Memory Leak</div>
-              </div>
-              <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800">
-                <div className="text-[10px] text-slate-400 uppercase font-sans">Impact Scope</div>
-                <div className="font-bold text-purple-300 text-[13px] mt-0.5">{INCIDENT_USERS_AFFECTED} Branch Officers</div>
-              </div>
+              {activeSpeaker === 'martha' && (
+                <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
+                  {[1, 2, 3, 4].map((i) => (
+                    <motion.div
+                      key={i}
+                      className="w-1 rounded-full bg-rose-400"
+                      animate={{ height: [4, 14, 4] }}
+                      transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* SCENE PRESENTATION */}
-          {stage === 'alert_martha' && (
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-[#170e24] border border-slate-800 rounded-2xl p-5 space-y-4"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-mono text-rose-400 font-bold uppercase tracking-wide flex items-center gap-1.5">
-                  <AlertCircle className="w-4 h-4 text-rose-400 animate-pulse" />
-                  19:00–19:40 · Production Alert Triggered
-                </span>
-                <button
-                  onClick={handleManualNext}
-                  className="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 flex items-center space-x-1 cursor-pointer"
-                >
-                  <span>Continue</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              <div className="flex items-start space-x-3.5">
+          {/* Tile 2: DANIEL BROOKS (LEAD DEVELOPER) */}
+          <div
+            className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
+              activeSpeaker === 'daniel'
+                ? 'border-[#38bdf8] shadow-[0_0_25px_rgba(56,189,248,0.35)]'
+                : 'border-white/10'
+            }`}
+          >
+            <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-sky-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
                 <img
-                  src="/character/Emma_Carter/EmmaDP.png"
-                  alt="Martha"
-                  className="w-12 h-12 rounded-2xl object-cover border-2 border-rose-500/60 shadow"
+                  src={CHARACTERS.daniel.dp}
+                  alt={CHARACTERS.daniel.name}
+                  className="w-full h-full object-cover object-top"
                 />
-                <div className="space-y-1.5 flex-1">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-bold text-white text-sm">Martha</span>
-                    <span className="text-[11px] font-mono text-slate-400">Monitoring / Operations</span>
-                  </div>
-                  <div className="p-4 rounded-2xl rounded-tl-sm bg-[#221334] border border-rose-500/30 text-slate-100 text-sm leading-relaxed shadow">
-                    “Jane! A minor memory leak in the attendance sync microservice caused intermittent 504 gateway timeouts for 12 branch officers during morning login.”
-                  </div>
-                </div>
               </div>
+              <span className="text-[10px] font-mono text-slate-500 mt-2">Lead Developer</span>
+            </div>
 
-              <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-slate-300 flex items-center justify-between">
-                <span className="text-slate-400">Incident scope identified:</span>
-                <span className="font-semibold text-white">Attendance Sync · Memory Leak · 504 Gateway Timeouts · 12 Branch Officers</span>
+            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+              <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
+                <span>Daniel Brooks (Lead Dev)</span>
               </div>
-            </motion.div>
-          )}
-
-          {stage === 'alex_hotfix_jane_response' && (
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-[#170e24] border border-slate-800 rounded-2xl p-5 space-y-4"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-mono text-sky-400 font-bold uppercase tracking-wide flex items-center gap-1.5">
-                  <Zap className="w-4 h-4 text-sky-400" />
-                  19:40–20:20 · Developer Prepares Hotfix
-                </span>
-                <button
-                  onClick={handleManualNext}
-                  className="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 flex items-center space-x-1 cursor-pointer"
-                >
-                  <span>Continue to Decision</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {/* Alex line */}
-              <div className="flex items-start space-x-3.5">
-                <img
-                  src="/character/Daniel_Brooks/DanielDP.png"
-                  alt="Alex"
-                  className="w-11 h-11 rounded-2xl object-cover border-2 border-sky-500/60 shadow"
-                />
-                <div className="space-y-1.5 flex-1">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-bold text-sky-300 text-sm">Alex</span>
-                    <span className="text-[11px] font-mono text-slate-400">Developer</span>
-                  </div>
-                  <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#162038] border border-sky-500/30 text-slate-100 text-sm leading-relaxed shadow">
-                    “I'm drafting a quick hotfix patch for the memory leak in the Attendance Sync microservice. I can push it straight to production quietly to stop the timeouts.”
-                  </div>
-                </div>
-              </div>
-
-              {/* Jane response */}
-              <div className="flex items-start space-x-3.5 pl-6">
-                <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 border-2 border-purple-400/60 flex items-center justify-center font-black text-white text-base shadow shrink-0">
-                  J
-                </div>
-                <div className="space-y-1.5 flex-1">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-bold text-purple-300 text-sm">Jane (You)</span>
-                    <span className="text-[11px] font-mono text-slate-400">Project Manager / Player</span>
-                  </div>
-                  <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#221338] border border-purple-500/40 text-purple-100 text-sm leading-relaxed shadow font-medium">
-                    “Don't just push the patch quietly. We need a formal Root Cause Analysis (RCA) document to show why the memory leak occurred and how we prevent it from repeating.”
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {(stage === 'decision_screen' || stage === 'decision_confirmed') && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-[#170e24] border border-rose-500/40 rounded-2xl p-5 space-y-4"
-            >
-              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <div>
-                  <span className="text-xs font-mono text-amber-400 font-bold uppercase tracking-wide flex items-center gap-1.5">
-                    <Shield className="w-4 h-4 text-amber-400" />
-                    20:20–21:00 · Decision Screen
-                  </span>
-                  <div className="text-sm font-bold text-white mt-0.5">
-                    Select Your Engineering Governance & Remediation Strategy
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono text-slate-400">Choose carefully</span>
-              </div>
-
-              {/* Choices Grid */}
-              <div className="grid grid-cols-1 gap-3">
-                {/* Option A */}
-                <div
-                  onClick={() => handleSelectDecision('choice_a')}
-                  className={`p-4 rounded-xl border transition-all cursor-pointer ${
-                    selectedDecision === 'choice_a'
-                      ? 'bg-slate-800/90 border-cyan-500/70 shadow-[0_0_15px_rgba(6,182,212,0.15)] ring-1 ring-cyan-500/50'
-                      : 'bg-slate-900/80 border-slate-800 hover:border-slate-700 hover:bg-slate-850'
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1.5 pr-4">
-                      <div className="flex items-center space-x-2">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700">
-                          Option A
-                        </span>
-                      </div>
-                      <p className="text-sm font-semibold text-slate-200">
-                        "{CHAPTER7_DECISION_CHOICES.choice_a.label}"
-                      </p>
-                    </div>
-                  </div>
-
-                  {selectedDecision === 'choice_a' && (
+              {activeSpeaker === 'daniel' && (
+                <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
+                  {[1, 2, 3, 4].map((i) => (
                     <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      className="mt-3 pt-3 border-t border-slate-700/60 text-xs text-slate-300 leading-relaxed space-y-3"
-                    >
-                      <p>{CHAPTER7_DECISION_CHOICES.choice_a.feedback}</p>
-                      <div className="flex items-center justify-end pt-1">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleLaunchStudio();
-                          }}
-                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:opacity-95 text-white font-extrabold text-xs flex items-center space-x-1.5 shadow-md cursor-pointer"
-                        >
-                          <Wrench className="w-3.5 h-3.5" />
-                          <span>Proceed to 3 Incident Activities</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
+                      key={i}
+                      className="w-1 rounded-full bg-sky-400"
+                      animate={{ height: [4, 14, 4] }}
+                      transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                    />
+                  ))}
                 </div>
+              )}
+            </div>
+          </div>
 
-                {/* Option B */}
-                <div
-                  onClick={() => handleSelectDecision('choice_b')}
-                  className={`p-4 rounded-xl border transition-all cursor-pointer ${
-                    selectedDecision === 'choice_b'
-                      ? 'bg-slate-800/90 border-cyan-500/70 shadow-[0_0_15px_rgba(6,182,212,0.15)] ring-1 ring-cyan-500/50'
-                      : 'bg-slate-900/80 border-slate-800 hover:border-slate-700 hover:bg-slate-850'
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1.5 pr-4">
-                      <div className="flex items-center space-x-2">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700">
-                          Option B
-                        </span>
-                      </div>
-                      <p className="text-sm font-semibold text-slate-200">
-                        "{CHAPTER7_DECISION_CHOICES.choice_b.label}"
-                      </p>
-                    </div>
-                  </div>
-
-                  {selectedDecision === 'choice_b' && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      className="mt-3 pt-3 border-t border-slate-700/60 text-xs text-slate-300 leading-relaxed space-y-3"
-                    >
-                      <p>{CHAPTER7_DECISION_CHOICES.choice_b.feedback}</p>
-                      <div className="flex items-center justify-end pt-1">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleLaunchStudio();
-                          }}
-                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:opacity-95 text-white font-extrabold text-xs flex items-center space-x-1.5 shadow-md cursor-pointer"
-                        >
-                          <Wrench className="w-3.5 h-3.5" />
-                          <span>Proceed to 3 Incident Activities</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {stage === 'resolution_summary' && (
+          {/* Tile 3: AARAV KAPOOR (SENIOR PM MENTOR) */}
+          {joinedParticipants.has('aarav') ? (
             <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-[#121f1b] border border-emerald-500/50 rounded-2xl p-5 space-y-4"
+              className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
+                activeSpeaker === 'aarav'
+                  ? 'border-[#eab308] shadow-[0_0_25px_rgba(234,179,8,0.35)]'
+                  : 'border-white/10'
+              }`}
             >
-              <div className="flex items-center justify-between border-b border-emerald-900/60 pb-2">
-                <div className="flex items-center space-x-2">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                  <span className="text-sm font-bold text-white">Incident INC-0241 Resolved & Post-Mortem Ready</span>
+              <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-amber-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
+                  <img
+                    src={CHARACTERS.aarav.dp}
+                    alt={CHARACTERS.aarav.name}
+                    className="w-full h-full object-cover object-top"
+                  />
                 </div>
-                <button
-                  onClick={onOpenScorecard}
-                  className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center space-x-1.5 cursor-pointer shadow"
-                >
-                  <span>Open Final Scorecard</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+                <span className="text-[10px] font-mono text-slate-500 mt-2">Senior PM Mentor</span>
               </div>
 
-              <div className="space-y-2.5 text-xs">
-                <div className="p-3 rounded-xl bg-[#172c25] border border-emerald-500/30 flex items-start space-x-2.5">
-                  <span className="font-bold text-emerald-300 shrink-0">Alex:</span>
-                  <span className="text-emerald-100">
-                    “The hotfix has been deployed, and attendance sync has recovered. Memory utilization is stable and all 12 branch officers can log in without errors.”
-                  </span>
+              <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+                <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                  <span>Aarav Kapoor (Senior PM)</span>
                 </div>
-                <div className="p-3 rounded-xl bg-[#172c25] border border-emerald-500/30 flex items-start space-x-2.5">
-                  <span className="font-bold text-emerald-300 shrink-0">Martha:</span>
-                  <span className="text-emerald-100">
-                    “Monitoring thresholds have been updated on our dashboard, and the incident post-mortem report is ready for engineering review.”
-                  </span>
-                </div>
-                <div className="p-3 rounded-xl bg-[#1c332b] border border-emerald-500/40 flex items-start space-x-2.5">
-                  <span className="font-bold text-emerald-200 shrink-0">Jane:</span>
-                  <span className="text-emerald-50 font-medium">
-                    “Incident INC-0241 resolved. We didn't just patch the bug—we established root cause and put automated monitoring in place so it never happens again.”
-                  </span>
-                </div>
+                {activeSpeaker === 'aarav' && (
+                  <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
+                    {[1, 2, 3, 4].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="w-1 rounded-full bg-amber-400"
+                        animate={{ height: [4, 14, 4] }}
+                        transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             </motion.div>
+          ) : (
+            <div className="relative rounded-2xl overflow-hidden bg-slate-950/60 border border-dashed border-white/10 flex flex-col items-center justify-center p-3">
+              <div className="w-14 h-14 rounded-full overflow-hidden border border-white/10 bg-slate-800/80 opacity-40 grayscale">
+                <img src={CHARACTERS.aarav.dp} alt="Aarav" className="w-full h-full object-cover" />
+              </div>
+              <div className="flex items-center space-x-1.5 mt-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400/60 animate-ping" />
+                <span className="text-[11px] font-mono text-slate-400">Aarav connecting...</span>
+              </div>
+            </div>
           )}
+
+          {/* Tile 4: PLAYER (YOU / PROJECT MANAGER) */}
+          <div
+            className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
+              activeSpeaker === 'player'
+                ? 'border-purple-400 shadow-[0_0_25px_rgba(168,85,247,0.35)]'
+                : 'border-white/10'
+            }`}
+          >
+            {isCameraOn && streamRef.current ? (
+              <video
+                ref={videoElementRef}
+                autoPlay
+                muted
+                playsInline
+                className="w-full h-full object-cover scale-x-[-1]"
+              />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-purple-950 border-2 border-purple-500/40 flex items-center justify-center text-purple-300 font-bold text-xl shadow-xl">
+                  PM
+                </div>
+                <span className="text-[10px] font-mono text-slate-500 mt-2">You (Camera Off)</span>
+              </div>
+            )}
+
+            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+              <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                <span>You (Project Manager)</span>
+              </div>
+              {activeSpeaker === 'player' && (
+                <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
+                  {[1, 2, 3, 4].map((i) => (
+                    <motion.div
+                      key={i}
+                      className="w-1 rounded-full bg-purple-400"
+                      animate={{ height: [4, 14, 4] }}
+                      transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* RIGHT: PARTICIPANTS & CALL CONTROLS */}
-        <div className="w-full md:w-72 bg-[#10091a] border-t md:border-t-0 md:border-l border-slate-800 p-4 flex flex-col justify-between shrink-0">
-          <div className="space-y-3">
-            <div className="text-[11px] font-mono text-slate-400 uppercase font-bold tracking-wider">
-              Bridge Participants (3)
+        {/* ── INTERACTIVE DECISION CARD / CAPTIONS OVERLAY ── */}
+        {isDialogueFinished ? (
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-2.5 p-4 rounded-2xl bg-[#130f23]/95 backdrop-blur-md border border-purple-500/30 shrink-0 shadow-2xl"
+          >
+            <div className="flex items-center justify-between pb-2 border-b border-white/10">
+              <div className="flex items-center space-x-2">
+                <Sparkles className="w-4 h-4 text-purple-400" />
+                <span className="text-xs font-bold text-white uppercase tracking-wider">
+                  Incident Directive Required · Root Cause Governance
+                </span>
+              </div>
+              <span className="text-[10px] font-mono text-purple-300">
+                Decision Point: Choose Triage Strategy
+              </span>
             </div>
 
-            {/* Martha Card */}
-            <div
-              className={`p-2.5 rounded-xl border flex items-center space-x-3 transition-all ${
-                activeSpeaker === 'martha'
-                  ? 'bg-rose-950/40 border-rose-500/60 shadow-[0_0_10px_rgba(244,63,94,0.3)]'
-                  : 'bg-slate-900/60 border-slate-800'
-              }`}
-            >
-              <img
-                src="/character/Emma_Carter/EmmaDP.png"
-                alt="Martha"
-                className="w-9 h-9 rounded-xl object-cover border border-rose-500/40"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="text-xs font-bold text-white truncate flex items-center justify-between">
-                  <span>Martha</span>
-                  {activeSpeaker === 'martha' && isSpeaking && (
-                    <Volume2 className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
-                  )}
-                </div>
-                <div className="text-[10px] text-slate-400 font-mono truncate">Monitoring / Ops</div>
-              </div>
-            </div>
-
-            {/* Alex Card */}
-            <div
-              className={`p-2.5 rounded-xl border flex items-center space-x-3 transition-all ${
-                activeSpeaker === 'alex'
-                  ? 'bg-sky-950/40 border-sky-500/60 shadow-[0_0_10px_rgba(56,189,248,0.3)]'
-                  : 'bg-slate-900/60 border-slate-800'
-              }`}
-            >
-              <img
-                src="/character/Daniel_Brooks/DanielDP.png"
-                alt="Alex"
-                className="w-9 h-9 rounded-xl object-cover border border-sky-500/40"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="text-xs font-bold text-white truncate flex items-center justify-between">
-                  <span>Alex</span>
-                  {activeSpeaker === 'alex' && isSpeaking && (
-                    <Volume2 className="w-3.5 h-3.5 text-sky-400 animate-pulse" />
-                  )}
-                </div>
-                <div className="text-[10px] text-slate-400 font-mono truncate">Developer</div>
-              </div>
-            </div>
-
-            {/* Jane Card */}
-            <div
-              className={`p-2.5 rounded-xl border flex items-center space-x-3 transition-all ${
-                activeSpeaker === 'jane'
-                  ? 'bg-purple-950/40 border-purple-500/60 shadow-[0_0_10px_rgba(168,85,247,0.3)]'
-                  : 'bg-slate-900/60 border-slate-800'
-              }`}
-            >
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 border border-purple-400/50 flex items-center justify-center font-bold text-white text-xs">
-                J
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-xs font-bold text-white truncate flex items-center justify-between">
-                  <span>Jane (You)</span>
-                </div>
-                <div className="text-[10px] text-slate-400 font-mono truncate">Project Manager</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Audio & Media Controls */}
-          <div className="pt-4 border-t border-slate-800 space-y-2">
-            <div className="flex items-center justify-center space-x-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+              {/* Choice A */}
               <button
-                onClick={() => {
-                  sound.playClick();
-                  setMicMuted(!micMuted);
-                }}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center text-white transition-all cursor-pointer ${
-                  micMuted ? 'bg-rose-600/80 hover:bg-rose-500' : 'bg-slate-800 hover:bg-slate-700'
+                onClick={() => handleSelectDecision('choice_a')}
+                className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                  selectedDecision === 'choice_a'
+                    ? 'bg-rose-950/40 border-rose-500 ring-1 ring-rose-500'
+                    : 'bg-slate-900/60 border-white/10 hover:border-white/20'
                 }`}
-                title={micMuted ? 'Unmute' : 'Mute'}
               >
-                {micMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                <div className="flex items-center justify-between text-xs font-bold">
+                  <span className={selectedDecision === 'choice_a' ? 'text-rose-300' : 'text-slate-300'}>
+                    Option A: Push Hotfix Silently
+                  </span>
+                  <span className="text-[10px] font-mono text-rose-400/80">High Risk</span>
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                  {CHAPTER7_DECISION_CHOICES.choice_a.label}
+                </p>
               </button>
+
+              {/* Choice B */}
               <button
-                onClick={() => {
-                  sound.playClick();
-                  setCameraOff(!cameraOff);
-                }}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center text-white transition-all cursor-pointer ${
-                  cameraOff ? 'bg-rose-600/80 hover:bg-rose-500' : 'bg-slate-800 hover:bg-slate-700'
+                onClick={() => handleSelectDecision('choice_b')}
+                className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                  selectedDecision === 'choice_b'
+                    ? 'bg-emerald-950/40 border-emerald-500 ring-1 ring-emerald-500'
+                    : 'bg-slate-900/60 border-white/10 hover:border-emerald-500/40'
                 }`}
-                title={cameraOff ? 'Turn Video On' : 'Turn Video Off'}
               >
-                {cameraOff ? <VideoOff className="w-4 h-4" /> : <Video className="w-4 h-4" />}
+                <div className="flex items-center justify-between text-xs font-bold">
+                  <span className={selectedDecision === 'choice_b' ? 'text-emerald-300' : 'text-white'}>
+                    Option B: Deploy &amp; Mandate Formal RCA (Recommended)
+                  </span>
+                  <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/20 px-1.5 py-0.5 rounded">
+                    Best Practice
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">
+                  {CHAPTER7_DECISION_CHOICES.choice_b.label}
+                </p>
               </button>
             </div>
-            <div className="text-center text-[10px] font-mono text-slate-500">
-              SEV-2 Incident Channel · Encrypted
+
+            {decisionFeedback && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className={`mt-3 p-2.5 rounded-xl text-xs leading-relaxed border ${
+                  selectedDecision === 'choice_b'
+                    ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-200'
+                    : 'bg-rose-950/30 border-rose-500/40 text-rose-200'
+                }`}
+              >
+                {decisionFeedback}
+              </motion.div>
+            )}
+          </motion.div>
+        ) : (
+          captionsEnabled &&
+          currentSpeakerMeta && (
+            <div className="mt-2.5 px-4 py-3 rounded-2xl bg-black/90 backdrop-blur-md border border-white/15 flex items-start sm:items-center space-x-3 shrink-0 shadow-xl">
+              <div
+                className="text-xs font-black uppercase font-mono px-2.5 py-1 rounded-lg border shrink-0"
+                style={{
+                  color: currentSpeakerMeta.color,
+                  borderColor: `${currentSpeakerMeta.color}40`,
+                  background: `${currentSpeakerMeta.color}15`,
+                }}
+              >
+                {currentSpeakerMeta.name}
+              </div>
+              <p className="text-sm sm:text-[15px] text-white font-medium leading-relaxed flex-1">
+                "{currentLine.text}"
+              </p>
             </div>
-          </div>
+          )
+        )}
+      </div>
+
+      {/* ── BOTTOM TEAMS CONTROL DOCK ── */}
+      <div className="h-16 bg-[#101320]/95 border-t border-white/10 px-6 flex items-center justify-between shrink-0 z-20">
+        <div className="flex items-center space-x-2 text-xs font-mono text-slate-400">
+          <Radio className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
+          <span>PROJECT AMIGO · INCIDENT BRIDGE</span>
+        </div>
+
+        {/* Center Meeting Controls */}
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => {
+              sound.playClick();
+              setIsMicOn(!isMicOn);
+            }}
+            className={`p-3 rounded-xl border transition-all cursor-pointer ${
+              !isMicOn
+                ? 'bg-rose-500/20 border-rose-500/40 text-rose-400'
+                : 'bg-white/5 border-white/10 hover:bg-white/10 text-white'
+            }`}
+            title={isMicOn ? 'Mute' : 'Unmute'}
+          >
+            {isMicOn ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
+          </button>
+
+          <button
+            onClick={toggleCamera}
+            className={`p-3 rounded-xl border transition-all cursor-pointer ${
+              isCameraOn
+                ? 'bg-purple-500/20 border-purple-500/40 text-purple-400'
+                : 'bg-white/5 border-white/10 hover:bg-white/10 text-slate-400'
+            }`}
+            title={isCameraOn ? 'Turn Camera Off' : 'Turn Camera On'}
+          >
+            {isCameraOn ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
+          </button>
+
+          <button
+            onClick={() => {
+              sound.playClick();
+              setCaptionsEnabled(!captionsEnabled);
+            }}
+            className={`px-3 py-2.5 rounded-xl border text-xs font-mono font-bold transition-all cursor-pointer ${
+              captionsEnabled
+                ? 'bg-sky-500/20 border-sky-500/40 text-sky-400'
+                : 'bg-white/5 border-white/10 text-slate-500'
+            }`}
+            title="Closed Captions"
+          >
+            CC
+          </button>
+        </div>
+
+        {/* Right Action: Replay / Skip / Launch Studio / Scorecard */}
+        <div className="flex items-center space-x-2.5">
+          <button
+            onClick={handleReplay}
+            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 text-xs flex items-center space-x-1 cursor-pointer transition-colors"
+            title="Replay dialogue"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+          </button>
+
+          {!isDialogueFinished ? (
+            <button
+              onClick={handleFastForward}
+              className="px-3 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-xs font-mono flex items-center space-x-1 cursor-pointer transition-all"
+              title="Skip to triage directive"
+            >
+              <FastForward className="w-3.5 h-3.5" />
+              <span>Skip Dialogue</span>
+            </button>
+          ) : (
+            <button
+              onClick={handleLaunchStudio}
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:opacity-95 text-white font-extrabold text-xs flex items-center space-x-2 shadow-[0_0_20px_rgba(168,85,247,0.4)] border border-purple-400/40 cursor-pointer transition-all animate-pulse"
+            >
+              <Wrench className="w-4 h-4" />
+              <span>Launch Incident Response Studio</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          )}
+
+          {chapter7State.completed && onOpenScorecard && (
+            <button
+              onClick={onOpenScorecard}
+              className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold cursor-pointer border border-slate-700"
+            >
+              Scorecard
+            </button>
+          )}
         </div>
       </div>
     </div>

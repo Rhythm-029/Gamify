@@ -557,7 +557,7 @@ export function computeChapter7Score(state: Chapter7State): Chapter7Scorecard {
 
   const whatYouDidWell =
     outcomeType === 'strong'
-      ? "You insisted on a formal RCA before patching, confirmed scope before deploying Alex's hotfix, strictly verified branch access before closing, and prioritized continuous memory monitoring and alert thresholds."
+      ? "You insisted on a formal RCA before patching, confirmed scope before deploying Daniel's hotfix, strictly verified branch access before closing, and prioritized continuous memory monitoring and alert thresholds."
       : 'You helped restore the Attendance Sync service and documented key elements of the outage.';
 
   const whatToImprove =
@@ -600,7 +600,7 @@ export function computeChapter7Score(state: Chapter7State): Chapter7Scorecard {
           : 'Governance lapse: Silent patching without ticket or incomplete RCA documentation.',
       efficiency:
         efficiencyScore >= 80
-          ? 'Seamless technical coordination with Alex and Martha. Prioritised root-cause elimination over capacity bloat.'
+          ? 'Seamless technical coordination with Daniel and Martha. Prioritised root-cause elimination over capacity bloat.'
           : 'Struggled to distinguish root-cause fixes from temporary server scaling.',
     },
   };

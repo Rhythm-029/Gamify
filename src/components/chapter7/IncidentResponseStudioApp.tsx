@@ -406,7 +406,7 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
   };
 
   // ─────────────────────────────────────────────────────────────
-  // RESOLUTION SEQUENCE (Alex -> Martha -> Jane)
+  // RESOLUTION SEQUENCE (Daniel -> Martha -> You)
   // ─────────────────────────────────────────────────────────────
   const [resolutionStep, setResolutionStep] = useState<number>(() => {
     if (chapter7State.completed || chapter7State.incidentStatus === 'resolved') return 3;
@@ -417,7 +417,7 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
     setResolutionStep(1);
     sound.playMessagePing();
     if (onNotifyDesktop) {
-      onNotifyDesktop('Alex (Developer)', 'The hotfix has been deployed, and attendance sync has recovered.');
+      onNotifyDesktop('Daniel Brooks (Lead Developer)', 'The hotfix has been deployed, and attendance sync has recovered.');
     }
 
     setTimeout(() => {
@@ -431,7 +431,7 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
         setResolutionStep(3);
         sound.playSystemClearance();
         if (onNotifyDesktop) {
-          onNotifyDesktop('Jane (Project Manager)', 'Incident INC-0241 resolved with formal RCA and monitoring.');
+          onNotifyDesktop('You (Project Manager)', 'Incident INC-0241 resolved with formal RCA and monitoring.');
         }
 
         onUpdateState((prev) => {
@@ -1211,7 +1211,7 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
                         Service Recovery & Formal RCA Published
                       </h2>
                       <p className="text-xs text-emerald-200/90 mt-1">
-                        Alex's hotfix has been verified by Martha. The formal RCA report has been shared with engineering leads, and automated monitoring thresholds are active.
+                        Daniel's hotfix has been verified by Martha. The formal RCA report has been shared with engineering leads, and automated monitoring thresholds are active.
                       </p>
                     </div>
                   </div>
@@ -1238,13 +1238,13 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
                 </div>
               </div>
 
-              {/* Three Live Confirmations (Alex -> Martha -> Jane) */}
+              {/* Three Live Confirmations (Daniel -> Martha -> You) */}
               <div className="space-y-3">
                 <div className="text-xs font-mono uppercase text-slate-400 font-bold">
                   Live Resolution Confirmations
                 </div>
 
-                {/* Alex */}
+                {/* Daniel */}
                 <motion.div
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -1253,13 +1253,13 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
                 >
                   <img
                     src="/character/Daniel_Brooks/DanielDP.png"
-                    alt="Alex"
+                    alt="Daniel Brooks"
                     className="w-9 h-9 rounded-full border border-sky-400/40 object-cover shrink-0"
                   />
                   <div>
                     <div className="flex items-center space-x-2">
-                      <span className="text-xs font-bold text-white">Alex</span>
-                      <span className="text-[10px] font-mono text-sky-400">Developer</span>
+                      <span className="text-xs font-bold text-white">Daniel Brooks</span>
+                      <span className="text-[10px] font-mono text-sky-400">Lead Developer</span>
                     </div>
                     <p className="text-xs text-slate-300 mt-1 leading-relaxed">
                       “The hotfix has been deployed, and attendance sync has recovered. Memory utilization is stable and all 12 branch officers can log in without errors.”
@@ -1290,7 +1290,7 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
                   </div>
                 </motion.div>
 
-                {/* Jane */}
+                {/* You */}
                 <motion.div
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -1298,12 +1298,12 @@ export const IncidentResponseStudioApp: React.FC<IncidentResponseStudioAppProps>
                   className="bg-[#190f2b] border border-purple-500/40 rounded-xl p-3.5 flex items-start space-x-3"
                 >
                   <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 border border-purple-400/50 flex items-center justify-center font-black text-white text-xs shrink-0">
-                    J
+                    PM
                   </div>
                   <div>
                     <div className="flex items-center space-x-2">
-                      <span className="text-xs font-bold text-white">Jane (You)</span>
-                      <span className="text-[10px] font-mono text-purple-400">Project Manager / Player</span>
+                      <span className="text-xs font-bold text-white">You (Project Manager)</span>
+                      <span className="text-[10px] font-mono text-purple-400">Delivery Lead</span>
                     </div>
                     <p className="text-xs text-purple-200 mt-1 leading-relaxed font-medium">
                       “Incident INC-0241 resolved. We didn't just patch the bug—we established root cause and put automated monitoring in place so it never happens again.”

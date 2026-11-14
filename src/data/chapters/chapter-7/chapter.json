@@ -11,9 +11,10 @@
   "xpReward": 500,
   "description": "An automated alert flashes red on Martha's monitoring dashboard: A minor memory leak in the Attendance Sync microservice caused intermittent 504 gateway timeouts for 12 branch officers. Decide the remediation strategy, restore the service, prepare the formal RCA, and prioritise preventive controls.",
   "stakeholders": [
-    { "name": "Jane", "role": "Project Manager", "agenda": "Leading response: Mandating formal RCA, verifying recovery before closing, and updating monitoring." },
+    { "name": "You", "role": "Project Manager", "agenda": "Leading response: Mandating formal RCA, verifying recovery before closing, and updating monitoring." },
     { "name": "Martha", "role": "Monitoring / Operations", "agenda": "Automated incident detection, user impact tracking, and updating monitoring alert thresholds." },
-    { "name": "Alex", "role": "Developer", "agenda": "Drafting hotfix patch for the memory leak in Attendance Sync and deploying under Jane's engineering governance." }
+    { "name": "Daniel Brooks", "role": "Lead Developer", "agenda": "Drafting hotfix patch for the memory leak in Attendance Sync and deploying under engineering governance." },
+    { "name": "Aarav Kapoor", "role": "Senior Consultant", "agenda": "Advising on institutional incident governance and executive transparency." }
   ],
   "objectives": [
     { "label": "Decide remediation strategy: Mandate formal RCA alongside hotfix deployment", "type": "decision" },

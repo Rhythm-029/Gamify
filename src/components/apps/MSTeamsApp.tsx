@@ -394,15 +394,15 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
           role: 'Monitoring / Operations',
           avatar: '/character/Emma_Carter/EmmaDP.png',
           lastMessage:
-            "Jane! A minor memory leak in the attendance sync microservice caused intermittent 504 gateway timeouts for 12 branch officers during morning login.",
+            "Alert! A minor memory leak in the attendance sync microservice caused intermittent 504 gateway timeouts for 12 branch officers during morning login.",
           time: '19:00',
           unread: !chapter7State?.marthaChatViewed,
           online: true,
         },
         {
           id: 'daniel',
-          name: 'Alex',
-          role: 'Developer',
+          name: 'Daniel Brooks',
+          role: 'Lead Developer',
           avatar: '/character/Daniel_Brooks/DanielDP.png',
           lastMessage:
             chapter7State?.incidentStatus === 'resolved'
@@ -1627,7 +1627,7 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
                   </div>
                   <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#1e233d] border border-rose-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
                     <p className="font-bold text-rose-200">
-                      "Jane, we've got an issue. The Attendance Sync service has started returning intermittent 504 errors. Twelve branch officers have reported login or attendance synchronisation problems."
+                      "We've got an urgent issue. The Attendance Sync service has started returning intermittent 504 errors. Twelve branch officers have reported login or attendance synchronisation problems."
                     </p>
                     <p className="text-slate-300 text-xs">
                       Branch officers in regional locations are blocked from clocking in during the morning shift start. We need engineering to triage and restore service immediately.
@@ -1717,7 +1717,7 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
               )}
             </div>
           ) : isCh7 && activeChatId === 'daniel' ? (
-            /* ── ALEX — CHAPTER 7 DEVELOPER ── */
+            /* ── DANIEL BROOKS — CHAPTER 7 LEAD DEVELOPER ── */
             <div className="space-y-4">
               <div className="flex justify-center">
                 <span className="text-[10px] font-mono text-sky-400 bg-sky-500/15 px-3.5 py-1 rounded-full border border-sky-500/30 font-bold">
@@ -1728,30 +1728,30 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
               <div className="flex items-start space-x-3 max-w-2xl">
                 <img
                   src="/character/Daniel_Brooks/DanielDP.png"
-                  alt="Alex"
+                  alt="Daniel Brooks"
                   className="w-8 h-8 rounded-full object-cover border border-sky-400/40 shrink-0 mt-1"
                 />
                 <div className="space-y-1">
                   <div className="flex items-center space-x-2">
-                    <span className="font-bold text-xs text-sky-300">Alex</span>
-                    <span className="text-[10px] font-mono text-slate-400">Developer · 19:40</span>
+                    <span className="font-bold text-xs text-sky-300">Daniel Brooks</span>
+                    <span className="text-[10px] font-mono text-slate-400">Lead Developer · 19:40</span>
                   </div>
                   <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#1e233d] border border-sky-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
                     <p>
-                      "I'm drafting a quick hotfix patch for the memory leak in the Attendance Sync microservice. I can push it straight to production quietly to stop the timeouts."
+                      "I've traced the issue to an unclosed connection pool causing a memory leak in Attendance Sync. I've drafted a hotfix patch and can push it straight to production to stop the timeouts."
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Jane's PM response */}
+              {/* Player PM response */}
               <div className="flex items-start space-x-3 max-w-2xl pl-6">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 border border-purple-400/50 flex items-center justify-center font-bold text-white text-xs shrink-0 mt-1">
-                  J
+                  PM
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center space-x-2">
-                    <span className="font-bold text-xs text-purple-300">Jane (You)</span>
+                    <span className="font-bold text-xs text-purple-300">You (Project Manager)</span>
                     <span className="text-[10px] font-mono text-slate-400">Project Manager · 19:41</span>
                   </div>
                   <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#221338] border border-purple-500/40 text-xs sm:text-[13px] text-purple-100 shadow-md leading-relaxed font-medium">
@@ -1780,13 +1780,13 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
                 <div className="flex items-start space-x-3 max-w-2xl">
                   <img
                     src="/character/Daniel_Brooks/DanielDP.png"
-                    alt="Alex"
+                    alt="Daniel Brooks"
                     className="w-8 h-8 rounded-full object-cover border border-emerald-400/40 shrink-0 mt-1"
                   />
                   <div className="space-y-1">
                     <div className="flex items-center space-x-2">
-                      <span className="font-bold text-xs text-emerald-300">Alex</span>
-                      <span className="text-[10px] font-mono text-slate-400">Developer · Just now</span>
+                      <span className="font-bold text-xs text-emerald-300">Daniel Brooks</span>
+                      <span className="text-[10px] font-mono text-slate-400">Lead Developer · Just now</span>
                     </div>
                     <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#13231d] border border-emerald-500/40 text-xs sm:text-[13px] text-emerald-100 shadow-md leading-relaxed">
                       “The hotfix has been deployed, and attendance sync has recovered. Memory utilization is stable and all 12 branch officers can log in without errors.”
@@ -1813,12 +1813,12 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
                 <div className="space-y-1">
                   <div className="flex items-center space-x-2">
                     <span className="font-bold text-xs text-amber-300">Aarav Kapoor</span>
-                    <span className="text-[10px] font-mono text-slate-400">Project Manager · 09:16 AM</span>
+                    <span className="text-[10px] font-mono text-slate-400">Senior PM Mentor · 09:16 AM</span>
                   </div>
                   <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#1e233d] border border-amber-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
                     <p>
                       {chapter7State?.studioUnlocked
-                        ? "Jane, take ownership of INC-0241. Coordinate the recovery, document the root cause, and put together the preventive actions. I've added Incident Response Studio to your desktop. Complete the incident response there."
+                        ? "Take ownership of INC-0241. Coordinate the recovery, document the root cause, and put together the preventive actions. I've added Incident Response Studio to your desktop. Complete the incident response there."
                         : "Get the service stable first. But we also need a proper incident record and a Root Cause Analysis. I want to know what failed, who was affected, and what we're changing to prevent this from happening again."}
                     </p>
                   </div>
