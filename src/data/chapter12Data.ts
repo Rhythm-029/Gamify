@@ -173,7 +173,7 @@ export const FINAL_DECISION_OPTIONS = {
   },
   choice_b: {
     id: 'choice_b',
-    title: 'Choice B (Recommended) — Controlled Phased Upgrade',
+    title: 'Choice B — Controlled Phased Upgrade',
     description:
       'Establish a formal CR-Upgrade pipeline. Use feature flags to roll out Phase 2 modules incrementally via blue-green staging environments.',
     quote: '"We\'ll release progressively, validate each upgrade, and preserve the ability to roll back safely."',

@@ -274,7 +274,7 @@ export const CHAPTER11_DECISION_OPTIONS = {
   },
   choice_b: {
     id: 'choice_b' as const,
-    title: 'Choice B · Formal Operational Handover Protocol (Recommended)',
+    title: 'Choice B · Formal Operational Handover Protocol',
     subtitle: 'Execute structured handover complete with admin runbooks, training workshops, and 2-week hypercare window',
     quote: '"Let\'s transfer ownership through a structured transition, with clear responsibilities and continued support until IT is ready to operate independently."',
     deliveryGovernanceDelta: +30,

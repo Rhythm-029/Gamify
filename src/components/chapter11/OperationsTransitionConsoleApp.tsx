@@ -1222,14 +1222,6 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                   {/* Top accent stripe */}
                   <div className={`h-1 w-full ${selectedDecision === 'choice_b' ? 'bg-emerald-500' : 'bg-[#30363d]'}`} />
 
-                  {/* Recommended badge */}
-                  <div className="absolute top-4 right-4">
-                    <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                      <Sparkles className="w-2.5 h-2.5" />
-                      Recommended
-                    </span>
-                  </div>
-
                   <div className="p-6 space-y-4">
                     {/* Header */}
                     <div className="flex items-start justify-between gap-3">

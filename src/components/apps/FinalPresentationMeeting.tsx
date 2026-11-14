@@ -374,7 +374,7 @@ export const FinalPresentationMeeting: React.FC = () => {
                 <span>Enable Camera & Join</span>
               </button>
               <button onClick={() => handleJoin(false)} className="w-full text-slate-500 hover:text-white text-xs cursor-pointer py-1 transition-colors">
-                Join without camera (not recommended)
+                Join without camera
               </button>
             </div>
           </div>

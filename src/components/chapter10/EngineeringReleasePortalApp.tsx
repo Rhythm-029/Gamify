@@ -550,9 +550,9 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
                   {[
                     { label: 'Author', value: `@${selectedFileForPreview.author}`, cls: 'text-slate-200' },
                     {
-                      label: 'Recommended',
-                      value: selectedFileForPreview.recommendedAction,
-                      cls: selectedFileForPreview.recommendedAction === 'retain' ? 'text-emerald-400' : 'text-amber-400',
+                      label: 'Review Status',
+                      value: 'Pending Classification',
+                      cls: 'text-slate-300',
                     },
                     { label: 'Category', value: selectedFileForPreview.category.toUpperCase(), cls: 'text-sky-300' },
                   ].map(({ label, value, cls }) => (
@@ -868,12 +868,11 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
                     <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-slate-800 text-slate-400 border border-slate-700 uppercase">
                       Option A
                     </span>
-                    <span className="text-[11px] font-mono text-rose-400">Gov: −30 · Vel: −10</span>
                   </div>
                   <h3 className="text-sm font-semibold text-white">{CHAPTER10_DECISION_OPTIONS.choice_a.title}</h3>
                 </div>
 
-                <blockquote className="pl-3 border-l-2 border-rose-600 text-xs text-slate-300 italic leading-relaxed">
+                <blockquote className="pl-3 border-l-2 border-slate-600 text-xs text-slate-300 italic leading-relaxed">
                   {CHAPTER10_DECISION_OPTIONS.choice_a.quote}
                 </blockquote>
 
@@ -881,8 +880,8 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
                   Prioritizes immediate sprint velocity over long-term maintainability. Skips version tagging and leaves documentation scattered across scratchpads.
                 </p>
 
-                <div className="pt-3 border-t border-slate-800 text-[11px] text-rose-300/80 leading-relaxed">
-                  <span className="font-semibold text-rose-300">Consequence: </span>
+                <div className="pt-3 border-t border-slate-800 text-[11px] text-slate-400 leading-relaxed">
+                  <span className="font-semibold text-slate-300">Consequence: </span>
                   Knowledge silos form. Future onboarding takes weeks, and original devs are interrupted constantly to explain undocumented code.
                 </div>
               </div>
@@ -905,10 +904,9 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
 
                 <div className="space-y-1 pr-6">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-900/40 text-emerald-300 border border-emerald-700/40 uppercase">
-                      Option B · Recommended
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-slate-800 text-slate-400 border border-slate-700 uppercase">
+                      Option B
                     </span>
-                    <span className="text-[11px] font-mono text-emerald-400">Gov: +30 · Risk: +20</span>
                   </div>
                   <h3 className="text-sm font-semibold text-white">{CHAPTER10_DECISION_OPTIONS.choice_b.title}</h3>
                 </div>

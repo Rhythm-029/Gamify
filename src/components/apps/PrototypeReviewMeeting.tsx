@@ -56,7 +56,7 @@ const STRATEGIC_QUESTIONS: StrategicQuestion[] = [
       {
         id: 'sq1_opt_a',
         label: 'Prioritized 1-click leave approvals first for plant floor managers, with document uploads deferred to Sprint 2.',
-        description: 'Recommended strategy matching Daniel Brooks\' approved brief.',
+        description: 'Targeted workflow matching shift supervisor field operations.',
         marks: 15,
         feedback: 'Excellent strategic choice! Shift supervisors need fast 1-click approvals without getting bogged down by attachments.',
       },
@@ -84,7 +84,7 @@ const STRATEGIC_QUESTIONS: StrategicQuestion[] = [
       {
         id: 'sq2_opt_a',
         label: 'Implemented Enterprise Single Sign-On (SSO) with shared terminal quick-switch for plant shifts.',
-        description: 'CTO Marcus Reed\'s recommended enterprise identity model.',
+        description: 'Enterprise SSO identity model with shared terminal session management.',
         marks: 15,
         feedback: 'Spot on! Enterprise SSO eliminates password reset overhead while maintaining strict audit logging for shift workers.',
       },

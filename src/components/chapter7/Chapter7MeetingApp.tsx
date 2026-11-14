@@ -708,15 +708,19 @@ export const Chapter7MeetingApp: React.FC<Chapter7MeetingAppProps> = ({
                 onClick={() => handleSelectDecision('choice_a')}
                 className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                   selectedDecision === 'choice_a'
-                    ? 'bg-rose-950/40 border-rose-500 ring-1 ring-rose-500'
+                    ? 'bg-purple-950/40 border-purple-400 ring-1 ring-purple-400'
                     : 'bg-slate-900/60 border-white/10 hover:border-white/20'
                 }`}
               >
                 <div className="flex items-center justify-between text-xs font-bold">
-                  <span className={selectedDecision === 'choice_a' ? 'text-rose-300' : 'text-slate-300'}>
+                  <span className={selectedDecision === 'choice_a' ? 'text-purple-200' : 'text-white'}>
                     Option A: Push Hotfix Silently
                   </span>
-                  <span className="text-[10px] font-mono text-rose-400/80">High Risk</span>
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                    selectedDecision === 'choice_a' ? 'border-purple-400' : 'border-white/30'
+                  }`}>
+                    {selectedDecision === 'choice_a' && <div className="w-2 h-2 rounded-full bg-purple-400" />}
+                  </div>
                 </div>
                 <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
                   {CHAPTER7_DECISION_CHOICES.choice_a.label}
@@ -728,19 +732,21 @@ export const Chapter7MeetingApp: React.FC<Chapter7MeetingAppProps> = ({
                 onClick={() => handleSelectDecision('choice_b')}
                 className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                   selectedDecision === 'choice_b'
-                    ? 'bg-emerald-950/40 border-emerald-500 ring-1 ring-emerald-500'
-                    : 'bg-slate-900/60 border-white/10 hover:border-emerald-500/40'
+                    ? 'bg-purple-950/40 border-purple-400 ring-1 ring-purple-400'
+                    : 'bg-slate-900/60 border-white/10 hover:border-white/20'
                 }`}
               >
                 <div className="flex items-center justify-between text-xs font-bold">
-                  <span className={selectedDecision === 'choice_b' ? 'text-emerald-300' : 'text-white'}>
-                    Option B: Deploy &amp; Mandate Formal RCA (Recommended)
+                  <span className={selectedDecision === 'choice_b' ? 'text-purple-200' : 'text-white'}>
+                    Option B: Deploy &amp; Mandate Formal RCA
                   </span>
-                  <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/20 px-1.5 py-0.5 rounded">
-                    Best Practice
-                  </span>
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                    selectedDecision === 'choice_b' ? 'border-purple-400' : 'border-white/30'
+                  }`}>
+                    {selectedDecision === 'choice_b' && <div className="w-2 h-2 rounded-full bg-purple-400" />}
+                  </div>
                 </div>
-                <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">
+                <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
                   {CHAPTER7_DECISION_CHOICES.choice_b.label}
                 </p>
               </button>
