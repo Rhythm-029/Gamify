@@ -34,7 +34,7 @@ export type PrePilotActivityId =
   | 'act_rollback_approval'  // Approve and verify the rollback procedure (Prerequisite)
   | 'act_user_comms';        // Publish the user communication plan (During pilot / Comms)
 
-export type PilotActivityStage = 'pre_pilot_prerequisite' | 'during_pilot_continuous';
+export type PilotActivityStage = 'pre_pilot_prerequisite' | 'during_pilot_continuous' | 'unassigned';
 
 export type LatencyTarget = 'strict_800ms' | 'moderate_1500ms' | 'unspecified';
 export type ErrorRateThreshold = 'strict_0_1_percent' | 'lenient_1_percent' | 'manual_logs_only';

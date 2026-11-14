@@ -285,11 +285,11 @@ export const INITIAL_CHAPTER5_STATE: Chapter5State = {
   blockerValidationMessage: null,
 
   prePilotActivities: {
-    act_peak_load: 'pre_pilot_prerequisite',
-    act_security_approval: 'pre_pilot_prerequisite',
-    act_monitoring_alerts: 'pre_pilot_prerequisite',
-    act_rollback_approval: 'pre_pilot_prerequisite',
-    act_user_comms: 'during_pilot_continuous',
+    act_peak_load: 'unassigned',
+    act_security_approval: 'unassigned',
+    act_monitoring_alerts: 'unassigned',
+    act_rollback_approval: 'unassigned',
+    act_user_comms: 'unassigned',
   },
   latencyTarget: 'strict_800ms',
   errorRateThreshold: 'strict_0_1_percent',

@@ -13,6 +13,10 @@ import {
   AlertCircle,
   Eye,
   Sparkles,
+  ChevronDown,
+  Check,
+  Activity,
+  HelpCircle,
 } from 'lucide-react';
 import type {
   Chapter5State,
@@ -53,6 +57,8 @@ export const ReleaseReadinessBoardApp: React.FC<ReleaseReadinessBoardAppProps> =
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [marcusWarning, setMarcusWarning] = useState<string | null>(null);
+  const [openDropdownActId, setOpenDropdownActId] = useState<PrePilotActivityId | null>(null);
+  const [unassignedWarning, setUnassignedWarning] = useState(false);
 
   const currentStage = chapter5State.currentStage;
 
@@ -131,20 +137,29 @@ export const ReleaseReadinessBoardApp: React.FC<ReleaseReadinessBoardAppProps> =
     }));
   };
 
-  const handleToggleActivityStage = (actId: PrePilotActivityId) => {
+  const handleSelectActivityStage = (actId: PrePilotActivityId, stage: PilotActivityStage) => {
     sound.playClick();
-    onUpdateState((prev) => {
-      const current = prev.prePilotActivities[actId];
-      const nextStage: PilotActivityStage =
-        current === 'pre_pilot_prerequisite' ? 'during_pilot_continuous' : 'pre_pilot_prerequisite';
-      return {
-        ...prev,
-        prePilotActivities: {
-          ...prev.prePilotActivities,
-          [actId]: nextStage,
-        },
-      };
-    });
+    onUpdateState((prev) => ({
+      ...prev,
+      prePilotActivities: {
+        ...prev.prePilotActivities,
+        [actId]: stage,
+      },
+    }));
+  };
+
+  const unassignedCount = PRE_PILOT_ACTIVITIES.filter(
+    (act) => !chapter5State.prePilotActivities?.[act.id] || chapter5State.prePilotActivities[act.id] === 'unassigned'
+  ).length;
+
+  const handleOpenSubmitModal = () => {
+    if (unassignedCount > 0) {
+      sound.playClick();
+      setUnassignedWarning(true);
+      return;
+    }
+    setUnassignedWarning(false);
+    setShowSubmitModal(true);
   };
 
   // Submit Rollout Plan
@@ -531,7 +546,7 @@ export const ReleaseReadinessBoardApp: React.FC<ReleaseReadinessBoardAppProps> =
                   Blockers
                 </button>
                 <button
-                  onClick={() => setShowSubmitModal(true)}
+                  onClick={handleOpenSubmitModal}
                   className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md transition-all flex items-center space-x-1.5 cursor-pointer"
                 >
                   <Send className="w-3.5 h-3.5" />
@@ -548,38 +563,158 @@ export const ReleaseReadinessBoardApp: React.FC<ReleaseReadinessBoardAppProps> =
                     A. Validation Activity Sequencing
                   </h3>
                   <p className="text-[11px] text-slate-500">
-                    Distinguish mandatory pre-pilot release prerequisites from continuous activities that run during the pilot.
+                    Assign each operational task to its appropriate phase: mandatory prerequisite before pilot or continuous execution during pilot.
                   </p>
                 </div>
                 <span className="text-[10px] font-mono text-slate-400">
-                  Click toggle to switch phase
+                  Select phase for each step
                 </span>
               </div>
 
+              {unassignedWarning && unassignedCount > 0 && (
+                <div className="p-3 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>
+                      Please choose a phase from the dropdown for each validation activity ({unassignedCount} not set yet).
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setUnassignedWarning(false)}
+                    className="text-amber-700 hover:text-amber-900 font-bold text-[11px] underline cursor-pointer"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              )}
+
               <div className="space-y-2">
                 {PRE_PILOT_ACTIVITIES.map((act) => {
-                  const currentStage = chapter5State.prePilotActivities[act.id];
+                  const currentStage: PilotActivityStage =
+                    chapter5State.prePilotActivities?.[act.id] || 'unassigned';
                   const isPrereq = currentStage === 'pre_pilot_prerequisite';
+                  const isContinuous = currentStage === 'during_pilot_continuous';
+                  const isUnassigned = currentStage === 'unassigned';
+                  const isOpen = openDropdownActId === act.id;
+
                   return (
                     <div
                       key={act.id}
-                      className="p-3 rounded-xl border border-slate-200/90 bg-slate-50/50 flex items-center justify-between gap-3 text-xs"
+                      className="p-3.5 rounded-xl border border-slate-200/90 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs transition-all relative"
                     >
-                      <div className="space-y-0.5 flex-1">
+                      <div className="space-y-0.5 flex-1 pr-2">
                         <div className="font-bold text-slate-800">{act.title}</div>
-                        <p className="text-[11px] text-slate-500">{act.description}</p>
+                        <p className="text-[11px] text-slate-500 leading-normal">{act.description}</p>
                       </div>
 
-                      <button
-                        onClick={() => handleToggleActivityStage(act.id)}
-                        className={`px-3 py-1.5 rounded-lg font-mono text-[10px] font-bold transition-all border cursor-pointer shrink-0 ${
-                          isPrereq
-                            ? 'bg-rose-50 text-rose-800 border-rose-200 hover:bg-rose-100'
-                            : 'bg-indigo-50 text-indigo-800 border-indigo-200 hover:bg-indigo-100'
-                        }`}
-                      >
-                        {isPrereq ? 'Prerequisite (Before Pilot)' : 'Continuous (During Pilot)'}
-                      </button>
+                      {/* Dropdown Selector */}
+                      <div className="relative shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            sound.playClick();
+                            setOpenDropdownActId(isOpen ? null : act.id);
+                          }}
+                          className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center justify-between gap-2.5 min-w-[210px] shadow-2xs ${
+                            isPrereq
+                              ? 'bg-rose-50 text-rose-800 border-rose-200 hover:bg-rose-100'
+                              : isContinuous
+                              ? 'bg-indigo-50 text-indigo-800 border-indigo-200 hover:bg-indigo-100'
+                              : 'bg-white text-slate-600 border-dashed border-slate-300 hover:border-indigo-400 hover:text-indigo-600'
+                          }`}
+                        >
+                          <div className="flex items-center gap-1.5 truncate">
+                            {isPrereq && (
+                              <ShieldAlert className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                            )}
+                            {isContinuous && (
+                              <Activity className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                            )}
+                            {isUnassigned && (
+                              <HelpCircle className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            )}
+                            <span className="truncate">
+                              {isPrereq
+                                ? 'Prerequisite (Before Pilot)'
+                                : isContinuous
+                                ? 'Continuous (During Pilot)'
+                                : 'Choose phase...'}
+                            </span>
+                          </div>
+                          <ChevronDown
+                            className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${
+                              isOpen ? 'rotate-180' : ''
+                            }`}
+                          />
+                        </button>
+
+                        {isOpen && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-40"
+                              onClick={() => setOpenDropdownActId(null)}
+                            />
+                            <div className="absolute right-0 top-full mt-1.5 z-50 w-72 bg-white rounded-xl border border-slate-200 shadow-2xl p-1.5 space-y-1">
+                              <div className="px-2.5 py-1 text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100">
+                                Select Timing Phase
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  handleSelectActivityStage(act.id, 'pre_pilot_prerequisite');
+                                  setOpenDropdownActId(null);
+                                }}
+                                className={`w-full text-left p-2.5 rounded-lg transition-colors cursor-pointer flex items-start gap-2.5 ${
+                                  isPrereq
+                                    ? 'bg-rose-50 text-rose-900 font-bold'
+                                    : 'hover:bg-slate-50 text-slate-700'
+                                }`}
+                              >
+                                <div className="w-2 h-2 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                                <div className="flex-1">
+                                  <div className="text-xs font-bold leading-tight">
+                                    Prerequisite (Before Pilot)
+                                  </div>
+                                  <div className="text-[10px] text-slate-500 font-normal mt-0.5 leading-normal">
+                                    Mandatory gate that must be validated before opening traffic.
+                                  </div>
+                                </div>
+                                {isPrereq && (
+                                  <Check className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                                )}
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  handleSelectActivityStage(act.id, 'during_pilot_continuous');
+                                  setOpenDropdownActId(null);
+                                }}
+                                className={`w-full text-left p-2.5 rounded-lg transition-colors cursor-pointer flex items-start gap-2.5 ${
+                                  isContinuous
+                                    ? 'bg-indigo-50 text-indigo-900 font-bold'
+                                    : 'hover:bg-slate-50 text-slate-700'
+                                }`}
+                              >
+                                <div className="w-2 h-2 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
+                                <div className="flex-1">
+                                  <div className="text-xs font-bold leading-tight">
+                                    Continuous (During Pilot)
+                                  </div>
+                                  <div className="text-[10px] text-slate-500 font-normal mt-0.5 leading-normal">
+                                    Runs actively alongside the 500-user test cohort.
+                                  </div>
+                                </div>
+                                {isContinuous && (
+                                  <Check className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+                                )}
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -925,6 +1060,12 @@ export const ReleaseReadinessBoardApp: React.FC<ReleaseReadinessBoardAppProps> =
                 <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5">
                   <span className="text-slate-500">Pilot Cohort & Window:</span>
                   <span className="font-bold text-slate-800">500 Users · 48 Hours</span>
+                </div>
+                <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5">
+                  <span className="text-slate-500">Validation Sequencing:</span>
+                  <span className="font-bold text-slate-800">
+                    {Object.values(chapter5State.prePilotActivities || {}).filter(s => s === 'pre_pilot_prerequisite').length} Prerequisites · {Object.values(chapter5State.prePilotActivities || {}).filter(s => s === 'during_pilot_continuous').length} Continuous
+                  </span>
                 </div>
                 <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5">
                   <span className="text-slate-500">Latency & Error Threshold:</span>
