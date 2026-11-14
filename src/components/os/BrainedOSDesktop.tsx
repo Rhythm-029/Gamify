@@ -1134,7 +1134,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
       pushNotification({
         id: 'ch10_portal_unlocked',
         app: 'Teams',
-        title: 'Alex · Lead Architect',
+        title: 'Daniel Brooks · Lead Developer',
         subtitle: 'Developer Portal Challenge Ready',
         body: 'Pre-brief concluded. Access the Internal Developer Portal to audit the repository, determine SemVer v1.0.0, and publish the 6-domain architecture catalog.',
         timestamp: 'Now',
@@ -1751,6 +1751,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
                   onUpdateChapter10State={handleUpdateChapter10State}
                   onOpenEngineeringReleasePortal={() => handleOpenApp('engineering_release_portal')}
                   onOpenChapter10Meeting={() => handleOpenApp('chapter10_meeting')}
+                  onOpenChapter10Scorecard={() => setIsChapter10ScorecardOpen(true)}
                   chapter11State={chapter11State}
                   onUpdateChapter11State={handleUpdateChapter11State}
                   onOpenOperationsTransitionConsole={() => handleOpenApp('operations_transition_console')}
@@ -2004,6 +2005,8 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
                       title,
                       body,
                       timestamp: 'Now',
+                      actionText: 'Open Portal',
+                      onActionAppId: 'engineering_release_portal',
                     });
                   }}
                 />

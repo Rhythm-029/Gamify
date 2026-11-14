@@ -153,13 +153,17 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
     onUpdateState({
       repoAuditCompleted: true,
       selectedRepoFiles: selectedFilesToRetain,
+      selectedTab: 'versioning',
     });
     if (onNotifyDesktop) {
       onNotifyDesktop(
-        'Repository Audit Completed',
-        'Authoritative documentation baseline established. Single source of truth locked.'
+        'Step 1 Complete: Repo Audit Saved',
+        'Authoritative baseline established. Moving to Step 2: Semantic Versioning.'
       );
     }
+    setTimeout(() => {
+      handleTabChange('versioning');
+    }, 450);
   };
 
   // Confirm SemVer
@@ -170,15 +174,17 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
     onUpdateState({
       selectedVersion: chosenVersion,
       versionConfirmed: true,
+      selectedTab: 'catalog',
     });
     if (onNotifyDesktop) {
       onNotifyDesktop(
-        `Version Tagged: ${chosenVersion}`,
-        chosenVersion === 'v1.0.0'
-          ? 'First formal stable release approved under Semantic Versioning rules.'
-          : 'Version tag recorded in repository release manifest.'
+        `Step 2 Complete: Version Tagged (${chosenVersion})`,
+        'Semantic version recorded. Moving to Step 3: Developer Portal Package.'
       );
     }
+    setTimeout(() => {
+      handleTabChange('catalog');
+    }, 450);
   };
 
   // Toggle Doc Section
@@ -204,13 +210,17 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
       catalogPublished: true,
       selectedDocSections,
       documentationCoveragePct: docCoveragePct,
+      selectedTab: 'governance',
     });
     if (onNotifyDesktop) {
       onNotifyDesktop(
-        'Developer Portal Catalog Published',
-        `Enterprise documentation package live with ${docCoveragePct}% coverage across APIs, schemas, and runbooks.`
+        'Step 3 Complete: Catalog Published',
+        `Documentation package live with ${docCoveragePct}% coverage. Moving to Step 4: Final Release Gate.`
       );
     }
+    setTimeout(() => {
+      handleTabChange('governance');
+    }, 450);
   };
 
   // Final Governance Decision Submit
@@ -424,17 +434,28 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
                   Review each file, inspect the content snippets, and select which must be retained as the single source of truth vs. deprecated.
                 </p>
               </div>
-              <button
-                onClick={handleSubmitAudit}
-                className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded text-xs font-semibold transition-all cursor-pointer border ${
-                  auditSubmitted
-                    ? 'bg-emerald-900/30 border-emerald-700/50 text-emerald-300'
-                    : 'bg-cyan-600 hover:bg-cyan-500 border-cyan-500 text-white shadow-sm'
-                }`}
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>{auditSubmitted ? 'Audit Submitted (+5 Bonus)' : 'Submit Repository Audit'}</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleSubmitAudit}
+                  className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded text-xs font-semibold transition-all cursor-pointer border ${
+                    auditSubmitted
+                      ? 'bg-emerald-900/30 border-emerald-700/50 text-emerald-300'
+                      : 'bg-cyan-600 hover:bg-cyan-500 border-cyan-500 text-white shadow-sm'
+                  }`}
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>{auditSubmitted ? 'Audit Submitted (+5 Bonus)' : 'Submit Repository Audit'}</span>
+                </button>
+                {auditSubmitted && (
+                  <button
+                    onClick={() => handleTabChange('versioning')}
+                    className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded text-xs font-bold transition-all cursor-pointer border bg-purple-600 hover:bg-purple-500 border-purple-400 text-white shadow-md shadow-purple-900/40 animate-pulse"
+                  >
+                    <span>Next: Semantic Versioning</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Split: file list + preview */}
@@ -616,17 +637,31 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
                   Daniel asks: <em>"We need to tag the repository before closing this sprint. Should we release as v0.9.9, v1.0.0, or v2.0.0?"</em> Software release numbers carry legal, contractual, and technical meaning.
                 </p>
               </div>
-              <button
-                onClick={handleConfirmVersion}
-                className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded text-xs font-semibold transition-all cursor-pointer border ${
-                  versionConfirmed
-                    ? 'bg-emerald-900/30 border-emerald-700/50 text-emerald-300'
-                    : 'bg-purple-600 hover:bg-purple-500 border-purple-500 text-white shadow-sm'
-                }`}
-              >
-                <Tag className="w-4 h-4" />
-                <span>{versionConfirmed ? 'Version Confirmed (+5 Bonus)' : 'Confirm Release Version'}</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleConfirmVersion}
+                  disabled={!chosenVersion}
+                  className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded text-xs font-semibold transition-all cursor-pointer border ${
+                    versionConfirmed
+                      ? 'bg-emerald-900/30 border-emerald-700/50 text-emerald-300'
+                      : chosenVersion
+                      ? 'bg-purple-600 hover:bg-purple-500 border-purple-500 text-white shadow-sm'
+                      : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed'
+                  }`}
+                >
+                  <Tag className="w-4 h-4" />
+                  <span>{versionConfirmed ? 'Version Confirmed (+5 Bonus)' : 'Confirm Release Version'}</span>
+                </button>
+                {versionConfirmed && (
+                  <button
+                    onClick={() => handleTabChange('catalog')}
+                    className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded text-xs font-bold transition-all cursor-pointer border bg-teal-600 hover:bg-teal-500 border-teal-400 text-white shadow-md shadow-teal-900/40 animate-pulse"
+                  >
+                    <span>Next: Developer Portal</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Version picker cards */}
@@ -717,17 +752,28 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
                   Daniel asks: <em>"What exactly should we publish? Just the API specs, or the complete documentation?"</em> Build a catalog that enables any developer to maintain the system independently.
                 </p>
               </div>
-              <button
-                onClick={handlePublishCatalog}
-                className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded text-xs font-semibold transition-all cursor-pointer border ${
-                  catalogPublished
-                    ? 'bg-emerald-900/30 border-emerald-700/50 text-emerald-300'
-                    : 'bg-teal-600 hover:bg-teal-500 border-teal-500 text-white shadow-sm'
-                }`}
-              >
-                <BookOpen className="w-4 h-4" />
-                <span>{catalogPublished ? 'Catalog Published (+5 Bonus)' : 'Publish Documentation Package'}</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePublishCatalog}
+                  className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded text-xs font-semibold transition-all cursor-pointer border ${
+                    catalogPublished
+                      ? 'bg-emerald-900/30 border-emerald-700/50 text-emerald-300'
+                      : 'bg-teal-600 hover:bg-teal-500 border-teal-500 text-white shadow-sm'
+                  }`}
+                >
+                  <BookOpen className="w-4 h-4" />
+                  <span>{catalogPublished ? 'Catalog Published (+5 Bonus)' : 'Publish Documentation Package'}</span>
+                </button>
+                {catalogPublished && (
+                  <button
+                    onClick={() => handleTabChange('governance')}
+                    className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded text-xs font-bold transition-all cursor-pointer border bg-amber-600 hover:bg-amber-500 border-amber-400 text-white shadow-md shadow-amber-900/40 animate-pulse"
+                  >
+                    <span>Next: Final Release Gate</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Coverage meter */}
@@ -932,6 +978,23 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
                   Awarded for establishing formal v1.0.0 release tagging, 100% developer portal coverage, and single-source-of-truth repo audit.
                 </p>
               </div>
+            </div>
+
+            {/* Bottom Submit Action */}
+            <div className="pt-2 flex justify-end">
+              <button
+                onClick={handleCommitFinalDecision}
+                disabled={!selectedDecision}
+                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-xs transition-all cursor-pointer shadow-lg ${
+                  selectedDecision
+                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border border-emerald-400/50 shadow-emerald-950/50 animate-pulse'
+                    : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
+                }`}
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span>Finalize Release &amp; View Scorecard</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
         )}

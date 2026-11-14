@@ -56,6 +56,7 @@ interface MSTeamsAppProps {
   onUpdateChapter10State?: (updater: Partial<Chapter10State> | ((prev: Chapter10State) => Chapter10State)) => void;
   onOpenEngineeringReleasePortal?: () => void;
   onOpenChapter10Meeting?: () => void;
+  onOpenChapter10Scorecard?: () => void;
   chapter11State?: Chapter11State;
   onUpdateChapter11State?: (updater: Partial<Chapter11State> | ((prev: Chapter11State) => Chapter11State)) => void;
   onOpenOperationsTransitionConsole?: () => void;
@@ -139,6 +140,7 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
   onUpdateChapter10State,
   onOpenEngineeringReleasePortal,
   onOpenChapter10Meeting,
+  onOpenChapter10Scorecard,
   chapter11State,
   onUpdateChapter11State,
   onOpenOperationsTransitionConsole,
@@ -1234,7 +1236,7 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
 
               {/* Action Buttons for Chapter 10 */}
               <div className="pt-2 flex flex-wrap items-center gap-3">
-                {onOpenChapter10Meeting && (
+                {onOpenChapter10Meeting && !chapter10State?.meetingCompleted && (
                   <button
                     onClick={onOpenChapter10Meeting}
                     className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-900/40 flex items-center gap-2 cursor-pointer transition-all border border-blue-400/40"
@@ -1242,12 +1244,21 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
                     <span>📹 Join Daniel Pre-Brief Call (25:00)</span>
                   </button>
                 )}
-                {onOpenEngineeringReleasePortal && (
+                {onOpenEngineeringReleasePortal && !chapter10State?.completed && (
                   <button
                     onClick={onOpenEngineeringReleasePortal}
                     className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs shadow-md shadow-indigo-900/40 flex items-center gap-2 cursor-pointer transition-all border border-indigo-400/40"
                   >
-                    <span>💻 Open Developer Portal (Engineering Challenge)</span>
+                    <span>💻 Continue Developer Portal Challenge</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                {chapter10State?.completed && onOpenChapter10Scorecard && (
+                  <button
+                    onClick={onOpenChapter10Scorecard}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-900/40 flex items-center gap-2 cursor-pointer transition-all border border-emerald-400/40 animate-pulse"
+                  >
+                    <span>🏆 View Chapter 10 Scorecard</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 )}
