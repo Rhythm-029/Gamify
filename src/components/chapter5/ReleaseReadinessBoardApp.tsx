@@ -17,6 +17,10 @@ import {
   Check,
   Activity,
   HelpCircle,
+  Gauge,
+  MessageSquare,
+  RotateCcw,
+  Info,
 } from 'lucide-react';
 import type {
   Chapter5State,
@@ -59,26 +63,47 @@ export const ReleaseReadinessBoardApp: React.FC<ReleaseReadinessBoardAppProps> =
   const [marcusWarning, setMarcusWarning] = useState<string | null>(null);
   const [openDropdownActId, setOpenDropdownActId] = useState<PrePilotActivityId | null>(null);
   const [unassignedWarning, setUnassignedWarning] = useState(false);
+  const [formValidationMessage, setFormValidationMessage] = useState<string | null>(null);
 
-  // Auto-reset legacy prePilotActivities if all 5 were set to 'pre_pilot_prerequisite'
+  // Auto-reset legacy cached state if user had the old hardcoded defaults
   useEffect(() => {
     if (!chapter5State.submitted && !chapter5State.completed) {
       const activities = chapter5State.prePilotActivities;
+      const updates: Partial<Chapter5State> = {};
+
       if (activities) {
         const vals = Object.values(activities);
         const isLegacyAllPrereq =
           vals.length === 5 && vals.every((v) => v === 'pre_pilot_prerequisite');
         if (isLegacyAllPrereq) {
-          onUpdateState({
-            prePilotActivities: {
-              act_peak_load: 'unassigned',
-              act_security_approval: 'unassigned',
-              act_monitoring_alerts: 'unassigned',
-              act_rollback_approval: 'unassigned',
-              act_user_comms: 'unassigned',
-            },
-          });
+          updates.prePilotActivities = {
+            act_peak_load: 'unassigned',
+            act_security_approval: 'unassigned',
+            act_monitoring_alerts: 'unassigned',
+            act_rollback_approval: 'unassigned',
+            act_user_comms: 'unassigned',
+          };
         }
+      }
+
+      // If Section B has the old hardcoded defaults, reset them to null so user can choose
+      const isLegacySectionB =
+        chapter5State.latencyTarget === 'strict_800ms' &&
+        chapter5State.errorRateThreshold === 'strict_0_1_percent' &&
+        chapter5State.feedbackChannel === 'in_app_daily_pulse' &&
+        chapter5State.incidentOwner === 'daniel_oncall_aarav_lead' &&
+        chapter5State.rollbackCondition === 'sev1_or_high_error_rate';
+
+      if (isLegacySectionB) {
+        updates.latencyTarget = null;
+        updates.errorRateThreshold = null;
+        updates.feedbackChannel = null;
+        updates.incidentOwner = null;
+        updates.rollbackCondition = null;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        onUpdateState(updates);
       }
     }
   }, []);
@@ -175,13 +200,35 @@ export const ReleaseReadinessBoardApp: React.FC<ReleaseReadinessBoardAppProps> =
     (act) => !chapter5State.prePilotActivities?.[act.id] || chapter5State.prePilotActivities[act.id] === 'unassigned'
   ).length;
 
+  const sectionBConfiguredCount = [
+    chapter5State.latencyTarget,
+    chapter5State.errorRateThreshold,
+    chapter5State.feedbackChannel,
+    chapter5State.incidentOwner,
+    chapter5State.rollbackCondition,
+  ].filter(Boolean).length;
+
   const handleOpenSubmitModal = () => {
     if (unassignedCount > 0) {
       sound.playClick();
-      setUnassignedWarning(true);
+      setFormValidationMessage(
+        `Please assign a phase (Prerequisite or Continuous) to all 5 activities in Section A (${unassignedCount} remaining).`
+      );
       return;
     }
-    setUnassignedWarning(false);
+    if (sectionBConfiguredCount < 5) {
+      sound.playClick();
+      setFormValidationMessage(
+        `Please configure all 5 safeguards in Section B (${5 - sectionBConfiguredCount} remaining).`
+      );
+      return;
+    }
+    if (!chapter5State.widerRolloutDecision) {
+      sound.playClick();
+      setFormValidationMessage('Please choose a post-pilot strategy in Section C before submitting.');
+      return;
+    }
+    setFormValidationMessage(null);
     setShowSubmitModal(true);
   };
 
@@ -578,6 +625,23 @@ export const ReleaseReadinessBoardApp: React.FC<ReleaseReadinessBoardAppProps> =
               </div>
             </div>
 
+            {/* Validation alert banner */}
+            {formValidationMessage && (
+              <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-300 text-amber-900 text-xs flex items-center justify-between shadow-2xs animate-shake">
+                <div className="flex items-center space-x-2.5">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span className="font-medium">{formValidationMessage}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFormValidationMessage(null)}
+                  className="px-2.5 py-1 rounded-lg text-amber-800 hover:bg-amber-100 font-bold text-xs cursor-pointer shrink-0"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+
             {/* ── SECTION A: PRE-PILOT VALIDATION SEQUENCING ── */}
             <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 space-y-3.5 shadow-2xs">
               <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
@@ -758,147 +822,395 @@ export const ReleaseReadinessBoardApp: React.FC<ReleaseReadinessBoardAppProps> =
             </div>
 
             {/* ── SECTION B: CONTROLLED USER GROUP PILOT SAFEGUARDS ── */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 space-y-4 shadow-2xs">
-              <div className="border-b border-slate-100 pb-2.5 flex items-center justify-between">
-                <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 font-mono">
-                    B. Controlled User Group Pilot Configuration
-                  </h3>
-                  <p className="text-[11px] text-slate-500">
-                    Define operational thresholds, feedback loops, and incident management for the 500-user test cohort.
+            <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 space-y-5 shadow-2xs">
+              {/* Header */}
+              <div className="border-b border-slate-100 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200/60">
+                      Step 3B
+                    </span>
+                    <h3 className="text-sm font-bold text-slate-900">
+                      B. Controlled User Group Pilot Configuration
+                    </h3>
+                  </div>
+                  <p className="text-[11px] text-slate-500 leading-normal max-w-xl">
+                    Select one policy for each of the 5 operational safeguards below. These define how telemetry, incident response, feedback, and emergency rollbacks are managed during the 48-hour pilot.
                   </p>
                 </div>
 
-                <div className="flex items-center space-x-2 text-[10px] font-mono font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
-                  <Users className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>500 Users · 48 Hours Fixed</span>
+                <div className="flex items-center space-x-2 shrink-0">
+                  <div
+                    className={`px-3 py-1 rounded-lg text-[10px] font-mono font-bold border flex items-center space-x-1.5 transition-colors ${
+                      sectionBConfiguredCount === 5
+                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                        : 'bg-amber-50 text-amber-800 border-amber-200'
+                    }`}
+                  >
+                    <span>{sectionBConfiguredCount} of 5 Configured</span>
+                  </div>
+                  <div className="px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold bg-slate-100 text-slate-700 border border-slate-200 flex items-center space-x-1">
+                    <Users className="w-3 h-3 text-slate-500" />
+                    <span>500 Users · 48h</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Pilot Controls Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* 1. Latency Target */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700">
-                    Performance Latency SLA
-                  </label>
-                  <div className="space-y-1.5">
-                    {LATENCY_TARGET_OPTIONS.map((opt) => (
-                      <div
-                        key={opt.id}
-                        onClick={() => {
-                          sound.playClick();
-                          onUpdateState({ latencyTarget: opt.id });
-                        }}
-                        className={`p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
-                          chapter5State.latencyTarget === opt.id
-                            ? 'bg-emerald-50 border-emerald-300 ring-1 ring-emerald-400'
-                            : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
-                        }`}
-                      >
-                        <div className="font-bold text-slate-800">{opt.label}</div>
-                        <p className="text-[10px] text-slate-500 leading-tight mt-0.5">{opt.detail}</p>
+              {/* Progress Checklist Bar */}
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pb-1">
+                {[
+                  { key: 'latency', label: '1. Latency SLA', done: !!chapter5State.latencyTarget },
+                  { key: 'error', label: '2. Error Alarm', done: !!chapter5State.errorRateThreshold },
+                  { key: 'feedback', label: '3. Feedback Loop', done: !!chapter5State.feedbackChannel },
+                  { key: 'oncall', label: '4. On-Call Lead', done: !!chapter5State.incidentOwner },
+                  { key: 'rollback', label: '5. Rollback Rule', done: !!chapter5State.rollbackCondition },
+                ].map((item) => (
+                  <div
+                    key={item.key}
+                    className={`p-2 rounded-xl border text-[10px] font-mono font-bold flex items-center justify-between transition-colors ${
+                      item.done
+                        ? 'bg-indigo-50/70 border-indigo-200 text-indigo-900'
+                        : 'bg-slate-50 border-slate-200 text-slate-400'
+                    }`}
+                  >
+                    <span className="truncate">{item.label}</span>
+                    {item.done ? (
+                      <Check className="w-3 h-3 text-indigo-600 shrink-0 ml-1" />
+                    ) : (
+                      <span className="text-[9px] text-slate-400 font-normal shrink-0 ml-1">Pending</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* 5 Safeguards List */}
+              <div className="space-y-4">
+                {/* 1. Performance Latency SLA */}
+                <div className="p-3.5 sm:p-4 rounded-xl border border-slate-200/90 bg-slate-50/40 space-y-2.5">
+                  <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-5 h-5 rounded-md bg-indigo-100 text-indigo-700 font-mono font-bold text-xs flex items-center justify-center shrink-0">
+                        1
                       </div>
-                    ))}
+                      <div className="flex items-center space-x-1.5">
+                        <Gauge className="w-3.5 h-3.5 text-indigo-600" />
+                        <span className="text-xs font-bold text-slate-900">
+                          Performance Latency SLA Target
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-mono text-slate-500">
+                      {chapter5State.latencyTarget ? '✓ Configured' : 'Needs Selection'}
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-slate-500">
+                    What response time threshold must the pilot system maintain before sounding degradation alarms?
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {LATENCY_TARGET_OPTIONS.map((opt) => {
+                      const isSelected = chapter5State.latencyTarget === opt.id;
+                      return (
+                        <div
+                          key={opt.id}
+                          onClick={() => {
+                            sound.playClick();
+                            onUpdateState({ latencyTarget: opt.id });
+                          }}
+                          className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col justify-between space-y-1.5 ${
+                            isSelected
+                              ? 'bg-indigo-50/70 border-indigo-400 ring-1 ring-indigo-400/40 shadow-2xs'
+                              : 'bg-white border-slate-200/90 hover:border-slate-300 hover:bg-slate-50/70'
+                          }`}
+                        >
+                          <div className="flex items-start space-x-2.5">
+                            <div
+                              className={`w-4 h-4 rounded-full border mt-0.5 flex items-center justify-center shrink-0 transition-colors ${
+                                isSelected ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300 bg-white'
+                              }`}
+                            >
+                              {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div
+                                className={`text-xs font-bold leading-snug ${
+                                  isSelected ? 'text-indigo-950' : 'text-slate-800'
+                                }`}
+                              >
+                                {opt.label}
+                              </div>
+                              <p className="text-[10px] text-slate-500 leading-normal mt-0.5">
+                                {opt.detail}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
-                {/* 2. Error Rate Threshold */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700">
-                    Error-Rate & Telemetry Threshold
-                  </label>
-                  <div className="space-y-1.5">
-                    {ERROR_RATE_OPTIONS.map((opt) => (
-                      <div
-                        key={opt.id}
-                        onClick={() => {
-                          sound.playClick();
-                          onUpdateState({ errorRateThreshold: opt.id });
-                        }}
-                        className={`p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
-                          chapter5State.errorRateThreshold === opt.id
-                            ? 'bg-emerald-50 border-emerald-300 ring-1 ring-emerald-400'
-                            : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
-                        }`}
-                      >
-                        <div className="font-bold text-slate-800">{opt.label}</div>
-                        <p className="text-[10px] text-slate-500 leading-tight mt-0.5">{opt.detail}</p>
+                {/* 2. Error-Rate Threshold */}
+                <div className="p-3.5 sm:p-4 rounded-xl border border-slate-200/90 bg-slate-50/40 space-y-2.5">
+                  <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-5 h-5 rounded-md bg-indigo-100 text-indigo-700 font-mono font-bold text-xs flex items-center justify-center shrink-0">
+                        2
                       </div>
-                    ))}
+                      <div className="flex items-center space-x-1.5">
+                        <Activity className="w-3.5 h-3.5 text-indigo-600" />
+                        <span className="text-xs font-bold text-slate-900">
+                          Error-Rate & Telemetry Threshold
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-mono text-slate-500">
+                      {chapter5State.errorRateThreshold ? '✓ Configured' : 'Needs Selection'}
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-slate-500">
+                    At what transaction error threshold should automated telemetry trigger incident response?
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {ERROR_RATE_OPTIONS.map((opt) => {
+                      const isSelected = chapter5State.errorRateThreshold === opt.id;
+                      return (
+                        <div
+                          key={opt.id}
+                          onClick={() => {
+                            sound.playClick();
+                            onUpdateState({ errorRateThreshold: opt.id });
+                          }}
+                          className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col justify-between space-y-1.5 ${
+                            isSelected
+                              ? 'bg-indigo-50/70 border-indigo-400 ring-1 ring-indigo-400/40 shadow-2xs'
+                              : 'bg-white border-slate-200/90 hover:border-slate-300 hover:bg-slate-50/70'
+                          }`}
+                        >
+                          <div className="flex items-start space-x-2.5">
+                            <div
+                              className={`w-4 h-4 rounded-full border mt-0.5 flex items-center justify-center shrink-0 transition-colors ${
+                                isSelected ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300 bg-white'
+                              }`}
+                            >
+                              {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div
+                                className={`text-xs font-bold leading-snug ${
+                                  isSelected ? 'text-indigo-950' : 'text-slate-800'
+                                }`}
+                              >
+                                {opt.label}
+                              </div>
+                              <p className="text-[10px] text-slate-500 leading-normal mt-0.5">
+                                {opt.detail}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
                 {/* 3. Feedback Collection */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700">
-                    Pilot User Feedback Collection
-                  </label>
-                  <div className="space-y-1.5">
-                    {FEEDBACK_CHANNEL_OPTIONS.map((opt) => (
-                      <div
-                        key={opt.id}
-                        onClick={() => {
-                          sound.playClick();
-                          onUpdateState({ feedbackChannel: opt.id });
-                        }}
-                        className={`p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
-                          chapter5State.feedbackChannel === opt.id
-                            ? 'bg-emerald-50 border-emerald-300 ring-1 ring-emerald-400'
-                            : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
-                        }`}
-                      >
-                        <div className="font-bold text-slate-800">{opt.label}</div>
-                        <p className="text-[10px] text-slate-500 leading-tight mt-0.5">{opt.detail}</p>
+                <div className="p-3.5 sm:p-4 rounded-xl border border-slate-200/90 bg-slate-50/40 space-y-2.5">
+                  <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-5 h-5 rounded-md bg-indigo-100 text-indigo-700 font-mono font-bold text-xs flex items-center justify-center shrink-0">
+                        3
                       </div>
-                    ))}
+                      <div className="flex items-center space-x-1.5">
+                        <MessageSquare className="w-3.5 h-3.5 text-indigo-600" />
+                        <span className="text-xs font-bold text-slate-900">
+                          Pilot User Feedback Collection
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-mono text-slate-500">
+                      {chapter5State.feedbackChannel ? '✓ Configured' : 'Needs Selection'}
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-slate-500">
+                    How will the 500 bank employees report usability friction, workflow blockers, and daily satisfaction?
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {FEEDBACK_CHANNEL_OPTIONS.map((opt) => {
+                      const isSelected = chapter5State.feedbackChannel === opt.id;
+                      return (
+                        <div
+                          key={opt.id}
+                          onClick={() => {
+                            sound.playClick();
+                            onUpdateState({ feedbackChannel: opt.id });
+                          }}
+                          className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col justify-between space-y-1.5 ${
+                            isSelected
+                              ? 'bg-indigo-50/70 border-indigo-400 ring-1 ring-indigo-400/40 shadow-2xs'
+                              : 'bg-white border-slate-200/90 hover:border-slate-300 hover:bg-slate-50/70'
+                          }`}
+                        >
+                          <div className="flex items-start space-x-2.5">
+                            <div
+                              className={`w-4 h-4 rounded-full border mt-0.5 flex items-center justify-center shrink-0 transition-colors ${
+                                isSelected ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300 bg-white'
+                              }`}
+                            >
+                              {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div
+                                className={`text-xs font-bold leading-snug ${
+                                  isSelected ? 'text-indigo-950' : 'text-slate-800'
+                                }`}
+                              >
+                                {opt.label}
+                              </div>
+                              <p className="text-[10px] text-slate-500 leading-normal mt-0.5">
+                                {opt.detail}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
-                {/* 4. Incident Owner & Rollback Trigger */}
-                <div className="space-y-3">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700">
-                      Incident On-Call & Escalation
-                    </label>
-                    {INCIDENT_OWNER_OPTIONS.map((opt) => (
-                      <div
-                        key={opt.id}
-                        onClick={() => {
-                          sound.playClick();
-                          onUpdateState({ incidentOwner: opt.id });
-                        }}
-                        className={`p-2 rounded-xl border text-xs cursor-pointer transition-all ${
-                          chapter5State.incidentOwner === opt.id
-                            ? 'bg-emerald-50 border-emerald-300 ring-1 ring-emerald-400'
-                            : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
-                        }`}
-                      >
-                        <div className="font-bold text-slate-800 text-[11px]">{opt.label}</div>
+                {/* 4 & 5 Grid: Incident Owner & Rollback Trigger */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* 4. Incident Owner */}
+                  <div className="p-3.5 sm:p-4 rounded-xl border border-slate-200/90 bg-slate-50/40 space-y-2.5">
+                    <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-5 h-5 rounded-md bg-indigo-100 text-indigo-700 font-mono font-bold text-xs flex items-center justify-center shrink-0">
+                          4
+                        </div>
+                        <div className="flex items-center space-x-1.5">
+                          <ShieldAlert className="w-3.5 h-3.5 text-indigo-600" />
+                          <span className="text-xs font-bold text-slate-900">
+                            Incident On-Call & Escalation
+                          </span>
+                        </div>
                       </div>
-                    ))}
+                      <span className="text-[10px] font-mono text-slate-500">
+                        {chapter5State.incidentOwner ? '✓ Configured' : 'Needs Selection'}
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] text-slate-500">
+                      Who is directly responsible for triaging technical bugs and managing incident escalation?
+                    </p>
+
+                    <div className="space-y-2">
+                      {INCIDENT_OWNER_OPTIONS.map((opt) => {
+                        const isSelected = chapter5State.incidentOwner === opt.id;
+                        return (
+                          <div
+                            key={opt.id}
+                            onClick={() => {
+                              sound.playClick();
+                              onUpdateState({ incidentOwner: opt.id });
+                            }}
+                            className={`p-3 rounded-xl border transition-all cursor-pointer flex items-start space-x-2.5 ${
+                              isSelected
+                                ? 'bg-indigo-50/70 border-indigo-400 ring-1 ring-indigo-400/40 shadow-2xs'
+                                : 'bg-white border-slate-200/90 hover:border-slate-300 hover:bg-slate-50/70'
+                            }`}
+                          >
+                            <div
+                              className={`w-4 h-4 rounded-full border mt-0.5 flex items-center justify-center shrink-0 transition-colors ${
+                                isSelected ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300 bg-white'
+                              }`}
+                            >
+                              {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div
+                                className={`text-xs font-bold leading-snug ${
+                                  isSelected ? 'text-indigo-950' : 'text-slate-800'
+                                }`}
+                              >
+                                {opt.label}
+                              </div>
+                              <p className="text-[10px] text-slate-500 leading-normal mt-0.5">
+                                {opt.detail}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700">
-                      Pause / Rollback Trigger Condition
-                    </label>
-                    {ROLLBACK_CONDITION_OPTIONS.map((opt) => (
-                      <div
-                        key={opt.id}
-                        onClick={() => {
-                          sound.playClick();
-                          onUpdateState({ rollbackCondition: opt.id });
-                        }}
-                        className={`p-2 rounded-xl border text-xs cursor-pointer transition-all ${
-                          chapter5State.rollbackCondition === opt.id
-                            ? 'bg-emerald-50 border-emerald-300 ring-1 ring-emerald-400'
-                            : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
-                        }`}
-                      >
-                        <div className="font-bold text-slate-800 text-[11px]">{opt.label}</div>
+                  {/* 5. Rollback Trigger */}
+                  <div className="p-3.5 sm:p-4 rounded-xl border border-slate-200/90 bg-slate-50/40 space-y-2.5">
+                    <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-5 h-5 rounded-md bg-indigo-100 text-indigo-700 font-mono font-bold text-xs flex items-center justify-center shrink-0">
+                          5
+                        </div>
+                        <div className="flex items-center space-x-1.5">
+                          <RotateCcw className="w-3.5 h-3.5 text-indigo-600" />
+                          <span className="text-xs font-bold text-slate-900">
+                            Pause / Rollback Trigger Condition
+                          </span>
+                        </div>
                       </div>
-                    ))}
+                      <span className="text-[10px] font-mono text-slate-500">
+                        {chapter5State.rollbackCondition ? '✓ Configured' : 'Needs Selection'}
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] text-slate-500">
+                      Under what criteria should the pilot immediately abort and redirect traffic to legacy HRMS?
+                    </p>
+
+                    <div className="space-y-2">
+                      {ROLLBACK_CONDITION_OPTIONS.map((opt) => {
+                        const isSelected = chapter5State.rollbackCondition === opt.id;
+                        return (
+                          <div
+                            key={opt.id}
+                            onClick={() => {
+                              sound.playClick();
+                              onUpdateState({ rollbackCondition: opt.id });
+                            }}
+                            className={`p-3 rounded-xl border transition-all cursor-pointer flex items-start space-x-2.5 ${
+                              isSelected
+                                ? 'bg-indigo-50/70 border-indigo-400 ring-1 ring-indigo-400/40 shadow-2xs'
+                                : 'bg-white border-slate-200/90 hover:border-slate-300 hover:bg-slate-50/70'
+                            }`}
+                          >
+                            <div
+                              className={`w-4 h-4 rounded-full border mt-0.5 flex items-center justify-center shrink-0 transition-colors ${
+                                isSelected ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300 bg-white'
+                              }`}
+                            >
+                              {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div
+                                className={`text-xs font-bold leading-snug ${
+                                  isSelected ? 'text-indigo-950' : 'text-slate-800'
+                                }`}
+                              >
+                                {opt.label}
+                              </div>
+                              <p className="text-[10px] text-slate-500 leading-normal mt-0.5">
+                                {opt.detail}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1106,8 +1418,16 @@ export const ReleaseReadinessBoardApp: React.FC<ReleaseReadinessBoardAppProps> =
                 <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5">
                   <span className="text-slate-500">Latency & Error Threshold:</span>
                   <span className="font-bold text-slate-800">
-                    {chapter5State.latencyTarget === 'strict_800ms' ? '< 800ms' : '< 1500ms'},{' '}
-                    {chapter5State.errorRateThreshold === 'strict_0_1_percent' ? '< 0.1%' : '< 1%'}
+                    {chapter5State.latencyTarget === 'strict_800ms'
+                      ? '< 800ms'
+                      : chapter5State.latencyTarget === 'moderate_1500ms'
+                      ? '< 1500ms'
+                      : 'Not Defined'},{' '}
+                    {chapter5State.errorRateThreshold === 'strict_0_1_percent'
+                      ? '< 0.1%'
+                      : chapter5State.errorRateThreshold === 'lenient_1_percent'
+                      ? '< 1%'
+                      : 'Manual Logs'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5">

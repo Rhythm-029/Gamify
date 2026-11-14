@@ -87,11 +87,11 @@ export interface Chapter5State {
 
   // Stage 3: Rollout plan configuration
   prePilotActivities: Record<PrePilotActivityId, PilotActivityStage>;
-  latencyTarget: LatencyTarget;
-  errorRateThreshold: ErrorRateThreshold;
-  feedbackChannel: FeedbackChannel;
-  incidentOwner: IncidentOwner;
-  rollbackCondition: RollbackCondition;
+  latencyTarget: LatencyTarget | null;
+  errorRateThreshold: ErrorRateThreshold | null;
+  feedbackChannel: FeedbackChannel | null;
+  incidentOwner: IncidentOwner | null;
+  rollbackCondition: RollbackCondition | null;
   widerRolloutDecision: WiderRolloutDecision | null;
 
   // Submission & Review
