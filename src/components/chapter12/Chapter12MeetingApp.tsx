@@ -189,8 +189,8 @@ export const Chapter12MeetingApp: React.FC<Chapter12MeetingAppProps> = ({
   const [joinToast, setJoinToast] = useState<{ name: string; dp: string } | null>(null);
 
   // Decision state for Part 3
-  const [selectedDecision, setSelectedDecision] = useState<Chapter12DecisionChoice>(
-    chapter12State.decisionChosen || 'choice_b'
+  const [selectedDecision, setSelectedDecision] = useState<Chapter12DecisionChoice | null>(
+    chapter12State.decisionChosen || null
   );
   const [decisionSubmitted, setDecisionSubmitted] = useState<boolean>(
     Boolean(chapter12State.decisionChosen)
@@ -350,6 +350,7 @@ export const Chapter12MeetingApp: React.FC<Chapter12MeetingAppProps> = ({
   };
 
   const handleAuthorizeDecision = () => {
+    if (!selectedDecision) return;
     sound.playSystemClearance();
     const scorecard = computeChapter12Score({
       ...chapter12State,
@@ -875,7 +876,12 @@ export const Chapter12MeetingApp: React.FC<Chapter12MeetingAppProps> = ({
               <div className="pt-4 flex items-center justify-end">
                 <button
                   onClick={handleAuthorizeDecision}
-                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-500 hover:to-sky-500 text-white font-bold text-xs flex items-center space-x-2 shadow-xl cursor-pointer transition-all border border-indigo-400/30"
+                  disabled={!selectedDecision}
+                  className={`px-6 py-3 rounded-xl font-bold text-xs flex items-center space-x-2 shadow-xl transition-all border ${
+                    selectedDecision
+                      ? 'bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-500 hover:to-sky-500 text-white cursor-pointer active:scale-95 border-indigo-400/30'
+                      : 'bg-slate-800 text-slate-500 cursor-not-allowed border-slate-700'
+                  }`}
                 >
                   <ShieldCheck className="w-4 h-4" />
                   <span>Authorize Release Strategy</span>

@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   Layers,
   CheckCircle2,
-  AlertCircle,
   GitBranch,
   ShieldAlert,
   GraduationCap,
@@ -81,7 +80,6 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
   const [scopeAssignments, setScopeAssignments] = useState<Record<string, UpgradeCategory>>(
     chapter12State.scopeAssignments || {}
   );
-  const [scopeError, setScopeError] = useState<string | null>(null);
   const [scopeCompleted, setScopeCompleted] = useState<boolean>(
     Boolean(chapter12State.scopeCompleted)
   );
@@ -89,8 +87,8 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
 
   // ── STAGE 2: FEATURE FLAGS & FRAMEWORK STATE ──
   const [featureFlags, setFeatureFlags] = useState<Record<string, FeatureFlagRollout>>({
-    lms: chapter12State.featureFlags?.lms ?? 25,
-    visiting_cards: chapter12State.featureFlags?.visiting_cards ?? 5,
+    lms: chapter12State.featureFlags?.lms ?? 0,
+    visiting_cards: chapter12State.featureFlags?.visiting_cards ?? 0,
     ai_chatbot: chapter12State.featureFlags?.ai_chatbot ?? 0,
   });
   const [frameworkConfigured, setFrameworkConfigured] = useState<boolean>(
@@ -106,7 +104,6 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
     chapter12State.deploymentSlots || [null, null, null, null]
   );
   const [draggedActionId, setDraggedActionId] = useState<string | null>(null);
-  const [deploymentInterruption, setDeploymentInterruption] = useState<string | null>(null);
   const [isSimulatingTests, setIsSimulatingTests] = useState(false);
   const [deploymentCompleted, setDeploymentCompleted] = useState<boolean>(
     Boolean(chapter12State.deploymentCompleted)
@@ -118,6 +115,12 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
   const hasStep3 = hasStep2 && deploymentSlots[2] === 'action_c';
   const hasStep4 = hasStep3 && deploymentSlots[3] === 'action_d';
 
+  // Scramble available deployment actions pool so they are not presented sequentially
+  const SCRAMBLED_ACTIONS = useMemo(
+    () => [DEPLOYMENT_ACTIONS[1], DEPLOYMENT_ACTIONS[3], DEPLOYMENT_ACTIONS[0], DEPLOYMENT_ACTIONS[2]],
+    []
+  );
+
   // ───────────────────────────────────────────────────────────────────────────
   // STAGE 1: DRAG & DROP HANDLERS (UPGRADE SCOPE)
   // ───────────────────────────────────────────────────────────────────────────
@@ -127,34 +130,16 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
     if (!mod) return;
 
     const updated = { ...scopeAssignments, [moduleId]: category };
-
-    if (mod.category !== category) {
-      sound.playPenaltyPing();
-      setScopeError(
-        mod.id === 'framework_upgrade'
-          ? 'Remember, the framework upgrade changes the underlying platform. It needs a separate compatibility and upgrade validation process.'
-          : 'LMS, Digital Visiting Cards, and AI HR Chatbot introduce new functional capabilities—place them under New Functionality, not Core Platform Upgrade.'
-      );
-      setScopeAssignments(updated);
-      setScopeCompleted(false);
-      onUpdateState({
-        scopeAssignments: updated,
-        scopeCompleted: false,
-        scopeErrorCount: (chapter12State.scopeErrorCount || 0) + 1,
-      });
-      return;
-    }
-
-    setScopeError(null);
     sound.playSystemClearance();
     setScopeAssignments(updated);
 
+    const allPlaced = Object.keys(updated).length === 4;
     const correctCount = UPGRADE_MODULES.filter(
       (m) => updated[m.id] === m.category
     ).length;
-
     const allCorrect = correctCount === 4;
-    setScopeCompleted(allCorrect);
+
+    setScopeCompleted(allPlaced);
     onUpdateState({
       scopeAssignments: updated,
       scopeCompleted: allCorrect,
@@ -167,7 +152,6 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
     delete updated[moduleId];
     setScopeAssignments(updated);
     setScopeCompleted(false);
-    setScopeError(null);
     onUpdateState({
       scopeAssignments: updated,
       scopeCompleted: false,
@@ -176,8 +160,11 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
 
   const handleContinueToStrategy = () => {
     sound.playClick();
+    const correctCount = UPGRADE_MODULES.filter(
+      (m) => scopeAssignments[m.id] === m.category
+    ).length;
     onUpdateState({
-      scopeCompleted: true,
+      scopeCompleted: correctCount === 4,
       selectedTab: 'release_strategy',
     });
     setActiveTab('release_strategy');
@@ -233,56 +220,31 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
   // ───────────────────────────────────────────────────────────────────────────
   const handleAssignActionToSlot = (slotIndex: number, actionId: string) => {
     sound.playClick();
-    setDeploymentInterruption(null);
-
     const action = DEPLOYMENT_ACTIONS.find((a) => a.id === actionId);
     if (!action) return;
 
-    if (action.correctStep === 4 && (!hasStep1 || !hasStep2 || !hasStep3)) {
-      sound.playPenaltyPing();
-      setDeploymentInterruption(
-        "Hold on. We haven't validated the green environment yet. We shouldn't move production traffic until the release passes its checks."
-      );
-      return;
-    }
-
-    if (action.correctStep !== slotIndex + 1) {
-      sound.playPenaltyPing();
-      setDeploymentInterruption(
-        `Action "${action.title.slice(0, 35)}..." cannot be placed in Step ${
-          slotIndex + 1
-        }. Ensure prerequisites are sequenced first.`
-      );
-      return;
-    }
-
-    const updatedSlots = [...deploymentSlots];
-    updatedSlots[slotIndex] = actionId;
+    // Place into slotIndex and remove from any previous slot if already placed
+    const updatedSlots = deploymentSlots.map((id, idx) =>
+      idx === slotIndex ? actionId : id === actionId ? null : id
+    );
     setDeploymentSlots(updatedSlots);
-
-    if (slotIndex === 1) {
-      setIsSimulatingTests(true);
-      setTimeout(() => {
-        setIsSimulatingTests(false);
-        sound.playSystemClearance();
-      }, 1200);
-    } else {
-      sound.playSystemClearance();
-    }
+    sound.playSystemClearance();
 
     const s1 = updatedSlots[0] === 'action_a';
     const s2 = s1 && updatedSlots[1] === 'action_b';
     const s3 = s2 && updatedSlots[2] === 'action_c';
     const s4 = s3 && updatedSlots[3] === 'action_d';
 
-    setDeploymentCompleted(s4);
+    const allSlotsFilled = updatedSlots.every((s) => s !== null);
+    setDeploymentCompleted(allSlotsFilled);
+
     onUpdateState({
       deploymentSlots: updatedSlots,
       greenPrepared: s1,
       testsPassed: s2,
       releaseValidated: s3,
       trafficSwitchedToGreen: s4,
-      deploymentCompleted: s4,
+      deploymentCompleted: allSlotsFilled,
     });
   };
 
@@ -292,7 +254,6 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
     updatedSlots[slotIndex] = null;
     setDeploymentSlots(updatedSlots);
     setDeploymentCompleted(false);
-    setDeploymentInterruption(null);
 
     const s1 = updatedSlots[0] === 'action_a';
     const s2 = s1 && updatedSlots[1] === 'action_b';
@@ -310,7 +271,16 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
 
   const handleFinishDeployment = () => {
     sound.playSystemClearance();
+    const s1 = deploymentSlots[0] === 'action_a';
+    const s2 = s1 && deploymentSlots[1] === 'action_b';
+    const s3 = s2 && deploymentSlots[2] === 'action_c';
+    const s4 = s3 && deploymentSlots[3] === 'action_d';
+
     onUpdateState({
+      greenPrepared: s1,
+      testsPassed: s2,
+      releaseValidated: s3,
+      trafficSwitchedToGreen: s4,
       deploymentCompleted: true,
       currentStage: 'steering_final_decision',
       timelineTimestamp: '30:42',
@@ -323,10 +293,14 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
   ).length;
 
   // ── STEPPER STEPS CONFIG ──
+  const isScopeDone = Object.keys(scopeAssignments).length === 4;
+  const isStrategyDone = strategyCompleted || frameworkConfigured;
+  const isDeploymentDone = deploymentCompleted;
+
   const steps = [
-    { key: 'upgrade_scope' as EvolutionControlCenterTab, label: 'Upgrade Scope', done: scopeCompleted, num: 1 },
-    { key: 'release_strategy' as EvolutionControlCenterTab, label: 'Release Strategy', done: strategyCompleted, num: 2 },
-    { key: 'deployment_validation' as EvolutionControlCenterTab, label: 'Deployment Validation', done: deploymentCompleted, num: 3 },
+    { key: 'upgrade_scope' as EvolutionControlCenterTab, label: 'Upgrade Scope', done: isScopeDone, num: 1 },
+    { key: 'release_strategy' as EvolutionControlCenterTab, label: 'Release Strategy', done: isStrategyDone, num: 2 },
+    { key: 'deployment_validation' as EvolutionControlCenterTab, label: 'Deployment Validation', done: isDeploymentDone, num: 3 },
   ];
 
   return (
@@ -362,8 +336,8 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
             {steps.map((step, i) => {
               const isActive = activeTab === step.key;
               const isLocked =
-                (step.key === 'release_strategy' && !scopeCompleted) ||
-                (step.key === 'deployment_validation' && !strategyCompleted);
+                (step.key === 'release_strategy' && !isScopeDone) ||
+                (step.key === 'deployment_validation' && !isStrategyDone);
               return (
                 <React.Fragment key={step.key}>
                   <button
@@ -442,29 +416,10 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
             </div>
             <div className="text-xs font-mono font-bold shrink-0 flex items-center gap-2 bg-[#060c1a] border border-sky-500/25 px-3 py-1.5 rounded-xl">
               <Activity className="w-3.5 h-3.5 text-sky-400" />
-              <span className="text-sky-400">{correctCategorizedCount} / 4</span>
+              <span className="text-sky-400">{Object.keys(scopeAssignments).length} / 4</span>
               <span className="text-slate-500">categorized</span>
             </div>
           </div>
-
-          {/* Error / Daniel hint */}
-          {scopeError && (
-            <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/35 flex items-start gap-2.5 text-amber-200 text-xs shrink-0"
-            >
-              <img
-                src={CHAPTER12_CHARACTERS.daniel.avatar}
-                alt="Daniel"
-                className="w-7 h-7 rounded-full border-2 border-amber-400 shrink-0 object-cover mt-0.5"
-              />
-              <div className="text-xs leading-snug">
-                <span className="font-black text-amber-300">DANIEL: </span>
-                {scopeError}
-              </div>
-            </motion.div>
-          )}
 
           {/* Main 2-column layout */}
           <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 min-h-0">
@@ -485,7 +440,6 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
               <div className="space-y-2 overflow-y-auto flex-1 pr-1">
                 {UPGRADE_MODULES.map((mod) => {
                   const isAssigned = Boolean(scopeAssignments[mod.id]);
-                  const isFramework = mod.id === 'framework_upgrade';
                   return (
                     <div
                       key={mod.id}
@@ -497,35 +451,27 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
                       className={`rounded-xl border transition-all ${
                         isAssigned
                           ? 'opacity-30 border-slate-800 bg-slate-900/50 pointer-events-none'
-                          : isFramework
-                          ? 'bg-gradient-to-r from-amber-950/40 to-[#0d1428] border-amber-500/35 hover:border-amber-400/60 cursor-grab active:cursor-grabbing shadow-md shadow-amber-950/20'
-                          : 'bg-gradient-to-r from-sky-950/30 to-[#0d1428] border-slate-700/60 hover:border-sky-400/50 cursor-grab active:cursor-grabbing shadow-sm'
+                          : 'bg-[#0d1428] border-slate-700/60 hover:border-indigo-400/50 cursor-grab active:cursor-grabbing shadow-sm'
                       }`}
                     >
                       <div className="px-3 py-2.5">
                         <div className="flex items-start gap-3">
                           {/* Icon */}
-                          <div
-                            className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
-                              isFramework
-                                ? 'bg-amber-500/15 border border-amber-500/35 text-amber-300'
-                                : 'bg-sky-600/15 border border-sky-500/30 text-sky-300'
-                            }`}
-                          >
+                          <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5 bg-indigo-600/15 border border-indigo-500/30 text-indigo-300">
                             <ModuleIcon moduleId={mod.id} className="w-4 h-4" />
                           </div>
 
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap mb-0.5">
                               <h4 className="text-[13px] font-bold text-white leading-tight">{mod.name}</h4>
-                              <span
-                                className={`text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${
-                                  isFramework
-                                    ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
-                                    : 'bg-sky-500/15 text-sky-400 border border-sky-500/25'
-                                }`}
-                              >
-                                {isFramework ? 'Core Platform' : 'New Feature'}
+                              <span className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                                {mod.id === 'lms'
+                                  ? 'Training & Cert'
+                                  : mod.id === 'visiting_cards'
+                                  ? 'Corporate Identity'
+                                  : mod.id === 'ai_chatbot'
+                                  ? 'Employee Support'
+                                  : 'Core Runtime'}
                               </span>
                             </div>
                             <p className="text-[11px] text-slate-400 leading-snug">{mod.description}</p>
@@ -536,13 +482,13 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
                           <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/5">
                             <button
                               onClick={() => handleAssignModule(mod.id, 'new_functionality')}
-                              className="flex-1 py-1 rounded-lg text-[10px] font-bold bg-sky-600/20 hover:bg-sky-600/40 text-sky-300 hover:text-white border border-sky-500/30 transition-all cursor-pointer"
+                              className="flex-1 py-1 rounded-lg text-[10px] font-bold bg-slate-800/80 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-600/40 transition-all cursor-pointer"
                             >
                               → New Functionality
                             </button>
                             <button
                               onClick={() => handleAssignModule(mod.id, 'core_platform_upgrade')}
-                              className="flex-1 py-1 rounded-lg text-[10px] font-bold bg-amber-500/15 hover:bg-amber-500/30 text-amber-300 hover:text-white border border-amber-500/30 transition-all cursor-pointer"
+                              className="flex-1 py-1 rounded-lg text-[10px] font-bold bg-slate-800/80 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-600/40 transition-all cursor-pointer"
                             >
                               → Core Platform Upgrade
                             </button>
@@ -586,7 +532,6 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
                     .map(([modId]) => {
                       const mod = UPGRADE_MODULES.find((m) => m.id === modId);
                       if (!mod) return null;
-                      const isCorrect = mod.category === 'new_functionality';
                       return (
                         <div
                           key={modId}
@@ -599,24 +544,15 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
                           <motion.div
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className={`px-3 py-2 rounded-xl border flex items-center justify-between gap-2 cursor-grab active:cursor-grabbing ${
-                              isCorrect
-                                ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-200'
-                                : 'bg-rose-950/40 border-rose-500/50 text-rose-200'
-                            }`}
+                            className="px-3 py-2 rounded-xl border border-indigo-500/30 bg-[#101935] text-slate-200 flex items-center justify-between gap-2 cursor-grab active:cursor-grabbing shadow-sm"
                           >
                             <div className="flex items-center gap-2 min-w-0">
-                              {isCorrect ? (
-                                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                              ) : (
-                                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-                              )}
-                              <ModuleIcon moduleId={modId} className="w-3.5 h-3.5 opacity-70 shrink-0" />
+                              <ModuleIcon moduleId={modId} className="w-3.5 h-3.5 text-indigo-400 opacity-80 shrink-0" />
                               <span className="text-xs font-bold truncate">{mod.name}</span>
                             </div>
                             <button
                               onClick={() => handleRemoveScopeAssignment(modId)}
-                              className="text-[10px] text-slate-300 hover:text-white px-2 py-0.5 rounded bg-slate-800/80 cursor-pointer shrink-0"
+                              className="text-[10px] text-slate-400 hover:text-white px-2 py-0.5 rounded bg-slate-800/80 hover:bg-slate-700 cursor-pointer shrink-0 transition-colors"
                             >
                               ✕
                             </button>
@@ -626,13 +562,13 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
                     })}
 
                   {Object.values(scopeAssignments).filter((c) => c === 'new_functionality').length === 0 && (
-                    <div className="h-full flex flex-col items-center justify-center text-xs text-slate-600 italic py-6 gap-1.5">
-                      <div className="flex gap-2 opacity-40">
+                    <div className="h-full flex flex-col items-center justify-center text-xs text-slate-500 italic py-6 gap-1.5">
+                      <div className="flex gap-2 opacity-40 text-slate-400">
                         <GraduationCap className="w-4 h-4" />
                         <Contact2 className="w-4 h-4" />
                         <Bot className="w-4 h-4" />
                       </div>
-                      <span>Drop LMS, Visiting Cards & AI Chatbot here</span>
+                      <span>Assign employee-facing & business functionality modules here</span>
                     </div>
                   )}
                 </div>
@@ -667,7 +603,6 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
                     .map(([modId]) => {
                       const mod = UPGRADE_MODULES.find((m) => m.id === modId);
                       if (!mod) return null;
-                      const isCorrect = mod.category === 'core_platform_upgrade';
                       return (
                         <div
                           key={modId}
@@ -680,24 +615,15 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
                           <motion.div
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className={`px-3 py-2 rounded-xl border flex items-center justify-between gap-2 cursor-grab active:cursor-grabbing ${
-                              isCorrect
-                                ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-200'
-                                : 'bg-rose-950/40 border-rose-500/50 text-rose-200'
-                            }`}
+                            className="px-3 py-2 rounded-xl border border-indigo-500/30 bg-[#101935] text-slate-200 flex items-center justify-between gap-2 cursor-grab active:cursor-grabbing shadow-sm"
                           >
                             <div className="flex items-center gap-2 min-w-0">
-                              {isCorrect ? (
-                                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                              ) : (
-                                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-                              )}
-                              <ModuleIcon moduleId={modId} className="w-3.5 h-3.5 opacity-70 shrink-0" />
+                              <ModuleIcon moduleId={modId} className="w-3.5 h-3.5 text-indigo-400 opacity-80 shrink-0" />
                               <span className="text-xs font-bold truncate">{mod.name}</span>
                             </div>
                             <button
                               onClick={() => handleRemoveScopeAssignment(modId)}
-                              className="text-[10px] text-slate-300 hover:text-white px-2 py-0.5 rounded bg-slate-800/80 cursor-pointer shrink-0"
+                              className="text-[10px] text-slate-400 hover:text-white px-2 py-0.5 rounded bg-slate-800/80 hover:bg-slate-700 cursor-pointer shrink-0 transition-colors"
                             >
                               ✕
                             </button>
@@ -707,9 +633,9 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
                     })}
 
                   {Object.values(scopeAssignments).filter((c) => c === 'core_platform_upgrade').length === 0 && (
-                    <div className="h-full flex flex-col items-center justify-center text-xs text-slate-600 italic py-4 gap-1.5">
-                      <ShieldCheck className="w-4 h-4 opacity-40" />
-                      <span>Drop Framework Upgrade here</span>
+                    <div className="h-full flex flex-col items-center justify-center text-xs text-slate-500 italic py-4 gap-1.5">
+                      <ShieldCheck className="w-4 h-4 opacity-40 text-slate-400" />
+                      <span>Assign foundational infrastructure & architectural framework upgrades here</span>
                     </div>
                   )}
                 </div>
@@ -720,23 +646,18 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
           {/* Footer */}
           <div className="mt-3 pt-3 border-t border-white/8 flex items-center justify-between shrink-0 gap-3">
             <div className="flex items-center gap-2 text-xs">
-              {correctCategorizedCount === 4 ? (
-                <span className="text-emerald-400 font-bold flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4" />
-                  All 4 components categorized correctly
-                </span>
-              ) : (
-                <span className="text-slate-400">
-                  Categorize all 4 components into the correct buckets to continue.
-                </span>
-              )}
+              <span className="text-slate-400">
+                {Object.keys(scopeAssignments).length === 4
+                  ? 'All 4 components categorized. Ready to proceed.'
+                  : `Categorize all 4 components into the appropriate buckets (${Object.keys(scopeAssignments).length}/4).`}
+              </span>
             </div>
 
             <button
               onClick={handleContinueToStrategy}
-              disabled={correctCategorizedCount !== 4}
+              disabled={Object.keys(scopeAssignments).length !== 4}
               className={`px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
-                correctCategorizedCount === 4
+                Object.keys(scopeAssignments).length === 4
                   ? 'bg-sky-600 hover:bg-sky-500 text-white shadow-lg shadow-sky-900/40 cursor-pointer active:scale-95'
                   : 'bg-slate-800 text-slate-500 cursor-not-allowed'
               }`}
@@ -761,15 +682,9 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
                 Control progressive feature exposure via release flags before full deployment.
               </p>
             </div>
-            {Object.values(featureFlags).some((v) => v === 100) ? (
-              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/35">
-                ⚠ 100% exposure weakens blast-radius protection
-              </span>
-            ) : (
-              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/25">
-                ✓ Progressive Guardrail Active
-              </span>
-            )}
+            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+              Release Gate: Configuration Active
+            </span>
           </div>
 
           {/* Character quote bar */}
@@ -885,11 +800,11 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
                     <span
                       className={`text-[9px] font-bold px-1.5 py-0.5 rounded font-mono border ${
                         frameworkConfigured
-                          ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-                          : 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+                          ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
+                          : 'bg-slate-800 text-slate-400 border-slate-700'
                       }`}
                     >
-                      {frameworkConfigured ? '✓ CONFIGURED' : 'PENDING'}
+                      {frameworkConfigured ? 'CONFIGURED' : 'PENDING'}
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">
@@ -900,8 +815,7 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
 
               <div className="shrink-0">
                 {frameworkConfigured ? (
-                  <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/35 flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/35 flex items-center gap-1.5">
                     Controlled Pathway Configured
                   </span>
                 ) : (
@@ -963,12 +877,12 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
             <div>
               <h2 className="text-base font-black text-white leading-tight">Blue-Green Deployment Simulator</h2>
               <p className="text-xs text-slate-400 mt-0.5">
-                Sequence the 4 deployment actions correctly to execute a zero-downtime release.
+                Sequence the deployment actions to execute a zero-downtime release.
               </p>
             </div>
             <div className="text-xs font-mono font-bold text-sky-400 bg-[#060c1a] px-3 py-1.5 rounded-xl border border-sky-500/25 shrink-0 flex items-center gap-2">
               <Activity className="w-3.5 h-3.5" />
-              {[hasStep1, hasStep2, hasStep3, hasStep4].filter(Boolean).length} / 4 steps
+              {deploymentSlots.filter(Boolean).length} / 4 actions sequenced
             </div>
           </div>
 
@@ -984,35 +898,10 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
             </div>
           </div>
 
-          {/* Error banner */}
-          {deploymentInterruption && (
-            <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-2 px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/35 flex items-start gap-2.5 text-rose-200 text-xs shrink-0"
-            >
-              <img
-                src={CHAPTER12_CHARACTERS.daniel.avatar}
-                alt="Daniel"
-                className="w-7 h-7 rounded-full border-2 border-rose-400 shrink-0 object-cover mt-0.5"
-              />
-              <div className="text-xs leading-snug">
-                <span className="font-black text-rose-300">DANIEL: </span>
-                {deploymentInterruption}
-              </div>
-            </motion.div>
-          )}
-
           {/* Environment panels */}
           <div className="mt-3 grid grid-cols-1 md:grid-cols-7 gap-3 shrink-0 items-center">
             {/* BLUE ENVIRONMENT */}
-            <div
-              className={`md:col-span-3 rounded-2xl border-2 p-4 transition-all ${
-                hasStep4
-                  ? 'bg-slate-900/40 border-slate-700/50 opacity-70'
-                  : 'bg-gradient-to-br from-blue-950/60 to-[#0d1428] border-blue-500/50 shadow-lg shadow-blue-950/40'
-              }`}
-            >
+            <div className="md:col-span-3 rounded-2xl border-2 p-4 transition-all bg-gradient-to-br from-blue-950/60 to-[#0d1428] border-blue-500/50 shadow-lg shadow-blue-950/40">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-300 shrink-0 shadow-md">
@@ -1024,17 +913,11 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
                       <code className="text-[10px] font-mono text-slate-400">v1.0.0</code>
                     </div>
                     <div className="text-[11px] text-slate-400 mt-0.5">Current Production</div>
-                    <div className="text-[10px] text-slate-500">Serving all employees</div>
+                    <div className="text-[10px] text-slate-500">Serving all active branches</div>
                   </div>
                 </div>
-                <span
-                  className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg border shrink-0 ${
-                    hasStep4
-                      ? 'bg-slate-800 text-slate-500 border-slate-700'
-                      : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 animate-pulse'
-                  }`}
-                >
-                  {hasStep4 ? 'STANDBY' : '● LIVE'}
+                <span className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg border shrink-0 bg-blue-500/15 text-blue-300 border-blue-500/30">
+                  ● LIVE
                 </span>
               </div>
             </div>
@@ -1042,87 +925,37 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
             {/* TRAFFIC INDICATOR */}
             <div className="md:col-span-1 flex flex-col items-center justify-center gap-1 py-2">
               <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Traffic</span>
-              <div
-                className={`text-[10px] font-mono font-black px-2 py-1 rounded-lg my-0.5 transition-all whitespace-nowrap border ${
-                  hasStep4
-                    ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/35 animate-pulse'
-                    : 'bg-blue-500/15 text-blue-300 border-blue-500/30'
-                }`}
-              >
-                {hasStep4 ? '→ Green' : '→ Blue'}
+              <div className="text-[10px] font-mono font-black px-2 py-1 rounded-lg my-0.5 transition-all whitespace-nowrap border bg-blue-500/15 text-blue-300 border-blue-500/30">
+                → Blue
               </div>
-              <ArrowLeftRight className={`w-4 h-4 ${hasStep4 ? 'text-emerald-400' : 'text-blue-400'}`} />
+              <ArrowLeftRight className="w-4 h-4 text-blue-400" />
               <span className="text-[9px] text-slate-600 font-mono">100%</span>
             </div>
 
             {/* GREEN ENVIRONMENT */}
-            <div
-              className={`md:col-span-3 rounded-2xl border-2 p-4 transition-all ${
-                hasStep4
-                  ? 'bg-gradient-to-br from-emerald-950/70 to-[#0d1428] border-emerald-400/70 shadow-xl shadow-emerald-950/50 ring-1 ring-emerald-500/40'
-                  : hasStep3
-                  ? 'bg-gradient-to-br from-emerald-950/40 to-[#0d1428] border-emerald-500/40 shadow-md'
-                  : hasStep1
-                  ? 'bg-gradient-to-br from-sky-950/30 to-[#0d1428] border-sky-500/35'
-                  : 'bg-[#0d1428]/60 border-slate-700/40 opacity-60'
-              }`}
-            >
+            <div className="md:col-span-3 rounded-2xl border-2 p-4 transition-all bg-gradient-to-br from-sky-950/30 to-[#0d1428] border-sky-500/35">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div
-                    className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-md border ${
-                      hasStep4
-                        ? 'bg-emerald-600/30 border-emerald-400/50 text-emerald-200'
-                        : hasStep1
-                        ? 'bg-emerald-600/15 border-emerald-500/30 text-emerald-300'
-                        : 'bg-slate-700/30 border-slate-600/40 text-slate-500'
-                    }`}
-                  >
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-md border bg-slate-700/30 border-slate-600/40 text-slate-400">
                     <Server className="w-6 h-6" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span
-                        className={`text-sm font-black uppercase tracking-wider ${
-                          hasStep4 ? 'text-emerald-300' : hasStep1 ? 'text-emerald-400' : 'text-slate-500'
-                        }`}
-                      >
+                      <span className="text-sm font-black uppercase tracking-wider text-sky-400">
                         GREEN
                       </span>
                       <code className="text-[10px] font-mono text-slate-400">v2.0.0</code>
                     </div>
                     <div className="text-[11px] text-slate-400 mt-0.5">Staging · Phase 2 + Framework</div>
-                    {/* Dynamic status checks */}
-                    {hasStep2 && (
-                      <div className="flex items-center gap-1 text-[10px] text-emerald-400 mt-0.5">
-                        <Check className="w-3 h-3" />
-                        {isSimulatingTests ? (
-                          <span className="animate-pulse text-sky-400">Running tests…</span>
-                        ) : (
-                          <span>Compatibility tests passed</span>
-                        )}
-                      </div>
-                    )}
-                    {hasStep3 && !hasStep2 === false && (
-                      <div className="flex items-center gap-1 text-[10px] text-emerald-400">
-                        <Check className="w-3 h-3" />
-                        <span>Release validated</span>
-                      </div>
-                    )}
+                    <div className="text-[10px] text-slate-500 mt-0.5">
+                      {deploymentSlots.filter(Boolean).length === 4
+                        ? '4 / 4 actions mapped'
+                        : `${deploymentSlots.filter(Boolean).length} / 4 actions mapped`}
+                    </div>
                   </div>
                 </div>
-                <span
-                  className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg border shrink-0 ${
-                    hasStep4
-                      ? 'bg-emerald-500/25 text-emerald-200 border-emerald-400/50 animate-pulse'
-                      : hasStep3
-                      ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-                      : hasStep1
-                      ? 'bg-sky-500/15 text-sky-300 border-sky-500/30'
-                      : 'bg-slate-800 text-slate-600 border-slate-700'
-                  }`}
-                >
-                  {hasStep4 ? '● LIVE' : hasStep3 ? 'VALIDATED' : hasStep1 ? 'PREPARING' : 'IDLE'}
+                <span className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg border shrink-0 bg-slate-800 text-slate-400 border-slate-700">
+                  {deploymentSlots.filter(Boolean).length === 4 ? 'READY' : 'STAGING'}
                 </span>
               </div>
             </div>
@@ -1142,7 +975,7 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
               </div>
 
               <div className="space-y-2 overflow-y-auto flex-1 pr-1">
-                {DEPLOYMENT_ACTIONS.map((action) => {
+                {SCRAMBLED_ACTIONS.map((action) => {
                   const isPlaced = deploymentSlots.includes(action.id);
                   return (
                     <div
@@ -1166,7 +999,7 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
                           </div>
                           <div className="min-w-0">
                             <span className="text-xs font-bold text-white block leading-snug">
-                              Step {action.correctStep}: {action.title}
+                              {action.title}
                             </span>
                           </div>
                         </div>
@@ -1223,7 +1056,7 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
                         }}
                         className={`px-3 py-2.5 rounded-xl border transition-all flex items-center justify-between gap-2 min-h-[54px] ${
                           assignedAction
-                            ? 'bg-gradient-to-r from-emerald-950/30 to-[#0d1428] border-emerald-500/40 shadow-sm'
+                            ? 'bg-[#101935] border-indigo-500/40 text-slate-200 shadow-sm'
                             : 'bg-[#060c1a]/60 border-dashed border-slate-700/70 hover:border-sky-500/50 hover:bg-sky-950/10'
                         }`}
                       >
@@ -1232,7 +1065,7 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
                           <div
                             className={`w-7 h-7 rounded-full flex items-center justify-center font-mono text-xs font-black border-2 shrink-0 ${
                               assignedAction
-                                ? 'bg-emerald-500 border-emerald-400 text-white shadow-sm'
+                                ? 'bg-indigo-600 border-indigo-400 text-white shadow-sm'
                                 : 'bg-slate-800 border-slate-600 text-slate-500'
                             }`}
                           >
@@ -1244,16 +1077,6 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
                               <span className="text-xs font-bold text-white block leading-snug truncate">
                                 {assignedAction.title}
                               </span>
-                              {slotIdx === 1 && isSimulatingTests && (
-                                <div className="text-[10px] text-sky-400 animate-pulse mt-0.5">
-                                  Running compatibility & integration checks…
-                                </div>
-                              )}
-                              {slotIdx === 1 && hasStep2 && !isSimulatingTests && (
-                                <div className="text-[10px] text-emerald-400 flex items-center gap-1 mt-0.5">
-                                  <Check className="w-3 h-3" /> Tests passed
-                                </div>
-                              )}
                             </div>
                           ) : (
                             <span className="text-xs text-slate-600 italic">Drop Step {slotIdx + 1} action here</span>
@@ -1283,35 +1106,36 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
                 </h3>
 
                 <div className="space-y-2">
-                  {[
-                    { done: hasStep1, label: 'Green Env Prepared', sub: 'v2.0.0 staging configured' },
-                    { done: hasStep2, label: 'Tests Passed', sub: 'Compatibility & security' },
-                    { done: hasStep3, label: 'Release Validated', sub: 'Go-live certified' },
-                    { done: hasStep4, label: 'Traffic Switched', sub: 'Zero-downtime cutover' },
-                  ].map((item, i) => (
-                    <div
-                      key={i}
-                      className={`flex items-center gap-2.5 px-2.5 py-2 rounded-xl border transition-all ${
-                        item.done
-                          ? 'bg-emerald-950/30 border-emerald-500/35'
-                          : 'bg-slate-800/30 border-slate-700/40'
-                      }`}
-                    >
+                  {[0, 1, 2, 3].map((slotIdx) => {
+                    const assignedActionId = deploymentSlots[slotIdx];
+                    const action = DEPLOYMENT_ACTIONS.find((a) => a.id === assignedActionId);
+                    return (
                       <div
-                        className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
-                          item.done ? 'bg-emerald-500 text-white' : 'bg-slate-700 text-slate-600'
+                        key={slotIdx}
+                        className={`flex items-center gap-2.5 px-2.5 py-2 rounded-xl border transition-all ${
+                          action
+                            ? 'bg-indigo-950/30 border-indigo-500/35'
+                            : 'bg-slate-800/30 border-slate-700/40'
                         }`}
                       >
-                        {item.done ? <Check className="w-3 h-3" /> : <span className="text-[10px] font-bold">{i + 1}</span>}
-                      </div>
-                      <div className="text-xs leading-tight">
-                        <div className={item.done ? 'text-emerald-200 font-bold' : 'text-slate-500'}>
-                          {item.label}
+                        <div
+                          className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+                            action ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-slate-500'
+                          }`}
+                        >
+                          <span className="text-[10px] font-bold">{slotIdx + 1}</span>
                         </div>
-                        <div className="text-[10px] text-slate-600">{item.sub}</div>
+                        <div className="text-xs leading-tight min-w-0">
+                          <div className={action ? 'text-indigo-200 font-bold truncate' : 'text-slate-500'}>
+                            {action ? `Step ${slotIdx + 1}: ${action.letter}` : `Step ${slotIdx + 1}: Unassigned`}
+                          </div>
+                          <div className="text-[10px] text-slate-500 truncate">
+                            {action ? action.title : 'Awaiting action placement'}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
@@ -1319,10 +1143,10 @@ export const EvolutionControlCenterApp: React.FC<EvolutionControlCenterAppProps>
               <div className="mt-3 pt-3 border-t border-white/8 shrink-0">
                 <button
                   onClick={handleFinishDeployment}
-                  disabled={!hasStep4}
+                  disabled={!deploymentSlots.every((s) => s !== null)}
                   className={`w-full py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
-                    hasStep4
-                      ? 'bg-gradient-to-r from-emerald-600 to-sky-600 hover:from-emerald-500 hover:to-sky-500 text-white shadow-lg shadow-emerald-900/40 cursor-pointer active:scale-95'
+                    deploymentSlots.every((s) => s !== null)
+                      ? 'bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-500 hover:to-sky-500 text-white shadow-lg shadow-indigo-900/40 cursor-pointer active:scale-95'
                       : 'bg-slate-800 text-slate-500 cursor-not-allowed'
                   }`}
                 >

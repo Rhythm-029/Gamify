@@ -324,8 +324,13 @@ export function computeChapter12Score(
 
   // Interactive Activity Bonuses
   let scopeBonus = 0;
-  if (state.scopeCompleted) {
+  const correctCount = UPGRADE_MODULES.filter(
+    (m) => state.scopeAssignments && state.scopeAssignments[m.id] === m.category
+  ).length;
+  if (correctCount === 4) {
     scopeBonus = 5;
+  } else if (correctCount >= 2) {
+    scopeBonus = 3;
   }
 
   let featureFlagBonus = 0;
@@ -343,7 +348,16 @@ export function computeChapter12Score(
 
   let blueGreenBonus = 0;
   if (state.deploymentCompleted) {
-    blueGreenBonus = 5;
+    const isCorrectSequence =
+      state.deploymentSlots?.[0] === 'action_a' &&
+      state.deploymentSlots?.[1] === 'action_b' &&
+      state.deploymentSlots?.[2] === 'action_c' &&
+      state.deploymentSlots?.[3] === 'action_d';
+    if (isCorrectSequence) {
+      blueGreenBonus = 5;
+    } else {
+      blueGreenBonus = 2;
+    }
   }
 
   const bonusPoints = scopeBonus + featureFlagBonus + blueGreenBonus;
@@ -439,8 +453,8 @@ const DEFAULT_CHAPTER12_STATE: Chapter12State = {
   scopeCompleted: false,
   scopeErrorCount: 0,
   featureFlags: {
-    lms: 25,
-    visiting_cards: 5,
+    lms: 0,
+    visiting_cards: 0,
     ai_chatbot: 0,
   },
   frameworkConfigured: false,
