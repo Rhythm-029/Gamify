@@ -61,7 +61,6 @@ import {
   EMAIL_UIUX_SIGNOFF,
   EMAIL_SPRINT1_GREENLIGHT,
 } from '../../data/chapter2Data';
-import { Chapter2Banner } from '../chapter2/Chapter2Banner';
 import { InfrastructureIncidentPanel } from '../chapter2/InfrastructureIncidentPanel';
 import { CommunicationSetupPanel } from '../chapter2/CommunicationSetupPanel';
 import { DesignReviewWorkspace } from '../chapter2/DesignReviewWorkspace';
@@ -77,7 +76,6 @@ import {
   setChapter3SessionState,
   computeChapter3Score,
 } from '../../data/chapter3Data';
-import { Chapter3Banner } from '../chapter3/Chapter3Banner';
 import { Chapter3MeetingApp } from '../chapter3/Chapter3MeetingApp';
 import { IntegrationPortalApp } from '../chapter3/IntegrationPortalApp';
 import { Chapter3ScorecardModal } from '../chapter3/Chapter3ScorecardModal';
@@ -88,7 +86,6 @@ import {
   getChapter4SessionState,
   setChapter4SessionState,
 } from '../../data/chapter4Data';
-import { Chapter4Banner } from '../chapter4/Chapter4Banner';
 import { Chapter4MeetingApp } from '../chapter4/Chapter4MeetingApp';
 import { IdeateImpactStudioApp } from '../chapter4/IdeateImpactStudioApp';
 import { Chapter4ScorecardModal } from '../chapter4/Chapter4ScorecardModal';
@@ -99,7 +96,6 @@ import {
   getChapter5SessionState,
   setChapter5SessionState,
 } from '../../data/chapter5Data';
-import { Chapter5Banner } from '../chapter5/Chapter5Banner';
 import { Chapter5MeetingApp } from '../chapter5/Chapter5MeetingApp';
 import { ReleaseReadinessBoardApp } from '../chapter5/ReleaseReadinessBoardApp';
 import { Chapter5ScorecardModal } from '../chapter5/Chapter5ScorecardModal';
@@ -110,7 +106,6 @@ import {
   getChapter6SessionState,
   setChapter6SessionState,
 } from '../../data/chapter6Data';
-import { Chapter6Banner } from '../chapter6/Chapter6Banner';
 import { Chapter6MeetingApp } from '../chapter6/Chapter6MeetingApp';
 import { PerformanceCommandCentreApp } from '../chapter6/PerformanceCommandCentreApp';
 import { Chapter6ScorecardModal } from '../chapter6/Chapter6ScorecardModal';
@@ -121,7 +116,6 @@ import {
   getChapter7SessionState,
   setChapter7SessionState,
 } from '../../data/chapter7Data';
-import { Chapter7Banner } from '../chapter7/Chapter7Banner';
 import { Chapter7MeetingApp } from '../chapter7/Chapter7MeetingApp';
 import { IncidentResponseStudioApp } from '../chapter7/IncidentResponseStudioApp';
 import { Chapter7ScorecardModal } from '../chapter7/Chapter7ScorecardModal';
@@ -133,7 +127,6 @@ import {
   getChapter8SessionState,
   setChapter8SessionState,
 } from '../../data/chapter8Data';
-import { Chapter8Banner } from '../chapter8/Chapter8Banner';
 import { Chapter8MeetingApp } from '../chapter8/Chapter8MeetingApp';
 import { ReleaseHandoverDeskApp } from '../chapter8/ReleaseHandoverDeskApp';
 import { Chapter8ScorecardModal } from '../chapter8/Chapter8ScorecardModal';
@@ -144,7 +137,6 @@ import {
   getChapter9SessionState,
   setChapter9SessionState,
 } from '../../data/chapter9Data';
-import { Chapter9Banner } from '../chapter9/Chapter9Banner';
 import { Chapter9MeetingApp } from '../chapter9/Chapter9MeetingApp';
 import { ExecutiveRoiBoardroomApp } from '../chapter9/ExecutiveRoiBoardroomApp';
 import { Chapter9ScorecardModal } from '../chapter9/Chapter9ScorecardModal';
@@ -156,7 +148,6 @@ import {
   setChapter10SessionState,
   computeChapter10Score,
 } from '../../data/chapter10Data';
-import { Chapter10Banner } from '../chapter10/Chapter10Banner';
 import { Chapter10MeetingApp } from '../chapter10/Chapter10MeetingApp';
 import { EngineeringReleasePortalApp } from '../chapter10/EngineeringReleasePortalApp';
 import { Chapter10ScorecardModal } from '../chapter10/Chapter10ScorecardModal';
@@ -168,7 +159,6 @@ import {
   setChapter11SessionState,
   computeChapter11Score,
 } from '../../data/chapter11Data';
-import { Chapter11Banner } from '../chapter11/Chapter11Banner';
 import { Chapter11MeetingApp } from '../chapter11/Chapter11MeetingApp';
 import { OperationsTransitionConsoleApp } from '../chapter11/OperationsTransitionConsoleApp';
 import { Chapter11ScorecardModal } from '../chapter11/Chapter11ScorecardModal';
@@ -181,7 +171,6 @@ import {
   computeChapter12Score,
 } from '../../data/chapter12Data';
 import { Chapter12StatusUpdateModal } from '../chapter12/Chapter12StatusUpdateModal';
-import { Chapter12Banner } from '../chapter12/Chapter12Banner';
 import { Chapter12MeetingApp } from '../chapter12/Chapter12MeetingApp';
 import { EvolutionControlCenterApp } from '../chapter12/EvolutionControlCenterApp';
 import { Chapter12CinematicModal } from '../chapter12/Chapter12CinematicModal';
@@ -1569,114 +1558,6 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
         onStartChapter={onStartChapter}
         onReturnToChapterSelect={onReturnToChapterSelect}
       />
-
-      {/* CHAPTER 2 STATUS BANNER */}
-      {activeChapter === 2 && (
-        <Chapter2Banner onOpenWorkspace={() => handleOpenApp('workspace_amigo')} />
-      )}
-
-      {/* CHAPTER 3 STATUS BANNER */}
-      {activeChapter === 3 && (
-        <Chapter3Banner
-          chapter3State={chapter3State}
-          onOpenDanielChat={() => {
-            handleUpdateChapter3State({ activeChatRecipient: 'daniel' });
-            handleOpenApp('teams');
-          }}
-          onOpenSophiaChat={() => {
-            handleUpdateChapter3State({ activeChatRecipient: 'sophia' });
-            handleOpenApp('teams');
-          }}
-          onOpenScorecard={() => setIsChapter3ScorecardOpen(true)}
-        />
-      )}
-
-      {/* CHAPTER 4 STATUS BANNER */}
-      {activeChapter === 4 && (
-        <Chapter4Banner
-          onOpenMeeting={() => handleOpenApp('chapter4_meeting')}
-          onOpenStudio={() => handleOpenApp('ideate_studio')}
-          studioUnlocked={chapter4State.studioAccessGranted}
-        />
-      )}
-
-      {/* CHAPTER 5 STATUS BANNER */}
-      {activeChapter === 5 && (
-        <Chapter5Banner
-          onOpenMeeting={() => handleOpenApp('chapter5_meeting')}
-          onOpenBoard={() => handleOpenApp('release_readiness')}
-          boardUnlocked={chapter5State.meetingCompleted || chapter5State.boardOpened}
-        />
-      )}
-
-      {/* CHAPTER 6 STATUS BANNER */}
-      {activeChapter === 6 && (
-        <Chapter6Banner
-          onOpenMeeting={() => handleOpenApp('chapter6_meeting')}
-          onOpenCommandCentre={() => handleOpenApp('performance_command_centre')}
-          commandCentreUnlocked={chapter6State.meetingCompleted || chapter6State.commandCentreOpened}
-        />
-      )}
-
-      {/* CHAPTER 7 STATUS BANNER */}
-      {activeChapter === 7 && (
-        <Chapter7Banner
-          onOpenMeeting={() => handleOpenApp('chapter7_meeting')}
-          onOpenStudio={() => handleOpenApp('incident_studio')}
-          studioUnlocked={chapter7State.meetingCompleted || chapter7State.callCompleted || chapter7State.studioUnlocked || chapter7State.studioOpened}
-        />
-      )}
-
-      {/* CHAPTER 8 STATUS BANNER */}
-      {activeChapter === 8 && (
-        <Chapter8Banner
-          chapter8State={chapter8State}
-          onOpenMeeting={() => handleOpenApp('chapter8_meeting')}
-          onOpenHandoverDesk={() => handleOpenApp('release_handover_desk')}
-          deskUnlocked={chapter8State.deskUnlocked}
-          onOpenScorecard={() => setIsChapter8ScorecardOpen(true)}
-        />
-      )}
-
-      {/* CHAPTER 9 STATUS BANNER */}
-      {activeChapter === 9 && (
-        <Chapter9Banner
-          chapter9State={chapter9State}
-          onOpenMeeting={() => handleOpenApp('chapter9_meeting')}
-          onOpenBoardroom={() => handleOpenApp('executive_roi_boardroom')}
-          onOpenScorecard={() => setIsChapter9ScorecardOpen(true)}
-        />
-      )}
-
-      {/* CHAPTER 10 STATUS BANNER */}
-      {activeChapter === 10 && (
-        <Chapter10Banner
-          state={chapter10State}
-          onOpenMeeting={() => handleOpenApp('chapter10_meeting')}
-          onOpenPortal={() => handleOpenApp('engineering_release_portal')}
-          onOpenScorecard={() => setIsChapter10ScorecardOpen(true)}
-        />
-      )}
-
-      {/* CHAPTER 11 STATUS BANNER */}
-      {activeChapter === 11 && (
-        <Chapter11Banner
-          state={chapter11State}
-          onOpenMeeting={() => handleOpenApp('chapter11_meeting')}
-          onOpenConsole={() => handleOpenApp('operations_transition_console')}
-          onOpenScorecard={() => setIsChapter11ScorecardOpen(true)}
-        />
-      )}
-
-      {/* CHAPTER 12 STATUS BANNER */}
-      {activeChapter === 12 && (
-        <Chapter12Banner
-          state={chapter12State}
-          onOpenMeeting={() => handleOpenApp('chapter12_meeting')}
-          onOpenControlCenter={() => handleOpenApp('evolution_control_center')}
-          onOpenReport={() => setIsChapter12ReportOpen(true)}
-        />
-      )}
 
       {/* DESKTOP CANVAS */}
       <main className="flex-1 relative z-10 pt-16 pb-24 px-8 overflow-hidden flex flex-col justify-between">
