@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShieldAlert,
@@ -59,6 +59,29 @@ export const ReleaseReadinessBoardApp: React.FC<ReleaseReadinessBoardAppProps> =
   const [marcusWarning, setMarcusWarning] = useState<string | null>(null);
   const [openDropdownActId, setOpenDropdownActId] = useState<PrePilotActivityId | null>(null);
   const [unassignedWarning, setUnassignedWarning] = useState(false);
+
+  // Auto-reset legacy prePilotActivities if all 5 were set to 'pre_pilot_prerequisite'
+  useEffect(() => {
+    if (!chapter5State.submitted && !chapter5State.completed) {
+      const activities = chapter5State.prePilotActivities;
+      if (activities) {
+        const vals = Object.values(activities);
+        const isLegacyAllPrereq =
+          vals.length === 5 && vals.every((v) => v === 'pre_pilot_prerequisite');
+        if (isLegacyAllPrereq) {
+          onUpdateState({
+            prePilotActivities: {
+              act_peak_load: 'unassigned',
+              act_security_approval: 'unassigned',
+              act_monitoring_alerts: 'unassigned',
+              act_rollback_approval: 'unassigned',
+              act_user_comms: 'unassigned',
+            },
+          });
+        }
+      }
+    }
+  }, []);
 
   const currentStage = chapter5State.currentStage;
 
@@ -616,12 +639,12 @@ export const ReleaseReadinessBoardApp: React.FC<ReleaseReadinessBoardAppProps> =
                             sound.playClick();
                             setOpenDropdownActId(isOpen ? null : act.id);
                           }}
-                          className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center justify-between gap-2.5 min-w-[210px] shadow-2xs ${
+                          className={`px-3 py-1.5 rounded-xl text-xs transition-all border cursor-pointer flex items-center justify-between gap-2.5 min-w-[150px] shadow-2xs ${
                             isPrereq
-                              ? 'bg-rose-50 text-rose-800 border-rose-200 hover:bg-rose-100'
+                              ? 'bg-rose-50 text-rose-800 border-rose-200 hover:bg-rose-100 font-bold'
                               : isContinuous
-                              ? 'bg-indigo-50 text-indigo-800 border-indigo-200 hover:bg-indigo-100'
-                              : 'bg-white text-slate-600 border-dashed border-slate-300 hover:border-indigo-400 hover:text-indigo-600'
+                              ? 'bg-indigo-50 text-indigo-800 border-indigo-200 hover:bg-indigo-100 font-bold'
+                              : 'bg-white text-slate-700 border-slate-300 hover:border-indigo-400 hover:bg-slate-50 font-medium'
                           }`}
                         >
                           <div className="flex items-center gap-1.5 truncate">
@@ -639,7 +662,7 @@ export const ReleaseReadinessBoardApp: React.FC<ReleaseReadinessBoardAppProps> =
                                 ? 'Prerequisite (Before Pilot)'
                                 : isContinuous
                                 ? 'Continuous (During Pilot)'
-                                : 'Choose phase...'}
+                                : 'Choose'}
                             </span>
                           </div>
                           <ChevronDown
@@ -711,6 +734,19 @@ export const ReleaseReadinessBoardApp: React.FC<ReleaseReadinessBoardAppProps> =
                                   <Check className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
                                 )}
                               </button>
+
+                              {!isUnassigned && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    handleSelectActivityStage(act.id, 'unassigned');
+                                    setOpenDropdownActId(null);
+                                  }}
+                                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-[11px] text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer border-t border-slate-100 mt-1 flex items-center justify-between"
+                                >
+                                  <span>Clear selection (reset to Choose)</span>
+                                </button>
+                              )}
                             </div>
                           </>
                         )}

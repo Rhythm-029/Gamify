@@ -276,6 +276,7 @@ export const WIDER_ROLLOUT_OPTIONS = [
 
 // ── INITIAL STATE ──
 export const INITIAL_CHAPTER5_STATE: Chapter5State = {
+  version: 2,
   currentStage: 'review_evidence',
   meetingCompleted: false,
   boardOpened: false,
@@ -566,7 +567,15 @@ export function getChapter5SessionState(): Chapter5State {
     if (raw) {
       try {
         const parsed = JSON.parse(raw);
-        sessionChapter5State = { ...INITIAL_CHAPTER5_STATE, ...parsed };
+        const isLegacy = !parsed.version || parsed.version < 2;
+        sessionChapter5State = {
+          ...INITIAL_CHAPTER5_STATE,
+          ...parsed,
+          version: 2,
+          prePilotActivities: isLegacy
+            ? { ...INITIAL_CHAPTER5_STATE.prePilotActivities }
+            : { ...INITIAL_CHAPTER5_STATE.prePilotActivities, ...(parsed.prePilotActivities || {}) },
+        };
       } catch {
         // ignore parse errors
       }

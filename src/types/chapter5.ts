@@ -72,6 +72,7 @@ export interface Chapter5Scorecard {
 }
 
 export interface Chapter5State {
+  version?: number;
   // Navigation & current stage
   currentStage: Chapter5Stage;
   meetingCompleted: boolean;
