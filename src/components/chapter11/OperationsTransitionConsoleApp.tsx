@@ -71,6 +71,20 @@ const RESOURCE_ICONS: Record<string, React.FC<{ className?: string }>> = {
   Wrench,
 };
 
+// Scramble resources so they are not in 1:1 row order opposite requirements
+const SCRAMBLED_RESOURCE_IDS = [
+  'res_escalation', // Row 0 (matches req 1)
+  'res_monitoring', // Row 1 (matches req 3)
+  'res_runbook',    // Row 2 (matches req 0)
+  'res_sop',        // Row 3 (matches req 5)
+  'res_access',     // Row 4 (matches req 2)
+  'res_known_bugs', // Row 5 (matches req 4)
+];
+
+const DISPLAY_RESOURCES = SCRAMBLED_RESOURCE_IDS.map(
+  (id) => AVAILABLE_RESOURCES.find((r) => r.id === id)!
+);
+
 // Phase color themes for Gantt-style view
 const PHASE_THEMES: Record<string, { bg: string; border: string; badge: string; accent: string; dot: string }> = {
   phase_intensive: {
@@ -111,10 +125,76 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
   const [matchedPairs, setMatchedPairs] = useState<Record<string, string>>(
     chapter11State.matchedPairs || {}
   );
-  const [matchingError, setMatchingError] = useState<string | null>(null);
   const [matchingSubmitted, setMatchingSubmitted] = useState<boolean>(
     Boolean(chapter11State.matchingCompleted)
   );
+
+  // Dynamic SVG wire connections
+  const matchingContainerRef = React.useRef<HTMLDivElement>(null);
+  const [lineConnections, setLineConnections] = useState<
+    { reqId: string; resId: string; x1: number; y1: number; x2: number; y2: number; color: string }[]
+  >([]);
+
+  const updateLineConnections = React.useCallback(() => {
+    if (!matchingContainerRef.current) return;
+    const containerRect = matchingContainerRef.current.getBoundingClientRect();
+    if (containerRect.width === 0 || containerRect.height === 0) return;
+
+    const LINE_PALETTE = [
+      '#6366f1', // Indigo
+      '#10b981', // Emerald
+      '#06b6d4', // Cyan
+      '#a855f7', // Purple
+      '#f59e0b', // Amber
+      '#3b82f6', // Blue
+    ];
+
+    const connections: {
+      reqId: string;
+      resId: string;
+      x1: number;
+      y1: number;
+      x2: number;
+      y2: number;
+      color: string;
+    }[] = [];
+
+    OPERATIONAL_REQUIREMENTS.forEach((req, idx) => {
+      const resId = matchedPairs[req.id];
+      if (!resId) return;
+
+      const reqPort = document.getElementById(`port-req-${req.id}`);
+      const resPort = document.getElementById(`port-res-${resId}`);
+
+      if (reqPort && resPort) {
+        const reqRect = reqPort.getBoundingClientRect();
+        const resRect = resPort.getBoundingClientRect();
+
+        connections.push({
+          reqId: req.id,
+          resId,
+          x1: reqRect.left + reqRect.width / 2 - containerRect.left,
+          y1: reqRect.top + reqRect.height / 2 - containerRect.top,
+          x2: resRect.left + resRect.width / 2 - containerRect.left,
+          y2: resRect.top + resRect.height / 2 - containerRect.top,
+          color: LINE_PALETTE[idx % LINE_PALETTE.length],
+        });
+      }
+    });
+
+    setLineConnections(connections);
+  }, [matchedPairs]);
+
+  React.useEffect(() => {
+    const handle = requestAnimationFrame(() => {
+      updateLineConnections();
+    });
+    window.addEventListener('resize', updateLineConnections);
+    return () => {
+      cancelAnimationFrame(handle);
+      window.removeEventListener('resize', updateLineConnections);
+    };
+  }, [updateLineConnections, activeTab]);
 
   // ── STAGE 2: INCIDENT SIMULATION & TRAINING STATE ──
   const [incidentSlots, setIncidentSlots] = useState<(string | null)[]>(
@@ -150,25 +230,33 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
     if (matchingSubmitted) return;
     sound.playClick();
     setSelectedReqId(reqId === selectedReqId ? null : reqId);
-    setMatchingError(null);
   };
 
   const handleSelectResource = (resId: string) => {
-    if (matchingSubmitted || !selectedReqId) return;
-    const req = OPERATIONAL_REQUIREMENTS.find((r) => r.id === selectedReqId);
-    if (!req) return;
+    if (matchingSubmitted) return;
 
-    if (req.targetResourceId === resId) {
-      sound.playSystemClearance();
-      const updated = { ...matchedPairs, [selectedReqId]: resId };
+    if (selectedReqId) {
+      sound.playClick();
+      const updated = { ...matchedPairs };
+      // If resource was already paired with another requirement, clear previous association
+      Object.keys(updated).forEach((rId) => {
+        if (updated[rId] === resId) {
+          delete updated[rId];
+        }
+      });
+
+      updated[selectedReqId] = resId;
       setMatchedPairs(updated);
       setSelectedReqId(null);
-      setMatchingError(null);
       onUpdateState({ matchedPairs: updated });
-    } else {
+      return;
+    }
+
+    // If no requirement selected, clicking a paired resource selects its requirement for quick re-linking
+    const pairedReqId = Object.keys(matchedPairs).find((rId) => matchedPairs[rId] === resId);
+    if (pairedReqId) {
       sound.playClick();
-      setMatchingError(`Resource does not match requirement. Review operational purpose.`);
-      setTimeout(() => setMatchingError(null), 2500);
+      setSelectedReqId(pairedReqId);
     }
   };
 
@@ -223,24 +311,12 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
   };
 
   const handleValidateIncidentSequence = () => {
-    const isCorrect =
-      incidentSlots[0] === 'step_access_check' &&
-      incidentSlots[1] === 'step_runbook_restart' &&
-      incidentSlots[2] === 'step_escalation_route';
-
-    if (isCorrect) {
-      sound.playSystemClearance();
-      setIncidentValidated(true);
-      setIncidentValidationFeedback(
-        'Response Sequence Validated: L1 triage verifies account lockouts, L2 restarts SSO pod, and L3 on-call handles SLA escalations.'
-      );
-      onUpdateState({ incidentValidated: true });
-    } else {
-      sound.playClick();
-      setIncidentValidationFeedback(
-        'Incorrect Sequence: Start with L1 Access Guide, follow with L2 Runbook restart, and reserve Escalation Matrix for SLA breaches.'
-      );
-    }
+    sound.playSystemClearance();
+    setIncidentValidated(true);
+    setIncidentValidationFeedback(
+      'Incident Triage Sequence Recorded: Workflow locked for operational handover review.'
+    );
+    onUpdateState({ incidentValidated: true });
   };
 
   const handleScheduleWorkshops = () => {
@@ -324,14 +400,9 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
     }
   };
 
-  // Metrics computation
-  const correctMatchesCount = OPERATIONAL_REQUIREMENTS.filter(
-    (req) => matchedPairs[req.id] === req.targetResourceId
-  ).length;
-
-  const hypercareCorrectCount = HYPERCARE_CARDS.filter(
-    (c) => phaseAssignments[c.id] === c.correctPhaseId
-  ).length;
+  // Metrics computation (counts player progress without leaking correctness before scorecard)
+  const pairedMatchesCount = Object.keys(matchedPairs).length;
+  const hypercareAssignedCount = Object.keys(phaseAssignments).length;
 
   // Tab config
   const tabs: { id: Chapter11PortalTab; label: string; shortLabel: string; icon: React.FC<{ className?: string }>; done: boolean }[] = [
@@ -458,32 +529,17 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <div className="text-center px-4 py-2 rounded-lg bg-[#0d1117] border border-[#30363d]">
-                    <div className="text-lg font-black text-indigo-300 leading-none">{correctMatchesCount}<span className="text-slate-500 text-xs font-normal">/6</span></div>
+                    <div className="text-lg font-black text-indigo-300 leading-none">{pairedMatchesCount}<span className="text-slate-500 text-xs font-normal">/6</span></div>
                     <div className="text-[10px] text-slate-500 mt-0.5">Matched</div>
                   </div>
                 </div>
               </div>
 
-              {/* Error banner */}
-              <AnimatePresence>
-                {matchingError && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2"
-                  >
-                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-                    <span>{matchingError}</span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
               {/* ── MAPPING LAYOUT ── */}
-              <div className="grid grid-cols-1 md:grid-cols-[1fr_48px_1fr] gap-0 md:gap-0 items-start">
+              <div ref={matchingContainerRef} className="relative grid grid-cols-1 md:grid-cols-[1fr_80px_1fr] gap-0 md:gap-0 items-start">
 
                 {/* LEFT: Requirements */}
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   <div className="flex items-center gap-2 px-1 pb-2 border-b border-[#21262d]">
                     <div className="w-1 h-4 rounded-full bg-indigo-500" />
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Operational Requirements</span>
@@ -497,20 +553,34 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                       <div
                         key={req.id}
                         onClick={() => handleSelectRequirement(req.id)}
-                        className={`group relative p-3.5 rounded-lg border transition-all cursor-pointer ${
+                        className={`group relative p-3.5 rounded-xl border transition-all cursor-pointer overflow-visible ${
                           isMatched
-                            ? 'bg-emerald-950/20 border-emerald-500/35 opacity-80'
+                            ? 'bg-emerald-950/20 border-emerald-500/35 opacity-90'
                             : isSelected
-                            ? 'bg-indigo-950/40 border-indigo-400/70 shadow-[0_0_0_2px_rgba(99,102,241,0.2)]'
+                            ? 'bg-indigo-950/40 border-indigo-400/70 shadow-[0_0_0_2px_rgba(99,102,241,0.25)]'
                             : 'bg-[#161b22] border-[#30363d] hover:border-indigo-500/40 hover:bg-[#1c2129]'
                         }`}
                       >
+                        {/* Right connector port */}
+                        <div
+                          id={`port-req-${req.id}`}
+                          className={`absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all z-20 ${
+                            isMatched
+                              ? 'bg-emerald-500 border-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.7)]'
+                              : isSelected
+                              ? 'bg-indigo-500 border-indigo-200 animate-pulse shadow-[0_0_12px_rgba(99,102,241,0.8)] scale-110'
+                              : 'bg-[#161b22] border-[#30363d] group-hover:border-indigo-400'
+                          }`}
+                        >
+                          <div className={`w-1.5 h-1.5 rounded-full ${isMatched || isSelected ? 'bg-white' : 'bg-slate-500'}`} />
+                        </div>
+
                         <div className="flex items-start gap-2.5">
                           {/* Status indicator */}
                           <div className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${
                             isMatched ? 'bg-emerald-400' : isSelected ? 'bg-indigo-400 animate-pulse' : 'bg-[#30363d]'
                           }`} />
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 pr-2">
                             <div className="flex items-center gap-1.5 mb-1">
                               <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${
                                 isMatched
@@ -555,46 +625,58 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                   })}
                 </div>
 
-                {/* CENTER: Connector column */}
-                <div className="hidden md:flex flex-col items-center pt-10 gap-[18px] px-2">
-                  {OPERATIONAL_REQUIREMENTS.map((req) => {
-                    const isMatched = Boolean(matchedPairs[req.id]);
-                    return (
-                      <div key={req.id} className="h-[66px] flex items-center justify-center">
-                        <div className={`w-6 h-px transition-all ${isMatched ? 'bg-emerald-500/50' : 'bg-[#30363d]'}`} />
-                      </div>
-                    );
-                  })}
+                {/* CENTER: Wire corridor & connection track */}
+                <div className="hidden md:flex flex-col items-center justify-between self-stretch relative py-6 px-1 h-full min-h-[460px]">
+                  <div className="w-px h-full bg-gradient-to-b from-transparent via-[#21262d] to-transparent" />
+                  <div className="absolute top-1/2 -translate-y-1/2 flex flex-col items-center gap-1.5 opacity-40">
+                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-500/50" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/50" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-purple-500/50" />
+                  </div>
                 </div>
 
-                {/* RIGHT: Resources */}
-                <div className="space-y-2 mt-4 md:mt-0">
+                {/* RIGHT: Resources in Scrambled Order */}
+                <div className="space-y-2.5 mt-4 md:mt-0">
                   <div className="flex items-center gap-2 px-1 pb-2 border-b border-[#21262d]">
                     <div className="w-1 h-4 rounded-full bg-purple-500" />
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Available Runbooks & Resources</span>
                   </div>
-                  {AVAILABLE_RESOURCES.map((res) => {
+                  {DISPLAY_RESOURCES.map((res) => {
                     const isAlreadyPaired = Object.values(matchedPairs).includes(res.id);
                     const ResIcon = RESOURCE_ICONS[res.iconName] || FileText;
-                    const isClickable = !!selectedReqId && !isAlreadyPaired && !matchingSubmitted;
+                    const isClickable = !matchingSubmitted;
 
                     return (
                       <div
                         key={res.id}
                         onClick={() => handleSelectResource(res.id)}
-                        className={`p-3.5 rounded-lg border transition-all ${
+                        className={`group relative p-3.5 rounded-xl border transition-all overflow-visible ${
                           isAlreadyPaired
-                            ? 'bg-[#161b22] border-[#21262d] opacity-45 cursor-default'
-                            : isClickable
+                            ? 'bg-emerald-950/15 border-emerald-500/35 cursor-pointer hover:border-emerald-500/50'
+                            : selectedReqId
                             ? 'bg-indigo-950/30 border-indigo-500/50 cursor-pointer hover:bg-indigo-950/50 shadow-[0_0_0_1px_rgba(99,102,241,0.2)]'
-                            : 'bg-[#161b22] border-[#30363d] cursor-default hover:border-[#444d56]'
+                            : 'bg-[#161b22] border-[#30363d] cursor-pointer hover:border-[#444d56]'
                         }`}
                       >
-                        <div className="flex items-start gap-2.5">
+                        {/* Left connector port */}
+                        <div
+                          id={`port-res-${res.id}`}
+                          className={`absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all z-20 ${
+                            isAlreadyPaired
+                              ? 'bg-emerald-500 border-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.7)]'
+                              : selectedReqId
+                              ? 'bg-indigo-950 border-indigo-400 group-hover:scale-110 shadow-[0_0_8px_rgba(99,102,241,0.4)]'
+                              : 'bg-[#161b22] border-[#30363d]'
+                          }`}
+                        >
+                          <div className={`w-1.5 h-1.5 rounded-full ${isAlreadyPaired ? 'bg-white' : selectedReqId ? 'bg-indigo-300' : 'bg-slate-600'}`} />
+                        </div>
+
+                        <div className="flex items-start gap-2.5 pl-2">
                           <div className={`mt-0.5 w-7 h-7 rounded-md flex items-center justify-center shrink-0 border ${
                             isAlreadyPaired
-                              ? 'bg-[#21262d] border-[#30363d] text-slate-600'
-                              : isClickable
+                              ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400'
+                              : selectedReqId
                               ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-400'
                               : 'bg-[#21262d] border-[#30363d] text-slate-500'
                           }`}>
@@ -613,25 +695,63 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                     );
                   })}
                 </div>
+
+                {/* SVG Wire Overlay */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none z-10 hidden md:block overflow-visible">
+                  <defs>
+                    <filter id="wire-glow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feGaussianBlur stdDeviation="2.5" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+                  {lineConnections.map((line) => {
+                    const dx = Math.max(30, (line.x2 - line.x1) * 0.45);
+                    return (
+                      <g key={`${line.reqId}-${line.resId}`} filter="url(#wire-glow)">
+                        <path
+                          d={`M ${line.x1} ${line.y1} C ${line.x1 + dx} ${line.y1}, ${line.x2 - dx} ${line.y2}, ${line.x2} ${line.y2}`}
+                          fill="none"
+                          stroke={line.color}
+                          strokeWidth={4}
+                          strokeOpacity={0.25}
+                          strokeLinecap="round"
+                        />
+                        <path
+                          d={`M ${line.x1} ${line.y1} C ${line.x1 + dx} ${line.y1}, ${line.x2 - dx} ${line.y2}, ${line.x2} ${line.y2}`}
+                          fill="none"
+                          stroke={line.color}
+                          strokeWidth={2}
+                          strokeOpacity={0.9}
+                          strokeLinecap="round"
+                        />
+                        <circle cx={line.x1} cy={line.y1} r={3} fill="#ffffff" />
+                        <circle cx={line.x2} cy={line.y2} r={3} fill="#ffffff" />
+                      </g>
+                    );
+                  })}
+                </svg>
               </div>
 
               {/* Submit bar */}
               <div className="p-4 rounded-xl bg-[#161b22] border border-[#30363d] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="text-xs text-slate-400">
-                  {correctMatchesCount === 6 ? (
+                  {pairedMatchesCount === 6 ? (
                     <span className="text-emerald-400 font-semibold flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4" />
-                      All 6 operational resources paired accurately — handover package complete.
+                      All 6 operational requirements connected — handover package ready to submit.
                     </span>
                   ) : (
-                    <span>Pair all <strong className="text-slate-200">6</strong> operational requirements to validate the handover package.</span>
+                    <span>Connect all <strong className="text-slate-200">6</strong> operational requirements to available resources to validate the package.</span>
                   )}
                 </div>
                 <button
-                  disabled={correctMatchesCount < 6 || matchingSubmitted}
+                  disabled={pairedMatchesCount < 6 || matchingSubmitted}
                   onClick={handleSubmitMatching}
                   className={`px-5 py-2.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
-                    correctMatchesCount === 6 && !matchingSubmitted
+                    pairedMatchesCount === 6 && !matchingSubmitted
                       ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/30 cursor-pointer active:scale-95'
                       : 'bg-[#21262d] text-slate-500 border border-[#30363d] cursor-not-allowed'
                   }`}
@@ -950,7 +1070,7 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <div className="text-center px-4 py-2 rounded-lg bg-[#0d1117] border border-[#30363d]">
-                    <div className="text-lg font-black text-indigo-300 leading-none">{hypercareCorrectCount}<span className="text-slate-500 text-xs font-normal">/4</span></div>
+                    <div className="text-lg font-black text-indigo-300 leading-none">{hypercareAssignedCount}<span className="text-slate-500 text-xs font-normal">/4</span></div>
                     <div className="text-[10px] text-slate-500 mt-0.5">Assigned</div>
                   </div>
                 </div>
@@ -1099,20 +1219,20 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
               {/* Submit bar */}
               <div className="p-4 rounded-xl bg-[#161b22] border border-[#30363d] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="text-xs text-slate-400">
-                  {hypercareCorrectCount === 4 ? (
+                  {hypercareAssignedCount === 4 ? (
                     <span className="text-emerald-400 font-semibold flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4" />
-                      14-day transition model aligned with Marcus and IT Operations.
+                      All 4 transition responsibilities allocated across the 14-day timeline.
                     </span>
                   ) : (
-                    <span>Assign all <strong className="text-slate-200">4</strong> responsibility cards into the correct timeline phases.</span>
+                    <span>Assign all <strong className="text-slate-200">4</strong> responsibility cards into the timeline phases.</span>
                   )}
                 </div>
                 <button
-                  disabled={hypercareCorrectCount < 4 || hypercareSubmitted}
+                  disabled={hypercareAssignedCount < 4 || hypercareSubmitted}
                   onClick={handleSubmitHypercare}
                   className={`px-5 py-2.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
-                    hypercareCorrectCount === 4 && !hypercareSubmitted
+                    hypercareAssignedCount === 4 && !hypercareSubmitted
                       ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/30 cursor-pointer active:scale-95'
                       : 'bg-[#21262d] text-slate-500 border border-[#30363d] cursor-not-allowed'
                   }`}
@@ -1146,7 +1266,7 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
               {/* ── DECISION CARDS ── */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-                {/* Choice A — Incomplete Transition */}
+                {/* Choice A — Direct Transition */}
                 <div
                   onClick={() => { if (decisionCommitted) return; sound.playClick(); setSelectedDecision('choice_a'); }}
                   className={`group relative rounded-2xl border-2 transition-all cursor-pointer overflow-hidden ${
@@ -1155,22 +1275,22 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                       : 'cursor-pointer'
                   } ${
                     selectedDecision === 'choice_a'
-                      ? 'border-rose-500/60 bg-rose-950/20 shadow-[0_0_30px_rgba(239,68,68,0.08)]'
+                      ? 'border-indigo-500/70 bg-indigo-950/20 shadow-[0_0_30px_rgba(99,102,241,0.12)]'
                       : 'border-[#30363d] bg-[#161b22] hover:border-[#444d56] hover:bg-[#1c2129]'
                   }`}
                 >
                   {/* Top accent stripe */}
-                  <div className={`h-1 w-full ${selectedDecision === 'choice_a' ? 'bg-rose-500' : 'bg-[#30363d]'}`} />
+                  <div className={`h-1 w-full ${selectedDecision === 'choice_a' ? 'bg-indigo-500' : 'bg-[#30363d]'}`} />
 
                   <div className="p-6 space-y-4">
                     {/* Header */}
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center">
-                            <XCircle className="w-4 h-4 text-rose-400" />
+                          <span className="w-8 h-8 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center">
+                            <FileText className="w-4 h-4 text-slate-300" />
                           </span>
-                          <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
                             {CHAPTER11_DECISION_OPTIONS.choice_a.title}
                           </span>
                         </div>
@@ -1179,34 +1299,34 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                         </h3>
                       </div>
                       {selectedDecision === 'choice_a' && !decisionCommitted && (
-                        <div className="w-5 h-5 rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center shrink-0 mt-1">
-                          <div className="w-2 h-2 rounded-full bg-rose-400" />
+                        <div className="w-5 h-5 rounded-full bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center shrink-0 mt-1">
+                          <div className="w-2 h-2 rounded-full bg-indigo-400" />
                         </div>
                       )}
                     </div>
 
                     {/* Quote */}
-                    <div className="p-3 rounded-lg bg-[#0d1117] border-l-2 border-rose-500/40 border border-[#21262d]">
+                    <div className="p-3 rounded-lg bg-[#0d1117] border-l-2 border-slate-600 border border-[#21262d]">
                       <p className="text-xs text-slate-300 italic leading-relaxed">
                         {CHAPTER11_DECISION_OPTIONS.choice_a.quote}
                       </p>
                     </div>
 
-                    {/* Warning tags */}
+                    {/* Neutral tags */}
                     <div className="flex flex-wrap gap-1.5">
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20">⚠ No Runbooks</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20">⚠ No Training</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20">⚠ No Hypercare</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#21262d] text-slate-300 border border-[#30363d]">Immediate Handover</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#21262d] text-slate-300 border border-[#30363d]">Ad-hoc Support</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#21262d] text-slate-300 border border-[#30363d]">Direct Team Closeout</span>
                     </div>
 
                     {/* Footer note */}
                     <div className="pt-3 border-t border-[#21262d] text-[11px] text-slate-500">
-                      Bypasses structured runbooks and 14-day hypercare window.
+                      Transfers ownership directly upon system launch without dedicated hypercare buffer.
                     </div>
                   </div>
                 </div>
 
-                {/* Choice B — Formal Handover */}
+                {/* Choice B — Formal Handover Protocol */}
                 <div
                   onClick={() => { if (decisionCommitted) return; sound.playClick(); setSelectedDecision('choice_b'); }}
                   className={`group relative rounded-2xl border-2 transition-all overflow-hidden ${
@@ -1215,22 +1335,22 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                       : 'cursor-pointer'
                   } ${
                     selectedDecision === 'choice_b'
-                      ? 'border-emerald-500/60 bg-emerald-950/15 shadow-[0_0_30px_rgba(16,185,129,0.06)]'
-                      : 'border-[#30363d] bg-[#161b22] hover:border-indigo-400/40 hover:bg-[#1c2129]'
+                      ? 'border-indigo-500/70 bg-indigo-950/20 shadow-[0_0_30px_rgba(99,102,241,0.12)]'
+                      : 'border-[#30363d] bg-[#161b22] hover:border-[#444d56] hover:bg-[#1c2129]'
                   }`}
                 >
                   {/* Top accent stripe */}
-                  <div className={`h-1 w-full ${selectedDecision === 'choice_b' ? 'bg-emerald-500' : 'bg-[#30363d]'}`} />
+                  <div className={`h-1 w-full ${selectedDecision === 'choice_b' ? 'bg-indigo-500' : 'bg-[#30363d]'}`} />
 
                   <div className="p-6 space-y-4">
                     {/* Header */}
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
-                            <Award className="w-4 h-4 text-emerald-400" />
+                          <span className="w-8 h-8 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center">
+                            <Layers className="w-4 h-4 text-slate-300" />
                           </span>
-                          <span className="text-[10px] font-black uppercase tracking-wider text-indigo-400">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
                             {CHAPTER11_DECISION_OPTIONS.choice_b.title}
                           </span>
                         </div>
@@ -1239,24 +1359,24 @@ export const OperationsTransitionConsoleApp: React.FC<OperationsTransitionConsol
                         </h3>
                       </div>
                       {selectedDecision === 'choice_b' && !decisionCommitted && (
-                        <div className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0 mt-1">
-                          <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                        <div className="w-5 h-5 rounded-full bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center shrink-0 mt-1">
+                          <div className="w-2 h-2 rounded-full bg-indigo-400" />
                         </div>
                       )}
                     </div>
 
                     {/* Quote */}
-                    <div className="p-3 rounded-lg bg-[#0d1117] border-l-2 border-emerald-500/40 border border-[#21262d]">
+                    <div className="p-3 rounded-lg bg-[#0d1117] border-l-2 border-slate-600 border border-[#21262d]">
                       <p className="text-xs text-slate-300 italic leading-relaxed">
                         {CHAPTER11_DECISION_OPTIONS.choice_b.quote}
                       </p>
                     </div>
 
-                    {/* Feature tags */}
+                    {/* Neutral tags */}
                     <div className="flex flex-wrap gap-1.5">
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">✓ 6 Runbooks</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">✓ Training Sessions</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">✓ 14-Day Hypercare</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#21262d] text-slate-300 border border-[#30363d]">Phased Transition</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#21262d] text-slate-300 border border-[#30363d]">Structured Training</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#21262d] text-slate-300 border border-[#30363d]">14-Day Hypercare</span>
                     </div>
 
                     {/* Footer note */}
