@@ -65,45 +65,26 @@ export const ReleaseReadinessBoardApp: React.FC<ReleaseReadinessBoardAppProps> =
   const [unassignedWarning, setUnassignedWarning] = useState(false);
   const [formValidationMessage, setFormValidationMessage] = useState<string | null>(null);
 
-  // Auto-reset legacy cached state if user had the old hardcoded defaults
+  // Auto-reset legacy cached state so nothing is pre-selected
   useEffect(() => {
     if (!chapter5State.submitted && !chapter5State.completed) {
-      const activities = chapter5State.prePilotActivities;
-      const updates: Partial<Chapter5State> = {};
-
-      if (activities) {
-        const vals = Object.values(activities);
-        const isLegacyAllPrereq =
-          vals.length === 5 && vals.every((v) => v === 'pre_pilot_prerequisite');
-        if (isLegacyAllPrereq) {
-          updates.prePilotActivities = {
+      if (!chapter5State.version || chapter5State.version < 3) {
+        onUpdateState({
+          version: 3,
+          latencyTarget: null,
+          errorRateThreshold: null,
+          feedbackChannel: null,
+          incidentOwner: null,
+          rollbackCondition: null,
+          widerRolloutDecision: null,
+          prePilotActivities: {
             act_peak_load: 'unassigned',
             act_security_approval: 'unassigned',
             act_monitoring_alerts: 'unassigned',
             act_rollback_approval: 'unassigned',
             act_user_comms: 'unassigned',
-          };
-        }
-      }
-
-      // If Section B has the old hardcoded defaults, reset them to null so user can choose
-      const isLegacySectionB =
-        chapter5State.latencyTarget === 'strict_800ms' &&
-        chapter5State.errorRateThreshold === 'strict_0_1_percent' &&
-        chapter5State.feedbackChannel === 'in_app_daily_pulse' &&
-        chapter5State.incidentOwner === 'daniel_oncall_aarav_lead' &&
-        chapter5State.rollbackCondition === 'sev1_or_high_error_rate';
-
-      if (isLegacySectionB) {
-        updates.latencyTarget = null;
-        updates.errorRateThreshold = null;
-        updates.feedbackChannel = null;
-        updates.incidentOwner = null;
-        updates.rollbackCondition = null;
-      }
-
-      if (Object.keys(updates).length > 0) {
-        onUpdateState(updates);
+          },
+        });
       }
     }
   }, []);

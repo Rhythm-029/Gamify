@@ -276,12 +276,12 @@ export const WIDER_ROLLOUT_OPTIONS = [
 
 // ── INITIAL STATE ──
 export const INITIAL_CHAPTER5_STATE: Chapter5State = {
-  version: 2,
+  version: 3,
   currentStage: 'review_evidence',
   meetingCompleted: false,
   boardOpened: false,
 
-  viewedEvidenceCards: ['functional_testing'],
+  viewedEvidenceCards: [],
   selectedBlockers: [],
   blockerValidationMessage: null,
 
@@ -567,15 +567,13 @@ export function getChapter5SessionState(): Chapter5State {
     if (raw) {
       try {
         const parsed = JSON.parse(raw);
-        const isLegacy = !parsed.version || parsed.version < 2;
-        sessionChapter5State = {
-          ...INITIAL_CHAPTER5_STATE,
-          ...parsed,
-          version: 2,
-          prePilotActivities: isLegacy
-            ? { ...INITIAL_CHAPTER5_STATE.prePilotActivities }
-            : { ...INITIAL_CHAPTER5_STATE.prePilotActivities, ...(parsed.prePilotActivities || {}) },
-        };
+        if (!parsed.version || parsed.version < 3) {
+          // Force wipe legacy state where options were pre-selected
+          globalThis.localStorage.removeItem('brained_chapter5_state');
+          sessionChapter5State = { ...INITIAL_CHAPTER5_STATE };
+          return { ...sessionChapter5State };
+        }
+        sessionChapter5State = { ...INITIAL_CHAPTER5_STATE, ...parsed };
       } catch {
         // ignore parse errors
       }
@@ -605,7 +603,7 @@ export function setChapter5SessionState(
 export function resetChapter5SessionState() {
   sessionChapter5State = {
     ...INITIAL_CHAPTER5_STATE,
-    viewedEvidenceCards: ['functional_testing'],
+    viewedEvidenceCards: [],
     selectedBlockers: [],
     prePilotActivities: { ...INITIAL_CHAPTER5_STATE.prePilotActivities },
     scorecard: { ...INITIAL_CHAPTER5_STATE.scorecard },
