@@ -3,7 +3,7 @@
 ## 📌 Executive Summary
 Chapter 9 proved the ROI and verified $2.4M recurring annual savings to CFO Vikram Malhotra and VP Sophia Bennett. But post-launch reality sets in immediately: the code is stable in production, but API documentation is scattered across temporary Markdown files, architecture diagrams have no versions, and knowledge is locked in the heads of the engineers who wrote it.
 
-As PM Lead, you conduct an **Engineering Release & Documentation Challenge** with Alex (Lead Architect) and CTO Marcus Reed to secure institutional knowledge and establish release governance.
+As PM Lead, you conduct an **Engineering Release & Documentation Challenge** with Daniel Brooks (Lead Developer & Tech Architect) and Aarav Kapoor (Senior PM Mentor) to secure institutional knowledge and establish release governance.
 
 ---
 
@@ -16,6 +16,6 @@ As PM Lead, you conduct an **Engineering Release & Documentation Challenge** wit
 ---
 
 ## 👥 Key Stakeholders
-- **Alex (Lead Architect)**: Partner in organizing the repository and establishing release artifacts.
-- **Marcus Reed (CTO)**: Overseeing engineering governance and demanding zero knowledge silos across Project Amigo's 4,800 branches.
+- **Daniel Brooks (Lead Developer & Tech Architect)**: Partner in organizing the repository and establishing release artifacts.
+- **Aarav Kapoor (Senior PM Mentor)**: Overseeing engineering governance and demanding zero knowledge silos across Project Amigo's 4,800 branches.
 - **Sophia Bennett (Executive Sponsor)**: Requiring operational sustainability so future engineering teams can work independently.

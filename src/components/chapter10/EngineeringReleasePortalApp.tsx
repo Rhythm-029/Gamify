@@ -610,7 +610,7 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
                   Establish the Official Release Tag: v0.9.9, v1.0.0, or v2.0.0?
                 </h2>
                 <p className="text-xs text-slate-400 leading-relaxed max-w-2xl">
-                  Alex asks: <em>"We need to tag the repository before closing this sprint. Should we release as v0.9.9, v1.0.0, or v2.0.0?"</em> Software release numbers carry legal, contractual, and technical meaning.
+                  Daniel asks: <em>"We need to tag the repository before closing this sprint. Should we release as v0.9.9, v1.0.0, or v2.0.0?"</em> Software release numbers carry legal, contractual, and technical meaning.
                 </p>
               </div>
               <button
@@ -722,7 +722,7 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
                   Assemble the Enterprise Internal Developer Portal Package
                 </h2>
                 <p className="text-xs text-slate-400 leading-relaxed max-w-2xl">
-                  Alex asks: <em>"What exactly should we publish? Just the API specs, or the complete documentation?"</em> Build a catalog that enables any developer to maintain the system independently.
+                  Daniel asks: <em>"What exactly should we publish? Just the API specs, or the complete documentation?"</em> Build a catalog that enables any developer to maintain the system independently.
                 </p>
               </div>
               <button
@@ -829,10 +829,10 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
                   <span className="text-[11px] text-slate-500 font-mono">Final Decision</span>
                 </div>
                 <h2 className="text-sm font-semibold text-white">
-                  Alex's Final Dilemma: Shortcut or Formal Release Governance?
+                  Daniel's Final Dilemma: Shortcut or Formal Release Governance?
                 </h2>
                 <p className="text-xs text-slate-400 leading-relaxed max-w-2xl">
-                  Alex raises one final concern: <em>"Jane, publishing documentation and tagging the repository will take additional time. We could skip the formal process and move directly to the next feature sprint."</em>
+                  Daniel raises one final concern: <em>"Publishing documentation and tagging the repository will take additional time. We could skip the formal process and move directly to the next feature sprint."</em>
                 </p>
               </div>
               <button

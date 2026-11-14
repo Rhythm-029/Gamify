@@ -1109,9 +1109,9 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
     const timer = setTimeout(() => {
       sound.playMessagePing();
       pushNotification({
-        id: 'ch10_alex_call_incoming',
+        id: 'ch10_daniel_call_incoming',
         app: 'Teams',
-        title: 'Alex · Lead Architect',
+        title: 'Daniel Brooks · Lead Developer',
         subtitle: 'Post-Launch Technical Debt & Spec Lock',
         body: 'The ROI is signed off, but our API specs and architecture diagrams are scattered across personal folders and duplicate files. We need release governance before sprint close.',
         timestamp: 'Now',

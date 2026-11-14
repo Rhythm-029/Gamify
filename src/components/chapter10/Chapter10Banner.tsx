@@ -109,7 +109,7 @@ export const Chapter10Banner: React.FC<Chapter10BannerProps> = ({
             }`}
           >
             <Video className="w-3.5 h-3.5" />
-            <span>Alex Briefing</span>
+            <span>Daniel Briefing</span>
             {!isMeetingDone && (
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
             )}

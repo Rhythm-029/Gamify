@@ -158,7 +158,7 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
     'aarav' | 'marcus' | 'sophia' | 'daniel' | 'amigo-dev-ops' | 'martha' | 'ciso' | 'alex' | 'mark' | 'vikram'
   >(
     (initialChatId as any) ||
-      (isCh11 ? 'martha' : isCh10 ? 'alex' : isCh9 ? 'sophia' : isCh8 ? 'ciso' : isCh7 ? 'martha' : isCh4 ? 'sophia' : isCh3 ? (chapter3State?.activeChatRecipient || 'daniel') : isPastCh1 ? 'daniel' : 'aarav')
+      (isCh11 ? 'martha' : isCh10 ? 'daniel' : isCh9 ? 'sophia' : isCh8 ? 'ciso' : isCh7 ? 'martha' : isCh4 ? 'sophia' : isCh3 ? (chapter3State?.activeChatRecipient || 'daniel') : isPastCh1 ? 'daniel' : 'aarav')
   );
   const [messageInput, setMessageInput] = useState('');
   const [customMessages, setCustomMessages] = useState<Record<string, CustomMessage[]>>({});
@@ -260,13 +260,13 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
     : isCh10
     ? [
         {
-          id: 'alex',
-          name: 'Alex',
-          role: 'Lead Architect & Engineering Lead',
+          id: 'daniel',
+          name: 'Daniel Brooks',
+          role: 'Lead Developer & Tech Architect',
           avatar: '/character/Daniel_Brooks/DanielDP.png',
           lastMessage: chapter10State?.decisionChosen
             ? 'Release v1.0.0 is officially tagged and verified in the Enterprise Wiki!'
-            : 'Jane, our API specs and architecture diagrams are scattered. If a new dev joins, they have to ask us. We need release governance before sprint close.',
+            : 'Our API specs and architecture diagrams are scattered. If a new dev joins, they have to ask us. We need release governance before sprint close.',
           time: '25:00',
           unread: !chapter10State?.decisionChosen,
           online: true,
@@ -1046,7 +1046,7 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
                 )}
               </div>
             </div>
-          ) : isCh10 && (activeChatId === 'alex' || activeChatId === 'marcus' || activeChatId === 'sophia' || activeChatId === 'amigo-dev-ops') ? (
+          ) : isCh10 && (activeChatId === 'daniel' || activeChatId === 'marcus' || activeChatId === 'sophia' || activeChatId === 'amigo-dev-ops') ? (
             /* ── CHAPTER 10 ENGINEERING RELEASE & GOVERNANCE CHATS ── */
             <div className="space-y-4">
               <div className="flex justify-center">
@@ -1056,23 +1056,23 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
                 </span>
               </div>
 
-              {/* VIEW 1: ALEX (LEAD ARCHITECT) CHAT */}
-              {activeChatId === 'alex' && (
+              {/* VIEW 1: DANIEL BROOKS (LEAD DEVELOPER) CHAT */}
+              {activeChatId === 'daniel' && (
                 <>
                   <div className="flex items-start space-x-3 max-w-2xl">
                     <img
                       src="/character/Daniel_Brooks/DanielDP.png"
-                      alt="Alex"
-                      className="w-8 h-8 rounded-full object-cover border border-indigo-400/50 shrink-0 mt-1"
+                      alt="Daniel Brooks"
+                      className="w-8 h-8 rounded-full object-cover border border-sky-400/50 shrink-0 mt-1"
                     />
                     <div className="space-y-1">
                       <div className="flex items-center space-x-2">
-                        <span className="font-bold text-xs text-indigo-300">Alex</span>
-                        <span className="text-[10px] font-mono text-slate-400">Lead Architect · 25:00</span>
+                        <span className="font-bold text-xs text-sky-300">Daniel Brooks</span>
+                        <span className="text-[10px] font-mono text-slate-400">Lead Developer · 25:00</span>
                       </div>
-                      <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#121c24] border border-indigo-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
-                        <p className="font-bold text-indigo-200">
-                          "Jane, the launch was successful, and the code is stable. But there's something we haven't addressed. Our API documentation is scattered across temporary Markdown files, architecture diagrams are sitting in personal folders, and nobody knows which version of the technical specifications is final."
+                      <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#121c24] border border-sky-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
+                        <p className="font-bold text-sky-200">
+                          "The launch was successful, and the code is stable. But there's something we haven't addressed. Our API documentation is scattered across temporary Markdown files, architecture diagrams are sitting in personal folders, and nobody knows which version of the technical specifications is final."
                         </p>
                         <p className="text-slate-300 text-xs">
                           "If a new developer joins tomorrow, they'll have to ask whoever wrote the code. We've created a dangerous knowledge dependency. We need to clean up the repository, choose our formal release tag (SemVer), and publish the official architecture catalog."
@@ -1085,12 +1085,12 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
                     <div className="flex items-start space-x-3 max-w-2xl">
                       <img
                         src="/character/Daniel_Brooks/DanielDP.png"
-                        alt="Alex"
+                        alt="Daniel Brooks"
                         className="w-8 h-8 rounded-full object-cover border border-emerald-400/50 shrink-0 mt-1"
                       />
                       <div className="space-y-1">
                         <div className="flex items-center space-x-2">
-                          <span className="font-bold text-xs text-emerald-300">Alex</span>
+                          <span className="font-bold text-xs text-emerald-300">Daniel Brooks</span>
                           <span className="text-[10px] font-mono text-emerald-400 font-bold px-2 py-0.2 rounded bg-emerald-500/20">
                             Repo Audit Validated (+5 Bonus)
                           </span>
@@ -1108,12 +1108,12 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
                     <div className="flex items-start space-x-3 max-w-2xl">
                       <img
                         src="/character/Daniel_Brooks/DanielDP.png"
-                        alt="Alex"
+                        alt="Daniel Brooks"
                         className="w-8 h-8 rounded-full object-cover border border-blue-400/50 shrink-0 mt-1"
                       />
                       <div className="space-y-1">
                         <div className="flex items-center space-x-2">
-                          <span className="font-bold text-xs text-blue-300">Alex</span>
+                          <span className="font-bold text-xs text-blue-300">Daniel Brooks</span>
                           <span className="text-[10px] font-mono text-blue-400 font-bold px-2 py-0.2 rounded bg-blue-500/20">
                             Tag: {chapter10State.selectedVersion}
                           </span>
@@ -1133,12 +1133,12 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
                     <div className="flex items-start space-x-3 max-w-2xl">
                       <img
                         src="/character/Daniel_Brooks/DanielDP.png"
-                        alt="Alex"
+                        alt="Daniel Brooks"
                         className="w-8 h-8 rounded-full object-cover border border-emerald-400/50 shrink-0 mt-1"
                       />
                       <div className="space-y-1">
                         <div className="flex items-center space-x-2">
-                          <span className="font-bold text-xs text-emerald-300">Alex</span>
+                          <span className="font-bold text-xs text-emerald-300">Daniel Brooks</span>
                           <span className="text-[10px] font-mono text-emerald-400 font-bold px-2 py-0.2 rounded bg-emerald-500/20">
                             {chapter10State.decisionChosen === 'choice_b' ? 'Release Governance Enforced' : 'Sprint Closed (Short-term shortcut)'}
                           </span>
@@ -1171,7 +1171,7 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
                     </div>
                     <div className="p-3.5 rounded-2xl rounded-tl-sm bg-[#181126] border border-purple-500/30 text-xs sm:text-[13px] text-slate-100 shadow-md leading-relaxed space-y-2">
                       <p className="font-bold text-purple-200">
-                        "Jane, congratulations on delivering quantifiable ROI to Vikram and the Steering Committee. But as CTO, my mandate is architectural longevity."
+                        "Congratulations on delivering quantifiable ROI to Vikram and the Steering Committee. But as CTO, my mandate is architectural longevity."
                       </p>
                       <p className="text-slate-300 text-xs">
                         "I cannot have 4,800 branch banking workflows dependent on the memory of three individual developers. Every API schema, Kafka message contract, and database relationship must be version-controlled and published to our Backstage developer portal before we declare sprint completion."
@@ -1199,7 +1199,7 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
                         "The Executive Steering Committee is thrilled with the ₹97.5 Lakhs in annual capacity savings! Phase 2 is fully funded."
                       </p>
                       <p className="text-slate-300 text-xs">
-                        "Work closely with Alex to lock down system specifications. When we rotate vendors and expand internal engineering pods for Phase 2, clean documentation will be the difference between smooth expansion and chaos."
+                        "Work closely with Daniel to lock down system specifications. When we rotate vendors and expand internal engineering pods for Phase 2, clean documentation will be the difference between smooth expansion and chaos."
                       </p>
                     </div>
                   </div>
@@ -1239,7 +1239,7 @@ export const MSTeamsApp: React.FC<MSTeamsAppProps> = ({
                     onClick={onOpenChapter10Meeting}
                     className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-900/40 flex items-center gap-2 cursor-pointer transition-all border border-blue-400/40"
                   >
-                    <span>📹 Join Alex Pre-Brief Call (25:00)</span>
+                    <span>📹 Join Daniel Pre-Brief Call (25:00)</span>
                   </button>
                 )}
                 {onOpenEngineeringReleasePortal && (

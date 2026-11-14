@@ -11,8 +11,8 @@
   "xpReward": 500,
   "description": "The product is live and business ROI is proven, but can engineering maintain, upgrade, and hand over the system without depending on original developers? Audit the messy repository, enforce Semantic Versioning (v1.0.0), publish enterprise developer portal specs, and enforce release governance.",
   "stakeholders": [
-    { "name": "Alex", "role": "Lead Architect & Engineering Lead", "agenda": "Resolving scattered API docs, untracked configs, and establishing a single source of truth before the sprint closes." },
-    { "name": "Marcus Reed", "role": "Chief Technology Officer", "agenda": "Enforcing formal release versioning, backward compatibility contracts, and eliminating single points of human failure." },
+    { "name": "Daniel Brooks", "role": "Lead Developer & Tech Architect", "agenda": "Resolving scattered API docs, untracked configs, and establishing an authoritative single source of truth before the sprint closes." },
+    { "name": "Aarav Kapoor", "role": "Senior PM Mentor · Governance", "agenda": "Enforcing formal release versioning, backward compatibility contracts, and eliminating single points of human failure." },
     { "name": "Sophia Bennett", "role": "VP Operations / Executive Sponsor", "agenda": "Ensuring long-term product maintainability across 4,800 branches without vendor or developer dependency." }
   ],
   "objectives": [

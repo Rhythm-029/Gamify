@@ -29,9 +29,9 @@ export const CHAPTER10_KEY_TAKEAWAY =
   'A successful product must be maintainable beyond its original development team. Documentation and version control protect institutional knowledge and enable future engineering teams to work independently.';
 
 export const CHAPTER10_CHARACTERS = {
-  alex: {
-    name: 'Alex',
-    role: 'Developer · Engineering Lead',
+  daniel: {
+    name: 'Daniel Brooks',
+    role: 'Lead Developer & Tech Architect',
     avatar: '/character/Daniel_Brooks/DanielDP.png',
     affiliation: 'Core Engineering Team',
   },
@@ -150,13 +150,13 @@ Partitioning: Hash partitioned on branch_code for Kafka event ingestion.`,
     path: 'scratchpad/temp_notes.md',
     size: '12 KB',
     lastModified: '12 hours ago',
-    author: 'alex',
+    author: 'daniel',
     status: 'unverified',
     category: 'scratchpad',
     summary: 'Informal developer scratchpad containing raw curl commands, temporary staging tokens, and meeting notes.',
-    contentSnippet: `# Alex's temporary scratch notes
+    contentSnippet: `# Daniel's temporary scratch notes
 - curl -X POST https://staging.hrms/debug -H "Authorization: Bearer test-token-xyz"
-- Remember to ask Jane about pizza for deployment night
+- Remember to order team dinner for deployment night
 - Fixed race condition in punch queue by bumping timeout to 5000ms (check if needed in prod)
 [Scratchpad notes must NOT be published in enterprise wiki catalog]`,
     recommendedAction: 'deprecate',
@@ -447,7 +447,7 @@ export function computeChapter10Score(
     },
     aiEvaluated: false,
     evaluatedAt: new Date().toISOString(),
-    evaluatorName: 'Marcus Reed (CTO) & Alex (Dev Lead)',
+    evaluatorName: 'Daniel Brooks (Lead Developer) & Aarav Kapoor (Senior PM)',
     evaluatorRole: 'Engineering Steering & Architecture Board',
   };
 }
