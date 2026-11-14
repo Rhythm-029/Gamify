@@ -94,7 +94,7 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
     REPO_FILES_MANIFEST[0]
   );
   const [selectedFilesToRetain, setSelectedFilesToRetain] = useState<string[]>(
-    chapter10State.selectedRepoFiles || AUTHORITATIVE_REPO_FILE_IDS
+    chapter10State.selectedRepoFiles || []
   );
   const [auditSubmitted, setAuditSubmitted] = useState<boolean>(
     Boolean(chapter10State.repoAuditCompleted)
@@ -102,7 +102,7 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
 
   // Tab 2: SemVer choice state
   const [chosenVersion, setChosenVersion] = useState<SemVerChoice | null>(
-    chapter10State.selectedVersion || 'v1.0.0'
+    chapter10State.selectedVersion || null
   );
   const [versionConfirmed, setVersionConfirmed] = useState<boolean>(
     Boolean(chapter10State.versionConfirmed)
@@ -110,7 +110,7 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
 
   // Tab 3: Catalog Publication state
   const [selectedDocSections, setSelectedDocSections] = useState<string[]>(
-    chapter10State.selectedDocSections || ENTERPRISE_CATALOG_SECTIONS.map((s) => s.id)
+    chapter10State.selectedDocSections || []
   );
   const [catalogPublished, setCatalogPublished] = useState<boolean>(
     Boolean(chapter10State.catalogPublished)
@@ -118,7 +118,7 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
 
   // Tab 4: Final Governance Decision
   const [selectedDecision, setSelectedDecision] = useState<Chapter10DecisionChoice | null>(
-    chapter10State.decisionChosen || 'choice_b'
+    chapter10State.decisionChosen || null
   );
   const [decisionCommitted, setDecisionCommitted] = useState<boolean>(
     Boolean(chapter10State.completed)
@@ -494,12 +494,8 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
                             <span className={`text-xs font-mono font-medium truncate ${isPreviewed ? 'text-white' : 'text-slate-200'}`}>
                               {file.name}
                             </span>
-                            {/* Warning badge for problem files */}
-                            {(file.status === 'duplicate_candidate' || file.status === 'obsolete_candidate' || file.status === 'unverified') && (
-                              <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0" />
-                            )}
-                            <span className={`px-1.5 py-px rounded text-[9px] font-mono font-semibold uppercase border ${statusStyle}`}>
-                              {file.status.replace(/_/g, ' ')}
+                            <span className="px-1.5 py-px rounded text-[9px] font-mono font-semibold uppercase bg-slate-800/80 text-slate-400 border border-slate-700/60">
+                              {file.category}
                             </span>
                           </div>
                           <div className="text-[11px] text-slate-500 font-mono truncate mt-0.5">
@@ -532,16 +528,23 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
                   </div>
                   <button
                     onClick={() => handleToggleFileRetention(selectedFileForPreview.id)}
-                    className={`shrink-0 flex items-center gap-1.5 px-3 py-1 rounded text-[11px] font-semibold transition-all cursor-pointer border ${
+                    className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded text-[11px] font-semibold transition-all cursor-pointer border ${
                       selectedFilesToRetain.includes(selectedFileForPreview.id)
-                        ? 'bg-cyan-900/30 text-cyan-300 border-cyan-700/50 hover:bg-cyan-900/50'
-                        : 'bg-slate-800 text-slate-300 border-slate-700 hover:text-white'
+                        ? 'bg-emerald-950/40 text-emerald-300 border-emerald-500/40 hover:bg-rose-950/30 hover:text-rose-300 hover:border-rose-500/40'
+                        : 'bg-slate-800 text-slate-300 border-slate-700 hover:border-cyan-500/50 hover:text-white'
                     }`}
                   >
-                    {selectedFilesToRetain.includes(selectedFileForPreview.id)
-                      ? <><CheckCircle2 className="w-3.5 h-3.5" /><span>Included</span></>
-                      : <><span>+ Include in Release</span></>
-                    }
+                    {selectedFilesToRetain.includes(selectedFileForPreview.id) ? (
+                      <>
+                        <CheckSquare className="w-3.5 h-3.5" />
+                        <span>Retained for Release (Click to Remove)</span>
+                      </>
+                    ) : (
+                      <>
+                        <Square className="w-3.5 h-3.5" />
+                        <span>+ Retain for Release</span>
+                      </>
+                    )}
                   </button>
                 </div>
 
@@ -659,17 +662,6 @@ export const EngineeringReleasePortalApp: React.FC<EngineeringReleasePortalAppPr
                     <p className="text-xs text-slate-400 leading-relaxed">
                       {opt.description}
                     </p>
-
-                    {isSelected && (
-                      <div className={`pt-3 border-t ${opt.isCorrect ? 'border-emerald-800/50' : 'border-amber-800/50'}`}>
-                        <p className={`text-[11px] leading-relaxed ${opt.isCorrect ? 'text-emerald-300' : 'text-amber-300'}`}>
-                          {opt.isCorrect
-                            ? <><CheckCircle2 className="inline w-3.5 h-3.5 mr-1" />{opt.critique}</>
-                            : <><AlertTriangle className="inline w-3.5 h-3.5 mr-1" />{opt.critique}</>
-                          }
-                        </p>
-                      </div>
-                    )}
                   </div>
                 );
               })}

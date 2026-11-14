@@ -63,17 +63,16 @@ export const REPO_FILES_MANIFEST: RepoFileItem[] = [
     path: 'docs/api/API_Spec_v1.md',
     size: '142 KB',
     lastModified: '2 days ago',
-    author: 'alex',
+    author: 'daniel',
     status: 'needs_review',
     category: 'api',
-    summary: 'Initial baseline REST & GraphQL API specifications covering Appraisal, Attendance Sync, and Biometric webhooks.',
+    summary: 'Baseline REST & GraphQL API specifications covering Appraisal, Attendance Sync, and Biometric webhooks.',
     contentSnippet: `# Project Amigo API Specification v1.0
 ## Base URL: https://api.hrms.internal.bank/v1
 - POST /auth/login (MFA enforced with rate limiting)
 - GET /appraisals/cycle (Active appraisal cycle metrics)
 - POST /appraisals/{id}/submit (Submission payload with SLA timestamps)
-- POST /attendance/sync (Kafka partition key: branch_code)
-[Verified against production gateways - single source of truth candidate]`,
+- POST /attendance/sync (Kafka partition key: branch_code)`,
     recommendedAction: 'retain',
   },
   {
@@ -85,12 +84,11 @@ export const REPO_FILES_MANIFEST: RepoFileItem[] = [
     author: 'contractor_dev',
     status: 'duplicate_candidate',
     category: 'api',
-    summary: 'Unreviewed duplicate with messy naming. Contains unmerged WIP endpoints and conflicting schema payloads.',
+    summary: 'Draft API spec created during interim sprint by external contractor. Contains draft endpoints.',
     contentSnippet: `# API Spec FINAL FINAL - DO NOT EDIT (copied by contractor)
 ## NOTE: Contains draft bonus calculation endpoints that did not make Phase 1 release!
 - POST /bonus/calc (UNVERIFIED - pending CR-017 Phase 2 approval)
-- GET /temp/debug/branch-dump (DEBUG ENDPOINT - SECURITY RISK IF PUBLISHED)
-[Warning: Duplicate file. Merge valid delta into API_Spec_v1.md and delete duplicate]`,
+- GET /temp/debug/branch-dump (DEBUG ENDPOINT - SECURITY RISK IF PUBLISHED)`,
     recommendedAction: 'deprecate',
   },
   {
@@ -102,12 +100,11 @@ export const REPO_FILES_MANIFEST: RepoFileItem[] = [
     author: 'marcus_reed',
     status: 'needs_versioning',
     category: 'architecture',
-    summary: 'Official C4 microservices architectural diagram showing API Gateway, Kafka cluster, Redis cache, and PostgreSQL read-replicas.',
+    summary: 'C4 microservices architectural diagram showing API Gateway, Kafka cluster, Redis cache, and PostgreSQL read-replicas.',
     contentSnippet: `[Binary Image Data: System_Architecture.png]
 Resolution: 3840x2160 · Layer 1: Ingress & Cloudflare WAF · Layer 2: Envoy API Gateway
 Layer 3: Microservices (Appraisal, Attendance, Payroll Auth) · Layer 4: Kafka Event Bus
-Layer 5: PostgreSQL Primary + 3 Read Replicas (Mumbai, Pune, Bangalore)
-[Authoritative architectural design verified by CTO Marcus Reed - Requires formal version tag]`,
+Layer 5: PostgreSQL Primary + 3 Read Replicas (Mumbai, Pune, Bangalore)`,
     recommendedAction: 'retain',
   },
   {
@@ -119,11 +116,10 @@ Layer 5: PostgreSQL Primary + 3 Read Replicas (Mumbai, Pune, Bangalore)
     author: 'marcus_reed',
     status: 'obsolete_candidate',
     category: 'architecture',
-    summary: 'Obsolete pre-pilot architectural diagram depicting deprecated single-node Redis cache before cluster sharding.',
+    summary: 'Architecture diagram depicting single-node cache and monolithic database topology.',
     contentSnippet: `[Binary Image Data: Architecture_old_backup.png]
 Deprecation Notice: Depicts pre-stress-test monolithic database setup without connection pooler.
-DO NOT USE for operational onboarding or production runbooks.
-[Candidate for archival in /archive/v0.8-pre-pilot]`,
+DO NOT USE for operational onboarding or production runbooks.`,
     recommendedAction: 'deprecate',
   },
   {
@@ -132,7 +128,7 @@ DO NOT USE for operational onboarding or production runbooks.
     path: 'docs/db/Database_Schema.md',
     size: '88 KB',
     lastModified: '3 days ago',
-    author: 'alex',
+    author: 'daniel',
     status: 'needs_review',
     category: 'database',
     summary: 'Complete DDL schemas, foreign key mappings, Kafka partitioning keys, and indexing strategy for 80,000 employees.',
@@ -153,12 +149,11 @@ Partitioning: Hash partitioned on branch_code for Kafka event ingestion.`,
     author: 'daniel',
     status: 'unverified',
     category: 'scratchpad',
-    summary: 'Informal developer scratchpad containing raw curl commands, temporary staging tokens, and meeting notes.',
+    summary: 'Developer scratchpad with quick curl commands, test credentials, and sprint notes.',
     contentSnippet: `# Daniel's temporary scratch notes
 - curl -X POST https://staging.hrms/debug -H "Authorization: Bearer test-token-xyz"
 - Remember to order team dinner for deployment night
-- Fixed race condition in punch queue by bumping timeout to 5000ms (check if needed in prod)
-[Scratchpad notes must NOT be published in enterprise wiki catalog]`,
+- Fixed race condition in punch queue by bumping timeout to 5000ms (check if needed in prod)`,
     recommendedAction: 'deprecate',
   },
   {
@@ -167,7 +162,7 @@ Partitioning: Hash partitioned on branch_code for Kafka event ingestion.`,
     path: 'docs/ops/Deployment_Guide.md',
     size: '64 KB',
     lastModified: 'Yesterday',
-    author: 'alex',
+    author: 'daniel',
     status: 'needs_review',
     category: 'ops',
     summary: 'Kubernetes Helm deployment instructions, environment variable manifest, healthcheck probes, and rollback procedures.',
@@ -461,13 +456,13 @@ export const INITIAL_CHAPTER10_STATE: Chapter10State = {
   meetingCompleted: false,
   callCompleted: false,
   portalOpened: false,
-  selectedRepoFiles: ['api_spec_v1', 'system_architecture', 'database_schema', 'deployment_guide', 'release_notes'],
+  selectedRepoFiles: [],
   repoAuditCompleted: false,
   selectedVersion: null,
   versionConfirmed: false,
-  selectedDocSections: ['api_specs', 'system_architecture', 'database_schema', 'deployment_guide', 'release_notes', 'adrs'],
+  selectedDocSections: [],
   catalogPublished: false,
-  documentationCoveragePct: 100,
+  documentationCoveragePct: 0,
   decisionChosen: null,
   completed: false,
   scorecard: {
@@ -501,7 +496,7 @@ export const INITIAL_CHAPTER10_STATE: Chapter10State = {
   },
 };
 
-const CHAPTER10_STORAGE_KEY = 'brained_os_chapter10_state_v1';
+const CHAPTER10_STORAGE_KEY = 'brained_os_chapter10_state_v2';
 
 export function getChapter10SessionState(): Chapter10State {
   if (typeof window === 'undefined') return { ...INITIAL_CHAPTER10_STATE };
@@ -511,9 +506,36 @@ export function getChapter10SessionState(): Chapter10State {
       localStorage.getItem('brained_chapter10_state');
     if (!raw) return { ...INITIAL_CHAPTER10_STATE };
     const parsed = JSON.parse(raw);
+    
+    // Clean up any legacy pre-selected state so player chooses cleanly
+    const safeSelectedRepoFiles = (!parsed.repoAuditCompleted && parsed.selectedRepoFiles?.length === 5)
+      ? []
+      : (parsed.selectedRepoFiles || []);
+
+    const safeSelectedDocSections = (!parsed.catalogPublished && parsed.selectedDocSections?.length === 6)
+      ? []
+      : (parsed.selectedDocSections || []);
+
+    const safeCoverage = (!parsed.catalogPublished && safeSelectedDocSections.length === 0)
+      ? 0
+      : (parsed.documentationCoveragePct ?? 0);
+
+    const safeSelectedVersion = (!parsed.versionConfirmed && parsed.selectedVersion === 'v1.0.0')
+      ? null
+      : (parsed.selectedVersion || null);
+
+    const safeDecision = (!parsed.completed && parsed.decisionChosen === 'choice_b')
+      ? null
+      : (parsed.decisionChosen || null);
+
     return {
       ...INITIAL_CHAPTER10_STATE,
       ...parsed,
+      selectedRepoFiles: safeSelectedRepoFiles,
+      selectedDocSections: safeSelectedDocSections,
+      documentationCoveragePct: safeCoverage,
+      selectedVersion: safeSelectedVersion,
+      decisionChosen: safeDecision,
       scorecard: {
         ...INITIAL_CHAPTER10_STATE.scorecard,
         ...(parsed.scorecard || {}),
