@@ -394,22 +394,6 @@ export const Chapter10MeetingApp: React.FC<Chapter10MeetingAppProps> = ({
   // ─────────────────────────────────────────────────────────────────────────────
   return (
     <div className="flex-1 flex flex-col h-full bg-[#0b0e17] text-white overflow-hidden relative select-none font-sans">
-      {/* ── TOP WINDOW HEADER ── */}
-      <div className="h-9 bg-[#171c2f] border-b border-white/10 px-4 flex items-center justify-between shrink-0 z-20">
-        <div className="flex items-center space-x-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
-          <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
-          <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
-          <span className="text-[11px] text-slate-300 font-medium ml-2">
-            Microsoft Teams — Locking Down System Architecture Specs
-          </span>
-        </div>
-        <div className="flex items-center space-x-1.5 text-[10px] text-emerald-400 font-mono">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Active App</span>
-        </div>
-      </div>
-
       {/* ── SUBHEADER CALL HUD ── */}
       <div className="h-10 bg-[#121626]/95 border-b border-white/10 px-5 flex items-center justify-between shrink-0 z-20">
         <div className="flex items-center space-x-3">
@@ -438,7 +422,7 @@ export const Chapter10MeetingApp: React.FC<Chapter10MeetingAppProps> = ({
       </div>
 
       {/* ── MAIN 4-TILE VIDEO GALLERY GRID ── */}
-      <div className="flex-1 p-3.5 overflow-hidden flex flex-col justify-between relative">
+      <div className="flex-1 p-3 overflow-hidden flex flex-col justify-between items-center relative min-h-0">
         {/* Teams Join Toast Notification */}
         <AnimatePresence>
           {joinToast && (
@@ -446,7 +430,7 @@ export const Chapter10MeetingApp: React.FC<Chapter10MeetingAppProps> = ({
               initial={{ opacity: 0, y: -20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              className="absolute top-4 left-1/2 -translate-x-1/2 z-40 flex items-center space-x-2.5 px-4 py-2 rounded-2xl bg-slate-900/95 border border-cyan-400/40 text-white shadow-2xl backdrop-blur-xl pointer-events-none"
+              className="absolute top-3 left-1/2 -translate-x-1/2 z-40 flex items-center space-x-2.5 px-4 py-2 rounded-2xl bg-slate-900/95 border border-cyan-400/40 text-white shadow-2xl backdrop-blur-xl pointer-events-none"
             >
               <div className="w-6 h-6 rounded-full overflow-hidden border border-cyan-400/50 bg-slate-800 shrink-0">
                 <img src={joinToast.dp} alt={joinToast.name} className="w-full h-full object-cover" />
@@ -459,201 +443,204 @@ export const Chapter10MeetingApp: React.FC<Chapter10MeetingAppProps> = ({
           )}
         </AnimatePresence>
 
-        <div className="flex-1 grid grid-cols-2 gap-3.5 auto-rows-fr max-h-[calc(100%-80px)]">
-          {/* Tile 1: ALEX CHEN (DEV LEAD / ARCHITECT) */}
-          <div
-            className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
-              activeSpeaker === 'alex'
-                ? 'border-[#06b6d4] shadow-[0_0_25px_rgba(6,182,212,0.35)]'
-                : 'border-white/10'
-            }`}
-          >
-            <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-cyan-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
-                <img
-                  src={CHARACTERS.alex.dp}
-                  alt={CHARACTERS.alex.name}
-                  className="w-full h-full object-cover object-top"
-                />
+        {/* 4-Tile Centered Aspect-Ratio-Preserved Video Grid */}
+        <div className="flex-1 min-h-0 w-full flex items-center justify-center p-1">
+          <div className="w-full max-w-[820px] h-full max-h-[380px] grid grid-cols-2 grid-rows-2 gap-3 sm:gap-3.5 items-stretch">
+            {/* Tile 1: ALEX CHEN (DEV LEAD / ARCHITECT) */}
+            <div
+              className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
+                activeSpeaker === 'alex'
+                  ? 'border-[#06b6d4] shadow-[0_0_25px_rgba(6,182,212,0.35)]'
+                  : 'border-white/10'
+              }`}
+            >
+              <div className="w-full h-full flex flex-col items-center justify-center p-2.5 bg-gradient-to-b from-slate-900 to-slate-950">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-cyan-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
+                  <img
+                    src={CHARACTERS.alex.dp}
+                    alt={CHARACTERS.alex.name}
+                    className="w-full h-full object-cover object-top"
+                  />
+                </div>
+                <span className="text-[10px] font-mono text-slate-500 mt-1.5">Engineering Lead</span>
               </div>
-              <span className="text-[10px] font-mono text-slate-500 mt-2">Engineering Lead</span>
+
+              <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+                <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                  <span>Alex Chen (Dev Lead)</span>
+                </div>
+                {activeSpeaker === 'alex' && (
+                  <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
+                    {[1, 2, 3, 4].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="w-1 rounded-full bg-cyan-400"
+                        animate={{ height: [4, 14, 4] }}
+                        transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
-              <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                <span>Alex Chen (Dev Lead)</span>
-              </div>
-              {activeSpeaker === 'alex' && (
-                <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
-                  {[1, 2, 3, 4].map((i) => (
-                    <motion.div
-                      key={i}
-                      className="w-1 rounded-full bg-cyan-400"
-                      animate={{ height: [4, 14, 4] }}
-                      transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+            {/* Tile 2: DANIEL BROOKS (PROGRAM MANAGER / TECH ARCH) */}
+            {joinedParticipants.has('daniel') ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
+                  activeSpeaker === 'daniel'
+                    ? 'border-[#f97316] shadow-[0_0_25px_rgba(249,115,22,0.35)]'
+                    : 'border-white/10'
+                }`}
+              >
+                <div className="w-full h-full flex flex-col items-center justify-center p-2.5 bg-gradient-to-b from-slate-900 to-slate-950">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-orange-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
+                    <img
+                      src={CHARACTERS.daniel.dp}
+                      alt={CHARACTERS.daniel.name}
+                      className="w-full h-full object-cover object-top"
                     />
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Tile 2: DANIEL BROOKS (PROGRAM MANAGER / TECH ARCH) */}
-          {joinedParticipants.has('daniel') ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
-                activeSpeaker === 'daniel'
-                  ? 'border-[#f97316] shadow-[0_0_25px_rgba(249,115,22,0.35)]'
-                  : 'border-white/10'
-              }`}
-            >
-              <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-orange-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
-                  <img
-                    src={CHARACTERS.daniel.dp}
-                    alt={CHARACTERS.daniel.name}
-                    className="w-full h-full object-cover object-top"
-                  />
-                </div>
-                <span className="text-[10px] font-mono text-slate-500 mt-2">Tech Architecture</span>
-              </div>
-
-              <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
-                <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-orange-400" />
-                  <span>Daniel Brooks (PM)</span>
-                </div>
-                {activeSpeaker === 'daniel' && (
-                  <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
-                    {[1, 2, 3, 4].map((i) => (
-                      <motion.div
-                        key={i}
-                        className="w-1 rounded-full bg-orange-400"
-                        animate={{ height: [4, 14, 4] }}
-                        transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
-                      />
-                    ))}
                   </div>
-                )}
-              </div>
-            </motion.div>
-          ) : (
-            <div className="relative rounded-2xl overflow-hidden bg-slate-950/60 border border-dashed border-white/10 flex flex-col items-center justify-center p-3">
-              <div className="w-14 h-14 rounded-full overflow-hidden border border-white/10 bg-slate-800/80 opacity-40 grayscale">
-                <img src={CHARACTERS.daniel.dp} alt="Daniel" className="w-full h-full object-cover" />
-              </div>
-              <div className="flex items-center space-x-1.5 mt-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-orange-400/60 animate-ping" />
-                <span className="text-[11px] font-mono text-slate-400">Daniel connecting...</span>
-              </div>
-            </div>
-          )}
-
-          {/* Tile 3: AARAV KAPOOR (SENIOR PM / MENTOR) */}
-          {joinedParticipants.has('aarav') ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
-                activeSpeaker === 'aarav'
-                  ? 'border-[#eab308] shadow-[0_0_25px_rgba(234,179,8,0.35)]'
-                  : 'border-white/10'
-              }`}
-            >
-              <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-amber-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
-                  <img
-                    src={CHARACTERS.aarav.dp}
-                    alt={CHARACTERS.aarav.name}
-                    className="w-full h-full object-cover object-top"
-                  />
+                  <span className="text-[10px] font-mono text-slate-500 mt-1.5">Tech Architecture</span>
                 </div>
-                <span className="text-[10px] font-mono text-slate-500 mt-2">Lead Strategist</span>
-              </div>
 
-              <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
-                <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                  <span>Aarav Kapoor (Senior PM)</span>
-                </div>
-                {activeSpeaker === 'aarav' && (
-                  <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
-                    {[1, 2, 3, 4].map((i) => (
-                      <motion.div
-                        key={i}
-                        className="w-1 rounded-full bg-amber-400"
-                        animate={{ height: [4, 14, 4] }}
-                        transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
-                      />
-                    ))}
+                <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+                  <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                    <span>Daniel Brooks (PM)</span>
                   </div>
-                )}
-              </div>
-            </motion.div>
-          ) : (
-            <div className="relative rounded-2xl overflow-hidden bg-slate-950/60 border border-dashed border-white/10 flex flex-col items-center justify-center p-3">
-              <div className="w-14 h-14 rounded-full overflow-hidden border border-white/10 bg-slate-800/80 opacity-40 grayscale">
-                <img src={CHARACTERS.aarav.dp} alt="Aarav" className="w-full h-full object-cover" />
-              </div>
-              <div className="flex items-center space-x-1.5 mt-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400/60 animate-ping" />
-                <span className="text-[11px] font-mono text-slate-400">Aarav connecting...</span>
-              </div>
-            </div>
-          )}
-
-          {/* Tile 4: PLAYER (YOU / DT LEAD) */}
-          <div
-            className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
-              activeSpeaker === 'player'
-                ? 'border-emerald-400 shadow-[0_0_25px_rgba(52,211,153,0.35)]'
-                : 'border-white/10'
-            }`}
-          >
-            {isCameraOn && streamRef.current ? (
-              <video
-                ref={videoElementRef}
-                autoPlay
-                muted
-                playsInline
-                className="w-full h-full object-cover scale-x-[-1]"
-              />
+                  {activeSpeaker === 'daniel' && (
+                    <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
+                      {[1, 2, 3, 4].map((i) => (
+                        <motion.div
+                          key={i}
+                          className="w-1 rounded-full bg-orange-400"
+                          animate={{ height: [4, 14, 4] }}
+                          transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-emerald-950 border-2 border-emerald-500/40 flex items-center justify-center text-emerald-300 font-bold text-xl shadow-xl">
-                  DT
+              <div className="relative rounded-2xl overflow-hidden bg-slate-950/60 border border-dashed border-white/10 flex flex-col items-center justify-center p-2.5">
+                <div className="w-14 h-14 rounded-full overflow-hidden border border-white/10 bg-slate-800/80 opacity-40 grayscale">
+                  <img src={CHARACTERS.daniel.dp} alt="Daniel" className="w-full h-full object-cover" />
                 </div>
-                <span className="text-[10px] font-mono text-slate-500 mt-2">You (Camera Off)</span>
+                <div className="flex items-center space-x-1.5 mt-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange-400/60 animate-ping" />
+                  <span className="text-[11px] font-mono text-slate-400">Daniel connecting...</span>
+                </div>
               </div>
             )}
 
-            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
-              <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span>You (DT Lead)</span>
-              </div>
-              {activeSpeaker === 'player' && (
-                <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
-                  {[1, 2, 3, 4].map((i) => (
-                    <motion.div
-                      key={i}
-                      className="w-1 rounded-full bg-emerald-400"
-                      animate={{ height: [4, 14, 4] }}
-                      transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+            {/* Tile 3: AARAV KAPOOR (SENIOR PM / MENTOR) */}
+            {joinedParticipants.has('aarav') ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
+                  activeSpeaker === 'aarav'
+                    ? 'border-[#eab308] shadow-[0_0_25px_rgba(234,179,8,0.35)]'
+                    : 'border-white/10'
+                }`}
+              >
+                <div className="w-full h-full flex flex-col items-center justify-center p-2.5 bg-gradient-to-b from-slate-900 to-slate-950">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-amber-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
+                    <img
+                      src={CHARACTERS.aarav.dp}
+                      alt={CHARACTERS.aarav.name}
+                      className="w-full h-full object-cover object-top"
                     />
-                  ))}
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-500 mt-1.5">Lead Strategist</span>
+                </div>
+
+                <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+                  <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                    <span>Aarav Kapoor (Senior PM)</span>
+                  </div>
+                  {activeSpeaker === 'aarav' && (
+                    <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
+                      {[1, 2, 3, 4].map((i) => (
+                        <motion.div
+                          key={i}
+                          className="w-1 rounded-full bg-amber-400"
+                          animate={{ height: [4, 14, 4] }}
+                          transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            ) : (
+              <div className="relative rounded-2xl overflow-hidden bg-slate-950/60 border border-dashed border-white/10 flex flex-col items-center justify-center p-2.5">
+                <div className="w-14 h-14 rounded-full overflow-hidden border border-white/10 bg-slate-800/80 opacity-40 grayscale">
+                  <img src={CHARACTERS.aarav.dp} alt="Aarav" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex items-center space-x-1.5 mt-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400/60 animate-ping" />
+                  <span className="text-[11px] font-mono text-slate-400">Aarav connecting...</span>
+                </div>
+              </div>
+            )}
+
+            {/* Tile 4: PLAYER (YOU / DT LEAD) */}
+            <div
+              className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
+                activeSpeaker === 'player'
+                  ? 'border-emerald-400 shadow-[0_0_25px_rgba(52,211,153,0.35)]'
+                  : 'border-white/10'
+              }`}
+            >
+              {isCameraOn && streamRef.current ? (
+                <video
+                  ref={videoElementRef}
+                  autoPlay
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover scale-x-[-1]"
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center p-2.5 bg-gradient-to-b from-slate-900 to-slate-950">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-emerald-950 border-2 border-emerald-500/40 flex items-center justify-center text-emerald-300 font-bold text-lg shadow-xl">
+                    DT
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-500 mt-1.5">You (Camera Off)</span>
                 </div>
               )}
+
+              <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+                <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <span>You (DT Lead)</span>
+                </div>
+                {activeSpeaker === 'player' && (
+                  <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
+                    {[1, 2, 3, 4].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="w-1 rounded-full bg-emerald-400"
+                        animate={{ height: [4, 14, 4] }}
+                        transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
         {/* ── LIVE CLOSED CAPTIONS & SUBTITLES BAR ── */}
         {captionsEnabled && (
-          <div className="mt-2.5 px-4 py-3 rounded-2xl bg-black/90 backdrop-blur-md border border-white/15 flex items-start sm:items-center space-x-3 shrink-0 shadow-xl">
+          <div className="w-full max-w-[820px] mx-auto mt-2 px-4 py-2.5 rounded-2xl bg-black/90 backdrop-blur-md border border-white/15 flex items-start sm:items-center space-x-3 shrink-0 shadow-xl">
             <div
               className="text-xs font-black uppercase font-mono px-2.5 py-1 rounded-lg border shrink-0"
               style={{

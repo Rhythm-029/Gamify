@@ -413,22 +413,6 @@ export const Chapter11MeetingApp: React.FC<Chapter11MeetingAppProps> = ({
   // ─────────────────────────────────────────────────────────────────────────────
   return (
     <div className="flex-1 flex flex-col h-full bg-[#0b0e17] text-white overflow-hidden relative select-none font-sans">
-      {/* ── TOP WINDOW HEADER ── */}
-      <div className="h-9 bg-[#171c2f] border-b border-white/10 px-4 flex items-center justify-between shrink-0 z-20">
-        <div className="flex items-center space-x-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
-          <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
-          <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
-          <span className="text-[11px] text-slate-300 font-medium ml-2">
-            Microsoft Teams — IT Operations Handover Meeting
-          </span>
-        </div>
-        <div className="flex items-center space-x-1.5 text-[10px] text-emerald-400 font-mono">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Active App</span>
-        </div>
-      </div>
-
       {/* ── SUBHEADER CALL HUD ── */}
       <div className="h-10 bg-[#121626]/95 border-b border-white/10 px-5 flex items-center justify-between shrink-0 z-20">
         <div className="flex items-center space-x-3">

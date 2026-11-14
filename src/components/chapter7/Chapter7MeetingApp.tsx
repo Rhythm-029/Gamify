@@ -453,22 +453,6 @@ export const Chapter7MeetingApp: React.FC<Chapter7MeetingAppProps> = ({
   // ─────────────────────────────────────────────────────────────────────────────
   return (
     <div className="flex-1 flex flex-col h-full bg-[#090b14] text-white overflow-hidden relative select-none font-sans">
-      {/* ── TOP WINDOW HEADER ── */}
-      <div className="h-9 bg-[#151928] border-b border-white/10 px-4 flex items-center justify-between shrink-0 z-20">
-        <div className="flex items-center space-x-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
-          <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
-          <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
-          <span className="text-[11px] text-slate-300 font-medium ml-2">
-            Microsoft Teams — Incident Response War Room · {INCIDENT_ID}
-          </span>
-        </div>
-        <div className="flex items-center space-x-1.5 text-[10px] text-emerald-400 font-mono">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Active App</span>
-        </div>
-      </div>
-
       {/* ── SUBHEADER CALL HUD ── */}
       <div className="h-10 bg-[#101320]/95 border-b border-white/10 px-5 flex items-center justify-between shrink-0 z-20">
         <div className="flex items-center space-x-3">
@@ -497,7 +481,7 @@ export const Chapter7MeetingApp: React.FC<Chapter7MeetingAppProps> = ({
       </div>
 
       {/* ── MAIN CONTENT AREA ── */}
-      <div className="flex-1 p-3.5 overflow-hidden flex flex-col justify-between relative">
+      <div className="flex-1 p-3 overflow-hidden flex flex-col justify-between items-center relative min-h-0">
         {/* Teams Join Toast Notification */}
         <AnimatePresence>
           {joinToast && (
@@ -505,7 +489,7 @@ export const Chapter7MeetingApp: React.FC<Chapter7MeetingAppProps> = ({
               initial={{ opacity: 0, y: -20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              className="absolute top-4 left-1/2 -translate-x-1/2 z-40 flex items-center space-x-2.5 px-4 py-2 rounded-2xl bg-slate-900/95 border border-amber-400/40 text-white shadow-2xl backdrop-blur-xl pointer-events-none"
+              className="absolute top-3 left-1/2 -translate-x-1/2 z-40 flex items-center space-x-2.5 px-4 py-2 rounded-2xl bg-slate-900/95 border border-amber-400/40 text-white shadow-2xl backdrop-blur-xl pointer-events-none"
             >
               <div className="w-6 h-6 rounded-full overflow-hidden border border-amber-400/50 bg-slate-800 shrink-0">
                 <img src={joinToast.dp} alt={joinToast.name} className="w-full h-full object-cover" />
@@ -518,119 +502,39 @@ export const Chapter7MeetingApp: React.FC<Chapter7MeetingAppProps> = ({
           )}
         </AnimatePresence>
 
-        {/* 4-Tile Grid */}
-        <div className="flex-1 grid grid-cols-2 gap-3.5 auto-rows-fr max-h-[calc(100%-80px)]">
-          {/* Tile 1: MARTHA VANCE (MONITORING / OPS) */}
-          <div
-            className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
-              activeSpeaker === 'martha'
-                ? 'border-[#f43f5e] shadow-[0_0_25px_rgba(244,63,94,0.35)]'
-                : 'border-white/10'
-            }`}
-          >
-            <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-rose-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
-                <img
-                  src={CHARACTERS.martha.dp}
-                  alt={CHARACTERS.martha.name}
-                  className="w-full h-full object-cover object-top"
-                />
-              </div>
-              <span className="text-[10px] font-mono text-slate-500 mt-2">Monitoring / Operations</span>
-            </div>
-
-            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
-              <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
-                <span>Martha Vance (Ops)</span>
-              </div>
-              {activeSpeaker === 'martha' && (
-                <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
-                  {[1, 2, 3, 4].map((i) => (
-                    <motion.div
-                      key={i}
-                      className="w-1 rounded-full bg-rose-400"
-                      animate={{ height: [4, 14, 4] }}
-                      transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Tile 2: DANIEL BROOKS (LEAD DEVELOPER) */}
-          <div
-            className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
-              activeSpeaker === 'daniel'
-                ? 'border-[#38bdf8] shadow-[0_0_25px_rgba(56,189,248,0.35)]'
-                : 'border-white/10'
-            }`}
-          >
-            <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-sky-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
-                <img
-                  src={CHARACTERS.daniel.dp}
-                  alt={CHARACTERS.daniel.name}
-                  className="w-full h-full object-cover object-top"
-                />
-              </div>
-              <span className="text-[10px] font-mono text-slate-500 mt-2">Lead Developer</span>
-            </div>
-
-            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
-              <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
-                <span>Daniel Brooks (Lead Dev)</span>
-              </div>
-              {activeSpeaker === 'daniel' && (
-                <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
-                  {[1, 2, 3, 4].map((i) => (
-                    <motion.div
-                      key={i}
-                      className="w-1 rounded-full bg-sky-400"
-                      animate={{ height: [4, 14, 4] }}
-                      transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Tile 3: AARAV KAPOOR (SENIOR PM MENTOR) */}
-          {joinedParticipants.has('aarav') ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
+        {/* 4-Tile Centered Aspect-Ratio-Preserved Video Grid */}
+        <div className="flex-1 min-h-0 w-full flex items-center justify-center p-1">
+          <div className="w-full max-w-[820px] h-full max-h-[380px] grid grid-cols-2 grid-rows-2 gap-3 sm:gap-3.5 items-stretch">
+            {/* Tile 1: MARTHA VANCE (MONITORING / OPS) */}
+            <div
               className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
-                activeSpeaker === 'aarav'
-                  ? 'border-[#eab308] shadow-[0_0_25px_rgba(234,179,8,0.35)]'
+                activeSpeaker === 'martha'
+                  ? 'border-[#f43f5e] shadow-[0_0_25px_rgba(244,63,94,0.35)]'
                   : 'border-white/10'
               }`}
             >
-              <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-amber-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
+              <div className="w-full h-full flex flex-col items-center justify-center p-2.5 bg-gradient-to-b from-slate-900 to-slate-950">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-rose-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
                   <img
-                    src={CHARACTERS.aarav.dp}
-                    alt={CHARACTERS.aarav.name}
+                    src={CHARACTERS.martha.dp}
+                    alt={CHARACTERS.martha.name}
                     className="w-full h-full object-cover object-top"
                   />
                 </div>
-                <span className="text-[10px] font-mono text-slate-500 mt-2">Senior PM Mentor</span>
+                <span className="text-[10px] font-mono text-slate-500 mt-1.5">Monitoring / Operations</span>
               </div>
 
               <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
                 <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                  <span>Aarav Kapoor (Senior PM)</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                  <span>Martha Vance (Ops)</span>
                 </div>
-                {activeSpeaker === 'aarav' && (
+                {activeSpeaker === 'martha' && (
                   <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
                     {[1, 2, 3, 4].map((i) => (
                       <motion.div
                         key={i}
-                        className="w-1 rounded-full bg-amber-400"
+                        className="w-1 rounded-full bg-rose-400"
                         animate={{ height: [4, 14, 4] }}
                         transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
                       />
@@ -638,61 +542,143 @@ export const Chapter7MeetingApp: React.FC<Chapter7MeetingAppProps> = ({
                   </div>
                 )}
               </div>
-            </motion.div>
-          ) : (
-            <div className="relative rounded-2xl overflow-hidden bg-slate-950/60 border border-dashed border-white/10 flex flex-col items-center justify-center p-3">
-              <div className="w-14 h-14 rounded-full overflow-hidden border border-white/10 bg-slate-800/80 opacity-40 grayscale">
-                <img src={CHARACTERS.aarav.dp} alt="Aarav" className="w-full h-full object-cover" />
+            </div>
+
+            {/* Tile 2: DANIEL BROOKS (LEAD DEVELOPER) */}
+            <div
+              className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
+                activeSpeaker === 'daniel'
+                  ? 'border-[#38bdf8] shadow-[0_0_25px_rgba(56,189,248,0.35)]'
+                  : 'border-white/10'
+              }`}
+            >
+              <div className="w-full h-full flex flex-col items-center justify-center p-2.5 bg-gradient-to-b from-slate-900 to-slate-950">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-sky-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
+                  <img
+                    src={CHARACTERS.daniel.dp}
+                    alt={CHARACTERS.daniel.name}
+                    className="w-full h-full object-cover object-top"
+                  />
+                </div>
+                <span className="text-[10px] font-mono text-slate-500 mt-1.5">Lead Developer</span>
               </div>
-              <div className="flex items-center space-x-1.5 mt-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400/60 animate-ping" />
-                <span className="text-[11px] font-mono text-slate-400">Aarav connecting...</span>
+
+              <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+                <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
+                  <span>Daniel Brooks (Lead Dev)</span>
+                </div>
+                {activeSpeaker === 'daniel' && (
+                  <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
+                    {[1, 2, 3, 4].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="w-1 rounded-full bg-sky-400"
+                        animate={{ height: [4, 14, 4] }}
+                        transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
-          )}
 
-          {/* Tile 4: PLAYER (YOU / PROJECT MANAGER) */}
-          <div
-            className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
-              activeSpeaker === 'player'
-                ? 'border-purple-400 shadow-[0_0_25px_rgba(168,85,247,0.35)]'
-                : 'border-white/10'
-            }`}
-          >
-            {isCameraOn && streamRef.current ? (
-              <video
-                ref={videoElementRef}
-                autoPlay
-                muted
-                playsInline
-                className="w-full h-full object-cover scale-x-[-1]"
-              />
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-b from-slate-900 to-slate-950">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-purple-950 border-2 border-purple-500/40 flex items-center justify-center text-purple-300 font-bold text-xl shadow-xl">
-                  PM
+            {/* Tile 3: AARAV KAPOOR (SENIOR PM MENTOR) */}
+            {joinedParticipants.has('aarav') ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
+                  activeSpeaker === 'aarav'
+                    ? 'border-[#eab308] shadow-[0_0_25px_rgba(234,179,8,0.35)]'
+                    : 'border-white/10'
+                }`}
+              >
+                <div className="w-full h-full flex flex-col items-center justify-center p-2.5 bg-gradient-to-b from-slate-900 to-slate-950">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-amber-400/40 shadow-xl bg-slate-800 flex items-center justify-center">
+                    <img
+                      src={CHARACTERS.aarav.dp}
+                      alt={CHARACTERS.aarav.name}
+                      className="w-full h-full object-cover object-top"
+                    />
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-500 mt-1.5">Senior PM Mentor</span>
                 </div>
-                <span className="text-[10px] font-mono text-slate-500 mt-2">You (Camera Off)</span>
+
+                <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+                  <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                    <span>Aarav Kapoor (Senior PM)</span>
+                  </div>
+                  {activeSpeaker === 'aarav' && (
+                    <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
+                      {[1, 2, 3, 4].map((i) => (
+                        <motion.div
+                          key={i}
+                          className="w-1 rounded-full bg-amber-400"
+                          animate={{ height: [4, 14, 4] }}
+                          transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            ) : (
+              <div className="relative rounded-2xl overflow-hidden bg-slate-950/60 border border-dashed border-white/10 flex flex-col items-center justify-center p-2.5">
+                <div className="w-14 h-14 rounded-full overflow-hidden border border-white/10 bg-slate-800/80 opacity-40 grayscale">
+                  <img src={CHARACTERS.aarav.dp} alt="Aarav" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex items-center space-x-1.5 mt-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400/60 animate-ping" />
+                  <span className="text-[11px] font-mono text-slate-400">Aarav connecting...</span>
+                </div>
               </div>
             )}
 
-            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
-              <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-                <span>You (Project Manager)</span>
-              </div>
-              {activeSpeaker === 'player' && (
-                <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
-                  {[1, 2, 3, 4].map((i) => (
-                    <motion.div
-                      key={i}
-                      className="w-1 rounded-full bg-purple-400"
-                      animate={{ height: [4, 14, 4] }}
-                      transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
-                    />
-                  ))}
+            {/* Tile 4: PLAYER (YOU / PROJECT MANAGER) */}
+            <div
+              className={`relative rounded-2xl overflow-hidden bg-slate-900/90 border-2 transition-all duration-300 flex items-center justify-center ${
+                activeSpeaker === 'player'
+                  ? 'border-purple-400 shadow-[0_0_25px_rgba(168,85,247,0.35)]'
+                  : 'border-white/10'
+              }`}
+            >
+              {isCameraOn && streamRef.current ? (
+                <video
+                  ref={videoElementRef}
+                  autoPlay
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover scale-x-[-1]"
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center p-2.5 bg-gradient-to-b from-slate-900 to-slate-950">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-purple-950 border-2 border-purple-500/40 flex items-center justify-center text-purple-300 font-bold text-lg shadow-xl">
+                    PM
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-500 mt-1.5">You (Camera Off)</span>
                 </div>
               )}
+
+              <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+                <div className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-bold text-white flex items-center space-x-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                  <span>You (Project Manager)</span>
+                </div>
+                {activeSpeaker === 'player' && (
+                  <div className="flex items-center space-x-0.5 bg-black/60 px-2 py-1 rounded-md">
+                    {[1, 2, 3, 4].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="w-1 rounded-full bg-purple-400"
+                        animate={{ height: [4, 14, 4] }}
+                        transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -702,7 +688,7 @@ export const Chapter7MeetingApp: React.FC<Chapter7MeetingAppProps> = ({
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-2.5 p-4 rounded-2xl bg-[#130f23]/95 backdrop-blur-md border border-purple-500/30 shrink-0 shadow-2xl"
+            className="w-full max-w-[820px] mx-auto mt-2 p-3.5 rounded-2xl bg-[#130f23]/95 backdrop-blur-md border border-purple-500/30 shrink-0 shadow-2xl"
           >
             <div className="flex items-center justify-between pb-2 border-b border-white/10">
               <div className="flex items-center space-x-2">
@@ -764,7 +750,7 @@ export const Chapter7MeetingApp: React.FC<Chapter7MeetingAppProps> = ({
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className={`mt-3 p-2.5 rounded-xl text-xs leading-relaxed border ${
+                className={`mt-2.5 p-2.5 rounded-xl text-xs leading-relaxed border ${
                   selectedDecision === 'choice_b'
                     ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-200'
                     : 'bg-rose-950/30 border-rose-500/40 text-rose-200'
@@ -777,7 +763,7 @@ export const Chapter7MeetingApp: React.FC<Chapter7MeetingAppProps> = ({
         ) : (
           captionsEnabled &&
           currentSpeakerMeta && (
-            <div className="mt-2.5 px-4 py-3 rounded-2xl bg-black/90 backdrop-blur-md border border-white/15 flex items-start sm:items-center space-x-3 shrink-0 shadow-xl">
+            <div className="w-full max-w-[820px] mx-auto mt-2 px-4 py-2.5 rounded-2xl bg-black/90 backdrop-blur-md border border-white/15 flex items-start sm:items-center space-x-3 shrink-0 shadow-xl">
               <div
                 className="text-xs font-black uppercase font-mono px-2.5 py-1 rounded-lg border shrink-0"
                 style={{
@@ -788,7 +774,7 @@ export const Chapter7MeetingApp: React.FC<Chapter7MeetingAppProps> = ({
               >
                 {currentSpeakerMeta.name}
               </div>
-              <p className="text-sm sm:text-[15px] text-white font-medium leading-relaxed flex-1">
+              <p className="text-xs sm:text-sm text-white font-medium leading-relaxed flex-1">
                 "{currentLine.text}"
               </p>
             </div>
