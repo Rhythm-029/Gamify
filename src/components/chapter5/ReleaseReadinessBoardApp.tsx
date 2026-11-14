@@ -500,12 +500,6 @@ export const ReleaseReadinessBoardApp: React.FC<ReleaseReadinessBoardAppProps> =
                         {opt.description}
                       </p>
                     </div>
-
-                    {opt.isMandatoryBlocker && (
-                      <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-slate-100 text-slate-600 border border-slate-200 shrink-0">
-                        Critical Gate
-                      </span>
-                    )}
                   </div>
                 );
               })}
