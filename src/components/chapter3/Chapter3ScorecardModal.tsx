@@ -70,7 +70,7 @@ export const Chapter3ScorecardModal: React.FC<Chapter3ScorecardModalProps> = ({
         initial={{ scale: 0.92, opacity: 0, y: 25 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 350, damping: 26 }}
-        className="max-w-3xl w-full bg-[#0d1222] border border-sky-500/40 rounded-3xl p-6 sm:p-8 shadow-[0_0_60px_rgba(14,165,233,0.25)] space-y-5 relative overflow-hidden my-auto"
+        className="max-w-3xl w-full max-h-[92vh] overflow-y-auto bg-[#0d1222] border border-sky-500/40 rounded-3xl p-6 sm:p-8 shadow-[0_0_60px_rgba(14,165,233,0.25)] space-y-5 relative my-auto"
       >
         {/* Ambient Glow */}
         <div className="absolute top-0 right-0 w-80 h-80 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
