@@ -74,7 +74,13 @@ type ViewMode = 'landing' | 'onboarding' | 'chapter_select' | 'workspace' | 'com
 type ActiveChapter = number | null;
 
 export function App() {
-  const [viewMode, setViewMode] = useState<ViewMode>('landing');
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('view') === 'hub') return 'chapter_select';
+    }
+    return 'landing';
+  });
   const [playerConfig, setPlayerConfig] = useState<{
     name: string; role: string; company: string; email: string; linkedin: string;
   } | null>(null);

@@ -174,6 +174,7 @@ import { Chapter12StatusUpdateModal } from '../chapter12/Chapter12StatusUpdateMo
 import { Chapter12MeetingApp } from '../chapter12/Chapter12MeetingApp';
 import { EvolutionControlCenterApp } from '../chapter12/EvolutionControlCenterApp';
 import { Chapter12CinematicModal } from '../chapter12/Chapter12CinematicModal';
+import { Chapter12ScorecardModal } from '../chapter12/Chapter12ScorecardModal';
 import { FinalTransformationReportModal } from '../chapter12/FinalTransformationReportModal';
 
 interface BrainedOSDesktopProps {
@@ -751,6 +752,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
   const [isChapter12StatusModalOpen, setIsChapter12StatusModalOpen] = useState(false);
   const [isChapter12ReportOpen, setIsChapter12ReportOpen] = useState(false);
   const [isChapter12CinematicOpen, setIsChapter12CinematicOpen] = useState(false);
+  const [isChapter12ScorecardOpen, setIsChapter12ScorecardOpen] = useState(false);
 
   const handleUpdateChapter12State = (
     updater: Partial<Chapter12State> | ((prev: Chapter12State) => Chapter12State)
@@ -2064,6 +2066,10 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
                     );
                     setIsChapter12ReportOpen(true);
                   }}
+                  onOpenScorecard={() => {
+                    sound.stopTeamsRingtone();
+                    setIsChapter12ScorecardOpen(true);
+                  }}
                 />
               )}
               {activeAppId === 'evolution_control_center' && (
@@ -2514,7 +2520,7 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
           scorecard={chapter12State.scorecard || computeChapter12Score(chapter12State)}
           onProceedToReport={() => {
             setIsChapter12CinematicOpen(false);
-            setIsChapter12ReportOpen(true);
+            setIsChapter12ScorecardOpen(true);
             handleUpdateChapter12State({
               currentStage: 'transformation_report',
               reportOpened: true,
@@ -2525,10 +2531,35 @@ export const BrainedOSDesktop: React.FC<BrainedOSDesktopProps> = ({
         />
       )}
 
+      {/* CHAPTER 12 SCORECARD MODAL (STANDARD FORMAT MATCHING CHAPTERS 1-9) */}
+      {isChapter12ScorecardOpen && (
+        <Chapter12ScorecardModal
+          scorecard={chapter12State.scorecard || computeChapter12Score(chapter12State)}
+          onClose={() => {
+            setIsChapter12ScorecardOpen(false);
+            if (onReturnToChapterSelect) onReturnToChapterSelect();
+          }}
+          onReset={() => {
+            setIsChapter12ScorecardOpen(false);
+            resetChapterSession(12);
+            setChapter12State(getChapter12SessionState());
+            if (onStartChapter) onStartChapter(12);
+          }}
+          onViewTransformationReport={() => {
+            setIsChapter12ScorecardOpen(false);
+            setIsChapter12ReportOpen(true);
+          }}
+        />
+      )}
+
       {/* CHAPTER 12 FINAL TRANSFORMATION REPORT (PART 6 — S+ SUMMARY) */}
       {isChapter12ReportOpen && (
         <FinalTransformationReportModal
           scorecard={chapter12State.scorecard || computeChapter12Score(chapter12State)}
+          onOpenScorecard={() => {
+            setIsChapter12ReportOpen(false);
+            setIsChapter12ScorecardOpen(true);
+          }}
           onReturnToDesktop={() => {
             setIsChapter12ReportOpen(false);
             handleUpdateChapter12State({
