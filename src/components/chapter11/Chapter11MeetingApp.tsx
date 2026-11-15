@@ -311,8 +311,14 @@ export const Chapter11MeetingApp: React.FC<Chapter11MeetingAppProps> = ({
 
   const handleFastForward = () => {
     sound.playClick();
-    setCurrentLineIndex(MEETING_DIALOGUES.length - 1);
-    setIsDialogueFinished(true);
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    if (currentLineIndex < MEETING_DIALOGUES.length - 1) {
+      setCurrentLineIndex((prev) => prev + 1);
+    } else {
+      setIsDialogueFinished(true);
+    }
   };
 
   const handleReplay = () => {
@@ -792,7 +798,7 @@ export const Chapter11MeetingApp: React.FC<Chapter11MeetingAppProps> = ({
             <button
               onClick={handleFastForward}
               className="px-3 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-xs font-mono flex items-center space-x-1 cursor-pointer transition-all"
-              title="Skip to end of handover meeting"
+              title="Skip to next dialogue"
             >
               <FastForward className="w-3.5 h-3.5" />
               <span>Skip Dialogue</span>
