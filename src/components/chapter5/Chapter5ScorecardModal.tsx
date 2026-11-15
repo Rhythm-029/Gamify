@@ -61,7 +61,7 @@ export const Chapter5ScorecardModal: React.FC<Chapter5ScorecardModalProps> = ({
         initial={{ scale: 0.92, opacity: 0, y: 25 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 350, damping: 26 }}
-        className="max-w-2xl w-full bg-[#0d1222] border border-emerald-500/40 rounded-3xl p-6 sm:p-8 shadow-[0_0_60px_rgba(16,185,129,0.25)] space-y-5 relative overflow-hidden"
+        className="max-w-2xl w-full max-h-[92vh] overflow-y-auto bg-[#0d1222] border border-emerald-500/40 rounded-3xl p-6 sm:p-8 shadow-[0_0_60px_rgba(16,185,129,0.25)] space-y-5 relative"
       >
         {/* Ambient Glow */}
         <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
