@@ -431,8 +431,26 @@ export function computeChapter12Score(
       efficiencyDelta: effDelta,
     },
     decisionChosen: state.decisionChosen || undefined,
+    outcomeType: isChoiceB ? 'strong' : 'mixed',
     outcomeTitle,
     outcomeText,
+    whatYouDidWell:
+      leadershipStrengths[0] ||
+      'Architected disciplined zero-downtime release governance using Blue-Green routing and feature flags.',
+    whatToImprove:
+      areasToImprove[0] ||
+      'Ensure earlier telemetry instrumentation for newly introduced background daemons.',
+    keyTakeaway:
+      'Enterprise agility is not reckless speed; it is the discipline of controlled releases, blast-radius mitigation via feature flags, and isolated blue-green staging that protects operational trust while accelerating innovation.',
+    executiveFeedback: isChoiceB
+      ? 'The Steering Committee and Board approved the Phase 2 upgrade strategy unanimously. By enforcing progressive feature flags and zero-downtime blue-green staging, you ensured the enterprise platform evolves safely without compromising production stability.'
+      : 'Deploying all modules simultaneously without staging isolation exposed the stable production environment to avoidable risk. The steering committee requested formal rollback mechanisms before cutover.',
+    explanations: {
+      governance: `Release governance calibrated at ${finalGov}%. Formal CR pipeline and change approval enforce board compliance.`,
+      risk: `Risk mitigation rated at ${finalRisk}%. Isolated blue-green staging protects live bank users from upgrade regression.`,
+      schedule: `Rollout cadence rated at ${finalSchedule}%. Progressive feature flags enable phased adoption without delivery bottlenecks.`,
+      efficiency: `Platform efficiency rated at ${finalEff}%. Automated routing switches traffic seamlessly with zero downtime.`,
+    },
     leadershipStrengths,
     areasToImprove,
     finalAchievementUnlocked: isChoiceB && bonusPoints >= 10,

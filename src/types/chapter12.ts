@@ -70,8 +70,19 @@ export interface Chapter12Scorecard {
     efficiencyDelta: number;
   };
   decisionChosen?: Chapter12DecisionChoice;
+  outcomeType?: 'strong' | 'mixed' | 'incomplete';
   outcomeTitle: string;
   outcomeText: string;
+  whatYouDidWell?: string;
+  whatToImprove?: string;
+  keyTakeaway?: string;
+  executiveFeedback?: string;
+  explanations?: {
+    schedule: string;
+    risk: string;
+    governance: string;
+    efficiency: string;
+  };
   leadershipStrengths: string[];
   areasToImprove: string[];
   finalAchievementUnlocked: boolean;
