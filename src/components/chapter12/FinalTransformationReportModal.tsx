@@ -20,11 +20,13 @@ import { sound } from '../onboarding/SoundEngine';
 interface FinalTransformationReportModalProps {
   scorecard: Chapter12Scorecard;
   onReturnToDesktop: () => void;
+  onOpenScorecard?: () => void;
 }
 
 export const FinalTransformationReportModal: React.FC<FinalTransformationReportModalProps> = ({
   scorecard,
   onReturnToDesktop,
+  onOpenScorecard,
 }) => {
   const [isJourneyDrawerOpen, setIsJourneyDrawerOpen] = useState(false);
 
@@ -32,13 +34,13 @@ export const FinalTransformationReportModal: React.FC<FinalTransformationReportM
   const cumulativeScoreFormatted = scorecard.cumulativeScore.toLocaleString();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/90 backdrop-blur-xl select-none overflow-y-auto font-sans">
-      <div className="relative w-full max-w-5xl bg-gradient-to-b from-[#0a0f1d] via-[#0d1326] to-[#0a0f1d] border border-amber-500/30 rounded-3xl shadow-2xl p-4 sm:p-6 flex flex-col justify-between overflow-hidden my-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/90 backdrop-blur-xl select-none font-sans">
+      <div className="relative w-full max-w-5xl max-h-[92vh] bg-gradient-to-b from-[#0a0f1d] via-[#0d1326] to-[#0a0f1d] border border-amber-500/30 rounded-3xl shadow-2xl p-4 sm:p-6 flex flex-col justify-between overflow-hidden">
         {/* Subtle Background Glow */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        {/* ── TOP HEADER (PROJECT AMIGO — COMPLETE & ICICI BANK LOGO) ── */}
+        {/* ── TOP HEADER (PINNED) ── */}
         <div className="flex items-center justify-between pb-3.5 border-b border-white/10 shrink-0">
           <div>
             <div className="flex items-center gap-2">
@@ -62,8 +64,10 @@ export const FinalTransformationReportModal: React.FC<FinalTransformationReportM
           </div>
         </div>
 
-        {/* ── MIDDLE GRID (LEFT: GOLD EMBLEM, RIGHT: YOUR TRANSFORMATION JOURNEY) ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 my-4 items-center">
+        {/* ── SCROLLABLE MIDDLE CONTENT ── */}
+        <div className="flex-1 min-h-0 overflow-y-auto my-3 pr-1 space-y-4">
+          {/* MIDDLE GRID (LEFT: GOLD EMBLEM, RIGHT: YOUR TRANSFORMATION JOURNEY) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
           {/* LEFT: PREMIUM GOLD SHIELD EMBLEM (5 cols) */}
           <div className="lg:col-span-5 flex flex-col items-center justify-center p-4 rounded-3xl bg-slate-900/60 border border-amber-500/30 shadow-xl relative overflow-hidden text-center">
             {/* Laurel Wreath / Shield Emblem */}
@@ -231,7 +235,7 @@ export const FinalTransformationReportModal: React.FC<FinalTransformationReportM
         </div>
 
         {/* ── STATS ROW (Matches Panel 6: 12 Chapters | 4 Major Releases | 80,000+ Users) ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 p-3 rounded-2xl bg-slate-900/60 border border-white/10 mb-3 shrink-0 text-center sm:text-left">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 p-3 rounded-2xl bg-slate-900/60 border border-white/10 mb-2 shrink-0 text-center sm:text-left">
           <div className="flex items-center justify-center sm:justify-start gap-2.5 px-2">
             <div className="w-9 h-9 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
               <BookOpen className="w-4 h-4" />
@@ -262,26 +266,42 @@ export const FinalTransformationReportModal: React.FC<FinalTransformationReportM
             </div>
           </div>
         </div>
+        </div>
 
         {/* ── ACTION BUTTONS (Matches Panel 6: Review My Journey & Return to Brained OS Desktop) ── */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-white/10 shrink-0">
-          <button
-            onClick={() => {
-              sound.playClick();
-              setIsJourneyDrawerOpen(true);
-            }}
-            className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-slate-800 hover:bg-slate-700 text-sky-300 border border-sky-500/30 flex items-center justify-center gap-2 transition-all cursor-pointer"
-          >
-            <BookOpen className="w-4 h-4" />
-            <span>Review My Journey</span>
-          </button>
+          <div className="flex items-center gap-2.5 w-full sm:w-auto">
+            <button
+              onClick={() => {
+                sound.playClick();
+                setIsJourneyDrawerOpen(true);
+              }}
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-sky-300 border border-sky-500/30 flex items-center justify-center gap-2 transition-all cursor-pointer"
+            >
+              <BookOpen className="w-4 h-4" />
+              <span>Review My Journey</span>
+            </button>
+
+            {onOpenScorecard && (
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  onOpenScorecard();
+                }}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                <Award className="w-4 h-4" />
+                <span>Chapter 12 Scorecard</span>
+              </button>
+            )}
+          </div>
 
           <button
             onClick={() => {
               sound.playClick();
               onReturnToDesktop();
             }}
-            className="w-full sm:w-auto px-7 py-2.5 rounded-xl text-xs sm:text-sm font-black bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white shadow-xl shadow-sky-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
+            className="w-full sm:w-auto px-6 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white shadow-xl shadow-sky-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
           >
             <span>Return to Brained OS Desktop</span>
             <ArrowRight className="w-4 h-4" />

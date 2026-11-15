@@ -33,6 +33,7 @@ interface Chapter12MeetingAppProps {
   onOpenControlCenter?: () => void;
   onWatchCinematic?: () => void;
   onOpenReport?: () => void;
+  onOpenScorecard?: () => void;
 }
 
 interface CharacterMeta {
@@ -172,6 +173,7 @@ export const Chapter12MeetingApp: React.FC<Chapter12MeetingAppProps> = ({
   onOpenControlCenter,
   onWatchCinematic,
   onOpenReport,
+  onOpenScorecard,
 }) => {
   const isPostControlCenter = chapter12State.deploymentCompleted;
 
@@ -382,8 +384,14 @@ export const Chapter12MeetingApp: React.FC<Chapter12MeetingAppProps> = ({
 
   const handleFastForward = () => {
     sound.playClick();
-    setCurrentLineIndex(activeDialogues.length - 1);
-    setIsDialogueFinished(true);
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    if (currentLineIndex < activeDialogues.length - 1) {
+      setCurrentLineIndex((prev) => prev + 1);
+    } else {
+      setIsDialogueFinished(true);
+    }
   };
 
   const handleReplay = () => {
@@ -1027,7 +1035,7 @@ export const Chapter12MeetingApp: React.FC<Chapter12MeetingAppProps> = ({
                 <button
                   onClick={handleFastForward}
                   className="px-3 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-xs font-mono flex items-center space-x-1 cursor-pointer transition-all"
-                  title="Skip to end of review"
+                  title="Skip to next dialogue"
                 >
                   <FastForward className="w-3.5 h-3.5" />
                   <span>Skip Dialogue</span>
@@ -1057,7 +1065,7 @@ export const Chapter12MeetingApp: React.FC<Chapter12MeetingAppProps> = ({
                 <button
                   onClick={handleFastForward}
                   className="px-3 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-xs font-mono flex items-center space-x-1 cursor-pointer transition-all"
-                  title="Skip to end of outcome"
+                  title="Skip to next dialogue"
                 >
                   <FastForward className="w-3.5 h-3.5" />
                   <span>Skip Dialogue</span>
@@ -1077,6 +1085,15 @@ export const Chapter12MeetingApp: React.FC<Chapter12MeetingAppProps> = ({
             <div className="text-[11px] font-mono text-amber-300 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-lg">
               Governance Decision Pending
             </div>
+          )}
+
+          {chapter12State.completed && onOpenScorecard && (
+            <button
+              onClick={onOpenScorecard}
+              className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold cursor-pointer border border-slate-700"
+            >
+              Scorecard
+            </button>
           )}
 
           {chapter12State.completed && onOpenReport && (
