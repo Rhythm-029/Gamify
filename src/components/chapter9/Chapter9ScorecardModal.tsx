@@ -8,12 +8,7 @@ import {
   CheckCircle2,
   RotateCcw,
   Sparkles,
-  Award,
-  Layers,
-  Lock,
   Building2,
-  TrendingUp,
-  AlertTriangle,
   Lightbulb,
 } from 'lucide-react';
 import { updateChapterStatus } from '../../data/chaptersData';
@@ -67,15 +62,15 @@ export const Chapter9ScorecardModal: React.FC<Chapter9ScorecardModalProps> = ({
   const badge = getStatusBadge();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-3xl bg-[#09121d] border border-emerald-500/40 rounded-3xl shadow-2xl overflow-hidden flex flex-col text-slate-100 my-8"
+        className="w-full max-w-3xl max-h-[90vh] bg-[#09121d] border border-emerald-500/40 rounded-3xl shadow-2xl overflow-hidden flex flex-col text-slate-100"
       >
-        {/* HEADER SECTION */}
-        <div className="p-6 border-b border-slate-800 bg-gradient-to-r from-emerald-950/60 via-teal-950/40 to-slate-900 relative">
+        {/* HEADER SECTION (PINNED) */}
+        <div className="p-5 sm:p-6 border-b border-slate-800 bg-gradient-to-r from-emerald-950/60 via-teal-950/40 to-slate-900 relative shrink-0">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
@@ -86,7 +81,7 @@ export const Chapter9ScorecardModal: React.FC<Chapter9ScorecardModalProps> = ({
                   {badge.text}
                 </span>
               </div>
-              <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
                 <span>{CHAPTER9_TITLE} — Executive Performance Report</span>
               </h2>
               <p className="text-xs text-slate-300 mt-1">
@@ -95,7 +90,7 @@ export const Chapter9ScorecardModal: React.FC<Chapter9ScorecardModalProps> = ({
             </div>
 
             {/* TOTAL SCORE BADGE */}
-            <div className="flex flex-col items-center justify-center bg-slate-950/70 border border-emerald-500/40 px-5 py-3 rounded-2xl shadow-inner min-w-[110px]">
+            <div className="flex flex-col items-center justify-center bg-slate-950/70 border border-emerald-500/40 px-5 py-3 rounded-2xl shadow-inner min-w-[110px] shrink-0">
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
                 Total Score
               </span>
@@ -111,169 +106,172 @@ export const Chapter9ScorecardModal: React.FC<Chapter9ScorecardModalProps> = ({
           </div>
         </div>
 
-        {/* EVALUATOR & OUTCOME SUMMARY */}
-        <div className="p-6 border-b border-slate-800 bg-slate-900/40 space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
-            <div className="flex items-center gap-2">
-              <span className="text-xl">👔</span>
-              <div>
-                <span className="font-bold text-white">
-                  {scorecardData.evaluatorName || CHAPTER9_CHARACTERS.mark.name}
+        {/* SCROLLABLE CONTENT BODY */}
+        <div className="flex-1 min-h-0 overflow-y-auto p-5 sm:p-6 space-y-5">
+          {/* EVALUATOR & OUTCOME SUMMARY */}
+          <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-800 space-y-3">
+            <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">👔</span>
+                <div>
+                  <span className="font-bold text-white">
+                    {scorecardData.evaluatorName || CHAPTER9_CHARACTERS.mark.name}
+                  </span>
+                  <span className="text-slate-400 ml-2">
+                    ({scorecardData.evaluatorRole || CHAPTER9_CHARACTERS.mark.role})
+                  </span>
+                </div>
+              </div>
+              {scorecardData.evaluatedAt && (
+                <span className="font-mono text-[10px] text-slate-500">
+                  Evaluated: {new Date(scorecardData.evaluatedAt).toLocaleTimeString()}
                 </span>
-                <span className="text-slate-400 ml-2">
-                  ({scorecardData.evaluatorRole || CHAPTER9_CHARACTERS.mark.role})
-                </span>
+              )}
+            </div>
+
+            <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80">
+              <div className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider mb-1">
+                Executive Boardroom Summary
+              </div>
+              <p className="text-sm text-slate-200 leading-relaxed font-medium">
+                {scorecardData.executiveFeedback || scorecardData.outcomeText}
+              </p>
+            </div>
+          </div>
+
+          {/* METRICS DIMENSION BREAKDOWN */}
+          <div className="space-y-3">
+            <div className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">
+              Executive Competency Breakdown
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              {/* DELIVERY GOVERNANCE */}
+              <div className="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800 space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-300 font-bold flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5 text-emerald-400" />
+                    Delivery Governance (35%)
+                  </span>
+                  <span className="font-mono font-bold text-emerald-400">
+                    {scorecardData.governanceScore}/100
+                  </span>
+                </div>
+                <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                  <div
+                    className="bg-emerald-400 h-full transition-all duration-500"
+                    style={{ width: `${scorecardData.governanceScore}%` }}
+                  />
+                </div>
+                <p className="text-[11px] text-slate-400 leading-tight">
+                  {scorecardData.explanations?.governance || 'Evaluation of ROI communication.'}
+                </p>
+              </div>
+
+              {/* TRUST & RISK MANAGEMENT */}
+              <div className="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800 space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-300 font-bold flex items-center gap-1.5">
+                    <Shield className="w-3.5 h-3.5 text-teal-400" />
+                    Trust & Risk Management (25%)
+                  </span>
+                  <span className="font-mono font-bold text-teal-400">
+                    {scorecardData.riskScore}/100
+                  </span>
+                </div>
+                <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                  <div
+                    className="bg-teal-400 h-full transition-all duration-500"
+                    style={{ width: `${scorecardData.riskScore}%` }}
+                  />
+                </div>
+                <p className="text-[11px] text-slate-400 leading-tight">
+                  {scorecardData.explanations?.risk || 'Evaluation of boardroom trust and capital safety.'}
+                </p>
+              </div>
+
+              {/* SCHEDULE / TIMELINE */}
+              <div className="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800 space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-300 font-bold flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-sky-400" />
+                    Schedule / Timeline (20%)
+                  </span>
+                  <span className="font-mono font-bold text-sky-400">
+                    {scorecardData.scheduleScore}/100
+                  </span>
+                </div>
+                <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                  <div
+                    className="bg-sky-400 h-full transition-all duration-500"
+                    style={{ width: `${scorecardData.scheduleScore}%` }}
+                  />
+                </div>
+                <p className="text-[11px] text-slate-400 leading-tight">
+                  {scorecardData.explanations?.schedule || 'Milestone and review cadence pacing.'}
+                </p>
+              </div>
+
+              {/* OPERATIONAL EFFICIENCY */}
+              <div className="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800 space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-300 font-bold flex items-center gap-1.5">
+                    <Zap className="w-3.5 h-3.5 text-amber-400" />
+                    Operational Efficiency (20%)
+                  </span>
+                  <span className="font-mono font-bold text-amber-400">
+                    {scorecardData.efficiencyScore}/100
+                  </span>
+                </div>
+                <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                  <div
+                    className="bg-amber-400 h-full transition-all duration-500"
+                    style={{ width: `${scorecardData.efficiencyScore}%` }}
+                  />
+                </div>
+                <p className="text-[11px] text-slate-400 leading-tight">
+                  {scorecardData.explanations?.efficiency || 'Capacity harvesting across 80k bank staff.'}
+                </p>
               </div>
             </div>
-            {scorecardData.evaluatedAt && (
-              <span className="font-mono text-[10px] text-slate-500">
-                Evaluated: {new Date(scorecardData.evaluatedAt).toLocaleTimeString()}
-              </span>
-            )}
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800">
-            <div className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider mb-1">
-              Executive Boardroom Summary
-            </div>
-            <p className="text-sm text-slate-200 leading-relaxed font-medium">
-              {scorecardData.executiveFeedback || scorecardData.outcomeText}
-            </p>
-          </div>
-        </div>
-
-        {/* METRICS DIMENSION BREAKDOWN */}
-        <div className="p-6 border-b border-slate-800 space-y-4">
-          <div className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">
-            Executive Competency Breakdown
-          </div>
-
+          {/* STRENGTHS & IMPROVEMENTS */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* DELIVERY GOVERNANCE */}
-            <div className="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800 space-y-2">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-300 font-bold flex items-center gap-1.5">
-                  <Building2 className="w-3.5 h-3.5 text-emerald-400" />
-                  Delivery Governance (35%)
-                </span>
-                <span className="font-mono font-bold text-emerald-400">
-                  {scorecardData.governanceScore}/100
-                </span>
+            <div className="p-4 rounded-2xl bg-emerald-950/20 border border-emerald-500/30">
+              <div className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4" />
+                What You Did Well
               </div>
-              <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div
-                  className="bg-emerald-400 h-full transition-all duration-500"
-                  style={{ width: `${scorecardData.governanceScore}%` }}
-                />
-              </div>
-              <p className="text-[11px] text-slate-400 leading-tight">
-                {scorecardData.explanations?.governance || 'Evaluation of ROI communication.'}
+              <p className="text-xs text-slate-300 leading-relaxed">
+                {scorecardData.whatYouDidWell}
               </p>
             </div>
 
-            {/* TRUST & RISK MANAGEMENT */}
-            <div className="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800 space-y-2">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-300 font-bold flex items-center gap-1.5">
-                  <Shield className="w-3.5 h-3.5 text-teal-400" />
-                  Trust & Risk Management (25%)
-                </span>
-                <span className="font-mono font-bold text-teal-400">
-                  {scorecardData.riskScore}/100
-                </span>
+            <div className="p-4 rounded-2xl bg-amber-950/20 border border-amber-500/30">
+              <div className="text-xs font-mono font-bold text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <Lightbulb className="w-4 h-4" />
+                Executive Growth Opportunity
               </div>
-              <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div
-                  className="bg-teal-400 h-full transition-all duration-500"
-                  style={{ width: `${scorecardData.riskScore}%` }}
-                />
-              </div>
-              <p className="text-[11px] text-slate-400 leading-tight">
-                {scorecardData.explanations?.risk || 'Evaluation of boardroom trust and capital safety.'}
-              </p>
-            </div>
-
-            {/* SCHEDULE / TIMELINE */}
-            <div className="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800 space-y-2">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-300 font-bold flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-sky-400" />
-                  Schedule / Timeline (20%)
-                </span>
-                <span className="font-mono font-bold text-sky-400">
-                  {scorecardData.scheduleScore}/100
-                </span>
-              </div>
-              <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div
-                  className="bg-sky-400 h-full transition-all duration-500"
-                  style={{ width: `${scorecardData.scheduleScore}%` }}
-                />
-              </div>
-              <p className="text-[11px] text-slate-400 leading-tight">
-                {scorecardData.explanations?.schedule || 'Milestone and review cadence pacing.'}
-              </p>
-            </div>
-
-            {/* OPERATIONAL EFFICIENCY */}
-            <div className="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800 space-y-2">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-300 font-bold flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5 text-amber-400" />
-                  Operational Efficiency (20%)
-                </span>
-                <span className="font-mono font-bold text-amber-400">
-                  {scorecardData.efficiencyScore}/100
-                </span>
-              </div>
-              <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div
-                  className="bg-amber-400 h-full transition-all duration-500"
-                  style={{ width: `${scorecardData.efficiencyScore}%` }}
-                />
-              </div>
-              <p className="text-[11px] text-slate-400 leading-tight">
-                {scorecardData.explanations?.efficiency || 'Capacity harvesting across 80k bank staff.'}
+              <p className="text-xs text-slate-300 leading-relaxed">
+                {scorecardData.whatToImprove}
               </p>
             </div>
           </div>
-        </div>
 
-        {/* STRENGTHS & IMPROVEMENTS */}
-        <div className="p-6 border-b border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="p-4 rounded-2xl bg-emerald-950/20 border border-emerald-500/30">
-            <div className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4" />
-              What You Did Well
+          {/* CORE LEARNING / KEY TAKEAWAY */}
+          <div className="p-4 rounded-2xl bg-slate-900/30 border border-slate-800">
+            <div className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+              Senior PM Executive Takeaway
             </div>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              {scorecardData.whatYouDidWell}
-            </p>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-amber-950/20 border border-amber-500/30">
-            <div className="text-xs font-mono font-bold text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <Lightbulb className="w-4 h-4" />
-              Executive Growth Opportunity
-            </div>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              {scorecardData.whatToImprove}
+            <p className="text-xs text-slate-300 leading-relaxed italic border-l-2 border-emerald-500 pl-3">
+              "{scorecardData.keyTakeaway || CHAPTER9_KEY_TAKEAWAY}"
             </p>
           </div>
         </div>
 
-        {/* CORE LEARNING / KEY TAKEAWAY */}
-        <div className="p-6 border-b border-slate-800 bg-slate-900/30">
-          <div className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-            Senior PM Executive Takeaway
-          </div>
-          <p className="text-xs text-slate-300 leading-relaxed italic border-l-2 border-emerald-500 pl-3">
-            "{scorecardData.keyTakeaway || CHAPTER9_KEY_TAKEAWAY}"
-          </p>
-        </div>
-
-        {/* ACTION BUTTONS FOOTER */}
-        <div className="p-6 bg-slate-950/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+        {/* ACTION BUTTONS FOOTER (PINNED) */}
+        <div className="p-4 sm:p-5 border-t border-slate-800 bg-slate-950/90 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
           {onReplayChapter && (
             <button
               onClick={onReplayChapter}
