@@ -136,6 +136,70 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
   const [autoLaunchTarget, setAutoLaunchTarget] = useState<number>(2);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const cardsContainerRef = useRef<HTMLDivElement>(null);
+  const dotRefs = useRef<Record<number, HTMLDivElement | null>>({});
+
+  const computeFallbackCoords = (selectedId: number) => {
+    const coords: { x: number; y: number }[] = [];
+    let currentX = 0;
+    const cardGap = 32; // space-x-8
+    const baseCardWidth = 185;
+    const selectedCardWidth = 280;
+    const baseDotY = 320;
+    const stepY = 8; // 8px rise per chapter going upwards
+
+    for (let i = 1; i <= 12; i++) {
+      const width = i === selectedId ? selectedCardWidth : baseCardWidth;
+      const centerX = currentX + width / 2;
+      const centerY = baseDotY - (i - 1) * stepY;
+      coords.push({ x: centerX, y: centerY });
+      currentX += width + cardGap;
+    }
+    return coords;
+  };
+
+  const [dotCoords, setDotCoords] = useState<{ x: number; y: number }[]>(() =>
+    computeFallbackCoords(selectedChapterId)
+  );
+
+  const updateCoords = () => {
+    if (!cardsContainerRef.current) return;
+    const containerRect = cardsContainerRef.current.getBoundingClientRect();
+    const coords: { x: number; y: number }[] = [];
+
+    for (let i = 1; i <= 12; i++) {
+      const dotEl = dotRefs.current[i];
+      if (dotEl) {
+        const dotRect = dotEl.getBoundingClientRect();
+        coords.push({
+          x: dotRect.left - containerRect.left + dotRect.width / 2,
+          y: dotRect.top - containerRect.top + dotRect.height / 2,
+        });
+      }
+    }
+    if (coords.length === 12) {
+      setDotCoords(coords);
+    }
+  };
+
+  useEffect(() => {
+    updateCoords();
+    const timer1 = setTimeout(updateCoords, 60);
+    const timer2 = setTimeout(updateCoords, 180);
+    const timer3 = setTimeout(updateCoords, 350);
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+    };
+  }, [selectedChapterId]);
+
+  useEffect(() => {
+    const onResize = () => updateCoords();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
   const storedName = typeof window !== 'undefined' ? localStorage.getItem('brained_player_name') : null;
   const playerName = (playerConfig?.name && playerConfig.name !== 'Riya Mehta')
     ? playerConfig.name
@@ -243,8 +307,32 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
 
   /* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */
   const unlockedCount = TEMPORARY_CHAPTER_SKIP_ACTIVE
-    ? 9
+    ? 12
     : Object.values(chapterStatuses).filter(s => s === 'unlocked' || s === 'completed').length;
+
+  // Compute straight linear path going upwards across all 12 chapters
+  let linearPathD = '';
+  let startX = 0;
+  let startY = 0;
+  let endX = 0;
+  let endY = 0;
+
+  if (dotCoords.length === 12) {
+    const p1 = dotCoords[0];
+    const p12 = dotCoords[11];
+    const dx = p12.x - p1.x || 1;
+    const dy = p12.y - p1.y;
+    const slope = dy / dx;
+
+    startX = p1.x - 50;
+    startY = p1.y - 50 * slope;
+    endX = p12.x + 60;
+    endY = p12.y + 60 * slope;
+
+    linearPathD = `M ${startX.toFixed(1)} ${startY.toFixed(1)} ` +
+      dotCoords.map(pt => `L ${pt.x.toFixed(1)} ${pt.y.toFixed(1)}`).join(' ') +
+      ` L ${endX.toFixed(1)} ${endY.toFixed(1)}`;
+  }
 
   return (
     <div className="relative w-full h-screen bg-[#070b14] text-white overflow-hidden flex flex-col font-sans select-none">
@@ -426,60 +514,111 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
         {/* ── HORIZONTALLY SCROLLABLE TRACK CONTAINER ── */}
         <div 
           ref={scrollContainerRef}
-          className="w-full overflow-x-auto overflow-y-hidden px-14 flex items-end relative scroll-smooth"
+          className="w-full overflow-x-auto overflow-y-visible pt-10 pb-8 px-14 flex items-end relative scroll-smooth"
           style={{ 
             scrollbarWidth: 'none', 
             msOverflowStyle: 'none',
           }}
         >
-          {/* Scrollable SVG Spline Curve across all 12 chapters (spanning full width) */}
-          <div className="absolute left-0 right-0 bottom-0 top-0 pointer-events-none z-0" style={{ width: '3100px' }}>
-            <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 3100 400">
+          {/* ── 12 CARDS WITH HEALTHY SPACING (GAP-8) & LINEAR PATH OVERLAY ── */}
+          <div 
+            ref={cardsContainerRef}
+            className="relative z-10 flex items-end space-x-8 pt-4 pb-12 pr-14" 
+            style={{ minWidth: 'max-content' }}
+          >
+            {/* ── VIBRANT GLOWING LINEAR PATH SVG ACROSS ALL 12 CHAPTERS ── */}
+            <svg 
+              className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-visible"
+            >
               <defs>
-                <linearGradient id="goldPathGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                <linearGradient id="hubLinearPathGrad" x1="0%" y1="100%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.9" />
-                  <stop offset="45%" stopColor="#fbbf24" stopOpacity="0.7" />
-                  <stop offset="100%" stopColor="#94a3b8" stopOpacity="0.35" />
+                  <stop offset="50%" stopColor="#fbbf24" stopOpacity="1" />
+                  <stop offset="100%" stopColor="#fef08a" stopOpacity="0.95" />
                 </linearGradient>
-                <filter id="goldGlow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="4" result="blur" />
+                <filter id="hubGoldGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="5" result="blur" />
                   <feComposite in="SourceGraphic" in2="blur" operator="over" />
                 </filter>
               </defs>
 
-              {/* Ascending Timeline Spline connecting all 12 Chapter Nodes */}
-              <path
-                d="M 120 310 C 350 305, 500 300, 750 280 C 1100 255, 1450 215, 1850 170 C 2250 130, 2650 95, 3000 65"
-                fill="none"
-                stroke="#f59e0b"
-                strokeWidth="5"
-                strokeOpacity="0.2"
-                filter="url(#goldGlow)"
-              />
-              <path
-                d="M 120 310 C 350 305, 500 300, 750 280 C 1100 255, 1450 215, 1850 170 C 2250 130, 2650 95, 3000 65"
-                fill="none"
-                stroke="url(#goldPathGrad)"
-                strokeWidth="2"
-              />
-            </svg>
-          </div>
+              {linearPathD && (
+                <>
+                  {/* 1. Broad Ambient Golden Glow Line */}
+                  <path
+                    d={linearPathD}
+                    fill="none"
+                    stroke="#f59e0b"
+                    strokeWidth="8"
+                    strokeOpacity="0.35"
+                    filter="url(#hubGoldGlow)"
+                  />
+                  {/* 2. Vibrant Solid Amber Line */}
+                  <path
+                    d={linearPathD}
+                    fill="none"
+                    stroke="url(#hubLinearPathGrad)"
+                    strokeWidth="3.5"
+                    strokeOpacity="0.95"
+                  />
+                  {/* 3. Bright White-Gold Core Line */}
+                  <path
+                    d={linearPathD}
+                    fill="none"
+                    stroke="#ffffff"
+                    strokeWidth="1.5"
+                    strokeOpacity="0.8"
+                  />
 
-          {/* ── 12 CARDS WITH HEALTHY SPACING (GAP-8) ── */}
-          <div className="relative z-10 flex items-end space-x-8 py-6 pr-14" style={{ minWidth: 'max-content' }}>
+                  {/* 12 Linear Anchor Points on the line */}
+                  {dotCoords.map((pt, idx) => {
+                    const chId = idx + 1;
+                    const isSel = selectedChapterId === chId;
+                    return (
+                      <g key={chId}>
+                        {/* Outer Pulse Ring for Selected Chapter */}
+                        {isSel && (
+                          <circle
+                            cx={pt.x}
+                            cy={pt.y}
+                            r={11}
+                            fill="none"
+                            stroke="#f59e0b"
+                            strokeWidth="1.5"
+                            opacity={0.8}
+                            className="animate-pulse"
+                          />
+                        )}
+                        {/* Node Center on the Linear Line */}
+                        <circle
+                          cx={pt.x}
+                          cy={pt.y}
+                          r={isSel ? 5 : 3.5}
+                          fill={isSel ? '#fbbf24' : '#f59e0b'}
+                          stroke="#ffffff"
+                          strokeWidth={isSel ? 1.5 : 1}
+                          filter="url(#hubGoldGlow)"
+                        />
+                      </g>
+                    );
+                  })}
+                </>
+              )}
+            </svg>
+
             {CHAPTERS.map((ch) => {
               const visual = CHAPTER_VISUALS[ch.id] || {
                 title: ch.title,
                 subtitle: ch.subtitle,
                 description: ch.description,
                 thumb: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=300&auto=format&fit=crop&q=80',
-                yOffset: ch.id * 12,
+                yOffset: 0,
               };
 
               const status = chapterStatuses[ch.id] || (ch.id === 1 ? 'unlocked' : 'locked');
               const isCompleted = status === 'completed';
               /* TEMPORARY CHAPTER SKIP FEATURE - CAN BE REMOVED ON REQUEST */
-              const isDevUnlocked = TEMPORARY_CHAPTER_SKIP_ACTIVE && ch.id <= 5;
+              const isDevUnlocked = TEMPORARY_CHAPTER_SKIP_ACTIVE;
               const isUnlocked = isDevUnlocked || status === 'unlocked' || isCompleted;
               const isSelected = selectedChapterId === ch.id;
               const isHovered = hoveredChapter === ch.id;
@@ -495,16 +634,20 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
                   onClick={() => handleCardClick(ch.id)}
                   className={`relative flex-shrink-0 rounded-2xl backdrop-blur-xl flex flex-col justify-between cursor-pointer transition-all duration-300 ${
                     isSelected
-                      ? 'w-[280px] p-4 bg-[#090e1a]/95'
-                      : 'w-[185px] p-3 bg-[#0a0f1d]/85'
+                      ? 'w-[280px] p-4 bg-[#090e1a]/95 z-30 shadow-[0_20px_50px_rgba(0,0,0,0.85)]'
+                      : isHovered
+                      ? 'w-[185px] p-3 bg-[#0a0f1d]/95 z-20 shadow-xl'
+                      : 'w-[185px] p-3 bg-[#0a0f1d]/85 z-10'
                   } ${
                     !isUnlocked 
                       ? 'grayscale contrast-75 brightness-75 border border-white/[0.08]' 
-                      : 'border border-white/10'
+                      : isSelected
+                      ? 'border border-amber-400/50'
+                      : 'border border-white/10 hover:border-white/30'
                   }`}
                   style={{
                     height: isSelected ? '345px' : '270px',
-                    marginBottom: `${visual.yOffset}px`,
+                    marginBottom: `${(ch.id - 1) * 8}px`,
                     transform: isHovered && !isSelected ? 'translateY(-6px)' : 'none',
                   }}
                 >
@@ -617,16 +760,23 @@ export const ChapterSelectHub: React.FC<ChapterSelectHubProps> = ({ playerConfig
                     )}
                   </div>
 
-                  {/* ── NODE CONNECTOR TO THE SPLINE PATH ── */}
-                  <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-10">
-                    <div className={`w-[1.5px] h-3 ${isSelected ? 'bg-amber-400' : 'bg-white/20'}`} />
-                    <div className={`rounded-full border transition-all ${
-                      isSelected
-                        ? 'w-4 h-4 border-amber-300 bg-amber-500 shadow-[0_0_12px_#f59e0b]'
-                        : isUnlocked
-                        ? 'w-3 h-3 border-white/60 bg-slate-200 shadow-[0_0_6px_rgba(255,255,255,0.4)]'
-                        : 'w-2.5 h-2.5 border-white/30 bg-slate-600'
+                  {/* ── CONNECTOR STEM TO THE LINEAR PATH DOT ── */}
+                  <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-20">
+                    <div className={`w-[2px] h-3.5 transition-colors ${
+                      isSelected ? 'bg-amber-400' : 'bg-white/20'
                     }`} />
+                    <div 
+                      ref={(el) => { dotRefs.current[ch.id] = el; }}
+                      className={`rounded-full border transition-all duration-300 ${
+                        isSelected
+                          ? 'w-4 h-4 border-amber-300 bg-amber-400 shadow-[0_0_16px_#f59e0b]'
+                          : isCompleted
+                          ? 'w-3.5 h-3.5 border-emerald-400 bg-emerald-500 shadow-[0_0_10px_rgba(52,211,153,0.5)]'
+                          : isUnlocked
+                          ? 'w-3 h-3 border-amber-300/80 bg-amber-100 shadow-[0_0_8px_rgba(245,158,11,0.5)]'
+                          : 'w-2.5 h-2.5 border-white/30 bg-slate-600'
+                      }`} 
+                    />
                   </div>
 
                   {/* Hover Tooltip for Locked Cards */}
