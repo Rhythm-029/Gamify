@@ -23,6 +23,7 @@ export const ENV = {
   // ── Game Backend ─────────────────────────────────────────────────────────
   // MongoDB — local default, override with Atlas URI in .env
   MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017',
+  MONGODB_DB_NAME: process.env.MONGODB_DB_NAME || 'Gamify',
 
   // Redis — local default, override with Upstash URL in .env
   REDIS_URL: process.env.REDIS_URL || 'redis://localhost:6379',

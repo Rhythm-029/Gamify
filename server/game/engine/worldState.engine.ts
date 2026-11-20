@@ -35,11 +35,11 @@ export async function ensureDbConnected(): Promise<void> {
   }
   try {
     await mongoose.connect(ENV.MONGODB_URI, {
-      dbName: 'brained',
+      dbName: ENV.MONGODB_DB_NAME,
       serverSelectionTimeoutMS: 3000,
     });
     dbConnected = true;
-    console.log('[MONGO] Connected to brained database');
+    console.log(`[MONGO] Connected to ${ENV.MONGODB_DB_NAME} database`);
   } catch (err: any) {
     if (!dbConnectAttempted) {
       console.warn('[MONGO] Connection failed. Local in-memory fallback active:', err?.message ?? err);
